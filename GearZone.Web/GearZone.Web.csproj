@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GearZone.Application\GearZone.Application.csproj" />
+    <ProjectReference Include="..\GearZone.Infrastructure\GearZone.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Middlewares\" />
+    <Folder Include="Pages\Admin\Businesses\" />
+    <Folder Include="Pages\Admin\Users\" />
+    <Folder Include="Pages\Admin\Stores\" />
+    <Folder Include="Pages\Cart\Models\" />
+    <Folder Include="Pages\Checkout\" />
+    <Folder Include="Pages\Public\Auth\" />
+    <Folder Include="Pages\Public\Stores\" />
+    <Folder Include="Pages\Public\Products\Models\" />
+    <Folder Include="Pages\Seller\Dashboard\" />
+    <Folder Include="Pages\Seller\Inventory\" />
+    <Folder Include="Pages\Seller\Orders\" />
+    <Folder Include="Pages\Seller\Store\" />
+    <Folder Include="Pages\Seller\Products\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

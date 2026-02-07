@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="GearZone.Application/GearZone.Application.csproj" />
+    <Project Path="GearZone.Domain/GearZone.Domain.csproj" />
+    <Project Path="GearZone.Infrastructure/GearZone.Infrastructure.csproj" />
+    <Project Path="GearZone.Web/GearZone.Web.csproj" Id="d33fd3d9-53a9-416f-b922-3afd17a8e6f4" />
+  </Folder>
+</Solution>

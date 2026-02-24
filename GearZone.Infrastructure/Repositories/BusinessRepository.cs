@@ -1,0 +1,15 @@
+﻿using GearZone.Domain.Abstractions.Persistence;
+using GearZone.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace GearZone.Infrastructure.Repositories
+{
+    public class BusinessRepository : Repository<Business, Guid>, IBusinessRepository
+    {
+        public BusinessRepository(ApplicationDbContext context) : base(context)
+        {
+        }
+    }
+}

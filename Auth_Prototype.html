@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GearZone - Login &amp; Sign Up</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1A56DB",
+                        "accent-orange": "#FF6B00",
+                        "background-light": "#F8FAFC",
+                        "background-dark": "#111621",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "8px",
+                        "xl": "12px",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .custom-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+        }.tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex flex-col items-center justify-center p-6">
+<div class="mb-8 flex flex-col items-center text-center">
+<div class="bg-primary text-white p-2.5 rounded-xl shadow-lg shadow-primary/20 mb-4">
+<span class="material-symbols-outlined text-3xl block">fitbit_circuit_training</span>
+</div>
+<h1 class="text-slate-900 dark:text-slate-100 text-2xl font-bold tracking-tight">GearZone</h1>
+<p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Multi-vendor Electronic Components Platform</p>
+</div>
+<main class="w-full max-w-[440px] bg-white dark:bg-slate-900 rounded-lg custom-shadow border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="flex border-b border-slate-200 dark:border-slate-800">
+<button class="flex-1 py-4 text-sm font-semibold text-primary border-b-2 border-primary transition-colors">
+                Login
+            </button>
+<button class="flex-1 py-4 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
+                Sign Up
+            </button>
+</div>
+<div class="p-8">
+<div class="tab-content active" id="login-tab">
+<form class="space-y-5">
+<div>
+<label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Email / Username</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">mail</span>
+<input class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 dark:text-slate-100 placeholder:text-slate-400" placeholder="Enter your email" type="text"/>
+</div>
+</div>
+<div>
+<label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Password</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock</span>
+<input class="w-full pl-10 pr-12 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 dark:text-slate-100 placeholder:text-slate-400" placeholder="••••••••" type="password"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors" type="button">
+<span class="material-symbols-outlined text-xl">visibility</span>
+</button>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center">
+<input class="h-4 w-4 text-primary focus:ring-primary border-slate-300 rounded" id="remember" type="checkbox"/>
+<label class="ml-2 block text-sm text-slate-600 dark:text-slate-400" for="remember">Remember me</label>
+</div>
+<a class="text-sm font-medium text-primary hover:text-primary/80 transition-colors" href="#">Forgot Password?</a>
+</div>
+<button class="w-full bg-primary hover:bg-primary/95 text-white font-semibold py-3 rounded-lg transition-all shadow-md shadow-primary/10 flex items-center justify-center gap-2 mt-2">
+                        Login
+                    </button>
+</form>
+<div class="mt-8">
+<div class="relative flex items-center justify-center mb-6">
+<div class="flex-grow border-t border-slate-100 dark:border-slate-800"></div>
+<span class="mx-4 text-slate-400 text-[11px] font-bold uppercase tracking-widest">Or continue with</span>
+<div class="flex-grow border-t border-slate-100 dark:border-slate-800"></div>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<button class="flex items-center justify-center gap-2 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+<img alt="Google Logo" class="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDG8cjHyoNFqaI63E3sM6N1HddCRqIZHkNSDD17fKv1f6d9Uilw-dARMS8Y9B6iyEysqmugLE-27wLxLV9nN-6jTar6Nhcby4oM3AjnY0hz6_WkRo_68fctRnKD06c1C2cru1N_nbMKDgB8ESBDJoUo3lRa4SQINkjnpt8NUP912NlO9R3jsCibeHf9W-k_M0EH59jJPawXpDOEizHgrBryoB4OAfy7mjR1ggTe8-TV5iJeqZF8Sol0ULQFal8bj2iGzYqsemlUfEXC"/>
+<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Google</span>
+</button>
+<button class="flex items-center justify-center gap-2 py-2.5 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+<img alt="Facebook Logo" class="w-5 h-5" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZxP3lE9qvvHHBJ6belRqsbvnL-YszGh-ZMPB0iJZILJim96EzBAtjybCsqzVMe3TX6YD4H9gZREp7jJS2TrrIOJUN4jxgCsyYCwErLuoMAcV0uVQYPWd5bC5waky3F15FhPdD9WfZ-34vGBXoPYuVEPR_4pUxXfww5i3Ur4WDvuh6Ic7SgOB1YAp8jlTIHD55Mh25RrMKi04a5z6HbcC0CYFY1u71oG0_QMJ0Jcs-ihoKBsr5pzSw3Zqi15RKt2bCufvF25P-tRLv"/>
+<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Facebook</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<p class="mt-6 text-sm text-slate-500 dark:text-slate-400">
+        Don't have an account? 
+        <a class="text-primary font-semibold hover:underline" href="#">Sign up</a>
+</p>
+<footer class="mt-12 text-slate-400 dark:text-slate-500 text-xs flex gap-6">
+<a class="hover:text-primary transition-colors" href="#">Help Center</a>
+<a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<span>© 2024 GearZone Inc.</span>
+</footer>
+
+</body></html>

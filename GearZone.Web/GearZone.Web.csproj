@@ -18,7 +18,8 @@
     <Folder Include="Pages\Admin\Stores\" />
     <Folder Include="Pages\Cart\Models\" />
     <Folder Include="Pages\Checkout\" />
-    <Folder Include="Pages\Public\Auth\" />
+    <Folder Include="Pages\Public\Auth\Models\" />
+    <Folder Include="Pages\Public\Home\" />
     <Folder Include="Pages\Public\Stores\" />
     <Folder Include="Pages\Public\Products\Models\" />
     <Folder Include="Pages\Seller\Dashboard\" />
@@ -26,9 +27,13 @@
     <Folder Include="Pages\Seller\Orders\" />
     <Folder Include="Pages\Seller\Store\" />
     <Folder Include="Pages\Seller\Products\" />
+    <Folder Include="wwwroot\assets\images\" />
+    <Folder Include="wwwroot\assets\icons\" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="DotNetEnv" Version="3.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

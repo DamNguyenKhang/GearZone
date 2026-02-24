@@ -1,0 +1,255 @@
+@page
+@model GearZone.Web.Pages.Public.Auth.LoginModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Login & Sign Up";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@ViewData["Title"] - GearZone</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@@100..700,0..1&display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1A56DB",
+                        "accent-orange": "#FF6B00",
+                        "background-light": "#F8FAFC",
+                        "background-dark": "#111621",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "8px",
+                        "xl": "12px",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @@layer base {
+            body {
+                font-family: 'Inter', sans-serif;
+            }
+        }
+        .custom-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex flex-col items-center justify-center p-6">
+    <div class="mb-8 flex flex-col items-center text-center">
+        <div class="bg-primary text-white p-2.5 rounded-xl shadow-lg shadow-primary/20 mb-4 transition-transform hover:scale-110 cursor-pointer" onclick="location.href='/'">
+            <span class="material-symbols-outlined text-3xl block">fitbit_circuit_training</span>
+        </div>
+        <h1 class="text-slate-900 dark:text-slate-100 text-2xl font-bold tracking-tight">GearZone</h1>
+        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Multi-vendor Electronic Components Platform</p>
+    </div>
+    <main class="w-full max-w-[440px] bg-white dark:bg-slate-900 rounded-lg custom-shadow border border-slate-200 dark:border-slate-800 overflow-hidden">
+        <div class="flex border-b border-slate-200 dark:border-slate-800">
+            <button id="login-tab-btn" class="flex-1 py-4 text-sm font-semibold text-primary border-b-2 border-primary transition-colors">
+                Login
+            </button>
+            <button id="signup-tab-btn" class="flex-1 py-4 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
+                Sign Up
+            </button>
+        </div>
+        <div class="p-8">
+            <!-- Login Tab -->
+            <div class="tab-content active" id="login-tab">
+                @if (!string.IsNullOrEmpty(Model.ErrorMessage) && (ViewData["ActiveTab"]?.ToString() != "signup"))
+                {
+                    <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+                        @Model.ErrorMessage
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+                {
+                    <div class="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg text-sm">
+                        @Model.SuccessMessage
+                    </div>
+                }
+                <div asp-validation-summary="All" class="text-red-600 text-xs mb-4"></div>
+                <form method="post" asp-page-handler="Login" class="space-y-5">
+                    <div>
+                        <label asp-for="Input.Username" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Email / Username</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">mail</span>
+                            <input asp-for="Input.Username" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 dark:text-slate-100 placeholder:text-slate-400" placeholder="Enter your email or username" />
+                        </div>
+                        <span asp-validation-for="Input.Username" class="text-xs text-red-500"></span>
+                    </div>
+                    <div>
+                        <label asp-for="Input.Password" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Password</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock</span>
+                            <input asp-for="Input.Password" class="w-full pl-10 pr-12 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 dark:text-slate-100 placeholder:text-slate-400" placeholder="••••••••" />
+                            <button class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors" type="button" onclick="const p = document.getElementById('Input_Password'); p.type = p.type === 'password' ? 'text' : 'password';">
+                                <span class="material-symbols-outlined text-xl">visibility</span>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Input.Password" class="text-xs text-red-500"></span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input asp-for="Input.RememberMe" class="h-4 w-4 text-primary focus:ring-primary border-slate-300 rounded" />
+                            <label asp-for="Input.RememberMe" class="ml-2 block text-sm text-slate-600 dark:text-slate-400">Remember me</label>
+                        </div>
+                        <a class="text-sm font-medium text-primary hover:text-primary/80 transition-colors" href="#">Forgot Password?</a>
+                    </div>
+                    <button type="submit" class="w-full bg-primary hover:bg-primary/95 text-white font-semibold py-3 rounded-lg transition-all shadow-md shadow-primary/10 flex items-center justify-center gap-2 mt-2">
+                        Login
+                    </button>
+                </form>
+            </div>
+
+
+            <!-- Sign Up Tab -->
+            <div class="tab-content" id="signup-tab">
+                @if (!string.IsNullOrEmpty(Model.ErrorMessage) && (ViewData["ActiveTab"]?.ToString() == "signup"))
+                {
+                    <div class="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+                        @Model.ErrorMessage
+                    </div>
+                }
+                <div asp-validation-summary="All" class="text-red-600 text-xs mb-4"></div>
+                <form method="post" asp-page-handler="Register" class="space-y-4">
+                    <div>
+                        <label asp-for="RegisterInput.FullName" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Full Name</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">person</span>
+                            <input asp-for="RegisterInput.FullName" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 dark:text-slate-100 placeholder:text-slate-400" placeholder="John Doe" />
+                        </div>
+                        <span asp-validation-for="RegisterInput.FullName" class="text-xs text-red-500"></span>
+                    </div>
+                    <div>
+                        <label asp-for="RegisterInput.Email" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Email Address</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">mail</span>
+                            <input asp-for="RegisterInput.Email" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 dark:text-slate-100 placeholder:text-slate-400" placeholder="name@@example.com" />
+                        </div>
+                        <span asp-validation-for="RegisterInput.Email" class="text-xs text-red-500"></span>
+                    </div>
+                    <div>
+                        <label asp-for="RegisterInput.Password" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Password</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock</span>
+                            <input asp-for="RegisterInput.Password" class="w-full pl-10 pr-12 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 dark:text-slate-100 placeholder:text-slate-400" placeholder="••••••••" />
+                        </div>
+                        <span asp-validation-for="RegisterInput.Password" class="text-xs text-red-500"></span>
+                    </div>
+                    <div>
+                        <label asp-for="RegisterInput.ConfirmPassword" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Confirm Password</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock</span>
+                            <input asp-for="RegisterInput.ConfirmPassword" class="w-full pl-10 pr-12 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 dark:text-slate-100 placeholder:text-slate-400" placeholder="••••••••" />
+                        </div>
+                        <span asp-validation-for="RegisterInput.ConfirmPassword" class="text-xs text-red-500"></span>
+                    </div>
+                    <button type="submit" class="w-full bg-primary hover:bg-primary/95 text-white font-semibold py-3 rounded-lg transition-all shadow-md shadow-primary/10 flex items-center justify-center gap-2 mt-4">
+                        Create Account
+                    </button>
+                </form>
+            </div>
+
+            <div class="mt-8">
+                <div class="relative flex items-center justify-center mb-6">
+                    <div class="flex-grow border-t border-slate-100 dark:border-slate-800"></div>
+                    <span class="mx-4 text-slate-400 text-[11px] font-bold uppercase tracking-widest">Or continue with</span>
+                    <div class="flex-grow border-t border-slate-100 dark:border-slate-800"></div>
+                </div>
+                <div class="w-full">
+                    <form method="post" asp-page-handler="ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl">
+                        <button type="submit" name="provider" value="Google"
+                                class="w-full flex items-center justify-center gap-2 py-2.5
+                               border border-slate-200 dark:border-slate-700
+                               rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800
+                               transition-colors">
+
+                            <img src="~/assets/icons/google-icon-logo-svgrepo-com.svg"
+                                 alt="Google"
+                                 class="w-5 h-5"
+                                 asp-append-version="true" />
+
+                            <span class="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                Continue with Google
+                            </span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+    <p class="mt-6 text-sm text-slate-500 dark:text-slate-400">
+        Already have an account?
+        <a id="switch-to-login" class="text-primary font-semibold hover:underline cursor-pointer">Login</a>
+    </p>
+    <footer class="mt-12 text-slate-400 dark:text-slate-500 text-xs flex gap-6">
+        <a class="hover:text-primary transition-colors" href="#">Help Center</a>
+        <a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+        <a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+        <span>© 2024 GearZone Inc.</span>
+    </footer>
+
+    <script>
+        const loginTab = document.getElementById('login-tab');
+        const signupTab = document.getElementById('signup-tab');
+        const loginBtn = document.getElementById('login-tab-btn');
+        const signupBtn = document.getElementById('signup-tab-btn');
+        const switchBtn = document.getElementById('switch-to-login');
+
+        function showLogin() {
+            loginTab.classList.add('active');
+            signupTab.classList.remove('active');
+            loginBtn.classList.add('text-primary', 'border-primary', 'border-b-2');
+            loginBtn.classList.remove('text-slate-500');
+            signupBtn.classList.remove('text-primary', 'border-primary', 'border-b-2');
+            signupBtn.classList.add('text-slate-500');
+        }
+
+        function showSignup() {
+            signupTab.classList.add('active');
+            loginTab.classList.remove('active');
+            signupBtn.classList.add('text-primary', 'border-primary', 'border-b-2');
+            signupBtn.classList.remove('text-slate-500');
+            loginBtn.classList.remove('text-primary', 'border-primary', 'border-b-2');
+            loginBtn.classList.add('text-slate-500');
+        }
+
+        loginBtn.addEventListener('click', showLogin);
+        signupBtn.addEventListener('click', showSignup);
+        switchBtn.addEventListener('click', showLogin);
+
+        // Initialize active tab from server-side state
+        @{
+            var activeTab = ViewData["ActiveTab"]?.ToString();
+        }
+        @if (activeTab == "signup")
+        {
+            <text>showSignup();</text>
+        }
+        else
+        {
+            <text>showLogin();</text>
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+</body>
+
+</html>

@@ -3,48 +3,217 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - GearZone.Web</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/GearZone.Web.styles.css" asp-append-version="true" />
+    <title>@ViewData["Title"] - GearZone</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@@100..700,0..1&display=swap" rel="stylesheet" />
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1a57db",
+                        "secondary": "#FF6B00",
+                        "accent-orange": "#FF6B00",
+                        "background-light": "#ffffff",
+                        "background-dark": "#111621",
+                        "text-primary": "#111827",
+                        "text-secondary": "#6b7280",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "sans": ["Inter", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @@layer base {
+            body {
+                @@apply font-display antialiased;
+            }
+        }
+        
+        /* Custom scrollbar for horizontal scrolling if needed */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .custom-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+        }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">GearZone.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
+<body class="bg-slate-50 text-text-primary min-h-screen flex flex-col">
+    <!-- Sticky Header -->
+    <header class="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20 gap-8">
+                <!-- Logo -->
+                <a class="flex items-center gap-2 flex-shrink-0 group" asp-page="/Index">
+                    <div class="w-8 h-8 text-primary">
+                        <span class="material-symbols-outlined text-4xl">memory</span>
+                    </div>
+                    <span class="text-2xl font-bold tracking-tight text-gray-900 group-hover:text-primary transition-colors">GearZone</span>
+                </a>
+                <!-- Search Bar -->
+                <div class="flex-1 max-w-2xl">
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="material-symbols-outlined text-gray-400">search</span>
+                        </div>
+                        <input aria-label="Search" class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm transition-all" placeholder="Search for components, devices, brands..." type="text" />
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <span class="text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5 hidden sm:block">Ctrl K</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right Actions -->
+                <div class="flex items-center gap-4 flex-shrink-0">
+                    <button class="relative p-2 text-gray-500 hover:text-primary transition-colors rounded-full hover:bg-gray-100">
+                        <span class="material-symbols-outlined">shopping_cart</span>
+                        <span class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full">3</span>
+                    </button>
+                    <button class="p-2 text-gray-500 hover:text-primary transition-colors rounded-full hover:bg-gray-100">
+                        <span class="material-symbols-outlined">person</span>
+                    </button>
+                    <a asp-page="/Public/Auth/Login" class="hidden md:flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white bg-secondary hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary transition-colors shadow-sm">
+                        Sign Up / Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Secondary Nav -->
+    <nav class="bg-white border-b border-gray-200 hidden md:block">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center space-x-8 h-12 overflow-x-auto hide-scrollbar text-sm font-medium text-gray-600">
+                <a class="flex items-center gap-2 text-primary hover:text-primary whitespace-nowrap border-b-2 border-primary h-full px-1" href="#">
+                    <span class="material-symbols-outlined text-[20px]">grid_view</span>
+                    All Categories
+                </a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap h-full flex items-center px-1" href="#">CPU & Processors</a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap h-full flex items-center px-1" href="#">Graphics Cards</a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap h-full flex items-center px-1" href="#">RAM & Memory</a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap h-full flex items-center px-1" href="#">Storage (SSD/HDD)</a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap h-full flex items-center px-1" href="#">Monitors</a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap h-full flex items-center px-1" href="#">Keyboards & Mice</a>
+                <a class="hover:text-primary transition-colors whitespace-nowrap h-full flex items-center px-1" href="#">Accessories</a>
+                <a class="text-red-600 hover:text-red-700 font-semibold transition-colors whitespace-nowrap h-full flex items-center px-1 ml-auto" href="#">
+                    <span class="material-symbols-outlined text-[18px] mr-1">bolt</span>
+                    Flash Deals
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        @RenderBody()
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-[#1E2937] text-gray-300 py-12 border-t border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+                <!-- Column 1 -->
+                <div>
+                    <a class="flex items-center gap-2 mb-6 text-white" asp-page="/Index">
+                        <span class="material-symbols-outlined text-3xl text-primary">memory</span>
+                        <span class="text-xl font-bold tracking-tight">GearZone</span>
+                    </a>
+                    <p class="text-sm text-gray-400 mb-6 leading-relaxed">
+                        Vietnam's leading marketplace for PC components and high-end electronics. We connect enthusiasts with the best authentic hardware vendors.
+                    </p>
+                    <div class="flex gap-4">
+                        <a class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center hover:bg-primary transition-colors text-white" href="#">
+                            <span class="text-xs font-bold">f</span>
+                        </a>
+                        <a class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center hover:bg-primary transition-colors text-white" href="#">
+                            <span class="text-xs font-bold">t</span>
+                        </a>
+                        <a class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center hover:bg-primary transition-colors text-white" href="#">
+                            <span class="text-xs font-bold">in</span>
+                        </a>
+                    </div>
+                </div>
+                <!-- Column 2 -->
+                <div>
+                    <h4 class="text-white font-bold mb-4">Categories</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a class="hover:text-primary transition-colors" href="#">Processors (CPU)</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">Graphics Cards (GPU)</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">Motherboards</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">Memory (RAM)</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">Storage & SSDs</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">Power Supplies</a></li>
+                    </ul>
+                </div>
+                <!-- Column 3 -->
+                <div>
+                    <h4 class="text-white font-bold mb-4">Customer Support</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a class="hover:text-primary transition-colors" href="#">Help Center</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">Warranty Policy</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">Return & Refund</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">Shipping Info</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">Track Order</a></li>
+                    </ul>
+                </div>
+                <!-- Column 4 -->
+                <div>
+                    <h4 class="text-white font-bold mb-4">Contact Us</h4>
+                    <ul class="space-y-3 text-sm">
+                        <li class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-gray-500 text-[20px]">location_on</span>
+                            <span>123 Tech Street, District 1,<br />Ho Chi Minh City, Vietnam</span>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
+                        <li class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-gray-500 text-[20px]">phone</span>
+                            <span>1900 123 456</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-gray-500 text-[20px]">mail</span>
+                            <span>support@@gearzone.vn</span>
                         </li>
                     </ul>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - GearZone.Web - <a asp-area="" asp-page="/Privacy">Privacy</a>
+            <div class="border-t border-gray-700 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-500">
+                <p>© 2023 GearZone Vietnam. All rights reserved.</p>
+                <div class="flex items-center gap-4">
+                    <span>Privacy Policy</span>
+                    <span>Terms of Service</span>
+                    <span>Sitemap</span>
+                </div>
+            </div>
         </div>
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @* <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script> *@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     @await RenderSectionAsync("Scripts", required: false)

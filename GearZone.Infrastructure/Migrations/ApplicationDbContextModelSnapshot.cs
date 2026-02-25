@@ -22,7 +22,7 @@ namespace GearZone.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("GearZone.Domain.Entities.ApplicationUser", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -43,6 +43,12 @@ namespace GearZone.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -58,6 +64,9 @@ namespace GearZone.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -109,7 +118,7 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Business", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Business", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -151,7 +160,6 @@ namespace GearZone.Infrastructure.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("RejectReason")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
@@ -174,7 +182,7 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("Businesses", (string)null);
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Cart", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Cart", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -200,7 +208,7 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("Carts", (string)null);
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.CartItem", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.CartItem", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -225,7 +233,7 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("CartItems", (string)null);
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Category", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Category", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -261,7 +269,7 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("Categories", (string)null);
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.InventoryTransaction", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.InventoryTransaction", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -301,7 +309,7 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("InventoryTransactions", (string)null);
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Order", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Order", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -343,7 +351,6 @@ namespace GearZone.Infrastructure.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("ShippingProvider")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
@@ -358,7 +365,6 @@ namespace GearZone.Infrastructure.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("TrackingNumber")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -382,7 +388,7 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("Orders", (string)null);
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.OrderItem", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.OrderItem", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -424,7 +430,7 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("OrderItems", (string)null);
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.OrderStatusHistory", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.OrderStatusHistory", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -443,12 +449,10 @@ namespace GearZone.Infrastructure.Migrations
                         .HasColumnType("nvarchar(30)");
 
                     b.Property<string>("Note")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("OldStatus")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("OrderId")
@@ -463,7 +467,7 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("OrderStatusHistories", (string)null);
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Payment", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Payment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -494,7 +498,6 @@ namespace GearZone.Infrastructure.Migrations
                         .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("TransactionRef")
-                        .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
@@ -509,7 +512,7 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("Payments", (string)null);
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Product", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Product", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -565,7 +568,7 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("Products", (string)null);
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.ProductImage", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.ProductImage", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -594,7 +597,7 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("ProductImages", (string)null);
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.ProductVariant", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.ProductVariant", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -641,7 +644,7 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("ProductVariants", (string)null);
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Store", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Store", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -660,17 +663,14 @@ namespace GearZone.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
                     b.Property<string>("LockReason")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("LogoUrl")
-                        .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
@@ -704,7 +704,7 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("Stores", (string)null);
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.StoreUser", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.StoreUser", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -873,9 +873,9 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Business", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Business", b =>
                 {
-                    b.HasOne("GearZone.Domain.Entities.ApplicationUser", "OwnerUser")
+                    b.HasOne("GearZone.Application.Entities.ApplicationUser", "OwnerUser")
                         .WithMany("OwnedBusinesses")
                         .HasForeignKey("OwnerUserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -884,13 +884,13 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("OwnerUser");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Cart", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Cart", b =>
                 {
-                    b.HasOne("GearZone.Domain.Entities.Store", "Store")
+                    b.HasOne("GearZone.Application.Entities.Store", "Store")
                         .WithMany()
                         .HasForeignKey("StoreId");
 
-                    b.HasOne("GearZone.Domain.Entities.ApplicationUser", "User")
+                    b.HasOne("GearZone.Application.Entities.ApplicationUser", "User")
                         .WithMany("Carts")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -901,15 +901,15 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.CartItem", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.CartItem", b =>
                 {
-                    b.HasOne("GearZone.Domain.Entities.Cart", "Cart")
+                    b.HasOne("GearZone.Application.Entities.Cart", "Cart")
                         .WithMany("Items")
                         .HasForeignKey("CartId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GearZone.Domain.Entities.ProductVariant", "Variant")
+                    b.HasOne("GearZone.Application.Entities.ProductVariant", "Variant")
                         .WithMany()
                         .HasForeignKey("VariantId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -920,9 +920,9 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Variant");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Category", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Category", b =>
                 {
-                    b.HasOne("GearZone.Domain.Entities.Category", "Parent")
+                    b.HasOne("GearZone.Application.Entities.Category", "Parent")
                         .WithMany("Children")
                         .HasForeignKey("ParentId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -930,15 +930,15 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Parent");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.InventoryTransaction", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.InventoryTransaction", b =>
                 {
-                    b.HasOne("GearZone.Domain.Entities.ApplicationUser", "CreatedByUser")
+                    b.HasOne("GearZone.Application.Entities.ApplicationUser", "CreatedByUser")
                         .WithMany()
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GearZone.Domain.Entities.ProductVariant", "Variant")
+                    b.HasOne("GearZone.Application.Entities.ProductVariant", "Variant")
                         .WithMany("InventoryTransactions")
                         .HasForeignKey("VariantId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -949,15 +949,15 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Variant");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Order", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Order", b =>
                 {
-                    b.HasOne("GearZone.Domain.Entities.Store", "Store")
+                    b.HasOne("GearZone.Application.Entities.Store", "Store")
                         .WithMany()
                         .HasForeignKey("StoreId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("GearZone.Domain.Entities.ApplicationUser", "User")
+                    b.HasOne("GearZone.Application.Entities.ApplicationUser", "User")
                         .WithMany("Orders")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -968,15 +968,15 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.OrderItem", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.OrderItem", b =>
                 {
-                    b.HasOne("GearZone.Domain.Entities.Order", "Order")
+                    b.HasOne("GearZone.Application.Entities.Order", "Order")
                         .WithMany("Items")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GearZone.Domain.Entities.ProductVariant", "Variant")
+                    b.HasOne("GearZone.Application.Entities.ProductVariant", "Variant")
                         .WithMany()
                         .HasForeignKey("VariantId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -987,15 +987,15 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Variant");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.OrderStatusHistory", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.OrderStatusHistory", b =>
                 {
-                    b.HasOne("GearZone.Domain.Entities.ApplicationUser", "ChangedByUser")
+                    b.HasOne("GearZone.Application.Entities.ApplicationUser", "ChangedByUser")
                         .WithMany()
                         .HasForeignKey("ChangedByUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GearZone.Domain.Entities.Order", "Order")
+                    b.HasOne("GearZone.Application.Entities.Order", "Order")
                         .WithMany("StatusHistories")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1006,9 +1006,9 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Order");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Payment", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Payment", b =>
                 {
-                    b.HasOne("GearZone.Domain.Entities.Order", "Order")
+                    b.HasOne("GearZone.Application.Entities.Order", "Order")
                         .WithMany("Payments")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1017,15 +1017,15 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Order");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Product", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Product", b =>
                 {
-                    b.HasOne("GearZone.Domain.Entities.Category", "Category")
+                    b.HasOne("GearZone.Application.Entities.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GearZone.Domain.Entities.Store", "Store")
+                    b.HasOne("GearZone.Application.Entities.Store", "Store")
                         .WithMany("Products")
                         .HasForeignKey("StoreId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1036,9 +1036,9 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Store");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.ProductImage", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.ProductImage", b =>
                 {
-                    b.HasOne("GearZone.Domain.Entities.Product", "Product")
+                    b.HasOne("GearZone.Application.Entities.Product", "Product")
                         .WithMany("Images")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1047,9 +1047,9 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.ProductVariant", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.ProductVariant", b =>
                 {
-                    b.HasOne("GearZone.Domain.Entities.Product", "Product")
+                    b.HasOne("GearZone.Application.Entities.Product", "Product")
                         .WithMany("Variants")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1058,9 +1058,9 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Store", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Store", b =>
                 {
-                    b.HasOne("GearZone.Domain.Entities.Business", "Business")
+                    b.HasOne("GearZone.Application.Entities.Business", "Business")
                         .WithMany("Stores")
                         .HasForeignKey("BusinessId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -1069,15 +1069,15 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Business");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.StoreUser", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.StoreUser", b =>
                 {
-                    b.HasOne("GearZone.Domain.Entities.Store", "Store")
+                    b.HasOne("GearZone.Application.Entities.Store", "Store")
                         .WithMany("StoreUsers")
                         .HasForeignKey("StoreId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GearZone.Domain.Entities.ApplicationUser", "User")
+                    b.HasOne("GearZone.Application.Entities.ApplicationUser", "User")
                         .WithMany("StoreUsers")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1099,7 +1099,7 @@ namespace GearZone.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("GearZone.Domain.Entities.ApplicationUser", null)
+                    b.HasOne("GearZone.Application.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1108,7 +1108,7 @@ namespace GearZone.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("GearZone.Domain.Entities.ApplicationUser", null)
+                    b.HasOne("GearZone.Application.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1123,7 +1123,7 @@ namespace GearZone.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GearZone.Domain.Entities.ApplicationUser", null)
+                    b.HasOne("GearZone.Application.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1132,14 +1132,14 @@ namespace GearZone.Infrastructure.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("GearZone.Domain.Entities.ApplicationUser", null)
+                    b.HasOne("GearZone.Application.Entities.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.ApplicationUser", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.ApplicationUser", b =>
                 {
                     b.Navigation("Carts");
 
@@ -1150,24 +1150,24 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("StoreUsers");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Business", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Business", b =>
                 {
                     b.Navigation("Stores");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Cart", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Cart", b =>
                 {
                     b.Navigation("Items");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Category", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Category", b =>
                 {
                     b.Navigation("Children");
 
                     b.Navigation("Products");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Order", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Order", b =>
                 {
                     b.Navigation("Items");
 
@@ -1176,19 +1176,19 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("StatusHistories");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Product", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Product", b =>
                 {
                     b.Navigation("Images");
 
                     b.Navigation("Variants");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.ProductVariant", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.ProductVariant", b =>
                 {
                     b.Navigation("InventoryTransactions");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Store", b =>
+            modelBuilder.Entity("GearZone.Application.Entities.Store", b =>
                 {
                     b.Navigation("Products");
 

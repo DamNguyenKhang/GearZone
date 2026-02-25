@@ -1,0 +1,248 @@
+@page
+@model GearZone.Web.Pages.Admin.DashboardModel
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["PageHeader"] = "Platform Overview";
+    ViewData["ActivePage"] = "Dashboard";
+    ViewData["Breadcrumb"] = new string[] { "Dashboard" };
+    Layout = "_AdminLayout";
+}
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="bg-surface-light rounded-xl p-5 border border-border-light shadow-soft relative overflow-hidden group hover:shadow-md transition-all">
+        <div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div class="flex justify-between items-start relative z-10">
+            <div>
+                <p class="text-slate-500 text-sm font-medium mb-1">Total Users</p>
+                <h3 class="text-2xl font-bold text-text-heading">15,234</h3>
+            </div>
+            <div class="p-2 bg-primary/10 rounded-lg text-primary">
+                <span class="material-symbols-outlined">group</span>
+            </div>
+        </div>
+        <div class="mt-4 flex items-center text-xs relative z-10">
+            <span class="text-emerald-600 flex items-center font-medium bg-emerald-50 px-1.5 py-0.5 rounded">
+                <span class="material-symbols-outlined text-base mr-0.5">trending_up</span>
+                12%
+            </span>
+            <span class="text-slate-500 ml-2">vs last month</span>
+        </div>
+    </div>
+    <div class="bg-surface-light rounded-xl p-5 border border-border-light shadow-soft relative overflow-hidden group hover:shadow-md transition-all">
+        <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div class="flex justify-between items-start relative z-10">
+            <div>
+                <p class="text-slate-500 text-sm font-medium mb-1">Active Stores</p>
+                <h3 class="text-2xl font-bold text-text-heading">842</h3>
+            </div>
+            <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
+                <span class="material-symbols-outlined">storefront</span>
+            </div>
+        </div>
+        <div class="mt-4 flex items-center text-xs relative z-10">
+            <span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                12 Pending Approval
+            </span>
+        </div>
+    </div>
+    <div class="bg-surface-light rounded-xl p-5 border border-border-light shadow-soft relative overflow-hidden group hover:shadow-md transition-all">
+        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div class="flex justify-between items-start relative z-10">
+            <div>
+                <p class="text-slate-500 text-sm font-medium mb-1">Monthly Revenue</p>
+                <h3 class="text-2xl font-bold text-text-heading">₫4.2B</h3>
+            </div>
+            <div class="p-2 bg-emerald-100 rounded-lg text-emerald-600">
+                <span class="material-symbols-outlined">payments</span>
+            </div>
+        </div>
+        <div class="mt-4 flex items-center text-xs relative z-10">
+            <span class="text-emerald-600 flex items-center font-medium bg-emerald-50 px-1.5 py-0.5 rounded">
+                <span class="material-symbols-outlined text-base mr-0.5">trending_up</span>
+                8.5%
+            </span>
+            <span class="text-slate-500 ml-2">growth</span>
+        </div>
+    </div>
+    <div class="bg-surface-light rounded-xl p-5 border border-border-light shadow-soft relative overflow-hidden group hover:shadow-md transition-all">
+        <div class="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        <div class="flex justify-between items-start relative z-10">
+            <div>
+                <p class="text-slate-500 text-sm font-medium mb-1">Open Disputes</p>
+                <h3 class="text-2xl font-bold text-text-heading">24</h3>
+            </div>
+            <div class="p-2 bg-red-100 rounded-lg text-red-600">
+                <span class="material-symbols-outlined">warning</span>
+            </div>
+        </div>
+        <div class="mt-4 flex items-center text-xs relative z-10">
+            <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                7 Critical Issues
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+    <div class="lg:col-span-3 bg-surface-light border border-border-light rounded-xl p-6 shadow-soft">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h3 class="text-text-heading font-semibold">Monthly Revenue</h3>
+                <p class="text-slate-500 text-sm">Last 6 months performance</p>
+            </div>
+            <button class="text-slate-400 hover:text-primary p-1 rounded-full hover:bg-slate-100 transition-colors">
+                <span class="material-symbols-outlined">more_horiz</span>
+            </button>
+        </div>
+        <div class="h-64 w-full flex items-end justify-between gap-2 sm:gap-4 px-2">
+            <div class="flex flex-col items-center gap-2 flex-1 group">
+                <div class="w-full bg-slate-100 rounded-t-sm h-full relative overflow-hidden">
+                    <div class="absolute bottom-0 left-0 right-0 bg-blue-300 group-hover:bg-primary transition-all duration-500" style="height: 45%;"></div>
+                </div>
+                <span class="text-xs text-slate-500 font-medium">May</span>
+            </div>
+            <div class="flex flex-col items-center gap-2 flex-1 group">
+                <div class="w-full bg-slate-100 rounded-t-sm h-full relative overflow-hidden">
+                    <div class="absolute bottom-0 left-0 right-0 bg-blue-300 group-hover:bg-primary transition-all duration-500" style="height: 58%;"></div>
+                </div>
+                <span class="text-xs text-slate-500 font-medium">Jun</span>
+            </div>
+            <div class="flex flex-col items-center gap-2 flex-1 group">
+                <div class="w-full bg-slate-100 rounded-t-sm h-full relative overflow-hidden">
+                    <div class="absolute bottom-0 left-0 right-0 bg-blue-300 group-hover:bg-primary transition-all duration-500" style="height: 42%;"></div>
+                </div>
+                <span class="text-xs text-slate-500 font-medium">Jul</span>
+            </div>
+            <div class="flex flex-col items-center gap-2 flex-1 group">
+                <div class="w-full bg-slate-100 rounded-t-sm h-full relative overflow-hidden">
+                    <div class="absolute bottom-0 left-0 right-0 bg-blue-300 group-hover:bg-primary transition-all duration-500" style="height: 65%;"></div>
+                </div>
+                <span class="text-xs text-slate-500 font-medium">Aug</span>
+            </div>
+            <div class="flex flex-col items-center gap-2 flex-1 group">
+                <div class="w-full bg-slate-100 rounded-t-sm h-full relative overflow-hidden">
+                    <div class="absolute bottom-0 left-0 right-0 bg-blue-300 group-hover:bg-primary transition-all duration-500" style="height: 78%;"></div>
+                </div>
+                <span class="text-xs text-slate-500 font-medium">Sep</span>
+            </div>
+            <div class="flex flex-col items-center gap-2 flex-1 group">
+                <div class="w-full bg-slate-100 rounded-t-sm h-full relative overflow-hidden">
+                    <div class="absolute bottom-0 left-0 right-0 bg-primary group-hover:bg-blue-600 transition-all duration-500" style="height: 92%;"></div>
+                </div>
+                <span class="text-xs text-text-heading font-bold">Oct</span>
+            </div>
+        </div>
+    </div>
+    <div class="lg:col-span-2 bg-surface-light border border-border-light rounded-xl p-6 shadow-soft">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h3 class="text-text-heading font-semibold">Order Status</h3>
+                <p class="text-slate-500 text-sm">Distribution by status</p>
+            </div>
+        </div>
+        <div class="flex flex-col items-center justify-center h-64 relative">
+            <div class="relative w-48 h-48">
+                <svg class="transform -rotate-90 w-full h-full" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" fill="transparent" r="40" stroke="#CBD5E1" stroke-dasharray="251.2" stroke-dashoffset="0" stroke-width="12"></circle>
+                    <circle cx="50" cy="50" fill="transparent" r="40" stroke="#10b981" stroke-dasharray="251.2" stroke-dashoffset="100" stroke-width="12"></circle>
+                    <circle cx="50" cy="50" fill="transparent" r="40" stroke="#3b82f6" stroke-dasharray="251.2" stroke-dashoffset="180" stroke-width="12"></circle>
+                    <circle cx="50" cy="50" fill="transparent" r="40" stroke="#ef4444" stroke-dasharray="251.2" stroke-dashoffset="230" stroke-width="12"></circle>
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span class="text-2xl font-bold text-text-heading">1,250</span>
+                    <span class="text-xs text-slate-500">Total Orders</span>
+                </div>
+            </div>
+            <div class="w-full mt-6 flex justify-center gap-4 text-xs">
+                <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span class="text-slate-600">Delivered</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                    <span class="text-slate-600">Shipped</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-slate-300"></span>
+                    <span class="text-slate-600">Proc.</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                    <span class="text-slate-600">Return</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lists Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6">
+    <div class="bg-surface-light border border-border-light rounded-xl overflow-hidden flex flex-col shadow-soft">
+        <div class="p-6 border-b border-border-light flex justify-between items-center bg-gray-50/50">
+            <h3 class="text-text-heading font-semibold">Stores Pending Approval</h3>
+            <a class="text-primary text-sm hover:underline font-medium" href="#">View All</a>
+        </div>
+        <div class="flex-1">
+            <div class="p-4 flex items-center justify-between border-b border-border-light hover:bg-slate-50 transition-colors">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 shadow-sm">
+                        <span class="material-symbols-outlined text-lg">store</span>
+                    </div>
+                    <div>
+                        <h4 class="text-text-heading text-sm font-medium">ElectroWorld VN</h4>
+                        <p class="text-slate-500 text-xs">Applied: Oct 23, 10:30 AM</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button class="p-2 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors" title="Approve">
+                        <span class="material-symbols-outlined text-xl">check_circle</span>
+                    </button>
+                    <button class="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors" title="Reject">
+                        <span class="material-symbols-outlined text-xl">cancel</span>
+                    </button>
+                </div>
+            </div>
+            <div class="p-4 flex items-center justify-between border-b border-border-light hover:bg-slate-50 transition-colors">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 shadow-sm">
+                        <span class="material-symbols-outlined text-lg">memory</span>
+                    </div>
+                    <div>
+                        <h4 class="text-text-heading text-sm font-medium">Saigon Chips</h4>
+                        <p class="text-slate-500 text-xs">Applied: Oct 22, 04:15 PM</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button class="p-2 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors" title="Approve">
+                        <span class="material-symbols-outlined text-xl">check_circle</span>
+                    </button>
+                    <button class="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors" title="Reject">
+                        <span class="material-symbols-outlined text-xl">cancel</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="bg-surface-light border border-border-light rounded-xl overflow-hidden flex flex-col shadow-soft">
+        <div class="p-6 border-b border-border-light flex justify-between items-center bg-gray-50/50">
+            <h3 class="text-text-heading font-semibold">Recent Disputes</h3>
+            <a class="text-primary text-sm hover:underline font-medium" href="#">View All</a>
+        </div>
+        <div class="flex-1">
+            <div class="p-4 flex items-center justify-between border-b border-border-light hover:bg-slate-50 transition-colors">
+                <div class="flex flex-col gap-1">
+                    <div class="flex items-center gap-2">
+                        <h4 class="text-text-heading text-sm font-medium">Order #9921</h4>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-600 uppercase">High</span>
+                    </div>
+                    <p class="text-slate-500 text-xs">Item Not Received - <span class="text-slate-400">Buyer: Minh T.</span></p>
+                </div>
+                <button class="px-3 py-1.5 bg-white hover:bg-gray-50 text-slate-700 text-xs font-medium rounded border border-slate-200 shadow-sm transition-colors">
+                    View Details
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

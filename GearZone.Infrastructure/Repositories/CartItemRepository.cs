@@ -1,5 +1,5 @@
 using GearZone.Application.Abstractions.Persistence;
-using GearZone.Domain.Entities;
+using GearZone.Application.Entities;
 using System;
 
 namespace GearZone.Infrastructure.Repositories

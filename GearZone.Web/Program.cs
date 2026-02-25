@@ -1,5 +1,5 @@
 using GearZone.Application;
-using GearZone.Domain.Entities;
+using GearZone.Application.Entities;
 using GearZone.Infrastructure;
 using GearZone.Infrastructure.Seed;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -39,6 +39,8 @@ builder.Services.ConfigureApplicationCookie(opt =>
     opt.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     opt.SlidingExpiration = true;
 });
+
+builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(GearZone.Application.DependencyInjection).Assembly);
 
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>

@@ -1,4 +1,4 @@
-﻿using GearZone.Domain.Abstractions.External;
+﻿using GearZone.Application.Abstractions.External;
 using GearZone.Application.Abstractions.Persistence;
 using GearZone.Infrastructure.External;
 using GearZone.Infrastructure.Repositories;
@@ -28,6 +28,7 @@ namespace GearZone.Infrastructure
             services.AddScoped<IProductVariantRepository, ProductVariantRepository>();
             services.AddScoped<IStoreRepository, StoreRepository>();
             services.AddScoped<IStoreUserRepository, StoreUserRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
 
             return services;
         }

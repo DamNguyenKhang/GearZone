@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace GearZone.Domain.Entities
+namespace GearZone.Application.Entities
 {
     public class CartItem : Entity<Guid>
     {

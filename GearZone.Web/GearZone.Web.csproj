@@ -14,8 +14,8 @@
   <ItemGroup>
     <Folder Include="Middlewares\" />
     <Folder Include="Pages\Admin\Businesses\" />
-    <Folder Include="Pages\Admin\Users\" />
     <Folder Include="Pages\Admin\Stores\" />
+    <Folder Include="Pages\Admin\Users\Models\" />
     <Folder Include="Pages\Cart\Models\" />
     <Folder Include="Pages\Checkout\" />
     <Folder Include="Pages\Public\Auth\Models\" />

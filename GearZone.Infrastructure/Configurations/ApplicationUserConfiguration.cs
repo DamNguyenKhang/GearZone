@@ -1,4 +1,4 @@
-﻿using GearZone.Domain.Entities;
+﻿using GearZone.Application.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

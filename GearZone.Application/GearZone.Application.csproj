@@ -8,7 +8,6 @@
 
 	<ItemGroup>
 		<Folder Include="Features\Inventory\" />
-		<Folder Include="Mappers\" />
 	</ItemGroup>
 
 	<ItemGroup>

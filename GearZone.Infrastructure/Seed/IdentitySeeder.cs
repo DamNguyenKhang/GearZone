@@ -1,4 +1,4 @@
-﻿using GearZone.Domain.Entities;
+﻿using GearZone.Application.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 
@@ -22,9 +22,9 @@ namespace GearZone.Infrastructure.Seed
 
             string[] roles = new[]
             {
-            "SuperAdmin",
+            "Super Admin",
             "Staff",
-            "StoreOwner",
+            "Store Owner",
             "Customer"
         };
 

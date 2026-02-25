@@ -1,4 +1,4 @@
-﻿using GearZone.Domain.Entities;
+﻿using GearZone.Application.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 

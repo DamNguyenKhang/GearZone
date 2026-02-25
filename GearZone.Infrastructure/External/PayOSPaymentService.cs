@@ -1,4 +1,4 @@
-﻿using GearZone.Domain.Abstractions.External;
+﻿using GearZone.Application.Abstractions.External;
 
 namespace GearZone.Infrastructure.External
 {

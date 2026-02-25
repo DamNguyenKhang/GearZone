@@ -1,4 +1,4 @@
-﻿using GearZone.Domain.Entities;
+﻿using GearZone.Application.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;

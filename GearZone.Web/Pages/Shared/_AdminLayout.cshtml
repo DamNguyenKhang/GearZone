@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>@ViewData["Title"] - GearZone Admin</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1A56DB",
+                        "primary-dark": "#1d4ed8",
+                        "primary-light": "#dbeafe",
+                        "background-light": "#F8FAFC",
+                        "surface-light": "#FFFFFF",
+                        "navy-dark": "#0F172A",
+                        "text-heading": "#1E2937",
+                        "text-body": "#374151",
+                        "border-light": "#E2E8F0",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.625rem", "lg": "0.75rem", "xl": "1rem", "full": "9999px" },
+                    boxShadow: {
+                        'soft': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+                        'card': '0 0 0 1px rgba(0,0,0,0.03), 0 2px 8px rgba(0,0,0,0.04)',
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #F1F5F9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 4px;
+        }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: #94A3B8;
+            }
+
+        /* Sidebar Transition Logic */
+        .sidebar {
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar-text {
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .sidebar.collapsed {
+            width: 80px;
+        }
+
+        .sidebar.collapsed .sidebar-text,
+        .sidebar.collapsed .sidebar-logo-text {
+            opacity: 0;
+            transform: translateX(-10px);
+            pointer-events: none;
+            display: none;
+        }
+
+        .sidebar.collapsed .sidebar-item {
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .sidebar.collapsed .logo-container {
+            justify-content: center;
+            padding: 0;
+        }
+
+        .sidebar.collapsed .badge-count {
+            display: none;
+        }
+
+        /* Active Link styles */
+        .active-link {
+            background-color: rgba(26, 86, 219, 0.1);
+            color: #1A56DB;
+        }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="bg-background-light text-text-body min-h-screen flex overflow-hidden">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar w-64 bg-surface-light border-r border-border-light flex flex-col shrink-0 shadow-sm z-30">
+        <div class="h-16 flex items-center px-6 border-b border-border-light logo-container">
+            <div class="flex items-center gap-2 text-primary font-bold text-xl">
+                <span class="material-symbols-outlined text-3xl">settings_suggest</span>
+                <span class="text-text-heading tracking-tight sidebar-logo-text">GearZone Admin</span>
+            </div>
+        </div>
+        <nav class="flex-1 overflow-y-auto py-6 px-3 flex flex-col gap-1">
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" asp-page="/Admin/Dashboard">
+                <span class="material-symbols-outlined filled">dashboard</span>
+                <span class="font-medium text-sm sidebar-text">Overview</span>
+            </a>
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Stores" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" href="#">
+                <span class="material-symbols-outlined">storefront</span>
+                <span class="font-medium text-sm sidebar-text">Store Management</span>
+            </a>
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Users" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" asp-page="/Admin/Users/Index">
+                <span class="material-symbols-outlined">group</span>
+                <span class="font-medium text-sm sidebar-text">User Management</span>
+            </a>
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Orders" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" href="#">
+                <span class="material-symbols-outlined">shopping_bag</span>
+                <span class="font-medium text-sm sidebar-text">Orders</span>
+            </a>
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Disputes" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" href="#">
+                <span class="material-symbols-outlined">gavel</span>
+                <span class="font-medium text-sm sidebar-text">Disputes</span>
+                <span class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-bold badge-count">7</span>
+            </a>
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Revenue" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" href="#">
+                <span class="material-symbols-outlined">monitoring</span>
+                <span class="font-medium text-sm sidebar-text">Revenue</span>
+            </a>
+            <div class="mt-auto pt-6 border-t border-border-light">
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-50 transition-colors group" href="#">
+                    <span class="material-symbols-outlined">settings</span>
+                    <span class="font-medium text-sm sidebar-text">Settings</span>
+                </a>
+                <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-50 transition-colors group" href="#">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span class="font-medium text-sm sidebar-text">Log Out</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        <!-- Header -->
+        <header class="h-16 bg-surface-light border-b border-border-light flex items-center justify-between px-6 shrink-0 z-20 shadow-sm">
+            <div class="flex items-center gap-4">
+                <button id="hamburger-btn" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+                <div class="flex flex-col">
+                    <h1 class="text-text-heading text-lg font-semibold leading-tight">@ViewData["PageHeader"]</h1>
+                    <nav class="flex items-center gap-1.5 text-slate-500 text-xs mt-0.5">
+                        <a asp-page="/Admin/Dashboard" class="hover:text-primary">Admin</a>
+                        @if (ViewData["Breadcrumb"] != null)
+                        {
+                            var crumbs = (string[])ViewData["Breadcrumb"];
+                            foreach (var crumb in crumbs)
+                            {
+                                <span class="material-symbols-outlined text-[10px] scale-75">chevron_right</span>
+                                <span class="@(crumb == crumbs.Last() ? "text-slate-400 font-medium" : "hover:text-primary pointer-events-none")">@crumb</span>
+                            }
+                        }
+                    </nav>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
+                    <button class="text-slate-500 hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined">notifications</span>
+                    </button>
+                </div>
+                <div class="flex items-center gap-3 pl-4 border-l border-border-light">
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center text-white font-bold text-xs shadow-md">
+                        AD
+                    </div>
+                    <span class="text-sm font-medium text-text-heading hidden sm:block">Admin User</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 overflow-y-auto p-6 scroll-smooth bg-background-light">
+            <div class="max-w-7xl mx-auto flex flex-col gap-6">
+                @RenderBody()
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const sidebar = document.getElementById('sidebar');
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+
+        hamburgerBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            // Store state in localStorage if you want it to persist across pages
+            localStorage.setItem('admin-sidebar-collapsed', sidebar.classList.contains('collapsed'));
+        });
+
+        // Initialize sidebar state from localStorage
+        if (localStorage.getItem('admin-sidebar-collapsed') === 'true') {
+            sidebar.classList.add('collapsed');
+        }
+
+        // Handle mobile responsiveness
+        if (window.innerWidth < 768) {
+            sidebar.classList.add('collapsed');
+        }
+    </script>
+    <script src="~/js/toast.js" asp-append-version="true"></script>
+    <partial name="_Toast" />
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

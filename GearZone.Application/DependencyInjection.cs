@@ -1,4 +1,5 @@
 ﻿using GearZone.Application.Abstractions.Services;
+using GearZone.Application.Features.Admin;
 using GearZone.Application.Features.Auth;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,7 +9,9 @@ namespace GearZone.Application
     {
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
+
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IAdminUserService, AdminUserService>();
             return services;
         }
     }

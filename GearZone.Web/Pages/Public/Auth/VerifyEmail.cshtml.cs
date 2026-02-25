@@ -1,4 +1,4 @@
-using GearZone.Application.Abstractions;
+using GearZone.Application.Abstractions.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Threading.Tasks;

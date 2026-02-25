@@ -1,4 +1,4 @@
-﻿using GearZone.Application.Abstractions;
+﻿using GearZone.Application.Abstractions.Services;
 using GearZone.Domain.Abstractions.External;
 using GearZone.Domain.Entities;
 using Microsoft.AspNetCore.Authentication;

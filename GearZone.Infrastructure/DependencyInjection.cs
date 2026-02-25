@@ -1,5 +1,5 @@
 ﻿using GearZone.Domain.Abstractions.External;
-using GearZone.Domain.Abstractions.Persistence;
+using GearZone.Application.Abstractions.Persistence;
 using GearZone.Infrastructure.External;
 using GearZone.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;

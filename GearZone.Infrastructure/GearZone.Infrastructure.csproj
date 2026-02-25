@@ -23,6 +23,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\GearZone.Application\GearZone.Application.csproj" />
 		<ProjectReference Include="..\GearZone.Domain\GearZone.Domain.csproj" />
 	</ItemGroup>
 

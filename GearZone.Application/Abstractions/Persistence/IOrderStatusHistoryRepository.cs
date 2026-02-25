@@ -1,7 +1,7 @@
 using GearZone.Domain.Entities;
 using System;
 
-namespace GearZone.Domain.Abstractions.Persistence
+namespace GearZone.Application.Abstractions.Persistence
 {
     public interface IOrderStatusHistoryRepository : IRepository<OrderStatusHistory, Guid>
     {

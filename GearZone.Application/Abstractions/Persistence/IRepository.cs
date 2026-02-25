@@ -1,7 +1,7 @@
 ﻿using GearZone.Domain.Entities;
 using System.Linq.Expressions;
 
-namespace GearZone.Domain.Abstractions.Persistence
+namespace GearZone.Application.Abstractions.Persistence
 {
     public interface IRepository<T, TKey> where T : Entity<TKey>
     {

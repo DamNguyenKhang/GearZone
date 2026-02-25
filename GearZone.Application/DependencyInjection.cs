@@ -1,4 +1,4 @@
-﻿using GearZone.Application.Abstractions;
+﻿using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Auth;
 using Microsoft.Extensions.DependencyInjection;
 

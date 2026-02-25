@@ -1,4 +1,4 @@
-﻿using GearZone.Domain.Abstractions.Persistence;
+﻿using GearZone.Application.Abstractions.Persistence;
 using System;
 
 namespace GearZone.Infrastructure.Repositories

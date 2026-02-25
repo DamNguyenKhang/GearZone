@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using System.Threading.Tasks;
 
-namespace GearZone.Application.Abstractions
+namespace GearZone.Application.Abstractions.Services
 {
     public enum LoginStatus
     {

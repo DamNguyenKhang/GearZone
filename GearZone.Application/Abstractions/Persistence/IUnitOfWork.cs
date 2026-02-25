@@ -1,4 +1,4 @@
-﻿namespace GearZone.Domain.Abstractions.Persistence
+﻿namespace GearZone.Application.Abstractions.Persistence
 {
     public interface IUnitOfWork
     {

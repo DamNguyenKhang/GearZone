@@ -19,16 +19,25 @@ namespace GearZone.Infrastructure.Configurations
             builder.Property(x => x.Slug).HasMaxLength(200).IsRequired();
             builder.Property(x => x.Description).HasMaxLength(2000);
             builder.Property(x => x.LogoUrl).HasMaxLength(1000);
+            
+            // Replaced Business Info
+            builder.Property(x => x.TaxCode).HasMaxLength(50);
+            builder.Property(x => x.Phone).HasMaxLength(50);
+            builder.Property(x => x.Email).HasMaxLength(256);
+            builder.Property(x => x.AddressLine).HasMaxLength(500);
+            builder.Property(x => x.Province).HasMaxLength(100);
+
             builder.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            builder.Property(x => x.RejectReason).HasMaxLength(500);
             builder.Property(x => x.LockReason).HasMaxLength(500);
 
             builder.HasIndex(x => x.Slug).IsUnique();
-            builder.HasIndex(x => x.BusinessId);
+            builder.HasIndex(x => x.OwnerUserId);
             builder.HasIndex(x => x.Status);
 
-            builder.HasOne(x => x.Business)
-                   .WithMany(x => x.Stores)
-                   .HasForeignKey(x => x.BusinessId)
+            builder.HasOne(x => x.OwnerUser)
+                   .WithMany(x => x.OwnedStores)
+                   .HasForeignKey(x => x.OwnerUserId)
                    .OnDelete(DeleteBehavior.Restrict);
         }
     }

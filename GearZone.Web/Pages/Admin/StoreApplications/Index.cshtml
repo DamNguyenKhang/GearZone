@@ -1,0 +1,250 @@
+@page
+@model GearZone.Web.Pages.Admin.StoreApplications.IndexModel
+@{
+    ViewData["Title"] = "Store Applications";
+    ViewData["PageHeader"] = "Store Applications";
+    ViewData["ActivePage"] = "Stores";
+    ViewData["Breadcrumb"] = new string[] { "Dashboard", "Store Applications" };
+    Layout = "_AdminLayout";
+}
+
+<div class="flex flex-col gap-6">
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
+            <div class="size-12 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                <span class="material-symbols-outlined">store</span>
+            </div>
+            <div>
+                <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Total Applications</p>
+                <h3 class="text-2xl font-bold text-slate-900">248</h3>
+            </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
+            <div class="size-12 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                <span class="material-symbols-outlined">pending_actions</span>
+            </div>
+            <div>
+                <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Pending Review</p>
+                <h3 class="text-2xl font-bold text-slate-900">42</h3>
+            </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
+            <div class="size-12 rounded-lg bg-green-50 text-green-600 flex items-center justify-center">
+                <span class="material-symbols-outlined">check_circle</span>
+            </div>
+            <div>
+                <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Approved</p>
+                <h3 class="text-2xl font-bold text-slate-900">186</h3>
+            </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
+            <div class="size-12 rounded-lg bg-red-50 text-red-600 flex items-center justify-center">
+                <span class="material-symbols-outlined">cancel</span>
+            </div>
+            <div>
+                <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Rejected</p>
+                <h3 class="text-2xl font-bold text-slate-900">20</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & Actions Bar -->
+    <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-end">
+        <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto flex-1">
+            <!-- Search -->
+            <div class="relative w-full sm:max-w-xs">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <span class="material-symbols-outlined text-[20px]">search</span>
+                </span>
+                <input class="form-input w-full rounded-lg border-slate-200 bg-slate-50 pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-primary" placeholder="Search Company or Tax Code..." type="text" />
+            </div>
+            <!-- Status Filter -->
+            <div class="w-full sm:w-40">
+                <select class="form-select w-full rounded-lg border-slate-200 bg-slate-50 py-2.5 text-sm text-slate-900 focus:border-primary focus:ring-primary">
+                    <option value="">All Status</option>
+                    <option value="pending" selected>Pending Review</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            <!-- Date Range -->
+            <div class="w-full sm:w-64">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <span class="material-symbols-outlined text-[20px]">calendar_today</span>
+                    </span>
+                    <input type="text" readonly class="form-input w-full rounded-lg border-slate-200 bg-slate-50 pl-10 pr-4 py-2.5 text-sm text-slate-900 cursor-pointer" value="Oct 1 - Oct 31, 2023" />
+                </div>
+            </div>
+        </div>
+        <!-- Export Button -->
+        <button class="w-full lg:w-auto flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-lg font-medium hover:bg-slate-50 transition-all shadow-sm">
+            <span class="material-symbols-outlined text-[20px]">download</span>
+            <span>Export CSV</span>
+        </button>
+    </div>
+
+    <!-- Data Table Card -->
+    <div class="bg-white rounded-xl shadow-card border border-slate-100 overflow-hidden flex flex-col">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-slate-100 bg-slate-50/50">
+                        <th class="py-4 pl-6 pr-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Company Name</th>
+                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Tax Code</th>
+                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Business Type</th>
+                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Rep Name</th>
+                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Phone</th>
+                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Submitted At</th>
+                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
+                        <th class="py-4 pl-3 pr-6 text-xs font-semibold uppercase tracking-wider text-slate-500 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <!-- Row 1 -->
+                    <tr class="group hover:bg-slate-50 transition-all cursor-pointer">
+                        <td class="py-4 pl-6 pr-3">
+                            <div class="flex items-center gap-3">
+                                <div class="size-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs shadow-sm">TC</div>
+                                <span class="text-sm font-semibold text-slate-900 group-hover:text-primary transition-colors">TechConnect Solutions</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-3 text-slate-500 font-mono text-xs uppercase tracking-tight">US-849201</td>
+                        <td class="py-4 px-3 text-slate-600">Distributor</td>
+                        <td class="py-4 px-3">
+                            <div class="flex items-center gap-2">
+                                <div class="size-7 rounded-full bg-slate-200 border border-white shadow-sm" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAePa1rDOfdjo04yYQo_cNtx1pJvK2oLvL3SHiCdbIGi2BMWCtHE4Y-vFakZbZTesQOIxMytES8KOT2iubFnvIf0uuKUsg0sDnUTjeDE2MW5Z18aSNtrj8_g5eprO3x-YzBePhZT4BqAeB_9Jl-c2QNaEB12vw0f60FdVbgCsmcfc9gQHsNoCcd-lpZyaxmYFpMTq66HsYdw9fv0DxMIn8s83dmo6_JJcr1_Le85XspHPdheFzNQWbEuOhrUGVJ_2XxGnh856U0MhB0'); background-size: cover;"></div>
+                                <span class="text-sm font-medium text-slate-900">Sarah Jenkins</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-3 text-slate-500">+1 (555) 012-3456</td>
+                        <td class="py-4 px-3">
+                            <div class="flex flex-col">
+                                <span class="text-slate-900">Oct 24, 2023</span>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">10:42 AM</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-3">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                                <span class="size-1.5 rounded-full bg-amber-500"></span>
+                                Pending Review
+                            </span>
+                        </td>
+                        <td class="py-4 pl-3 pr-6 text-right">
+                            <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a asp-page="/Admin/StoreApplications/Detail" asp-route-id="GZ-8821" class="text-slate-400 hover:text-primary transition-colors p-1" title="View Details">
+                                    <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    <!-- Row 2 -->
+                    <tr class="group hover:bg-slate-50 transition-all cursor-pointer">
+                        <td class="py-4 pl-6 pr-3">
+                            <div class="flex items-center gap-3">
+                                <div class="size-9 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-xs shadow-sm">GC</div>
+                                <span class="text-sm font-semibold text-slate-900 group-hover:text-primary transition-colors">Global Components Inc.</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-3 text-slate-500 font-mono text-xs uppercase tracking-tight">EU-293847</td>
+                        <td class="py-4 px-3 text-slate-600">Manufacturer</td>
+                        <td class="py-4 px-3">
+                            <div class="flex items-center gap-2">
+                                <div class="size-7 rounded-full bg-slate-200 border border-white shadow-sm" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBp6283LgKT5eQ9t8zRMYFHrqBVMfpnXfm8QEZ_rkS8iaGhC5rmzRzT-omnmz3QmJnPSyTp7s5ogiKGTvD85l8B2Q4-3RyjLgzjnra4_Vl7E1W3XNsSdxbfRDgTAsQaqFb-h8vDPgXSSyK5PCBweVxDf0CNQRsrWPLlv4_3qUNfPt8kwDVER2YTHwn3uIctTA101hl_nbKY6rgh4Gethc-zIja_GOGhgOwd-9uil0ap-66ENS9Q6nC8VDYpnVKXgVNdrH7Ew7usLBP'); background-size: cover;"></div>
+                                <span class="text-sm font-medium text-slate-900">Michael Chen</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-3 text-slate-500">+44 20 7123 4567</td>
+                        <td class="py-4 px-3">
+                            <div class="flex flex-col">
+                                <span class="text-slate-900">Oct 23, 2023</span>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">04:15 PM</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-3">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                                <span class="size-1.5 rounded-full bg-amber-500"></span>
+                                Pending Review
+                            </span>
+                        </td>
+                        <td class="py-4 pl-3 pr-6 text-right">
+                            <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a asp-page="/Admin/StoreApplications/Detail" asp-route-id="GZ-2938" class="text-slate-400 hover:text-primary transition-colors p-1" title="View Details">
+                                    <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    <!-- Row 3 -->
+                    <tr class="group hover:bg-slate-50 transition-all cursor-pointer">
+                        <td class="py-4 pl-6 pr-3">
+                            <div class="flex items-center gap-3">
+                                <div class="size-9 rounded-lg bg-green-100 text-green-600 flex items-center justify-center font-bold text-xs shadow-sm">NE</div>
+                                <span class="text-sm font-semibold text-slate-900 group-hover:text-primary transition-colors">Nexus Electronics</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-3 text-slate-500 font-mono text-xs uppercase tracking-tight">CA-998877</td>
+                        <td class="py-4 px-3 text-slate-600">Retailer</td>
+                        <td class="py-4 px-3">
+                            <div class="flex items-center gap-2">
+                                <div class="size-7 rounded-full bg-slate-200 border border-white shadow-sm" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBi3tU1dnbxrrydeFoiqk8fJQmpjBwmBv_S5xYvhCkV8s9RIpejPFtkQaFnnlYcfuXi3IFw19b8mo6RbtWsvSyQHhlrZYH0wNI4ArrN1HfMKf9poL5UDmKdfO-Y620MNgvLZw4Ode9XS37bg656xer2XOFM88i_ZNmBvuzXNptxgSfvTrgy9fdiK3A8NFTjY27Rd7v_UudnEXpjC7qL2Nlk4Xni4MXm19xLArNMC0UehYLqzZHJx8JaFyUZ_7tKE_m2ufx4z06O2rUY'); background-size: cover;"></div>
+                                <span class="text-sm font-medium text-slate-900">Emma Wilson</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-3 text-slate-500">+1 (416) 555-0199</td>
+                        <td class="py-4 px-3">
+                            <div class="flex flex-col">
+                                <span class="text-slate-900">Oct 23, 2023</span>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">09:30 AM</span>
+                            </div>
+                        </td>
+                        <td class="py-4 px-3">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/10">
+                                <span class="size-1.5 rounded-full bg-red-500"></span>
+                                Rejection Pending
+                            </span>
+                        </td>
+                        <td class="py-4 pl-3 pr-6 text-right">
+                            <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a asp-page="/Admin/StoreApplications/Detail" asp-route-id="GZ-9988" class="text-slate-400 hover:text-primary transition-colors p-1" title="View Details">
+                                    <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- Pagination -->
+        <div class="border-t border-slate-100 px-6 py-4 bg-slate-50/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-sm text-slate-500">
+                Showing <span class="font-medium text-slate-900">1</span> to 
+                <span class="font-medium text-slate-900">10</span> of 
+                <span class="font-medium text-slate-900">248</span> applications
+            </div>
+            
+            <nav aria-label="Pagination" class="flex items-center gap-1">
+                <button class="p-2 rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+                    <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+                </button>
+                <div class="flex items-center gap-1 px-1">
+                    <button class="size-9 rounded-lg border border-primary bg-primary text-white text-sm font-bold shadow-sm shadow-primary/20 transition-all">1</button>
+                    <button class="size-9 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-all">2</button>
+                    <button class="size-9 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-all">3</button>
+                    <span class="px-1 text-slate-400 italic">...</span>
+                    <button class="size-9 rounded-lg border border-slate-200 bg-white text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-all">25</button>
+                </div>
+                <button class="p-2 rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-slate-600 transition-all">
+                    <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Placeholder for future logic
+    </script>
+}

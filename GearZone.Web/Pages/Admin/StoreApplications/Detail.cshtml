@@ -1,0 +1,236 @@
+@page "{id}"
+@model GearZone.Web.Pages.Admin.StoreApplications.DetailModel
+@{
+    ViewData["Title"] = "Application Details - " + Model.Id;
+    ViewData["PageHeader"] = "Application Details";
+    ViewData["ActivePage"] = "Stores";
+    ViewData["Breadcrumb"] = new string[] { "Dashboard", "Store Applications", "Details" };
+    Layout = "_AdminLayout";
+}
+
+<div class="flex flex-col gap-8 pb-32">
+    <!-- Header with Status -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div class="flex flex-col gap-2">
+            <h1 class="text-3xl font-bold tracking-tight text-slate-900">TechConnect Ltd.</h1>
+            <div class="flex flex-wrap items-center gap-4">
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-sm font-bold text-amber-700 ring-1 ring-inset ring-amber-600/20 uppercase tracking-tight">
+                    <span class="size-1.5 rounded-full bg-amber-500"></span>
+                    Pending Review
+                </span>
+                <span class="text-sm text-slate-500 font-medium">Submitted on Oct 24, 2023 • Distributor Application</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <button class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-all">
+                <span class="material-symbols-outlined text-[18px] text-slate-500">print</span>
+                Print
+            </button>
+            <button class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-all">
+                <span class="material-symbols-outlined text-[18px] text-slate-500">history</span>
+                Audit Log
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Grid Content -->
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        <!-- Left Side: Basic Info & Status -->
+        <div class="flex flex-col gap-6 lg:col-span-12 xl:col-span-7">
+            <!-- Basic Information Card -->
+            <div class="rounded-xl border border-slate-100 bg-white shadow-card overflow-hidden">
+                <div class="border-b border-slate-100 px-6 py-4 flex items-center justify-between bg-slate-50/30">
+                    <h3 class="flex items-center gap-2 text-base font-bold text-slate-900 uppercase tracking-wider text-xs">
+                        <span class="material-symbols-outlined text-primary text-[20px]">domain</span>
+                        Basic Information
+                    </h3>
+                    <button class="text-sm font-bold text-primary hover:text-primary-dark transition-colors">EDIT</button>
+                </div>
+                <div class="p-6">
+                    <dl class="grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2">
+                        <div class="col-span-1">
+                            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Company Name</dt>
+                            <dd class="mt-1 text-sm font-semibold text-slate-900">TechConnect Ltd.</dd>
+                        </div>
+                        <div class="col-span-1">
+                            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Tax Code / EIN</dt>
+                            <dd class="mt-1 text-sm font-semibold text-slate-900 font-mono tracking-tighter">US-8829102-TX</dd>
+                        </div>
+                        <div class="col-span-1">
+                            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Business Type</dt>
+                            <dd class="mt-1 text-sm font-semibold text-slate-900">Distributor</dd>
+                        </div>
+                        <div class="col-span-1">
+                            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Representative</dt>
+                            <dd class="mt-1 flex items-center gap-2">
+                                <div class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700 shadow-sm border border-blue-200">SJ</div>
+                                <span class="text-sm font-semibold text-slate-900">Sarah Jenkins</span>
+                            </dd>
+                        </div>
+                        <div class="col-span-1">
+                            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Email Address</dt>
+                            <dd class="mt-1 text-sm font-semibold text-primary hover:underline cursor-pointer">sarah.j@techconnect.com</dd>
+                        </div>
+                        <div class="col-span-1">
+                            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Phone Number</dt>
+                            <dd class="mt-1 text-sm font-semibold text-slate-900">+1 (555) 019-2834</dd>
+                        </div>
+                        <div class="col-span-1 sm:col-span-2">
+                            <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Headquarters Address</dt>
+                            <dd class="mt-1 flex items-start justify-between bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                <span class="text-sm font-semibold text-slate-900 leading-relaxed">402 Innovation Dr, Suite 500<br/>Austin, TX 78759, USA</span>
+                                <button class="rounded p-1.5 text-slate-400 hover:bg-white hover:text-primary hover:shadow-sm transition-all">
+                                    <span class="material-symbols-outlined text-[20px]">map</span>
+                                </button>
+                            </dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Application Metadata Card -->
+            <div class="rounded-xl border border-slate-100 bg-white shadow-card overflow-hidden">
+                <div class="border-b border-slate-100 px-6 py-4 bg-slate-50/30">
+                    <h3 class="flex items-center gap-2 text-base font-bold text-slate-900 uppercase tracking-wider text-xs">
+                        <span class="material-symbols-outlined text-primary text-[20px]">info</span>
+                        Application Metadata
+                    </h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Application ID</p>
+                            <p class="mt-1 text-sm font-mono font-semibold text-slate-900">#GZ-8821</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Submission Date</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">Oct 24, 2023</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Last Updated</p>
+                            <p class="mt-1 text-sm font-semibold text-slate-900">2 hours ago</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Documents -->
+        <div class="flex flex-col gap-6 lg:col-span-12 xl:col-span-5">
+            <div class="rounded-xl border border-slate-100 bg-white shadow-card overflow-hidden flex flex-col h-full">
+                <div class="border-b border-slate-100 px-6 py-4 flex items-center justify-between bg-slate-50/30">
+                    <h3 class="flex items-center gap-2 text-base font-bold text-slate-900 uppercase tracking-wider text-xs">
+                        <span class="material-symbols-outlined text-primary text-[20px]">description</span>
+                        Documents Preview
+                    </h3>
+                    <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-600 uppercase tracking-wider">3 Files</span>
+                </div>
+                <div class="p-6 flex flex-col gap-6">
+                    <!-- Business License -->
+                    <div>
+                        <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-slate-400">Business License</h4>
+                        <div class="group relative flex items-center gap-4 rounded-xl border border-slate-100 bg-slate-50/50 p-4 hover:border-primary/30 transition-all hover:bg-white hover:shadow-md">
+                            <div class="flex size-11 flex-shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-100 group-hover:ring-primary/20 transition-all">
+                                <span class="material-symbols-outlined text-red-500 text-[28px]">picture_as_pdf</span>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-sm font-bold text-slate-900">techconnect_license_2023.pdf</p>
+                                <p class="text-xs text-slate-500 font-medium">2.4 MB • Uploaded Oct 24</p>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <button class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-primary transition-all">
+                                    <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                </button>
+                                <button class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-primary transition-all">
+                                    <span class="material-symbols-outlined text-[20px]">download</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Identity Verification -->
+                    <div>
+                        <div class="mb-3 flex items-center justify-between">
+                            <h4 class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Identity Verification</h4>
+                            <span class="flex items-center gap-1 text-[11px] font-bold text-emerald-600 uppercase tracking-widest">
+                                <span class="material-symbols-outlined text-[16px] text-emerald-500 filled">check_circle</span>
+                                Verified
+                            </span>
+                        </div>
+                        <div class="space-y-4">
+                            <!-- Card Front -->
+                            <div class="group relative overflow-hidden rounded-xl border border-slate-100 bg-slate-200 aspect-[16/9] shadow-sm">
+                                <img alt="ID Front" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANGzlYRk7s6lABxhJnmI9ix_lpQa5UO7jaXCTx0Tz0ogccJxTZTlrDwNrMA0I0auwNszSFTHN02VcNO6uyUyduHXNFDCNpRY7NF9fCd-XZmoWvMisPG7ial2dRIxK2KZL5ETjQQctTPF9K3yUJFHq2Peigl1qSye7x0HLcCLkNE8DHcWgDYpDF1lE451G0cginuKEmar07RAYRhxxre8dBzqIJffoOhLnc1pP_NtMRLUn5o1hLltNDxz-m9_OL4ZRiWvk3QjrNvRQG"/>
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+                                <span class="absolute bottom-3 left-4 text-[10px] font-bold text-white uppercase tracking-widest drop-shadow-md">ID Card (Front)</span>
+                                <div class="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-[1px]">
+                                    <button class="rounded-full bg-white px-4 py-2 text-slate-900 font-bold text-xs shadow-xl flex items-center gap-2 hover:bg-primary hover:text-white transition-all transform translate-y-2 group-hover:translate-y-0">
+                                        <span class="material-symbols-outlined text-[18px]">zoom_in</span>
+                                        Full Image
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Card Back -->
+                            <div class="group relative overflow-hidden rounded-xl border border-slate-100 bg-slate-200 aspect-[16/9] shadow-sm">
+                                <img alt="ID Back" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_9PeDMv_rGz5Xk-BiRJyHrcbmsYj-guZYWDCyZu21gFZIwHiEJ_qu5Wm1bQ3MfW1yrLRfpMI3mRmWyz1srm0TUU6yF0pja0l5xQzpbJwMAZzRhBykEVtmxg-oYZ4IfJrNQ5YqA1oUNPXBus5BqGeUJleh5dS70rSn3imXSjLkgnn9ra2Vbk5C82CTbNTk3xcMZwMNwiTH-fmSdq0kkM3qZdBAb7nE_bXzRufW8ytB7LiFwr2znSh8OpPbpkD9mJqLUjUFsQib4JpP"/>
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+                                <span class="absolute bottom-3 left-4 text-[10px] font-bold text-white uppercase tracking-widest drop-shadow-md">ID Card (Back)</span>
+                                <div class="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-[1px]">
+                                    <button class="rounded-full bg-white px-4 py-2 text-slate-900 font-bold text-xs shadow-xl flex items-center gap-2 hover:bg-primary hover:text-white transition-all transform translate-y-2 group-hover:translate-y-0">
+                                        <span class="material-symbols-outlined text-[18px]">zoom_in</span>
+                                        Full Image
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sticky Bottom Action Bar -->
+<div class="fixed bottom-0 left-[260px] right-0 z-40 border-t border-slate-200 bg-white/80 backdrop-blur-md shadow-2xl transition-all duration-300">
+    <div class="max-w-[1400px] mx-auto flex w-full flex-col gap-4 px-8 py-4 md:flex-row md:items-center md:justify-between">
+        <!-- Rejection/Notes Area -->
+        <div class="w-full md:w-5/12">
+            <div class="relative group">
+                <textarea class="w-full resize-none rounded-xl border-slate-200 bg-slate-50/50 py-3 pl-4 pr-11 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all" id="rejection-reason" placeholder="Enter notes or rejection reason (will be sent to user)..." rows="2"></textarea>
+                <div class="absolute right-3 top-3 text-slate-400 group-focus-within:text-primary transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">edit_note</span>
+                </div>
+            </div>
+        </div>
+        <!-- Primary Actions -->
+        <div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center">
+            <button class="flex items-center justify-center gap-2 rounded-xl border-2 border-primary/20 px-5 py-2.5 text-sm font-bold text-primary hover:bg-primary/5 hover:border-primary transition-all">
+                <span class="material-symbols-outlined text-[20px]">help_outline</span>
+                REQUEST INFO
+            </button>
+            <div class="flex items-center gap-3">
+                <button class="flex items-center justify-center gap-2 rounded-xl bg-red-50 px-6 py-2.5 text-sm font-bold text-red-600 border-2 border-red-100 hover:bg-red-600 hover:text-white hover:border-red-600 transition-all shadow-sm">
+                    <span class="material-symbols-outlined text-[20px]">block</span>
+                    REJECT
+                </button>
+                <button class="flex items-center justify-center gap-2 rounded-xl bg-primary px-8 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/30 hover:bg-primary-dark hover:-translate-y-0.5 transition-all">
+                    <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                    APPROVE SELLER
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Adjust bottom bar position if sidebar state changes
+        const sidebar = document.querySelector('aside');
+        const bottomBar = document.querySelector('.fixed.bottom-0');
+        
+        // This is a simplified version, ideally you'd have a resize observer
+        if (sidebar && sidebar.classList.contains('w-20')) {
+            bottomBar.classList.replace('left-[260px]', 'left-20');
+        }
+    </script>
+}

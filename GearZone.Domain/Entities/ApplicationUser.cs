@@ -16,7 +16,7 @@ namespace GearZone.Application.Entities
         public DateTime? DeletedAt { get; set; }
         public string? DeletedBy { get; set; }
 
-        public ICollection<Business> OwnedBusinesses { get; set; } = new List<Business>();
+        public ICollection<Store> OwnedStores { get; set; } = new List<Store>();
         public ICollection<StoreUser> StoreUsers { get; set; } = new List<StoreUser>();
         public ICollection<Cart> Carts { get; set; } = new List<Cart>();
         public ICollection<Order> Orders { get; set; } = new List<Order>();

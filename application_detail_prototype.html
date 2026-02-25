@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Seller Application Detail View</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#2563EB",
+                        "primary-hover": "#1d4ed8",
+                        "background-light": "#F8FAFC",
+                        "surface-light": "#ffffff",
+                        "text-main": "#0f172a",
+                        "text-sub": "#64748b",
+                        "border-color": "#e2e8f0",
+                        danger: "#ef4444",
+                        success: "#10b981",
+                        warning: "#f59e0b",
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
+                        'card': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
+                        'sticky': '0 -4px 6px -1px rgba(0, 0, 0, 0.05)',
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light font-sans text-text-main antialiased selection:bg-primary/20">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden pb-32">
+<header class="sticky top-0 z-30 flex items-center justify-between border-b border-border-color bg-surface-light px-6 py-3 shadow-soft lg:px-8">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3 text-text-main">
+<div class="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+<span class="material-symbols-outlined text-[22px]">admin_panel_settings</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-tight text-slate-900">GearZone Admin</h2>
+</div>
+<div class="hidden md:flex">
+<div class="flex h-10 w-full min-w-[320px] max-w-md items-center rounded-lg border border-slate-200 bg-background-light px-3 text-text-sub focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10">
+<span class="material-symbols-outlined text-[20px] text-slate-400">search</span>
+<input class="flex-1 border-none bg-transparent px-3 text-sm text-text-main placeholder:text-slate-400 focus:outline-none focus:ring-0" placeholder="Search applications, sellers, or IDs..."/>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="relative flex size-9 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 transition-colors">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+<span class="absolute right-2 top-2 size-2 rounded-full bg-danger ring-2 ring-white"></span>
+</button>
+<div class="size-9 rounded-full bg-slate-200 bg-cover bg-center ring-2 ring-white shadow-sm cursor-pointer" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA8O2LeP_Nb4l5s8E0VKo3-DtOFKAlmiPnuXfoIK4SFiuFX5d6RQj1SuOqmrDnsGP4baS602Oz3gmX3KNlaAE0wH594c-hkRsoT8qZ91IBlvU8ucHt3OheEBn2Abp9jNkyOdVHRVylxAUckgW1lZCM6dkvGxtvxgq3ZBtDM1L6qb-u_YpTFWI6IK2jZ3UCUYjs2-Y_iWu_tyRv7BOKfCh671ntt5dmDhcCnuZbEmR-v9oipq9PL49xXXg703QURo3NlGTX6fVYw3Fg7");'></div>
+</div>
+</header>
+<main class="mx-auto flex w-full max-w-7xl flex-col px-6 py-8 lg:px-8">
+<div class="mb-8 flex flex-col justify-between gap-6 md:flex-row md:items-end">
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-2 text-sm font-medium text-text-sub">
+<span class="cursor-pointer hover:text-primary transition-colors">Applications</span>
+<span class="material-symbols-outlined text-[16px] text-slate-400">chevron_right</span>
+<span class="text-text-main font-semibold">#GZ-8821</span>
+</div>
+<div class="flex flex-wrap items-center gap-4">
+<h1 class="text-3xl font-bold tracking-tight text-slate-900">TechConnect Ltd.</h1>
+<span class="inline-flex items-center gap-1.5 rounded-full bg-yellow-50 px-3 py-1 text-sm font-medium text-yellow-700 ring-1 ring-inset ring-yellow-600/20">
+<span class="size-1.5 rounded-full bg-yellow-500"></span>
+                            Pending Review
+                        </span>
+</div>
+<p class="text-sm text-text-sub mt-1">Submitted on Oct 24, 2023 • Distributor Application</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 rounded-lg border border-border-color bg-surface-light px-4 py-2 text-sm font-medium text-text-main shadow-sm hover:bg-slate-50 transition-all">
+<span class="material-symbols-outlined text-[18px] text-slate-500">print</span>
+                        Print
+                    </button>
+<button class="flex items-center gap-2 rounded-lg border border-border-color bg-surface-light px-4 py-2 text-sm font-medium text-text-main shadow-sm hover:bg-slate-50 transition-all">
+<span class="material-symbols-outlined text-[18px] text-slate-500">history</span>
+                        Audit Log
+                    </button>
+</div>
+</div>
+<div class="grid grid-cols-1 gap-8 lg:grid-cols-12">
+<div class="flex flex-col gap-6 lg:col-span-7 xl:col-span-7">
+<div class="rounded-xl border border-border-color bg-surface-light shadow-card overflow-hidden">
+<div class="border-b border-border-color px-6 py-4 flex items-center justify-between">
+<h3 class="flex items-center gap-2 text-base font-bold text-slate-900">
+<span class="material-symbols-outlined text-primary text-[20px]">domain</span>
+                                Basic Information
+                            </h3>
+<button class="text-sm font-medium text-primary hover:text-primary-hover">Edit</button>
+</div>
+<div class="p-6">
+<dl class="grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2">
+<div class="col-span-1">
+<dt class="text-xs font-medium uppercase tracking-wider text-text-sub">Company Name</dt>
+<dd class="mt-1 text-sm font-semibold text-slate-900">TechConnect Ltd.</dd>
+</div>
+<div class="col-span-1">
+<dt class="text-xs font-medium uppercase tracking-wider text-text-sub">Tax Code / EIN</dt>
+<dd class="mt-1 text-sm font-semibold text-slate-900 font-mono">US-8829102-TX</dd>
+</div>
+<div class="col-span-1">
+<dt class="text-xs font-medium uppercase tracking-wider text-text-sub">Business Type</dt>
+<dd class="mt-1 text-sm font-semibold text-slate-900">Distributor</dd>
+</div>
+<div class="col-span-1">
+<dt class="text-xs font-medium uppercase tracking-wider text-text-sub">Representative</dt>
+<dd class="mt-1 flex items-center gap-2">
+<div class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700">SJ</div>
+<span class="text-sm font-semibold text-slate-900">Sarah Jenkins</span>
+</dd>
+</div>
+<div class="col-span-1">
+<dt class="text-xs font-medium uppercase tracking-wider text-text-sub">Email Address</dt>
+<dd class="mt-1 text-sm font-semibold text-primary hover:underline cursor-pointer">sarah.j@techconnect.com</dd>
+</div>
+<div class="col-span-1">
+<dt class="text-xs font-medium uppercase tracking-wider text-text-sub">Phone Number</dt>
+<dd class="mt-1 text-sm font-semibold text-slate-900">+1 (555) 019-2834</dd>
+</div>
+<div class="col-span-1 sm:col-span-2">
+<dt class="text-xs font-medium uppercase tracking-wider text-text-sub">Headquarters Address</dt>
+<dd class="mt-1 flex items-start justify-between">
+<span class="text-sm font-semibold text-slate-900">402 Innovation Dr, Suite 500<br/>Austin, TX 78759, USA</span>
+<button class="rounded p-1 text-slate-400 hover:bg-slate-50 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">map</span>
+</button>
+</dd>
+</div>
+</dl>
+</div>
+</div>
+<div class="rounded-xl border border-border-color bg-surface-light shadow-card overflow-hidden">
+<div class="border-b border-border-color px-6 py-4">
+<h3 class="flex items-center gap-2 text-base font-bold text-slate-900">
+<span class="material-symbols-outlined text-primary text-[20px]">info</span>
+                                Application Status
+                            </h3>
+</div>
+<div class="p-6">
+<div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+<div>
+<p class="text-xs font-medium uppercase tracking-wider text-text-sub">Application ID</p>
+<p class="mt-1 text-sm font-mono font-semibold text-slate-900">#GZ-8821</p>
+</div>
+<div>
+<p class="text-xs font-medium uppercase tracking-wider text-text-sub">Submission Date</p>
+<p class="mt-1 text-sm font-semibold text-slate-900">Oct 24, 2023</p>
+</div>
+<div>
+<p class="text-xs font-medium uppercase tracking-wider text-text-sub">Last Updated</p>
+<p class="mt-1 text-sm font-semibold text-slate-900">2 hours ago</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-6 lg:col-span-5 xl:col-span-5">
+<div class="rounded-xl border border-border-color bg-surface-light shadow-card overflow-hidden flex flex-col h-full">
+<div class="border-b border-border-color px-6 py-4 flex items-center justify-between">
+<h3 class="flex items-center gap-2 text-base font-bold text-slate-900">
+<span class="material-symbols-outlined text-primary text-[20px]">description</span>
+                                Documents Preview
+                            </h3>
+<span class="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">3 Files</span>
+</div>
+<div class="p-6 flex flex-col gap-6">
+<div>
+<h4 class="mb-3 text-sm font-semibold text-slate-900">Business License</h4>
+<div class="group relative flex items-center gap-4 rounded-lg border border-border-color bg-background-light p-3 hover:border-primary/30 transition-colors">
+<div class="flex size-10 flex-shrink-0 items-center justify-center rounded bg-white shadow-sm">
+<span class="material-symbols-outlined text-red-500 text-[24px]">picture_as_pdf</span>
+</div>
+<div class="min-w-0 flex-1">
+<p class="truncate text-sm font-medium text-slate-900">techconnect_license_2023.pdf</p>
+<p class="text-xs text-text-sub">2.4 MB • Uploaded Oct 24</p>
+</div>
+<div class="flex items-center gap-1">
+<button class="rounded p-2 text-slate-400 hover:bg-white hover:text-primary hover:shadow-sm transition-all" title="View">
+<span class="material-symbols-outlined text-[20px]">visibility</span>
+</button>
+<button class="rounded p-2 text-slate-400 hover:bg-white hover:text-primary hover:shadow-sm transition-all" title="Download">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+</div>
+</div>
+</div>
+<div>
+<div class="mb-3 flex items-center justify-between">
+<h4 class="text-sm font-semibold text-slate-900">Identity Verification</h4>
+<span class="flex items-center gap-1 text-xs font-medium text-emerald-600">
+<span class="material-symbols-outlined text-[16px] text-emerald-500 filled">check_circle</span>
+                                        Verified
+                                    </span>
+</div>
+<div class="space-y-3">
+<div class="group relative overflow-hidden rounded-lg border border-border-color bg-slate-100">
+<div class="aspect-[3/1.8] w-full bg-slate-200 relative">
+<img alt="ID Front" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="ID Card Front Preview" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANGzlYRk7s6lABxhJnmI9ix_lpQa5UO7jaXCTx0Tz0ogccJxTZTlrDwNrMA0I0auwNszSFTHN02VcNO6uyUyduHXNFDCNpRY7NF9fCd-XZmoWvMisPG7ial2dRIxK2KZL5ETjQQctTPF9K3yUJFHq2Peigl1qSye7x0HLcCLkNE8DHcWgDYpDF1lE451G0cginuKEmar07RAYRhxxre8dBzqIJffoOhLnc1pP_NtMRLUn5o1hLltNDxz-m9_OL4ZRiWvk3QjrNvRQG"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-60"></div>
+<span class="absolute bottom-2 left-3 text-xs font-medium text-white shadow-sm">ID Card (Front)</span>
+<div class="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100 backdrop-blur-[1px]">
+<button class="rounded-full bg-white/90 p-2 text-slate-900 shadow-sm hover:bg-white hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">zoom_in</span>
+</button>
+</div>
+</div>
+</div>
+<div class="group relative overflow-hidden rounded-lg border border-border-color bg-slate-100">
+<div class="aspect-[3/1.8] w-full bg-slate-200 relative">
+<img alt="ID Back" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" data-alt="ID Card Back Pattern Preview" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_9PeDMv_rGz5Xk-BiRJyHrcbmsYj-guZYWDCyZu21gFZIwHiEJ_qu5Wm1bQ3MfW1yrLRfpMI3mRmWyz1srm0TUU6yF0pja0l5xQzpbJwMAZzRhBykEVtmxg-oYZ4IfJrNQ5YqA1oUNPXBus5BqGeUJleh5dS70rSn3imXSjLkgnn9ra2Vbk5C82CTbNTk3xcMZwMNwiTH-fmSdq0kkM3qZdBAb7nE_bXzRufW8ytB7LiFwr2znSh8OpPbpkD9mJqLUjUFsQib4JpP"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-60"></div>
+<span class="absolute bottom-2 left-3 text-xs font-medium text-white shadow-sm">ID Card (Back)</span>
+<div class="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100 backdrop-blur-[1px]">
+<button class="rounded-full bg-white/90 p-2 text-slate-900 shadow-sm hover:bg-white hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[20px]">zoom_in</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<div class="fixed bottom-0 left-0 right-0 z-40 border-t border-border-color bg-surface-light shadow-sticky">
+<div class="mx-auto flex w-full max-w-7xl flex-col gap-4 px-6 py-4 md:flex-row md:items-start md:justify-between lg:px-8">
+<div class="w-full md:w-1/2 lg:w-5/12">
+<label class="sr-only" for="rejection-reason">Rejection Reason</label>
+<div class="relative">
+<textarea class="w-full resize-none rounded-lg border-slate-300 bg-background-light py-2 pl-3 pr-10 text-sm text-text-main shadow-sm placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary" id="rejection-reason" placeholder="Enter notes, rejection reason, or specify missing documents..." rows="2"></textarea>
+<div class="absolute right-2 top-2 text-slate-400">
+<span class="material-symbols-outlined text-[18px]">edit_note</span>
+</div>
+</div>
+</div>
+<div class="flex w-full flex-col gap-3 md:w-auto md:flex-row md:items-center md:self-center">
+<button class="flex items-center justify-center gap-2 rounded-lg border border-blue-600 px-4 py-2.5 text-sm font-semibold text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">help_outline</span>
+                        Request More Info
+                    </button>
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center gap-2 rounded-lg bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-offset-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">block</span>
+                            Reject Application
+                        </button>
+<button class="flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+                            Approve Seller
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</body></html>

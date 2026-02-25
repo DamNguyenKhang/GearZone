@@ -14,7 +14,6 @@ namespace GearZone.Infrastructure
             services.AddScoped<IFileStorageService, CloudinaryStorageService>();
             services.AddScoped<IEmailService, SmtpEmailService>();
             services.AddScoped<IPaymentService, PayOSPaymentService>();
-            services.AddScoped<IBusinessRepository, BusinessRepository>();
             services.AddScoped<ICartRepository, CartRepository>();
             services.AddScoped<ICartItemRepository, CartItemRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();

@@ -6,7 +6,6 @@ namespace GearZone.Infrastructure
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-        public DbSet<Business> Businesses { get; set; }
         public DbSet<Store> Stores { get; set; }
         public DbSet<StoreUser> StoreUsers { get; set; }
 

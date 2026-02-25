@@ -6,12 +6,20 @@ namespace GearZone.Application.Entities
 {
     public class Store : Entity<Guid>
     {
-        public Guid BusinessId { get; set; }
+        public string OwnerUserId { get; set; } = string.Empty;
         public string StoreName { get; set; } = string.Empty;
         public string Slug { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string? LogoUrl { get; set; }
+
+        public string TaxCode { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string AddressLine { get; set; } = string.Empty;
+        public string Province { get; set; } = string.Empty;
+
         public string Status { get; set; } = string.Empty;
+        public string? RejectReason { get; set; }
         public string? LockReason { get; set; }
         public decimal CommissionRate { get; set; }
         public DateTime CreatedAt { get; set; }
@@ -19,7 +27,7 @@ namespace GearZone.Application.Entities
         public DateTime? UpdatedAt { get; set; }
  
         // Navigation
-        public Business Business { get; set; } = null!;
+        public ApplicationUser OwnerUser { get; set; } = null!;
         public ICollection<StoreUser> StoreUsers { get; set; } = new List<StoreUser>();
         public ICollection<Product> Products { get; set; } = new List<Product>();
     }

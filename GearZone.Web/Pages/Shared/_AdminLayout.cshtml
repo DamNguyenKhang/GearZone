@@ -6,7 +6,7 @@
     <title>@ViewData["Title"] - GearZone Admin</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
     <script id="tailwind-config">
         tailwind.config = {
             theme: {
@@ -100,6 +100,15 @@
             background-color: rgba(26, 86, 219, 0.1);
             color: #1A56DB;
         }
+        
+        .active-link span {
+            color: #1A56DB !important;
+        }
+
+        /* Material Symbols Fill */
+        .filled {
+            font-variation-settings: 'FILL' 1;
+        }
     </style>
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -108,44 +117,59 @@
     <aside id="sidebar" class="sidebar w-64 bg-surface-light border-r border-border-light flex flex-col shrink-0 shadow-sm z-30">
         <div class="h-16 flex items-center px-6 border-b border-border-light logo-container">
             <div class="flex items-center gap-2 text-primary font-bold text-xl">
-                <span class="material-symbols-outlined text-3xl">settings_suggest</span>
+                <span class="material-symbols-outlined text-3xl filled text-primary">hexagon</span>
                 <span class="text-text-heading tracking-tight sidebar-logo-text">GearZone Admin</span>
             </div>
         </div>
         <nav class="flex-1 overflow-y-auto py-6 px-3 flex flex-col gap-1">
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" asp-page="/Admin/Dashboard">
-                <span class="material-symbols-outlined filled">dashboard</span>
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "filled" : "")">dashboard</span>
                 <span class="font-medium text-sm sidebar-text">Overview</span>
             </a>
-            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Stores" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" href="#">
-                <span class="material-symbols-outlined">storefront</span>
-                <span class="font-medium text-sm sidebar-text">Store Management</span>
+            
+            <div class="px-3 py-4 mt-2 sidebar-text">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Management</span>
+            </div>
+
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Stores" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" asp-page="/Admin/StoreApplications/Index">
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Stores" ? "filled" : "")">storefront</span>
+                <span class="font-medium text-sm sidebar-text">Store Applications</span>
             </a>
-            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Users" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" asp-page="/Admin/Users/Index">
-                <span class="material-symbols-outlined">group</span>
+
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Users" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" asp-page="/Admin/Users/Index">
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Users" ? "filled" : "")">group</span>
                 <span class="font-medium text-sm sidebar-text">User Management</span>
             </a>
-            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Orders" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" href="#">
-                <span class="material-symbols-outlined">shopping_bag</span>
+
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Orders" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" href="#">
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Orders" ? "filled" : "")">shopping_bag</span>
                 <span class="font-medium text-sm sidebar-text">Orders</span>
             </a>
+
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Disputes" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" href="#">
-                <span class="material-symbols-outlined">gavel</span>
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Disputes" ? "filled" : "")">gavel</span>
                 <span class="font-medium text-sm sidebar-text">Disputes</span>
                 <span class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-bold badge-count">7</span>
             </a>
+
+            <div class="px-3 py-4 mt-2 sidebar-text">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">System</span>
+            </div>
+
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Revenue" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" href="#">
-                <span class="material-symbols-outlined">monitoring</span>
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Revenue" ? "filled" : "")">monitoring</span>
                 <span class="font-medium text-sm sidebar-text">Revenue</span>
             </a>
-            <div class="mt-auto pt-6 border-t border-border-light">
-                <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-50 transition-colors group" href="#">
-                    <span class="material-symbols-outlined">settings</span>
-                    <span class="font-medium text-sm sidebar-text">Settings</span>
-                </a>
-                <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-50 transition-colors group" href="#">
-                    <span class="material-symbols-outlined">logout</span>
-                    <span class="font-medium text-sm sidebar-text">Log Out</span>
+
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-50 transition-colors group" href="#">
+                <span class="material-symbols-outlined">settings</span>
+                <span class="font-medium text-sm sidebar-text">Settings</span>
+            </a>
+
+            <div class="mt-auto px-3 py-2 border-t border-border-light sidebar-text">
+                 <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors group" href="#">
+                    <span class="material-symbols-outlined group-hover:text-red-600">logout</span>
+                    <span class="font-medium text-sm">Log Out</span>
                 </a>
             </div>
         </nav>
@@ -168,7 +192,7 @@
                             foreach (var crumb in crumbs)
                             {
                                 <span class="material-symbols-outlined text-[10px] scale-75">chevron_right</span>
-                                <span class="@(crumb == crumbs.Last() ? "text-slate-400 font-medium" : "hover:text-primary pointer-events-none")">@crumb</span>
+                                <span class="@(crumb == crumbs.Last() ? "text-slate-400 font-medium" : "hover:text-primary cursor-default")">@crumb</span>
                             }
                         }
                     </nav>
@@ -176,17 +200,24 @@
             </div>
             
             <div class="flex items-center gap-4">
-                <div class="relative">
-                    <span class="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-                    <button class="text-slate-500 hover:text-primary transition-colors">
-                        <span class="material-symbols-outlined">notifications</span>
+                <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-xl">
+                    <button class="p-2 text-slate-500 hover:bg-white hover:text-primary hover:shadow-sm rounded-lg transition-all relative group">
+                        <span class="material-symbols-outlined text-[22px]">notifications</span>
+                        <span class="absolute top-2.5 right-2.5 size-2 bg-red-500 border-2 border-white rounded-full"></span>
+                    </button>
+                    <button class="p-2 text-slate-500 hover:bg-white hover:text-primary hover:shadow-sm rounded-lg transition-all">
+                        <span class="material-symbols-outlined text-[22px]">mail</span>
                     </button>
                 </div>
+
                 <div class="flex items-center gap-3 pl-4 border-l border-border-light">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center text-white font-bold text-xs shadow-md">
+                    <div class="size-9 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-primary/20">
                         AD
                     </div>
-                    <span class="text-sm font-medium text-text-heading hidden sm:block">Admin User</span>
+                    <div class="hidden sm:flex flex-col">
+                        <span class="text-sm font-bold text-text-heading leading-none">Admin User</span>
+                        <span class="text-[10px] font-medium text-slate-400 mt-0.5">Administrator</span>
+                    </div>
                 </div>
             </div>
         </header>
@@ -199,13 +230,15 @@
         </div>
     </main>
 
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/toast.js" asp-append-version="true"></script>
+
     <script>
         const sidebar = document.getElementById('sidebar');
         const hamburgerBtn = document.getElementById('hamburger-btn');
 
         hamburgerBtn.addEventListener('click', () => {
             sidebar.classList.toggle('collapsed');
-            // Store state in localStorage if you want it to persist across pages
             localStorage.setItem('admin-sidebar-collapsed', sidebar.classList.contains('collapsed'));
         });
 
@@ -215,11 +248,11 @@
         }
 
         // Handle mobile responsiveness
-        if (window.innerWidth < 768) {
+        if (window.innerWidth < 1024) {
             sidebar.classList.add('collapsed');
         }
     </script>
-    <script src="~/js/toast.js" asp-append-version="true"></script>
+    
     <partial name="_Toast" />
     @await RenderSectionAsync("Scripts", required: false)
 </body>

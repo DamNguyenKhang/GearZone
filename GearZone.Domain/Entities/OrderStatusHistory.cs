@@ -7,14 +7,14 @@ namespace GearZone.Domain.Entities
     public class OrderStatusHistory : Entity<Guid>
     {
         public Guid OrderId { get; set; }
-        public string OldStatus { get; set; }
-        public string NewStatus { get; set; }
+        public string? OldStatus { get; set; }
+        public string NewStatus { get; set; } = string.Empty;
         public DateTime ChangedAt { get; set; }
-        public string ChangedByUserId { get; set; }
-        public string Note { get; set; }
+        public string ChangedByUserId { get; set; } = string.Empty;
+        public string? Note { get; set; }
 
         // Navigation
-        public Order Order { get; set; }
-        public ApplicationUser ChangedByUser { get; set; }
+        public Order Order { get; set; } = null!;
+        public ApplicationUser ChangedByUser { get; set; } = null!;
     }
 }

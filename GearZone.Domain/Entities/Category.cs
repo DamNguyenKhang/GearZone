@@ -7,14 +7,14 @@ namespace GearZone.Domain.Entities
     public class Category : Entity<int>
     {
         public int? ParentId { get; set; }
-        public string Name { get; set; }
-        public string Slug { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
         public bool IsActive { get; set; }
 
         // Navigation
-        public Category Parent { get; set; }
-        public ICollection<Category> Children { get; set; }
-        public ICollection<Product> Products { get; set; }
+        public Category? Parent { get; set; }
+        public ICollection<Category> Children { get; set; } = new List<Category>();
+        public ICollection<Product> Products { get; set; } = new List<Product>();
     }
 
 }

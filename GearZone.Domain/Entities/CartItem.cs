@@ -11,7 +11,7 @@ namespace GearZone.Domain.Entities
         public int Quantity { get; set; }
 
         // Navigation
-        public Cart Cart { get; set; }
-        public ProductVariant Variant { get; set; }
+        public Cart Cart { get; set; } = null!;
+        public ProductVariant Variant { get; set; } = null!;
     }
 }

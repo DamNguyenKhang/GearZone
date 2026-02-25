@@ -7,8 +7,8 @@ namespace GearZone.Domain.Entities
     public class ProductVariant : Entity<Guid>
     {
         public Guid ProductId { get; set; }
-        public string Sku { get; set; }
-        public string VariantName { get; set; }
+        public string Sku { get; set; } = string.Empty;
+        public string VariantName { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public int StockQuantity { get; set; }
         public bool IsActive { get; set; }
@@ -17,8 +17,8 @@ namespace GearZone.Domain.Entities
         public DateTime? UpdatedAt { get; set; }
 
         // Navigation
-        public Product Product { get; set; }
-        public ICollection<InventoryTransaction> InventoryTransactions { get; set; }
+        public Product Product { get; set; } = null!;
+        public ICollection<InventoryTransaction> InventoryTransactions { get; set; } = new List<InventoryTransaction>();
     }
 
 }

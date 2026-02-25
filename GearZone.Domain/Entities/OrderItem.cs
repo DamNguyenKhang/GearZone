@@ -9,16 +9,16 @@ namespace GearZone.Domain.Entities
         public Guid OrderId { get; set; }
         public Guid VariantId { get; set; }
 
-        public string ProductNameSnapshot { get; set; }
-        public string VariantNameSnapshot { get; set; }
-        public string SkuSnapshot { get; set; }
+        public string ProductNameSnapshot { get; set; } = string.Empty;
+        public string VariantNameSnapshot { get; set; } = string.Empty;
+        public string SkuSnapshot { get; set; } = string.Empty;
         public decimal UnitPriceSnapshot { get; set; }
         public int Quantity { get; set; }
         public decimal LineTotal { get; set; }
 
         // Navigation
-        public Order Order { get; set; }
-        public ProductVariant Variant { get; set; }
+        public Order Order { get; set; } = null!;
+        public ProductVariant Variant { get; set; } = null!;
     }
 
 }

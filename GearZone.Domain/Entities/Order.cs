@@ -6,10 +6,10 @@ namespace GearZone.Domain.Entities
 {
     public class Order : Entity<Guid>
     {
-        public string OrderCode { get; set; }
-        public string UserId { get; set; }
+        public string OrderCode { get; set; } = string.Empty;
+        public string UserId { get; set; } = string.Empty;
         public Guid StoreId { get; set; }
-        public string Status { get; set; }
+        public string Status { get; set; } = string.Empty;
 
         public decimal Subtotal { get; set; }
         public decimal ShippingFee { get; set; }
@@ -17,22 +17,22 @@ namespace GearZone.Domain.Entities
         public decimal CommissionRateSnapshot { get; set; }
         public decimal CommissionAmount { get; set; }
 
-        public string ReceiverName { get; set; }
-        public string ReceiverPhone { get; set; }
-        public string ShippingAddress { get; set; }
-        public string ShippingProvider { get; set; }
-        public string TrackingNumber { get; set; }
+        public string ReceiverName { get; set; } = string.Empty;
+        public string ReceiverPhone { get; set; } = string.Empty;
+        public string ShippingAddress { get; set; } = string.Empty;
+        public string? ShippingProvider { get; set; }
+        public string? TrackingNumber { get; set; }
 
         public DateTime CreatedAt { get; set; }
         public DateTime? PaidAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 
         // Navigation
-        public ApplicationUser User { get; set; }
-        public Store Store { get; set; }
-        public ICollection<OrderItem> Items { get; set; }
-        public ICollection<OrderStatusHistory> StatusHistories { get; set; }
-        public ICollection<Payment> Payments { get; set; }
+        public ApplicationUser User { get; set; } = null!;
+        public Store Store { get; set; } = null!;
+        public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
+        public ICollection<OrderStatusHistory> StatusHistories { get; set; } = new List<OrderStatusHistory>();
+        public ICollection<Payment> Payments { get; set; } = new List<Payment>();
     }
 
 }

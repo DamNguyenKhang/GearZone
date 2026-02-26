@@ -8,6 +8,10 @@ namespace GearZone.Domain.Entities
 
         public string? AvatarUrl { get; set; }
 
+        public string? IdentityNumber { get; set; } // CCCD
+        public DateTime? IdentityIssuedDate { get; set; }
+        public string? IdentityIssuedPlace { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public bool IsActive { get; set; } = true;

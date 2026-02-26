@@ -1,4 +1,4 @@
-﻿using GearZone.Application.Entities;
+﻿using GearZone.Domain.Entities;
 using System.Linq.Expressions;
 
 namespace GearZone.Application.Abstractions.Persistence

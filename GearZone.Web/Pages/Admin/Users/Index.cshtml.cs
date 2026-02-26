@@ -1,7 +1,7 @@
 using AutoMapper;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Common.Models;
-using GearZone.Application.Entities;
+using GearZone.Domain.Entities;
 using GearZone.Application.Features.Admin.Dtos;
 using GearZone.Web.Pages.Admin.Users.Models;
 using Microsoft.AspNetCore.Identity;

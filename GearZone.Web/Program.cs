@@ -1,5 +1,5 @@
 using GearZone.Application;
-using GearZone.Application.Entities;
+using GearZone.Domain.Entities;
 using GearZone.Infrastructure;
 using GearZone.Infrastructure.Seed;
 using Microsoft.AspNetCore.Authentication.Cookies;

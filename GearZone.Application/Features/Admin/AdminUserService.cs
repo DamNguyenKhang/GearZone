@@ -5,7 +5,7 @@ using GearZone.Application.Abstractions;
 using GearZone.Application.Features.Admin.Dtos;
 using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Common.Models;
-using GearZone.Application.Entities;
+using GearZone.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using GearZone.Application.Abstractions.Services;

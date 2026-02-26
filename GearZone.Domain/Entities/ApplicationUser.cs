@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace GearZone.Application.Entities
+namespace GearZone.Domain.Entities
 {
     public class ApplicationUser : IdentityUser
     {

@@ -1,6 +1,6 @@
 using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Common.Models;
-using GearZone.Application.Entities;
+using GearZone.Domain.Entities;
 using GearZone.Application.Features.Admin.Dtos;
 using Microsoft.EntityFrameworkCore;
 

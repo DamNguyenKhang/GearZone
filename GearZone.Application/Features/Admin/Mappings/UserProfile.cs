@@ -1,6 +1,6 @@
 using AutoMapper;
 using GearZone.Application.Features.Admin.Dtos;
-using GearZone.Application.Entities;
+using GearZone.Domain.Entities;
 
 namespace GearZone.Application.Features.Admin.Mappings
 {

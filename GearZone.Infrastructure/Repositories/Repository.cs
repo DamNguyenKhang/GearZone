@@ -1,5 +1,5 @@
 ﻿using GearZone.Application.Abstractions.Persistence;
-using GearZone.Application.Entities;
+using GearZone.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 

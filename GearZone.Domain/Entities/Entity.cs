@@ -1,4 +1,4 @@
-﻿namespace GearZone.Application.Entities
+﻿namespace GearZone.Domain.Entities
 {
     public class Entity<TKey>
     {

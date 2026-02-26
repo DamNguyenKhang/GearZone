@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 using GearZone.Application.Common.Models;
-using GearZone.Application.Entities;
+using GearZone.Domain.Entities;
 using GearZone.Application.Features.Admin.Dtos;
 
 namespace GearZone.Application.Abstractions.Persistence

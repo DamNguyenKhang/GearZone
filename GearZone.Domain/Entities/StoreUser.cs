@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace GearZone.Application.Entities
+namespace GearZone.Domain.Entities
 {
     public class StoreUser : Entity<Guid>
     {

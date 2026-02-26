@@ -26,8 +26,9 @@ namespace GearZone.Infrastructure.Configurations
             builder.Property(x => x.Email).HasMaxLength(256);
             builder.Property(x => x.AddressLine).HasMaxLength(500);
             builder.Property(x => x.Province).HasMaxLength(100);
+            builder.Property(x => x.BusinessType).HasMaxLength(20).HasConversion<string>();
 
-            builder.Property(x => x.Status).HasMaxLength(20).IsRequired();
+            builder.Property(x => x.Status).HasMaxLength(20).IsRequired().HasConversion<string>();
             builder.Property(x => x.RejectReason).HasMaxLength(500);
             builder.Property(x => x.LockReason).HasMaxLength(500);
 

@@ -9,6 +9,7 @@ namespace GearZone.Domain.Entities
         public string Slug { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string? LogoUrl { get; set; }
+        public BusinessType BusinessType { get; set; }
 
         public string TaxCode { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;

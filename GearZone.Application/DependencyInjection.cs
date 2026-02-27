@@ -9,9 +9,10 @@ namespace GearZone.Application
     {
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
-
+            services.AddMemoryCache();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IAdminUserService, AdminUserService>();
+            services.AddScoped<ISystemSettingService, SystemSettingService>();
             return services;
         }
     }

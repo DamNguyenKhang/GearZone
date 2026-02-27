@@ -4,6 +4,7 @@ using GearZone.Infrastructure.External;
 using GearZone.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using GearZone.Application.Abstractions.Persistence;
 
 namespace GearZone.Infrastructure
 {
@@ -28,6 +29,7 @@ namespace GearZone.Infrastructure
             services.AddScoped<IStoreRepository, StoreRepository>();
             services.AddScoped<IStoreUserRepository, StoreUserRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
 
             return services;
         }

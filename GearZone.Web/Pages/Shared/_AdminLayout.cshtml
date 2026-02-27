@@ -161,8 +161,8 @@
                 <span class="font-medium text-sm sidebar-text">Revenue</span>
             </a>
 
-            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-50 transition-colors group" href="#">
-                <span class="material-symbols-outlined">settings</span>
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Settings" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" asp-page="/Admin/Settings/Index">
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Settings" ? "filled" : "")">settings</span>
                 <span class="font-medium text-sm sidebar-text">Settings</span>
             </a>
 

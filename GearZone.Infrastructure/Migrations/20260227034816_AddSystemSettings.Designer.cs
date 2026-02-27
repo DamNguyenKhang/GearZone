@@ -4,6 +4,7 @@ using GearZone.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GearZone.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260227034816_AddSystemSettings")]
+    partial class AddSystemSettings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -751,7 +754,7 @@ namespace GearZone.Infrastructure.Migrations
 
                     b.Property<string>("Key")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -762,9 +765,6 @@ namespace GearZone.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Key")
-                        .IsUnique();
-
                     b.ToTable("SystemSettings");
 
                     b.HasData(
@@ -772,10 +772,10 @@ namespace GearZone.Infrastructure.Migrations
                         {
                             Id = new Guid("11111111-1111-1111-1111-111111111111"),
                             DataType = 1,
-                            Description = "Commission Rate (Decimal: 0.05 = 5%)",
+                            Description = "Commission Rate (%)",
                             GroupName = "Payment",
                             Key = "Payment_CommissionRate",
-                            Value = "0.05"
+                            Value = "5"
                         },
                         new
                         {
@@ -806,15 +806,6 @@ namespace GearZone.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("11111111-1111-1111-1111-111111111115"),
-                            DataType = 0,
-                            Description = "Webhook signature secret",
-                            GroupName = "Payment",
-                            Key = "Payment_WebhookSecret",
-                            Value = ""
-                        },
-                        new
-                        {
                             Id = new Guid("22222222-2222-2222-2222-222222222221"),
                             DataType = 2,
                             Description = "Manually approve new vendors",
@@ -838,7 +829,7 @@ namespace GearZone.Infrastructure.Migrations
                             Description = "Default Store Status (Active, Pending Review, Inactive)",
                             GroupName = "Store",
                             Key = "Store_DefaultStatus",
-                            Value = "Pending"
+                            Value = "Active"
                         },
                         new
                         {
@@ -884,15 +875,6 @@ namespace GearZone.Infrastructure.Migrations
                             GroupName = "Finance",
                             Key = "Finance_HoldFunds",
                             Value = "true"
-                        },
-                        new
-                        {
-                            Id = new Guid("44444444-4444-4444-4444-444444444443"),
-                            DataType = 1,
-                            Description = "Hold funds before payout (days)",
-                            GroupName = "Finance",
-                            Key = "Finance_PayoutDelayDays",
-                            Value = "7"
                         },
                         new
                         {

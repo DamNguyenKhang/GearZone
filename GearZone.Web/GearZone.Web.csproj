@@ -7,13 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Pages\Admin\Businesses\**" />
+    <Content Remove="Pages\Admin\Businesses\**" />
+    <EmbeddedResource Remove="Pages\Admin\Businesses\**" />
+    <None Remove="Pages\Admin\Businesses\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\GearZone.Application\GearZone.Application.csproj" />
     <ProjectReference Include="..\GearZone.Infrastructure\GearZone.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Middlewares\" />
-    <Folder Include="Pages\Admin\Businesses\" />
     <Folder Include="Pages\Admin\Stores\" />
     <Folder Include="Pages\Admin\Users\Models\" />
     <Folder Include="Pages\Cart\Models\" />

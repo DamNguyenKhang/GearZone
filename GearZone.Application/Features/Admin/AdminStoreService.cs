@@ -4,7 +4,7 @@ using System.Text;
 
 namespace GearZone.Application.Features.Admin
 {
-    internal class AddminStoreService
+    internal class AdminStoreService
     {
     }
 }

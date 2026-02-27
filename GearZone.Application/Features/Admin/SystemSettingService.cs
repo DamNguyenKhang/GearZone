@@ -29,6 +29,7 @@ public class SystemSettingService : ISystemSettingService
         {
             var settings = await _settingRepository.GetAllSettingsAsync();
             cachedSettings = _mapper.Map<List<SystemSettingDto>>(settings);
+            
 
             var cacheEntryOptions = new MemoryCacheEntryOptions()
                 .SetAbsoluteExpiration(TimeSpan.FromHours(1));

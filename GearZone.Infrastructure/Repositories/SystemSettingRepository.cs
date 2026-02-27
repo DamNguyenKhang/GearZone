@@ -29,6 +29,5 @@ public class SystemSettingRepository : Repository<SystemSetting, Guid>, ISystemS
     public async Task UpdateSettingsAsync(List<SystemSetting> settings)
     {
         _context.SystemSettings.UpdateRange(settings);
-        await _context.SaveChangesAsync();
     }
 }

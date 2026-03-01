@@ -33,6 +33,37 @@
                             Gold Member
                         </span>
                     </div>
+
+                    <div class="mt-4 px-4">
+                        @if (Model.UserStore == null)
+                        {
+                            <a asp-page="/Public/User/RegisterSeller" class="w-full py-2 bg-orange-50 text-orange-600 font-bold rounded-lg hover:bg-orange-100 transition-all border border-orange-200 flex items-center justify-center gap-2 text-sm">
+                                <span class="material-symbols-outlined text-[18px]">storefront</span>
+                                Register as Seller
+                            </a>
+                        }
+                        else if (Model.UserStore.Status == "Pending")
+                        {
+                            <div class="w-full py-2 bg-blue-50 text-blue-600 font-bold rounded-lg border border-blue-200 flex items-center justify-center gap-2 text-sm" title="Your application is currently being reviewed.">
+                                <span class="material-symbols-outlined text-[18px]">hourglass_empty</span>
+                                App Pending
+                            </div>
+                        }
+                        else if (Model.UserStore.Status == "Approved")
+                        {
+                            <a href="/Admin/Dashboard" class="w-full py-2 bg-green-50 text-green-600 font-bold rounded-lg hover:bg-green-100 transition-all border border-green-200 flex items-center justify-center gap-2 text-sm">
+                                <span class="material-symbols-outlined text-[18px]">store</span>
+                                Go to Store
+                            </a>
+                        }
+                        else if (Model.UserStore.Status == "Rejected")
+                        {
+                            <div class="w-full py-2 bg-red-50 text-red-600 font-bold rounded-lg border border-red-200 flex items-center justify-center gap-2 text-sm cursor-help" title="Reason: @Model.UserStore.RejectReason">
+                                <span class="material-symbols-outlined text-[18px]">cancel</span>
+                                App Rejected
+                            </div>
+                        }
+                    </div>
                 </div>
 
                 <!-- Navigation -->
@@ -97,13 +128,8 @@
                                     <label class="text-sm font-semibold text-gray-700">Username</label>
                                     <input type="text" value="@Model.CurrentUser?.UserName" disabled class="block w-full px-4 py-3 border border-gray-100 bg-gray-50 text-gray-500 rounded-xl cursor-not-allowed" />
                                 </div>
-                            </div>
-                            <div class="pt-4 flex items-center justify-between">
+                            <div class="pt-4">
                                 <button type="submit" class="px-8 py-3 bg-primary text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-primary/20">Save Changes</button>
-                                <a asp-page="/Public/User/RegisterSeller" class="px-6 py-3 bg-orange-50 text-orange-600 font-bold rounded-xl hover:bg-orange-100 transition-all border border-orange-200 flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-[20px]">storefront</span>
-                                    Register as Seller
-                                </a>
                             </div>
                         </form>
                     </div>

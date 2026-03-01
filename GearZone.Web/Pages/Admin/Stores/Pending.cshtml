@@ -1,0 +1,157 @@
+@page
+@model GearZone.Web.Pages.Admin.Stores.PendingModel
+@{
+    ViewData["Title"] = "Pending Store Approvals";
+    Layout = "_AdminLayout";
+}
+
+<div class="px-4 sm:px-6 lg:px-8 py-8">
+    <div class="sm:flex sm:items-center py-4">
+        <div class="sm:flex-auto">
+            <h1 class="text-2xl font-bold text-gray-900 leading-tight">Pending Store Approvals</h1>
+            <p class="mt-2 text-sm text-gray-700">A list of all users who have applied to become sellers and are waiting for approval.</p>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <span class="material-symbols-outlined text-green-500">check_circle</span>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-green-700 font-medium">@TempData["SuccessMessage"]</p>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="mt-8 flex flex-col">
+        <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+                <div class="overflow-hidden shadow-sm ring-1 ring-black ring-opacity-5 rounded-2xl border border-gray-200 bg-white">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50/50">
+                            <tr>
+                                <th scope="col" class="py-4 pl-4 pr-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Store Name</th>
+                                <th scope="col" class="px-3 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Applicant Info</th>
+                                <th scope="col" class="px-3 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Tax & Address</th>
+                                <th scope="col" class="px-3 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Applied On</th>
+                                <th scope="col" class="relative py-4 pl-3 pr-4 text-right">
+                                    <span class="sr-only">Actions</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 bg-white">
+                            @if (!Model.PendingStores.Any())
+                            {
+                                <tr>
+                                    <td colspan="5" class="py-8 text-center text-sm text-gray-500">
+                                        <div class="flex flex-col items-center justify-center">
+                                            <span class="material-symbols-outlined text-4xl text-gray-300 mb-2">inbox</span>
+                                            <p>No pending store applications found.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var store in Model.PendingStores)
+                                {
+                                    <tr>
+                                        <td class="whitespace-nowrap py-5 pl-4 pr-3 text-sm">
+                                            <div class="font-bold text-gray-900">@store.StoreName</div>
+                                            <div class="text-xs text-gray-400 mt-1">ID: @store.Id.ToString().Substring(0, 8)...</div>
+                                        </td>
+                                        <td class="whitespace-nowrap px-3 py-5 text-sm">
+                                            <div class="font-medium text-gray-900">@(store.OwnerUser?.FullName ?? store.OwnerUser?.UserName)</div>
+                                            <div class="text-gray-500 mt-0.5">@store.Email</div>
+                                            <div class="text-gray-500">@store.Phone</div>
+                                        </td>
+                                        <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
+                                            <div class="font-medium">Tax: <span class="text-gray-900">@store.TaxCode</span></div>
+                                            <div class="mt-1 max-w-[200px] truncate" title="@store.AddressLine, @store.Province">
+                                                @store.Province
+                                            </div>
+                                        </td>
+                                        <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
+                                            @store.CreatedAt.ToString("MMM dd, yyyy")
+                                        </td>
+                                        <td class="relative whitespace-nowrap py-5 pl-3 pr-4 text-right text-sm font-medium">
+                                            <div class="flex justify-end gap-2">
+                                                <form method="post" asp-page-handler="Approve" class="inline">
+                                                    <input type="hidden" name="id" value="@store.Id" />
+                                                    <button type="submit" class="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-bold rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
+                                                        Approve
+                                                    </button>
+                                                </form>
+                                                <button type="button" onclick="showRejectModal('@store.Id', '@store.StoreName')" class="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-bold rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
+                                                    Reject
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="hideRejectModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100">
+            <form method="post" asp-page-handler="Reject">
+                <input type="hidden" id="rejectStoreId" name="id" value="" />
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <span class="material-symbols-outlined text-red-600">cancel</span>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-lg leading-6 font-bold text-gray-900" id="modal-title">
+                                Reject Store Application
+                            </h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500 mb-4">
+                                    Are you sure you want to reject the application for <strong id="rejectStoreName" class="text-gray-900"></strong>?
+                                </p>
+                                <div class="space-y-2 text-left">
+                                    <label class="text-sm font-semibold text-gray-700">Reason for Rejection <span class="text-red-500">*</span></label>
+                                    <textarea name="reason" rows="3" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all text-sm" required placeholder="Please provide a reason..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-5 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-2xl border-t border-gray-100">
+                    <button type="submit" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-bold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                        Reject Application
+                    </button>
+                    <button type="button" onclick="hideRejectModal()" class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-bold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showRejectModal(id, name) {
+        document.getElementById('rejectStoreId').value = id;
+        document.getElementById('rejectStoreName').textContent = name;
+        document.getElementById('rejectModal').classList.remove('hidden');
+    }
+
+    function hideRejectModal() {
+        document.getElementById('rejectModal').classList.add('hidden');
+    }
+</script>

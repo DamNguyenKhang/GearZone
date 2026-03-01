@@ -148,18 +148,19 @@ namespace GearZone.Application.Features.Auth
             return _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
         }
 
-        public async Task<(bool Succeeded, string? Error)> HandleExternalLoginCallbackAsync()
+        public async Task<(bool Succeeded, string? Error, string? UserId)> HandleExternalLoginCallbackAsync()
         {
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
             {
-                return (false, "Error loading external login information.");
+                return (false, "Error loading external login information.", null);
             }
 
             var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
             if (result.Succeeded)
             {
-                return (true, null);
+                var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+                return (true, null, user?.Id);
             }
 
             var email = info.Principal.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
@@ -180,7 +181,7 @@ namespace GearZone.Application.Features.Auth
                     var createResult = await _userManager.CreateAsync(user);
                     if (!createResult.Succeeded)
                     {
-                        return (false, string.Join(", ", createResult.Errors.Select(e => e.Description)));
+                        return (false, string.Join(", ", createResult.Errors.Select(e => e.Description)), null);
                     }
                     await _userManager.AddToRoleAsync(user, "Customer");
                 }
@@ -189,11 +190,11 @@ namespace GearZone.Application.Features.Auth
                 if (addLoginResult.Succeeded)
                 {
                     await _signInManager.SignInAsync(user, isPersistent: false);
-                    return (true, null);
+                    return (true, null, user.Id);
                 }
             }
 
-            return (false, "Error during external login.");
+            return (false, "Error during external login.", null);
         }
     }
 }

@@ -2,6 +2,8 @@ using GearZone.Application.Abstractions.Services;
 using GearZone.Web.Pages.Public.Auth.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Identity;
+using GearZone.Domain.Entities;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,10 +13,12 @@ namespace GearZone.Web.Pages.Public.Auth
     public class LoginModel : PageModel
     {
         private readonly IAuthService _authService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public LoginModel(IAuthService authService)
+        public LoginModel(IAuthService authService, UserManager<ApplicationUser> userManager)
         {
             _authService = authService;
+            _userManager = userManager;
         }
 
         [BindProperty]
@@ -54,6 +58,11 @@ namespace GearZone.Web.Pages.Public.Auth
 
             if (result.Status == LoginStatus.Success)
             {
+                var user = await _userManager.FindByIdAsync(result.UserId!);
+                if (user != null && await _userManager.IsInRoleAsync(user, "Super Admin"))
+                {
+                    return LocalRedirect("/Admin/Dashboard");
+                }
                 return LocalRedirect(ReturnUrl ?? "/");
             }
 
@@ -149,9 +158,17 @@ namespace GearZone.Web.Pages.Public.Auth
                 return Page();
             }
 
-            var (succeeded, error) = await _authService.HandleExternalLoginCallbackAsync();
+            var (succeeded, error, userId) = await _authService.HandleExternalLoginCallbackAsync();
             if (succeeded)
             {
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    var user = await _userManager.FindByIdAsync(userId);
+                    if (user != null && await _userManager.IsInRoleAsync(user, "Super Admin"))
+                    {
+                        return LocalRedirect("/Admin/Dashboard");
+                    }
+                }
                 return LocalRedirect(returnUrl);
             }
 

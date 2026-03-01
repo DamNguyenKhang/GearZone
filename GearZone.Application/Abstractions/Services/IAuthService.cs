@@ -28,6 +28,6 @@ namespace GearZone.Application.Abstractions.Services
         Task<string?> GetUserIdAsync(string emailOrUsername);
         Task SendVerificationEmailAsync(string userId, string email, string callbackUrl);
         AuthenticationProperties GetExternalAuthenticationProperties(string provider, string redirectUrl);
-        Task<(bool Succeeded, string? Error)> HandleExternalLoginCallbackAsync();
+        Task<(bool Succeeded, string? Error, string? UserId)> HandleExternalLoginCallbackAsync();
     }
 }

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace GearZone.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitClean : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -87,7 +87,8 @@ namespace GearZone.Infrastructure.Migrations
                     ParentId = table.Column<int>(type: "int", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Slug = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -628,6 +629,21 @@ namespace GearZone.Infrastructure.Migrations
                 });
 
             migrationBuilder.InsertData(
+                table: "Categories",
+                columns: new[] { "Id", "IsActive", "IsDeleted", "Name", "ParentId", "Slug" },
+                values: new object[,]
+                {
+                    { 1, true, false, "Keyboards", null, "keyboards" },
+                    { 2, true, false, "Mice", null, "mice" },
+                    { 3, true, false, "Headsets", null, "headsets" },
+                    { 4, true, false, "Monitors", null, "monitors" },
+                    { 5, true, false, "PC Components", null, "pc-components" },
+                    { 6, true, false, "Gaming Furniture", null, "gaming-furniture" },
+                    { 7, true, false, "Setup Accessories", null, "setup-accessories" },
+                    { 8, true, false, "Console & Controllers", null, "console-controllers" }
+                });
+
+            migrationBuilder.InsertData(
                 table: "SystemSettings",
                 columns: new[] { "Id", "DataType", "Description", "GroupName", "Key", "UpdatedAt", "Value" },
                 values: new object[,]
@@ -648,6 +664,33 @@ namespace GearZone.Infrastructure.Migrations
                     { new Guid("44444444-4444-4444-4444-444444444443"), 1, "Hold funds before payout (days)", "Finance", "Finance_PayoutDelayDays", null, "7" },
                     { new Guid("55555555-5555-5555-5555-555555555551"), 2, "Require sellers to upload ID documents", "Security", "Security_KYCRequired", null, "false" },
                     { new Guid("55555555-5555-5555-5555-555555555552"), 2, "Mandatory tax code input", "Security", "Security_TaxCodeVerification", null, "true" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Categories",
+                columns: new[] { "Id", "IsActive", "IsDeleted", "Name", "ParentId", "Slug" },
+                values: new object[,]
+                {
+                    { 11, true, false, "Mechanical Keyboards", 1, "mechanical-keyboards" },
+                    { 12, true, false, "Membrane Keyboards", 1, "membrane-keyboards" },
+                    { 13, true, false, "Keycaps", 1, "keycaps" },
+                    { 14, true, false, "Keyboard Switches", 1, "keyboard-switches" },
+                    { 21, true, false, "Gaming Mice", 2, "gaming-mice" },
+                    { 22, true, false, "Office Mice", 2, "office-mice" },
+                    { 23, true, false, "Mouse Pads", 2, "mouse-pads" },
+                    { 31, true, false, "Gaming Headsets", 3, "gaming-headsets" },
+                    { 32, true, false, "Wireless Headphones", 3, "wireless-headphones" },
+                    { 33, true, false, "Microphones", 3, "microphones" },
+                    { 41, true, false, "Gaming Monitors", 4, "gaming-monitors" },
+                    { 42, true, false, "Office Monitors", 4, "office-monitors" },
+                    { 43, true, false, "Curved Monitors", 4, "curved-monitors" },
+                    { 51, true, false, "CPUs", 5, "cpus" },
+                    { 52, true, false, "GPUs", 5, "gpus" },
+                    { 53, true, false, "RAM", 5, "ram" },
+                    { 54, true, false, "Motherboards", 5, "motherboards" },
+                    { 55, true, false, "Storage (SSD/HDD)", 5, "storage" },
+                    { 56, true, false, "Power Supplies", 5, "power-supplies" },
+                    { 57, true, false, "PC Cases", 5, "pc-cases" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -736,6 +779,11 @@ namespace GearZone.Infrastructure.Migrations
                 name: "IX_Categories_IsActive",
                 table: "Categories",
                 column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Categories_IsDeleted",
+                table: "Categories",
+                column: "IsDeleted");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Categories_ParentId",

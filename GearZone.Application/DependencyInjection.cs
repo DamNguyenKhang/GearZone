@@ -14,6 +14,7 @@ namespace GearZone.Application
             services.AddScoped<IAdminUserService, AdminUserService>();
             services.AddScoped<IAdminStoreService, AdminStoreService>();
             services.AddScoped<ISystemSettingService, SystemSettingService>();
+            services.AddScoped<IAdminCategoryService, AdminCategoryService>();
             return services;
         }
     }

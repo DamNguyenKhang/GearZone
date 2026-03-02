@@ -1,0 +1,416 @@
+@page
+@model GearZone.Web.Pages.Admin.Reports.IndexModel
+@{
+    ViewData["Title"] = "Platform Reports";
+    ViewData["PageHeader"] = "Platform Reports";
+    ViewData["ActivePage"] = "Reports";
+    ViewData["Breadcrumb"] = new string[] { "Reports" };
+    Layout = "_AdminLayout";
+}
+
+@section Styles {
+    <style>
+        .chart-grid {
+            background-image: linear-gradient(to right, #f3f4f6 1px, transparent 1px),
+                              linear-gradient(to bottom, #f3f4f6 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+    </style>
+}
+
+<div class="flex flex-wrap items-end justify-between gap-4 mb-2">
+    <div>
+        <p class="text-slate-500 text-sm mt-1">Comprehensive analytics &mdash; Updated @DateTime.Now.ToString("MMM dd, yyyy")</p>
+    </div>
+    <div class="flex items-center gap-3">
+        <button class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
+            <span class="material-symbols-outlined text-[20px]">calendar_today</span>
+            Last 30 days
+        </button>
+        <button class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
+            <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+            Export PDF
+        </button>
+        <button class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200">
+            <span class="material-symbols-outlined text-[20px]">download</span>
+            Export Excel
+        </button>
+    </div>
+</div>
+
+<div class="space-y-6">
+    <!-- Section 1: KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <!-- Card 1 -->
+        <div class="bg-white p-5 rounded-xl border border-border-light shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition-shadow">
+            <div class="flex justify-between items-start">
+                <p class="text-slate-500 text-sm font-medium">Gross Revenue</p>
+                <span class="material-symbols-outlined text-slate-400 text-[20px]">payments</span>
+            </div>
+            <div>
+                <h3 class="text-2xl font-bold text-text-heading">&#8363;8.24B</h3>
+                <p class="text-emerald-600 text-sm font-medium flex items-center gap-1 mt-1">
+                    <span class="material-symbols-outlined text-[16px]">trending_up</span>
+                    +12.3%
+                </p>
+            </div>
+        </div>
+        <!-- Card 2 -->
+        <div class="bg-white p-5 rounded-xl border border-border-light shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition-shadow">
+            <div class="flex justify-between items-start">
+                <p class="text-slate-500 text-sm font-medium">Total Orders</p>
+                <span class="material-symbols-outlined text-slate-400 text-[20px]">shopping_bag</span>
+            </div>
+            <div>
+                <h3 class="text-2xl font-bold text-text-heading">14,892</h3>
+                <p class="text-emerald-600 text-sm font-medium flex items-center gap-1 mt-1">
+                    <span class="material-symbols-outlined text-[16px]">trending_up</span>
+                    +8.1%
+                </p>
+            </div>
+        </div>
+        <!-- Card 3 -->
+        <div class="bg-white p-5 rounded-xl border border-border-light shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition-shadow">
+            <div class="flex justify-between items-start">
+                <p class="text-slate-500 text-sm font-medium">Active Stores</p>
+                <span class="material-symbols-outlined text-slate-400 text-[20px]">store</span>
+            </div>
+            <div>
+                <h3 class="text-2xl font-bold text-text-heading">842</h3>
+                <p class="text-emerald-600 text-sm font-medium flex items-center gap-1 mt-1">
+                    <span class="material-symbols-outlined text-[16px]">trending_up</span>
+                    +2.4%
+                </p>
+            </div>
+        </div>
+        <!-- Card 4 -->
+        <div class="bg-white p-5 rounded-xl border border-border-light shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition-shadow">
+            <div class="flex justify-between items-start">
+                <p class="text-slate-500 text-sm font-medium">New Users</p>
+                <span class="material-symbols-outlined text-slate-400 text-[20px]">person_add</span>
+            </div>
+            <div>
+                <h3 class="text-2xl font-bold text-text-heading">2,341</h3>
+                <p class="text-emerald-600 text-sm font-medium flex items-center gap-1 mt-1">
+                    <span class="material-symbols-outlined text-[16px]">trending_up</span>
+                    +15.2%
+                </p>
+            </div>
+        </div>
+        <!-- Card 5 -->
+        <div class="bg-white p-5 rounded-xl border border-border-light shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition-shadow">
+            <div class="flex justify-between items-start">
+                <p class="text-slate-500 text-sm font-medium">Dispute Rate</p>
+                <span class="material-symbols-outlined text-slate-400 text-[20px]">gavel</span>
+            </div>
+            <div>
+                <h3 class="text-2xl font-bold text-text-heading">1.8%</h3>
+                <p class="text-emerald-600 text-sm font-medium flex items-center gap-1 mt-1">
+                    <span class="material-symbols-outlined text-[16px]">trending_down</span>
+                    -0.3%
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2: Revenue Overview -->
+    <div class="bg-white rounded-xl border border-border-light shadow-sm p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-lg font-bold text-text-heading">Revenue Overview</h2>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-primary"></div>
+                    <span class="text-sm text-slate-500">Gross Revenue</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-[#1ABC9C] border border-dashed border-white"></div>
+                    <span class="text-sm text-slate-500">Net Revenue</span>
+                </div>
+            </div>
+        </div>
+        <!-- Chart Area Placeholder -->
+        <div class="h-64 w-full chart-grid relative rounded-lg overflow-hidden mb-6">
+            <!-- Simplified Visual Representation of a Line Chart -->
+            <svg class="w-full h-full" preserveaspectratio="none">
+                <!-- Solid Blue Line (Gross) -->
+                <path d="M0,200 C100,180 200,100 300,120 S500,60 600,80 S800,20 1000,40 V256 H0 Z" fill="url(#blueGradient)" opacity="0.1" stroke="none"></path>
+                <path d="M0,200 C100,180 200,100 300,120 S500,60 600,80 S800,20 1000,40" fill="none" stroke="#1A56DB" stroke-width="3"></path>
+                <!-- Dashed Teal Line (Net) -->
+                <path d="M0,220 C100,200 200,130 300,150 S500,100 600,120 S800,60 1000,80" fill="none" stroke="#1ABC9C" stroke-dasharray="5,5" stroke-width="2"></path>
+                <defs>
+                    <lineargradient id="blueGradient" x1="0%" x2="0%" y1="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#1A56DB;stop-opacity:0.6"></stop>
+                        <stop offset="100%" style="stop-color:#1A56DB;stop-opacity:0"></stop>
+                    </lineargradient>
+                </defs>
+            </svg>
+            <!-- X-Axis Labels -->
+            <div class="absolute bottom-2 left-0 right-0 flex justify-between px-4 text-xs text-slate-400">
+                <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span>
+            </div>
+        </div>
+        <div class="grid grid-cols-3 gap-8 pt-4 border-t border-slate-100">
+            <div>
+                <p class="text-slate-500 text-sm">Average Daily Revenue</p>
+                <p class="text-xl font-bold text-text-heading mt-1">&#8363;274.6M</p>
+            </div>
+            <div>
+                <p class="text-slate-500 text-sm">Highest Revenue Day</p>
+                <p class="text-xl font-bold text-text-heading mt-1">Oct 14 <span class="text-sm font-normal text-slate-500">(&#8363;412M)</span></p>
+            </div>
+            <div>
+                <p class="text-slate-500 text-sm">Projection (Next 30 Days)</p>
+                <p class="text-xl font-bold text-text-heading mt-1">&#8363;9.1B <span class="text-emerald-600 text-sm font-medium">&uarr;</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3: Split Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <!-- Revenue by Category (60%) -->
+        <div class="lg:col-span-3 bg-white rounded-xl border border-border-light shadow-sm p-6">
+            <h2 class="text-lg font-bold text-text-heading mb-6">Revenue by Category</h2>
+            <div class="space-y-4">
+                <div class="flex items-center gap-4">
+                    <span class="w-24 text-sm font-medium text-slate-600">GPU</span>
+                    <div class="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-primary w-[85%] rounded-full"></div>
+                    </div>
+                    <span class="w-16 text-sm font-bold text-right">&#8363;3.2B</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="w-24 text-sm font-medium text-slate-600">CPU</span>
+                    <div class="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-primary/80 w-[65%] rounded-full"></div>
+                    </div>
+                    <span class="w-16 text-sm font-bold text-right">&#8363;2.1B</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="w-24 text-sm font-medium text-slate-600">Monitors</span>
+                    <div class="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-primary/60 w-[45%] rounded-full"></div>
+                    </div>
+                    <span class="w-16 text-sm font-bold text-right">&#8363;1.4B</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="w-24 text-sm font-medium text-slate-600">Storage</span>
+                    <div class="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-primary/40 w-[30%] rounded-full"></div>
+                    </div>
+                    <span class="w-16 text-sm font-bold text-right">&#8363;0.9B</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="w-24 text-sm font-medium text-slate-600">Peripherals</span>
+                    <div class="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-primary/30 w-[20%] rounded-full"></div>
+                    </div>
+                    <span class="w-16 text-sm font-bold text-right">&#8363;0.6B</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Status (40%) -->
+        <div class="lg:col-span-2 bg-white rounded-xl border border-border-light shadow-sm p-6">
+            <h2 class="text-lg font-bold text-text-heading mb-2">Order Status Breakdown</h2>
+            <div class="flex items-center justify-center py-6 relative">
+                <!-- Donut Chart Representation -->
+                <div class="w-48 h-48 rounded-full border-[16px] border-primary border-r-[#1ABC9C] border-b-amber-400 border-l-slate-200 relative flex items-center justify-center transform -rotate-45">
+                    <div class="text-center transform rotate-45">
+                        <span class="block text-3xl font-bold text-text-heading">14.8K</span>
+                        <span class="text-xs text-slate-500">Total Orders</span>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 text-sm mt-2">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 bg-primary rounded-full"></div>
+                    <span class="text-slate-600">Delivered (58.4%)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 bg-[#1ABC9C] rounded-full"></div>
+                    <span class="text-slate-600">Shipped (22.1%)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 bg-amber-400 rounded-full"></div>
+                    <span class="text-slate-600">Processing (15.2%)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 bg-slate-200 rounded-full"></div>
+                    <span class="text-slate-600">Cancelled (4.3%)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 4: Top Stores Table -->
+    <div class="bg-white rounded-xl border border-border-light shadow-sm overflow-hidden">
+        <div class="px-6 py-5 border-b border-border-light flex justify-between items-center">
+            <h2 class="text-lg font-bold text-text-heading">Top 10 Stores by Revenue</h2>
+            <a class="text-sm text-primary font-medium hover:underline" href="#">View All Stores</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50 text-slate-600 font-medium border-b border-border-light">
+                    <tr>
+                        <th class="px-6 py-3 w-16 text-center">#</th>
+                        <th class="px-6 py-3">Store Name</th>
+                        <th class="px-6 py-3">Category</th>
+                        <th class="px-6 py-3 text-right">Revenue</th>
+                        <th class="px-6 py-3 text-right">Orders</th>
+                        <th class="px-6 py-3 text-center">Rating</th>
+                        <th class="px-6 py-3 text-right">Commission</th>
+                        <th class="px-6 py-3 text-right">Growth</th>
+                        <th class="px-6 py-3 text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-6 py-4 text-center font-medium text-slate-500">1</td>
+                        <td class="px-6 py-4 font-semibold text-text-heading flex items-center gap-3">
+                            <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xs">TS</div>
+                            TechStore Official
+                        </td>
+                        <td class="px-6 py-4 text-slate-600">Electronics</td>
+                        <td class="px-6 py-4 text-right font-medium">&#8363;1.24B</td>
+                        <td class="px-6 py-4 text-right text-slate-600">2,140</td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-1 rounded-full text-xs font-semibold border border-amber-100">
+                                <span class="material-symbols-outlined text-[14px]">star</span> 4.9
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right text-slate-600">&#8363;62M</td>
+                        <td class="px-6 py-4 text-right text-emerald-600 font-medium">+15%</td>
+                        <td class="px-6 py-4 text-center"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span></td>
+                    </tr>
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-6 py-4 text-center font-medium text-slate-500">2</td>
+                        <td class="px-6 py-4 font-semibold text-text-heading flex items-center gap-3">
+                            <div class="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center font-bold text-xs">GZ</div>
+                            GearZone Direct
+                        </td>
+                        <td class="px-6 py-4 text-slate-600">Components</td>
+                        <td class="px-6 py-4 text-right font-medium">&#8363;980M</td>
+                        <td class="px-6 py-4 text-right text-slate-600">1,820</td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-1 rounded-full text-xs font-semibold border border-amber-100">
+                                <span class="material-symbols-outlined text-[14px]">star</span> 4.8
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right text-slate-600">&#8363;49M</td>
+                        <td class="px-6 py-4 text-right text-emerald-600 font-medium">+8%</td>
+                        <td class="px-6 py-4 text-center"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span></td>
+                    </tr>
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-6 py-4 text-center font-medium text-slate-500">3</td>
+                        <td class="px-6 py-4 font-semibold text-text-heading flex items-center gap-3">
+                            <div class="w-8 h-8 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold text-xs">VN</div>
+                            VietPC Parts
+                        </td>
+                        <td class="px-6 py-4 text-slate-600">Parts</td>
+                        <td class="px-6 py-4 text-right font-medium">&#8363;750M</td>
+                        <td class="px-6 py-4 text-right text-slate-600">1,240</td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-1 rounded-full text-xs font-semibold border border-amber-100">
+                                <span class="material-symbols-outlined text-[14px]">star</span> 4.7
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right text-slate-600">&#8363;37M</td>
+                        <td class="px-6 py-4 text-right text-red-500 font-medium">-2%</td>
+                        <td class="px-6 py-4 text-center"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section 5: User Growth & Disputes -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6">
+        <!-- User Growth -->
+        <div class="bg-white rounded-xl border border-border-light shadow-sm p-6">
+            <h2 class="text-lg font-bold text-text-heading mb-4">User Growth</h2>
+            <div class="h-64 relative w-full flex items-end justify-between px-2 gap-2">
+                <!-- Bar & Line combo simulated -->
+                <div class="w-full h-full absolute inset-0 flex items-end justify-between px-2 gap-2 z-0 opacity-20">
+                    <!-- Bars -->
+                    <div class="w-1/6 bg-primary h-[40%] rounded-t-sm"></div>
+                    <div class="w-1/6 bg-primary h-[55%] rounded-t-sm"></div>
+                    <div class="w-1/6 bg-primary h-[45%] rounded-t-sm"></div>
+                    <div class="w-1/6 bg-primary h-[70%] rounded-t-sm"></div>
+                    <div class="w-1/6 bg-primary h-[85%] rounded-t-sm"></div>
+                    <div class="w-1/6 bg-primary h-[90%] rounded-t-sm"></div>
+                </div>
+                <!-- Line Chart SVG on top -->
+                <svg class="w-full h-full absolute inset-0 z-10 overflow-visible">
+                    <path d="M10,180 L80,160 L150,170 L220,120 L290,80 L360,60" fill="none" stroke="#1ABC9C" stroke-width="3"></path>
+                    <circle cx="360" cy="60" fill="#1ABC9C" r="4"></circle>
+                </svg>
+                <div class="absolute top-0 right-0 flex gap-4 text-xs">
+                    <div class="flex items-center gap-1">
+                        <div class="w-3 h-3 bg-primary/20"></div>
+                        <span>New Users</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <div class="w-3 h-1 bg-[#1ABC9C]"></div>
+                        <span>Total Users</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dispute & Resolution -->
+        <div class="bg-white rounded-xl border border-border-light shadow-sm p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-text-heading">Dispute &amp; Resolution</h2>
+                <span class="text-sm text-slate-500">Avg Resolution: 24h</span>
+            </div>
+            <div class="space-y-6">
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <div class="p-3 bg-red-50 rounded-lg border border-red-100 text-center">
+                        <p class="text-xs text-red-600 font-semibold uppercase">Open</p>
+                        <p class="text-xl font-bold text-text-heading">24</p>
+                    </div>
+                    <div class="p-3 bg-amber-50 rounded-lg border border-amber-100 text-center">
+                        <p class="text-xs text-amber-600 font-semibold uppercase">Review</p>
+                        <p class="text-xl font-bold text-text-heading">12</p>
+                    </div>
+                    <div class="p-3 bg-emerald-50 rounded-lg border border-emerald-100 text-center">
+                        <p class="text-xs text-emerald-600 font-semibold uppercase">Resolved</p>
+                        <p class="text-xl font-bold text-text-heading">148</p>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-slate-700 mb-2">Dispute Reasons</p>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span>Item not as described</span>
+                                <span class="font-medium">42%</span>
+                            </div>
+                            <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-red-400 w-[42%]"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span>Shipping damage</span>
+                                <span class="font-medium">28%</span>
+                            </div>
+                            <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-red-400 w-[28%]"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs mb-1">
+                                <span>Missing parts</span>
+                                <span class="font-medium">15%</span>
+                            </div>
+                            <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-red-400 w-[15%]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

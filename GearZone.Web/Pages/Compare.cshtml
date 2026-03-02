@@ -1,0 +1,233 @@
+@page "/compare"
+@model GearZone.Web.Pages.CompareModel
+@{
+    ViewData["Title"] = "So sánh sản phẩm | GearZone";
+}
+
+<div class="max-w-7xl mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-8">
+        <span class="material-symbols-outlined text-3xl text-primary">compare_arrows</span>
+        <h1 class="text-2xl lg:text-3xl font-bold text-gray-900">So sánh sản phẩm</h1>
+    </div>
+
+    @if (!Model.Products.Any())
+    {
+        <!-- Empty State -->
+        <div class="text-center py-20">
+            <span class="material-symbols-outlined text-8xl text-gray-200 mb-4">compare</span>
+            <h2 class="text-xl font-semibold text-gray-500 mb-2">Chưa có sản phẩm nào để so sánh</h2>
+            <p class="text-gray-400 mb-6">Chọn tối đa 3 sản phẩm từ danh sách để so sánh thông số kỹ thuật.</p>
+            <a href="/" class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90 transition-colors">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                Quay lại trang chủ
+            </a>
+        </div>
+    }
+    else
+    {
+        <!-- Compare Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse">
+                <!-- Product Images -->
+                <tr class="border-b border-gray-100">
+                    <td class="p-4 w-48 bg-gray-50 font-semibold text-sm text-gray-600 rounded-tl-xl">Hình ảnh</td>
+                    @foreach (var product in Model.Products)
+                    {
+                        <td class="p-4 text-center">
+                            <div class="w-40 h-40 mx-auto rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
+                                @if (product.Images.Any())
+                                {
+                                    <img src="@product.Images.First().ImageUrl" alt="@product.Name" class="w-full h-full object-contain" />
+                                }
+                                else
+                                {
+                                    <div class="flex items-center justify-center h-full">
+                                        <span class="material-symbols-outlined text-5xl text-gray-300">image</span>
+                                    </div>
+                                }
+                            </div>
+                        </td>
+                    }
+                </tr>
+
+                <!-- Product Name -->
+                <tr class="border-b border-gray-100">
+                    <td class="p-4 bg-gray-50 font-semibold text-sm text-gray-600">Tên sản phẩm</td>
+                    @foreach (var product in Model.Products)
+                    {
+                        <td class="p-4">
+                            <a href="/product/@product.Slug" class="font-bold text-gray-900 hover:text-primary transition-colors">
+                                @product.Name
+                            </a>
+                        </td>
+                    }
+                </tr>
+
+                <!-- Price -->
+                <tr class="border-b border-gray-100 bg-orange-50/50">
+                    <td class="p-4 bg-gray-50 font-semibold text-sm text-gray-600">Giá</td>
+                    @foreach (var product in Model.Products)
+                    {
+                        <td class="p-4">
+                            <span class="text-lg font-bold text-red-600">
+                                @product.MinPrice.ToString("N0") ₫
+                            </span>
+                            @if (product.MinPrice != product.MaxPrice)
+                            {
+                                <span class="text-sm text-gray-400"> – @product.MaxPrice.ToString("N0") ₫</span>
+                            }
+                        </td>
+                    }
+                </tr>
+
+                <!-- Category -->
+                <tr class="border-b border-gray-100">
+                    <td class="p-4 bg-gray-50 font-semibold text-sm text-gray-600">Danh mục</td>
+                    @foreach (var product in Model.Products)
+                    {
+                        <td class="p-4 text-sm text-gray-700">@product.CategoryName</td>
+                    }
+                </tr>
+
+                <!-- Store -->
+                <tr class="border-b border-gray-100">
+                    <td class="p-4 bg-gray-50 font-semibold text-sm text-gray-600">Cửa hàng</td>
+                    @foreach (var product in Model.Products)
+                    {
+                        <td class="p-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border">
+                                    @if (!string.IsNullOrEmpty(product.Store.LogoUrl))
+                                    {
+                                        <img src="@product.Store.LogoUrl" alt="" class="w-full h-full object-cover" />
+                                    }
+                                    else
+                                    {
+                                        <span class="material-symbols-outlined text-gray-400 text-sm">storefront</span>
+                                    }
+                                </div>
+                                <span class="text-sm font-medium text-gray-700">@product.Store.StoreName</span>
+                            </div>
+                        </td>
+                    }
+                </tr>
+
+                <!-- Variants -->
+                <tr class="border-b border-gray-100">
+                    <td class="p-4 bg-gray-50 font-semibold text-sm text-gray-600">Phân loại</td>
+                    @foreach (var product in Model.Products)
+                    {
+                        <td class="p-4">
+                            @if (product.Variants.Any())
+                            {
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach (var v in product.Variants)
+                                    {
+                                        <span class="px-2 py-1 bg-gray-100 rounded-lg text-xs font-medium text-gray-600">@v.VariantName</span>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-sm text-gray-400">—</span>
+                            }
+                        </td>
+                    }
+                </tr>
+
+                <!-- Stock -->
+                <tr class="border-b border-gray-200">
+                    <td class="p-4 bg-gray-50 font-semibold text-sm text-gray-600">Tồn kho</td>
+                    @foreach (var product in Model.Products)
+                    {
+                        var stock = product.Variants.Sum(v => v.StockQuantity);
+                        <td class="p-4">
+                            @if (stock > 0)
+                            {
+                                <span class="inline-flex items-center gap-1 text-sm text-green-600 font-medium">
+                                    <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                                    Còn @stock SP
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center gap-1 text-sm text-red-500 font-medium">
+                                    <span class="material-symbols-outlined text-[16px]">cancel</span>
+                                    Hết hàng
+                                </span>
+                            }
+                        </td>
+                    }
+                </tr>
+
+                <!-- Specs Section Header -->
+                @if (Model.AllSpecKeys.Any())
+                {
+                    <tr>
+                        <td colspan="@(Model.Products.Count + 1)" class="pt-6 pb-2 px-4">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary text-[20px]">settings</span>
+                                <h3 class="font-bold text-gray-900">Thông số kỹ thuật</h3>
+                            </div>
+                        </td>
+                    </tr>
+
+                    var specIsEven = false;
+                    @foreach (var key in Model.AllSpecKeys)
+                    {
+                        <tr class="border-b border-gray-100 @(specIsEven ? "bg-gray-50/50" : "")">
+                            <td class="p-4 bg-gray-50 font-semibold text-sm text-gray-600">@key</td>
+                            @foreach (var product in Model.Products)
+                            {
+                                <td class="p-4 text-sm text-gray-700">
+                                    @if (product.Specs.TryGetValue(key, out var value))
+                                    {
+                                        @value
+                                    }
+                                    else
+                                    {
+                                        <span class="text-gray-300">—</span>
+                                    }
+                                </td>
+                            }
+                        </tr>
+                        specIsEven = !specIsEven;
+                    }
+                }
+
+                <!-- Actions Row -->
+                <tr>
+                    <td class="p-4 bg-gray-50 rounded-bl-xl"></td>
+                    @foreach (var product in Model.Products)
+                    {
+                        <td class="p-4 text-center">
+                            <a href="/product/@product.Slug"
+                               class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                Xem chi tiết
+                            </a>
+                        </td>
+                    }
+                </tr>
+            </table>
+        </div>
+
+        <!-- Remove buttons -->
+        <div class="mt-4 flex justify-center">
+            <button onclick="clearCompare()" class="inline-flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                <span class="material-symbols-outlined text-[18px]">delete</span>
+                Xóa tất cả
+            </button>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function clearCompare() {
+            localStorage.removeItem('gearzone_compare');
+            window.location.href = '/compare';
+        }
+    </script>
+}

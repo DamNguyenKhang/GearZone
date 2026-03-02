@@ -4,6 +4,7 @@ using GearZone.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GearZone.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260301192039_AddBrandAndSpecFiltering")]
+    partial class AddBrandAndSpecFiltering
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,21 +24,6 @@ namespace GearZone.Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("ApplicationUserStore", b =>
-                {
-                    b.Property<Guid>("StaffStoresId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("StaffsId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("StaffStoresId", "StaffsId");
-
-                    b.HasIndex("StaffsId");
-
-                    b.ToTable("StoreStaffs", (string)null);
-                });
 
             modelBuilder.Entity("GearZone.Domain.Entities.ApplicationUser", b =>
                 {
@@ -239,9 +227,6 @@ namespace GearZone.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -259,260 +244,12 @@ namespace GearZone.Infrastructure.Migrations
 
                     b.HasIndex("IsActive");
 
-                    b.HasIndex("IsDeleted");
-
                     b.HasIndex("ParentId");
 
                     b.HasIndex("Slug")
                         .IsUnique();
 
                     b.ToTable("Categories", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Keyboards",
-                            Slug = "keyboards"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Mice",
-                            Slug = "mice"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Headsets",
-                            Slug = "headsets"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Monitors",
-                            Slug = "monitors"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "PC Components",
-                            Slug = "pc-components"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Gaming Furniture",
-                            Slug = "gaming-furniture"
-                        },
-                        new
-                        {
-                            Id = 7,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Setup Accessories",
-                            Slug = "setup-accessories"
-                        },
-                        new
-                        {
-                            Id = 8,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Console & Controllers",
-                            Slug = "console-controllers"
-                        },
-                        new
-                        {
-                            Id = 11,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Mechanical Keyboards",
-                            ParentId = 1,
-                            Slug = "mechanical-keyboards"
-                        },
-                        new
-                        {
-                            Id = 12,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Membrane Keyboards",
-                            ParentId = 1,
-                            Slug = "membrane-keyboards"
-                        },
-                        new
-                        {
-                            Id = 13,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Keycaps",
-                            ParentId = 1,
-                            Slug = "keycaps"
-                        },
-                        new
-                        {
-                            Id = 14,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Keyboard Switches",
-                            ParentId = 1,
-                            Slug = "keyboard-switches"
-                        },
-                        new
-                        {
-                            Id = 21,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Gaming Mice",
-                            ParentId = 2,
-                            Slug = "gaming-mice"
-                        },
-                        new
-                        {
-                            Id = 22,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Office Mice",
-                            ParentId = 2,
-                            Slug = "office-mice"
-                        },
-                        new
-                        {
-                            Id = 23,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Mouse Pads",
-                            ParentId = 2,
-                            Slug = "mouse-pads"
-                        },
-                        new
-                        {
-                            Id = 31,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Gaming Headsets",
-                            ParentId = 3,
-                            Slug = "gaming-headsets"
-                        },
-                        new
-                        {
-                            Id = 32,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Wireless Headphones",
-                            ParentId = 3,
-                            Slug = "wireless-headphones"
-                        },
-                        new
-                        {
-                            Id = 33,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Microphones",
-                            ParentId = 3,
-                            Slug = "microphones"
-                        },
-                        new
-                        {
-                            Id = 41,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Gaming Monitors",
-                            ParentId = 4,
-                            Slug = "gaming-monitors"
-                        },
-                        new
-                        {
-                            Id = 42,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Office Monitors",
-                            ParentId = 4,
-                            Slug = "office-monitors"
-                        },
-                        new
-                        {
-                            Id = 43,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Curved Monitors",
-                            ParentId = 4,
-                            Slug = "curved-monitors"
-                        },
-                        new
-                        {
-                            Id = 51,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "CPUs",
-                            ParentId = 5,
-                            Slug = "cpus"
-                        },
-                        new
-                        {
-                            Id = 52,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "GPUs",
-                            ParentId = 5,
-                            Slug = "gpus"
-                        },
-                        new
-                        {
-                            Id = 53,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "RAM",
-                            ParentId = 5,
-                            Slug = "ram"
-                        },
-                        new
-                        {
-                            Id = 54,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Motherboards",
-                            ParentId = 5,
-                            Slug = "motherboards"
-                        },
-                        new
-                        {
-                            Id = 55,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Storage (SSD/HDD)",
-                            ParentId = 5,
-                            Slug = "storage"
-                        },
-                        new
-                        {
-                            Id = 56,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "Power Supplies",
-                            ParentId = 5,
-                            Slug = "power-supplies"
-                        },
-                        new
-                        {
-                            Id = 57,
-                            IsActive = true,
-                            IsDeleted = false,
-                            Name = "PC Cases",
-                            ParentId = 5,
-                            Slug = "pc-cases"
-                        });
                 });
 
             modelBuilder.Entity("GearZone.Domain.Entities.CategoryAttribute", b =>
@@ -1046,24 +783,27 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("Stores", (string)null);
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.SystemSetting", b =>
+            modelBuilder.Entity("GearZone.Domain.Entities.StoreUser", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("DataType")
-                        .HasColumnType("int");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
-                    b.Property<string>("Description")
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Role")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
-                    b.Property<string>("GroupName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Key")
+                    b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
@@ -1237,21 +977,6 @@ namespace GearZone.Infrastructure.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
-                });
-
-            modelBuilder.Entity("ApplicationUserStore", b =>
-                {
-                    b.HasOne("GearZone.Domain.Entities.Store", null)
-                        .WithMany()
-                        .HasForeignKey("StaffStoresId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GearZone.Domain.Entities.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("StaffsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("GearZone.Domain.Entities.Cart", b =>
@@ -1608,6 +1333,8 @@ namespace GearZone.Infrastructure.Migrations
             modelBuilder.Entity("GearZone.Domain.Entities.Store", b =>
                 {
                     b.Navigation("Products");
+
+                    b.Navigation("StoreUsers");
                 });
 #pragma warning restore 612, 618
         }

@@ -16,6 +16,8 @@ namespace GearZone.Infrastructure
             services.AddScoped<IFileStorageService, CloudinaryStorageService>();
             services.AddScoped<IEmailService, SmtpEmailService>();
             services.AddScoped<IPaymentService, PayOSPaymentService>();
+            services.AddScoped<IBrandRepository, BrandRepository>();
+            services.AddScoped<ICategoryAttributeRepository, CategoryAttributeRepository>();
             services.AddScoped<ICartRepository, CartRepository>();
             services.AddScoped<ICartItemRepository, CartItemRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
@@ -27,6 +29,7 @@ namespace GearZone.Infrastructure
             services.AddScoped<IProductRepository, ProductRepository>();
             services.AddScoped<IProductImageRepository, ProductImageRepository>();
             services.AddScoped<IProductVariantRepository, ProductVariantRepository>();
+            services.AddScoped<IVariantAttributeValueRepository, VariantAttributeValueRepository>();
             services.AddScoped<IStoreRepository, StoreRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ISystemSettingRepository, SystemSettingRepository>();

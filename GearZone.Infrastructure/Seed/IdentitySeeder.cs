@@ -60,7 +60,7 @@ namespace GearZone.Infrastructure.Seed
                 throw new Exception($"Cannot create SuperAdmin: {errors}");
             }
 
-            await userManager.AddToRoleAsync(user, "SuperAdmin");
+            await userManager.AddToRoleAsync(user, "Super Admin");
         }
     }
 }

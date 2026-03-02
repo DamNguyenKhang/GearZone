@@ -9,11 +9,14 @@ namespace GearZone.Infrastructure
     {
         public DbSet<Store> Stores { get; set; }
 
+        public DbSet<Brand> Brands { get; set; }
         public DbSet<Category> Categories { get; set; }
+        public DbSet<CategoryAttribute> CategoryAttributes { get; set; }
 
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<ProductVariant> ProductVariants { get; set; }
+        public DbSet<VariantAttributeValue> VariantAttributeValues { get; set; }
 
         public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
 

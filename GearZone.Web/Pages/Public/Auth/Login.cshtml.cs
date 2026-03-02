@@ -59,9 +59,16 @@ namespace GearZone.Web.Pages.Public.Auth
             if (result.Status == LoginStatus.Success)
             {
                 var user = await _userManager.FindByIdAsync(result.UserId!);
-                if (user != null && await _userManager.IsInRoleAsync(user, "Super Admin"))
+                if (user != null)
                 {
-                    return LocalRedirect("/Admin/Dashboard");
+                    if (await _userManager.IsInRoleAsync(user, "Super Admin"))
+                    {
+                        return LocalRedirect("/Admin/Dashboard");
+                    }
+                    if (await _userManager.IsInRoleAsync(user, "Store Owner"))
+                    {
+                        return LocalRedirect("/StoreOwner/Dashboard");
+                    }
                 }
                 return LocalRedirect(ReturnUrl ?? "/");
             }
@@ -164,9 +171,16 @@ namespace GearZone.Web.Pages.Public.Auth
                 if (!string.IsNullOrEmpty(userId))
                 {
                     var user = await _userManager.FindByIdAsync(userId);
-                    if (user != null && await _userManager.IsInRoleAsync(user, "Super Admin"))
+                    if (user != null)
                     {
-                        return LocalRedirect("/Admin/Dashboard");
+                        if (await _userManager.IsInRoleAsync(user, "Super Admin"))
+                        {
+                            return LocalRedirect("/Admin/Dashboard");
+                        }
+                        if (await _userManager.IsInRoleAsync(user, "Store Owner"))
+                        {
+                            return LocalRedirect("/StoreOwner/Dashboard");
+                        }
                     }
                 }
                 return LocalRedirect(returnUrl);

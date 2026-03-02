@@ -208,7 +208,7 @@
                         </div>
                         <div class="col-span-1">
                             <dt class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Commission Rate</dt>
-                            <dd class="mt-1 text-sm font-semibold text-emerald-600">@store.CommissionRate.ToString("0.##")%</dd>
+                            <dd class="mt-1 text-sm font-semibold text-emerald-600">@((store.CommissionRate * 100).ToString("0.##"))%</dd>
                         </div>
                     </dl>
                 </div>

@@ -34,6 +34,7 @@ namespace GearZone.Infrastructure
             base.OnModelCreating(builder);
             
             SystemSettingSeeder.Seed(builder);
+            CategorySeeder.Seed(builder);
 
             builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
         }

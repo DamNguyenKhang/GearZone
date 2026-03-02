@@ -112,7 +112,7 @@
     </style>
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="bg-background-light text-text-body min-h-screen flex overflow-hidden">
+<body class="bg-background-light text-text-body h-screen flex overflow-hidden">
     <!-- Sidebar -->
     <aside id="sidebar" class="sidebar w-64 bg-surface-light border-r border-border-light flex flex-col shrink-0 shadow-sm z-30">
         <div class="h-16 flex items-center px-6 border-b border-border-light logo-container">
@@ -127,7 +127,7 @@
                 <span class="font-medium text-sm sidebar-text">Overview</span>
             </a>
             
-            <div class="px-3 py-4 mt-2 sidebar-text">
+            <div class="px-3 py-2 mt-1 sidebar-text">
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Management</span>
             </div>
 
@@ -143,7 +143,22 @@
 
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Orders" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" href="#">
                 <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Orders" ? "filled" : "")">shopping_bag</span>
-                <span class="font-medium text-sm sidebar-text">Orders</span>
+                <span class="font-medium text-sm sidebar-text">Orders Management</span>
+            </a>
+
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Products" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" href="#">
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Products" ? "filled" : "")">inventory_2</span>
+                <span class="font-medium text-sm sidebar-text">Product Management</span>
+            </a>
+
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Categories" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" asp-page="/Admin/Categories/Index">
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Categories" ? "filled" : "")">category</span>
+                <span class="font-medium text-sm sidebar-text">Category Management</span>
+            </a>
+
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Commission" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" href="#">
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Commission" ? "filled" : "")">payments</span>
+                <span class="font-medium text-sm sidebar-text">Commission & Payout</span>
             </a>
 
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Disputes" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" href="#">
@@ -152,13 +167,23 @@
                 <span class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-bold badge-count">7</span>
             </a>
 
-            <div class="px-3 py-4 mt-2 sidebar-text">
+            <div class="px-3 py-2 mt-1 sidebar-text">
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">System</span>
             </div>
 
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Revenue" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" href="#">
                 <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Revenue" ? "filled" : "")">monitoring</span>
                 <span class="font-medium text-sm sidebar-text">Revenue</span>
+            </a>
+
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Reports" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" asp-page="/Admin/Reports/Index">
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Reports" ? "filled" : "")">bar_chart</span>
+                <span class="font-medium text-sm sidebar-text">Reports</span>
+            </a>
+
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Logs" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" href="#">
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Logs" ? "filled" : "")">receipt_long</span>
+                <span class="font-medium text-sm sidebar-text">System Logs</span>
             </a>
 
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Settings" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" asp-page="/Admin/Settings/Index">

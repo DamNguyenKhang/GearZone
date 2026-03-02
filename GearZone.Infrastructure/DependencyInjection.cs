@@ -4,6 +4,7 @@ using GearZone.Infrastructure.External;
 using GearZone.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using GearZone.Application.Abstractions.Persistence;
 
 namespace GearZone.Infrastructure
 {
@@ -11,6 +12,7 @@ namespace GearZone.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services)
         {
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IFileStorageService, CloudinaryStorageService>();
             services.AddScoped<IEmailService, SmtpEmailService>();
             services.AddScoped<IPaymentService, PayOSPaymentService>();
@@ -26,8 +28,8 @@ namespace GearZone.Infrastructure
             services.AddScoped<IProductImageRepository, ProductImageRepository>();
             services.AddScoped<IProductVariantRepository, ProductVariantRepository>();
             services.AddScoped<IStoreRepository, StoreRepository>();
-            services.AddScoped<IStoreUserRepository, StoreUserRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
 
             return services;
         }

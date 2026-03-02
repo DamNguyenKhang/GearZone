@@ -1,4 +1,4 @@
-﻿namespace GearZone.Domain.Enums
+﻿ namespace GearZone.Domain.Enums
 {
     public enum StoreStatus
     {

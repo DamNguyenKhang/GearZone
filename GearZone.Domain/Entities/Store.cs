@@ -30,7 +30,7 @@ namespace GearZone.Domain.Entities
         public DateTime? UpdatedAt { get; set; }
  
         public ApplicationUser OwnerUser { get; set; } = null!;
-        public ICollection<StoreUser> StoreUsers { get; set; } = new List<StoreUser>();
+        public ICollection<ApplicationUser> Staffs { get; set; } = new List<ApplicationUser>();
         public ICollection<Product> Products { get; set; } = new List<Product>();
     }
 }

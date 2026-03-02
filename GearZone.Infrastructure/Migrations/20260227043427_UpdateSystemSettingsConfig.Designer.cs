@@ -4,6 +4,7 @@ using GearZone.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GearZone.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260227043427_UpdateSystemSettingsConfig")]
+    partial class UpdateSystemSettingsConfig
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,21 +24,6 @@ namespace GearZone.Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("ApplicationUserStore", b =>
-                {
-                    b.Property<Guid>("StaffStoresId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("StaffsId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("StaffStoresId", "StaffsId");
-
-                    b.HasIndex("StaffsId");
-
-                    b.ToTable("StoreStaffs", (string)null);
-                });
 
             modelBuilder.Entity("GearZone.Domain.Entities.ApplicationUser", b =>
                 {
@@ -711,6 +699,42 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("Stores", (string)null);
                 });
 
+            modelBuilder.Entity("GearZone.Domain.Entities.StoreUser", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("StoreId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("StoreUsers", (string)null);
+                });
+
             modelBuilder.Entity("GearZone.Domain.Entities.SystemSetting", b =>
                 {
                     b.Property<Guid>("Id")
@@ -763,7 +787,7 @@ namespace GearZone.Infrastructure.Migrations
                             Description = "Minimum Payout (VND)",
                             GroupName = "Payment",
                             Key = "Payment_MinimumPayout",
-                            Value = "50000"
+                            Value = "500000"
                         },
                         new
                         {
@@ -799,7 +823,7 @@ namespace GearZone.Infrastructure.Migrations
                             Description = "Manually approve new vendors",
                             GroupName = "Store",
                             Key = "Store_NewStoreApproval",
-                            Value = "true"
+                            Value = "false"
                         },
                         new
                         {
@@ -1026,21 +1050,6 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("ApplicationUserStore", b =>
-                {
-                    b.HasOne("GearZone.Domain.Entities.Store", null)
-                        .WithMany()
-                        .HasForeignKey("StaffStoresId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GearZone.Domain.Entities.ApplicationUser", null)
-                        .WithMany()
-                        .HasForeignKey("StaffsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("GearZone.Domain.Entities.Cart", b =>
                 {
                     b.HasOne("GearZone.Domain.Entities.Store", "Store")
@@ -1226,6 +1235,25 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("OwnerUser");
                 });
 
+            modelBuilder.Entity("GearZone.Domain.Entities.StoreUser", b =>
+                {
+                    b.HasOne("GearZone.Domain.Entities.Store", "Store")
+                        .WithMany("StoreUsers")
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GearZone.Domain.Entities.ApplicationUser", "User")
+                        .WithMany("StoreUsers")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Store");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -1284,6 +1312,8 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Orders");
 
                     b.Navigation("OwnedStores");
+
+                    b.Navigation("StoreUsers");
                 });
 
             modelBuilder.Entity("GearZone.Domain.Entities.Cart", b =>
@@ -1322,6 +1352,8 @@ namespace GearZone.Infrastructure.Migrations
             modelBuilder.Entity("GearZone.Domain.Entities.Store", b =>
                 {
                     b.Navigation("Products");
+
+                    b.Navigation("StoreUsers");
                 });
 #pragma warning restore 612, 618
         }

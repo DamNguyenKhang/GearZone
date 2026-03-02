@@ -40,6 +40,10 @@ namespace GearZone.Infrastructure.Configurations
                    .WithMany(x => x.OwnedStores)
                    .HasForeignKey(x => x.OwnerUserId)
                    .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasMany(x => x.Staffs)
+                   .WithMany(x => x.StaffStores)
+                   .UsingEntity(j => j.ToTable("StoreStaffs"));
         }
     }
 

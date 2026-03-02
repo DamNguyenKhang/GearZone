@@ -50,8 +50,8 @@
 
         <div class="flex flex-col lg:flex-row gap-8">
             <!-- Left Sidebar Filters -->
-            <aside class="w-full lg:w-[260px] flex-shrink-0 space-y-6">
-                <form id="filter-form" class="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark p-5 sticky top-24">
+            <aside class="w-full lg:w-[260px] flex-shrink-0 lg:sticky lg:top-24 lg:self-start lg:h-[calc(100vh-7rem)] transition-all duration-300">
+                <form id="filter-form" class="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark p-5 h-full overflow-y-auto hide-scrollbar">
                     <input type="hidden" name="CategorySlug" value="@Model.Filter.CategorySlug" />
                     <input type="hidden" name="PageNumber" id="page-number-input" value="1" />
                     <input type="hidden" name="SortBy" id="sort-by-input" value="@Model.Filter.SortBy" />

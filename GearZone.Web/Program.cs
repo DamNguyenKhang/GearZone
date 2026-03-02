@@ -83,8 +83,10 @@ using (var scope = app.Services.CreateScope())
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var configuration = services.GetRequiredService<IConfiguration>();
+    var dbContext = services.GetRequiredService<ApplicationDbContext>();
 
     await IdentitySeeder.SeedAsync(userManager, roleManager, configuration);
+    await CatalogSeeder.SeedAsync(dbContext);
 }
 
 app.UseHttpsRedirection();

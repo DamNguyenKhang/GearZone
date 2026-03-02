@@ -64,6 +64,7 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
     </style>
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="bg-slate-50 text-text-primary min-h-screen flex flex-col">
     <!-- Sticky Header -->

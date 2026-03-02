@@ -1,0 +1,410 @@
+@page "{CategorySlug?}"
+@model GearZone.Web.Pages.Public.Catalog.BrowseModel
+@{
+    ViewData["Title"] = "Browse Products";
+}
+
+@section Styles {
+    <style>
+        .dual-slider-input {
+            -webkit-appearance: none;
+            appearance: none;
+            pointer-events: none;
+        }
+        .dual-slider-input::-webkit-slider-thumb {
+            pointer-events: all;
+            width: 24px;
+            height: 24px;
+            -webkit-appearance: none;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .dual-slider-input::-moz-range-thumb {
+            pointer-events: all;
+            width: 24px;
+            height: 24px;
+            border: none;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+    </style>
+}
+
+<!-- Main Content Layout -->
+<main class="flex-1 flex justify-center py-6 px-4 md:px-10">
+    <div class="w-full max-w-[1440px] flex flex-col gap-6">
+        <!-- Breadcrumbs & Title -->
+        <div class="flex flex-col gap-2">
+            <nav class="flex items-center gap-2 text-sm text-text-secondary">
+                <a class="hover:text-primary transition-colors" href="/">Home</a>
+                <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                <span class="text-text-main dark:text-white font-medium capitalize">@Model.Filter.CategorySlug?.Replace("-", " ")</span>
+            </nav>
+            <div class="flex flex-wrap items-baseline justify-between gap-4">
+                <h1 class="text-3xl font-bold tracking-tight text-text-main dark:text-white capitalize">
+                    @Model.Filter.CategorySlug?.Replace("-", " ") 
+                    <span class="text-lg font-normal text-text-secondary ml-2" id="total-count-text">(@Model.Products.TotalCount products)</span>
+                </h1>
+            </div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Left Sidebar Filters -->
+            <aside class="w-full lg:w-[260px] flex-shrink-0 lg:sticky lg:top-24 lg:self-start lg:h-[calc(100vh-7rem)] transition-all duration-300">
+                <form id="filter-form" class="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark p-5 h-full overflow-y-auto hide-scrollbar">
+                    <input type="hidden" name="CategorySlug" value="@Model.Filter.CategorySlug" />
+                    <input type="hidden" name="PageNumber" id="page-number-input" value="1" />
+                    <input type="hidden" name="SortBy" id="sort-by-input" value="@Model.Filter.SortBy" />
+
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="font-bold text-lg">Filter by</h3>
+                        <button type="button" id="reset-filters-btn" class="text-xs font-medium text-text-secondary hover:text-primary">Reset</button>
+                    </div>
+
+                    <!-- Brand Filter -->
+                    @if (Model.Sidebar.Brands.Any())
+                    {
+                        <div class="mb-6">
+                            <button type="button" class="flex items-center justify-between w-full mb-3 group">
+                                <span class="font-semibold text-sm">Brand</span>
+                                <span class="material-symbols-outlined text-[20px] text-text-secondary group-hover:text-primary transition-colors">expand_less</span>
+                            </button>
+                            <div class="space-y-2.5">
+                                @foreach (var brand in Model.Sidebar.Brands)
+                                {
+                                    <label class="flex items-center gap-3 cursor-pointer group">
+                                        <input type="checkbox" name="BrandSlugs" value="@brand.Slug" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/20 filter-checkbox" 
+                                               @(Model.Filter.BrandSlugs?.Contains(brand.Slug) == true ? "checked" : "") />
+                                        <span class="text-sm text-text-secondary group-hover:text-text-main dark:group-hover:text-white transition-colors">@brand.Name</span>
+                                        <span class="ml-auto text-xs text-text-secondary">@brand.ProductCount</span>
+                                    </label>
+                                }
+                            </div>
+                        </div>
+                        <div class="w-full h-px bg-border-light dark:bg-border-dark mb-6"></div>
+                    }
+
+                    <!-- Price Range -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="font-semibold text-sm">Price (VND)</span>
+                            <span class="material-symbols-outlined text-[20px] text-text-secondary">expand_less</span>
+                        </div>
+                        
+                        <!-- Dual Range Slider -->
+                        <div class="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full mb-8 mt-2 mx-2">
+                            <div id="price-slider-track" class="absolute h-full bg-primary rounded-full z-10" style="left: 0%; right: 0%;"></div>
+                            <input type="range" id="price-min-range" min="0" max="100000000" step="500000" value="@(Model.Filter.MinPrice ?? 0)" 
+                                   class="absolute w-full h-full opacity-0 z-30 bg-transparent dual-slider-input m-0 cursor-pointer" />
+                            <input type="range" id="price-max-range" min="0" max="100000000" step="500000" value="@(Model.Filter.MaxPrice ?? 100000000)" 
+                                   class="absolute w-full h-full opacity-0 z-30 bg-transparent dual-slider-input m-0 cursor-pointer" />
+                            
+                            <!-- Custom Thumb Visuals -->
+                            <div id="thumb-min" class="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-primary rounded-full shadow-md z-20 pointer-events-none -ml-2.5"></div>
+                            <div id="thumb-max" class="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-primary rounded-full shadow-md z-20 pointer-events-none -ml-2.5"></div>
+                        </div>
+
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="flex flex-col gap-1 w-full text-center">
+                                <span class="text-[10px] text-text-secondary font-medium">Min</span>
+                                <input type="hidden" name="MinPrice" id="min-price-hidden" value="@Model.Filter.MinPrice" />
+                                <div id="min-price-display" class="bg-background-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded px-1 py-1.5 text-[11px] font-bold w-full truncate">
+                                    @(Model.Filter.MinPrice?.ToString("N0") ?? "0")
+                                </div>
+                            </div>
+                            <span class="text-text-secondary mt-4 font-bold">-</span>
+                            <div class="flex flex-col gap-1 w-full text-center">
+                                <span class="text-[10px] text-text-secondary font-medium">Max</span>
+                                <input type="hidden" name="MaxPrice" id="max-price-hidden" value="@Model.Filter.MaxPrice" />
+                                <div id="max-price-display" class="bg-background-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded px-1 py-1.5 text-[11px] font-bold w-full truncate">
+                                    @(Model.Filter.MaxPrice?.ToString("N0") ?? "100M+")
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-full h-px bg-border-light dark:bg-border-dark mb-6"></div>
+
+                    <!-- Dynamic Attributes -->
+                    @foreach (var attr in Model.Sidebar.Attributes)
+                    {
+                        <div class="mb-6">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="font-semibold text-sm">@attr.Name</span>
+                                <span class="material-symbols-outlined text-[20px] text-text-secondary">expand_less</span>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach (var val in attr.Values)
+                                {
+                                    bool isChecked = Model.Filter.Attributes != null 
+                                                     && Model.Filter.Attributes.ContainsKey(attr.Name) 
+                                                     && Model.Filter.Attributes[attr.Name].Contains(val.Value);
+
+                                    <label class="cursor-pointer">
+                                        <input type="checkbox" name="Attributes[@attr.Name][]" value="@val.Value" class="peer sr-only filter-checkbox" @(isChecked ? "checked" : "") />
+                                        <div class="px-3 py-1.5 rounded-full border border-border-light dark:border-border-dark bg-white dark:bg-surface-dark text-xs font-medium text-text-secondary peer-checked:bg-primary/10 peer-checked:text-primary peer-checked:border-primary transition-all">
+                                            @val.Value
+                                        </div>
+                                    </label>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Availability Toggle -->
+                    <div class="flex items-center justify-between py-2">
+                        <span class="font-semibold text-sm">In Stock Only</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="InStockOnly" value="true" class="sr-only peer filter-checkbox" @(Model.Filter.InStockOnly == true ? "checked" : "") />
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+                        </label>
+                    </div>
+
+                </form>
+            </aside>
+
+            <!-- Product Grid Area -->
+            <div class="flex-1 flex flex-col gap-6">
+                <!-- Sorting & View Options -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-surface-dark p-2 rounded-xl border border-border-light dark:border-border-dark shadow-sm">
+                    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0 px-2 sort-container">
+                        <span class="text-sm font-medium text-text-secondary whitespace-nowrap mr-2">Sort by:</span>
+                        
+                        <button type="button" data-sort="popular" class="sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors @(string.IsNullOrEmpty(Model.Filter.SortBy) || Model.Filter.SortBy == "popular" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-background-light dark:hover:bg-gray-800")">Popular</button>
+                        
+                        <button type="button" data-sort="newest" class="sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors @(Model.Filter.SortBy == "newest" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-background-light dark:hover:bg-gray-800")">Newest</button>
+                        
+                        <button type="button" data-sort="price_asc" class="sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors @(Model.Filter.SortBy == "price_asc" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-background-light dark:hover:bg-gray-800")">Price: Low-High</button>
+                        
+                        <button type="button" data-sort="price_desc" class="sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors @(Model.Filter.SortBy == "price_desc" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-background-light dark:hover:bg-gray-800")">Price: High-Low</button>
+                    </div>
+                    
+                    <div class="flex items-center gap-1 border-l border-border-light dark:border-border-dark pl-2 sm:pl-4">
+                        <button class="p-1.5 text-primary bg-primary/10 rounded hover:bg-primary/20 transition-colors" title="Grid View">
+                            <span class="material-symbols-outlined text-[20px]">grid_view</span>
+                        </button>
+                        <button class="p-1.5 text-text-secondary hover:text-text-main dark:hover:text-white rounded transition-colors" title="List View">
+                            <span class="material-symbols-outlined text-[20px]">view_list</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Products Grid -->
+                <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                    @await Html.PartialAsync("_ProductGridPartial", Model.Products.Items)
+                </div>
+
+                <!-- Infinite Scroll Loading Indicator -->
+                <div id="loading-indicator" class="hidden mt-8 flex justify-center py-4">
+                    <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
+                        <span class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+                    </div>
+                </div>
+                
+                <div id="no-more-products" class="@(Model.Products.PageNumber >= Model.Products.TotalPages ? "block" : "hidden") text-center text-text-secondary mt-8 py-4">
+                    You've reached the end of the list.
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let currentPage = @Model.Products.PageNumber;
+            let totalPages = @Model.Products.TotalPages;
+            let isLoading = false;
+            
+            const form = document.getElementById('filter-form');
+            const grid = document.getElementById('product-grid');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const noMoreProducts = document.getElementById('no-more-products');
+            const sortInput = document.getElementById('sort-by-input');
+            const pageInput = document.getElementById('page-number-input');
+
+            // Handle sorting clicks
+            document.querySelectorAll('.sort-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Update active styling
+                    document.querySelectorAll('.sort-btn').forEach(b => {
+                        b.className = "sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors text-text-secondary hover:bg-background-light dark:hover:bg-gray-800";
+                    });
+                    this.className = "sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors bg-primary/10 text-primary";
+                    
+                    // Update input and submit
+                    sortInput.value = this.dataset.sort;
+                    applyFilters();
+                });
+            });
+
+            // Handle checkbox changes for auto-submission
+            document.querySelectorAll('.filter-checkbox').forEach(cb => {
+                cb.addEventListener('change', function() {
+                    applyFilters();
+                });
+            });
+
+            // Handle Reset button
+            document.getElementById('reset-filters-btn').addEventListener('click', function() {
+                document.querySelectorAll('.filter-checkbox').forEach(cb => cb.checked = false);
+                // Reset Price Slider
+                minRange.value = 0;
+                maxRange.value = 100000000;
+                updateSlider();
+                
+                sortInput.value = 'popular';
+                document.querySelectorAll('.sort-btn').forEach(b => {
+                        b.className = b.dataset.sort === 'popular' 
+                            ? "sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors bg-primary/10 text-primary"
+                            : "sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors text-text-secondary hover:bg-background-light dark:hover:bg-gray-800";
+                });
+                applyFilters();
+            });
+
+            // Price Slider Logic
+            const minRange = document.getElementById('price-min-range');
+            const maxRange = document.getElementById('price-max-range');
+            const minDisplay = document.getElementById('min-price-display');
+            const maxDisplay = document.getElementById('max-price-display');
+            const minHidden = document.getElementById('min-price-hidden');
+            const maxHidden = document.getElementById('max-price-hidden');
+            const track = document.getElementById('price-slider-track');
+            const thumbMin = document.getElementById('thumb-min');
+            const thumbMax = document.getElementById('thumb-max');
+            const gap = 5000000; // 5M gap between handles
+
+            function updateSlider() {
+                const minVal = parseInt(minRange.value);
+                const maxVal = parseInt(maxRange.value);
+                const maxTotal = parseInt(minRange.max);
+
+                // Update UI
+                const minPercent = (minVal / maxTotal) * 100;
+                const maxPercent = (maxVal / maxTotal) * 100;
+
+                track.style.left = minPercent + '%';
+                track.style.right = (100 - maxPercent) + '%';
+                thumbMin.style.left = minPercent + '%';
+                thumbMax.style.left = maxPercent + '%';
+
+                minDisplay.innerText = minVal.toLocaleString('vi-VN') + '₫';
+                maxDisplay.innerText = maxVal === maxTotal ? '100M+ ₫' : maxVal.toLocaleString('vi-VN') + '₫';
+                
+                minHidden.value = minVal;
+                maxHidden.value = maxVal === maxTotal ? null : maxVal;
+            }
+
+            // Initial call
+            updateSlider();
+
+            let priceTimeout;
+
+            minRange.addEventListener('input', () => {
+                const minVal = parseInt(minRange.value);
+                const maxVal = parseInt(maxRange.value);
+                if (maxVal - minVal <= gap) {
+                    minRange.value = maxVal - gap;
+                }
+                minRange.style.zIndex = 31;
+                maxRange.style.zIndex = 30;
+                updateSlider();
+            });
+            minRange.addEventListener('change', () => {
+                clearTimeout(priceTimeout);
+                priceTimeout = setTimeout(applyFilters, 500);
+            });
+
+            maxRange.addEventListener('input', () => {
+                const minVal = parseInt(minRange.value);
+                const maxVal = parseInt(maxRange.value);
+                if (maxVal - minVal <= gap) {
+                    maxRange.value = minVal + gap;
+                }
+                maxRange.style.zIndex = 31;
+                minRange.style.zIndex = 30;
+                updateSlider();
+            });
+            maxRange.addEventListener('change', () => {
+                clearTimeout(priceTimeout);
+                priceTimeout = setTimeout(applyFilters, 500);
+            });
+
+            function applyFilters() {
+                // Reset to page 1 for new filters
+                currentPage = 1;
+                pageInput.value = 1;
+                noMoreProducts.classList.add('hidden');
+                
+                const formData = new FormData(form);
+                const queryString = new URLSearchParams(formData).toString();
+                
+                // Update URL without reloading
+                const newUrl = window.location.pathname + '?' + queryString;
+                window.history.pushState({path: newUrl}, '', newUrl);
+
+                // Fetch new data
+                grid.style.opacity = '0.5';
+                
+                fetch(window.location.pathname + '?handler=LoadMore&' + queryString)
+                    .then(response => response.text())
+                    .then(html => {
+                        grid.innerHTML = html;
+                        grid.style.opacity = '1';
+                        // Re-evaluate total pages if needed, though this requires JSON wrapper or custom header.
+                        // Assuming the user doesn't scroll immediately, we will just keep pulling until empty.
+                        // But best to re-fetch if we can. For now, infinite scroll continues until empty HTML.
+                    })
+                    .catch(err => {
+                        console.error("Filter error", err);
+                        grid.style.opacity = '1';
+                    });
+            }
+
+            // Infinite Scroll setup
+            const loadMoreData = () => {
+                if (isLoading || currentPage >= totalPages) return;
+                
+                isLoading = true;
+                currentPage++;
+                pageInput.value = currentPage;
+                loadingIndicator.classList.remove('hidden');
+
+                const formData = new FormData(form);
+                const queryString = new URLSearchParams(formData).toString();
+
+                fetch(window.location.pathname + '?handler=LoadMore&' + queryString)
+                    .then(response => response.text())
+                    .then(html => {
+                        loadingIndicator.classList.add('hidden');
+                        if (html.trim() === '') {
+                            totalPages = currentPage; // Done
+                            noMoreProducts.classList.remove('hidden');
+                        } else {
+                            grid.insertAdjacentHTML('beforeend', html);
+                        }
+                        isLoading = false;
+                    })
+                    .catch(err => {
+                        console.error('Pagination error', err);
+                        loadingIndicator.classList.add('hidden');
+                        isLoading = false;
+                        currentPage--; // Revert
+                    });
+            };
+
+            // Intersection Observer for Infinite Scroll
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    loadMoreData();
+                }
+            }, { rootMargin: '200px' });
+
+            // Since we need to observe the end of the grid, let's observe the loading indicator
+            // or the no more products div. Let's create an invisible footer element to observe.
+            const sentinel = document.createElement('div');
+            sentinel.style.height = '1px';
+            document.getElementById('no-more-products').parentNode.appendChild(sentinel);
+            observer.observe(sentinel);
+        });
+    </script>
+}

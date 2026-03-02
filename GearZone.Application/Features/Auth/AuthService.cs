@@ -1,5 +1,5 @@
 ﻿using GearZone.Application.Abstractions.Services;
-using GearZone.Application.Abstractions.External;
+using GearZone.Domain.Abstractions.External;
 using GearZone.Domain.Entities;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
@@ -59,12 +59,6 @@ namespace GearZone.Application.Features.Auth
 
         public async Task<(bool Succeeded, string[] Errors, string? UserId)> RegisterAsync(string fullName, string email, string password)
         {
-            var existingUser = await _userManager.FindByEmailAsync(email);
-            if (existingUser != null)
-            {
-                return (false, new[] { $"Email {email} is already taken." }, null);
-            }
-
             var user = new ApplicationUser
             {
                 UserName = email,

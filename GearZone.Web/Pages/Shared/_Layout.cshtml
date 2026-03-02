@@ -212,12 +212,13 @@
         </div>
     </footer>
 
+    <!-- Compare Bar -->
+    <partial name="_CompareBar" />
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     @* <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script> *@
-    <script src="~/js/toast.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
-    <partial name="_Toast" />
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

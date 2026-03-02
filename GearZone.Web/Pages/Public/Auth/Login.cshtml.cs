@@ -23,6 +23,9 @@ namespace GearZone.Web.Pages.Public.Auth
         [BindProperty]
         public RegisterViewModel RegisterInput { get; set; } = new();
 
+        public string? ErrorMessage { get; set; }
+        public string? SuccessMessage { get; set; }
+
         [BindProperty(SupportsGet = true)]
         public string? ReturnUrl { get; set; }
 
@@ -43,7 +46,7 @@ namespace GearZone.Web.Pages.Public.Auth
 
             if (!ModelState.IsValid)
             {
-                TempData["ErrorMessage"] = "Validation failed: " + string.Join(", ", ModelState.Values
+                ErrorMessage = "Validation failed: " + string.Join(", ", ModelState.Values
                     .SelectMany(v => v.Errors)
                     .Select(e => e.ErrorMessage));
                 ViewData["ActiveTab"] = "login";
@@ -63,17 +66,17 @@ namespace GearZone.Web.Pages.Public.Auth
                 {
                     var callbackUrl = await GetVerifyEmailUrlAsync(result.UserId);
                     await _authService.SendVerificationEmailAsync(result.UserId, Input.Username, callbackUrl);
-                    TempData["SuccessMessage"] = "Your email is not verified. We have sent a new verification link to your email.";
+                    SuccessMessage = "Your email is not verified. We have sent a new verification link to your email.";
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = "Your email is not verified. Please check your inbox.";
+                    ErrorMessage = "Your email is not verified. Please check your inbox.";
                 }
                 ViewData["ActiveTab"] = "login";
                 return Page();
             }
 
-            TempData["ErrorMessage"] = result.Status switch
+            ErrorMessage = result.Status switch
             {
                 LoginStatus.LockedOut => "This account has been locked due to too many failed attempts.",
                 LoginStatus.InvalidCredentials => "Invalid username or password.",
@@ -96,7 +99,7 @@ namespace GearZone.Web.Pages.Public.Auth
 
             if (!ModelState.IsValid)
             {
-                TempData["ErrorMessage"] = "Validation failed: " + string.Join(", ", ModelState.Values
+                ErrorMessage = "Validation failed: " + string.Join(", ", ModelState.Values
                     .SelectMany(v => v.Errors)
                     .Select(e => e.ErrorMessage));
                 ViewData["ActiveTab"] = "signup";
@@ -113,12 +116,12 @@ namespace GearZone.Web.Pages.Public.Auth
             {
                 var callbackUrl = await GetVerifyEmailUrlAsync(userId);
                 await _authService.SendVerificationEmailAsync(userId, RegisterInput.Email, callbackUrl);
-                TempData["SuccessMessage"] = "Registration successful! Please check your email to verify your account.";
+                SuccessMessage = "Registration successful! Please check your email to verify your account.";
                 ViewData["ActiveTab"] = "login";
                 return Page();
             }
 
-            TempData["ErrorMessage"] = string.Join(" ", errors);
+            ErrorMessage = string.Join(" ", errors);
             ViewData["ActiveTab"] = "signup";
             return Page();
         }
@@ -145,7 +148,7 @@ namespace GearZone.Web.Pages.Public.Auth
             returnUrl = returnUrl ?? Url.Content("~/");
             if (remoteError != null)
             {
-                TempData["ErrorMessage"] = $"Error from external provider: {remoteError}";
+                ErrorMessage = $"Error from external provider: {remoteError}";
                 return Page();
             }
 
@@ -155,7 +158,7 @@ namespace GearZone.Web.Pages.Public.Auth
                 return LocalRedirect(returnUrl);
             }
 
-            TempData["ErrorMessage"] = error ?? "Error during external login.";
+            ErrorMessage = error ?? "Error during external login.";
             return Page();
         }
     }

@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 DotNetEnv.Env.Load();
 builder.Configuration.AddEnvironmentVariables();
 
-var connectionString = builder.Configuration["DB_CONNECTION_STRING"];
+var connectionString = builder.Configuration.GetConnectionString("GearZoneDB");
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -39,8 +39,6 @@ builder.Services.ConfigureApplicationCookie(opt =>
     opt.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     opt.SlidingExpiration = true;
 });
-
-builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(GearZone.Application.DependencyInjection).Assembly);
 
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>

@@ -4,9 +4,9 @@ using System;
 
 namespace GearZone.Infrastructure.Repositories
 {
-    public class StoreRepository : Repository<Store, Guid>, IStoreRepository
+    public class StoreUserRepository : Repository<StoreUser, Guid>, IStoreUserRepository
     {
-        public StoreRepository(ApplicationDbContext context) : base(context)
+        public StoreUserRepository(ApplicationDbContext context) : base(context)
         {
         }
     }

@@ -1,5 +1,4 @@
 ﻿using GearZone.Domain.Entities;
-using GearZone.Infrastructure.Seed;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,7 +6,9 @@ namespace GearZone.Infrastructure
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
+        public DbSet<Business> Businesses { get; set; }
         public DbSet<Store> Stores { get; set; }
+        public DbSet<StoreUser> StoreUsers { get; set; }
 
         public DbSet<Category> Categories { get; set; }
 
@@ -25,16 +26,11 @@ namespace GearZone.Infrastructure
         public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
 
         public DbSet<Payment> Payments { get; set; }
-        public DbSet<SystemSetting> SystemSettings { get; set; }
-        
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            
-            SystemSettingSeeder.Seed(builder);
-
             builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
         }
     }

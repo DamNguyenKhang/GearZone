@@ -22,9 +22,9 @@ namespace GearZone.Infrastructure.Seed
 
             string[] roles = new[]
             {
-            "Super Admin",
+            "SuperAdmin",
             "Staff",
-            "Store Owner",
+            "StoreOwner",
             "Customer"
         };
 

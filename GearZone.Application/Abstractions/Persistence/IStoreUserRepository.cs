@@ -3,7 +3,7 @@ using System;
 
 namespace GearZone.Application.Abstractions.Persistence
 {
-    public interface IStoreRepository : IRepository<Store, Guid>
+    public interface IStoreUserRepository : IRepository<StoreUser, Guid>
     {
     }
 }

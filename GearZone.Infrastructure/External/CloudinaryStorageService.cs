@@ -41,7 +41,7 @@ namespace GearZone.Infrastructure.External
                 var uploadParams = new ImageUploadParams
                 {
                     File = new FileDescription(file.FileName, stream),
-                    Folder = "FUNewsManagement/images",
+                    Folder = "GearZone/images",
                     Transformation = new Transformation()
                         .Quality("auto")
                         .FetchFormat("auto")
@@ -51,7 +51,7 @@ namespace GearZone.Infrastructure.External
 
                 if (result.StatusCode != System.Net.HttpStatusCode.OK)
                 {
-
+                    throw new Exception("Failed to upload image to Cloudinary.");
                 }
 
                 imageUrls.Add(result.SecureUrl.ToString());

@@ -28,7 +28,6 @@ namespace GearZone.Infrastructure
             services.AddScoped<IProductImageRepository, ProductImageRepository>();
             services.AddScoped<IProductVariantRepository, ProductVariantRepository>();
             services.AddScoped<IStoreRepository, StoreRepository>();
-            services.AddScoped<IStoreUserRepository, StoreUserRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
 

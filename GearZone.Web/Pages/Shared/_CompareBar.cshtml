@@ -1,0 +1,128 @@
+<!-- Compare Bar - Fixed bottom -->
+<div id="compareBar" class="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-primary shadow-2xl z-50 transition-transform duration-300 translate-y-full">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+        <div class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+            <span class="material-symbols-outlined text-primary">compare_arrows</span>
+            So sánh (<span id="compareCount">0</span>/3)
+        </div>
+
+        <div id="compareItems" class="flex-1 flex items-center gap-3 overflow-x-auto">
+            <!-- JS will render items here -->
+        </div>
+
+        <div class="flex items-center gap-2 flex-shrink-0">
+            <button onclick="goCompare()" id="compareBtn"
+                    class="px-5 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled>
+                So sánh ngay
+            </button>
+            <button onclick="clearAllCompare()" class="px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                Xóa hết
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const COMPARE_KEY = 'gearzone_compare';
+    const MAX_COMPARE = 3;
+
+    function getCompareList() {
+        try {
+            return JSON.parse(localStorage.getItem(COMPARE_KEY) || '[]');
+        } catch { return []; }
+    }
+
+    function saveCompareList(list) {
+        localStorage.setItem(COMPARE_KEY, JSON.stringify(list));
+        updateCompareBar();
+    }
+
+    function toggleCompare(id, name, imageUrl) {
+        let list = getCompareList();
+        const index = list.findIndex(item => item.id === id);
+
+        if (index > -1) {
+            list.splice(index, 1);
+        } else {
+            if (list.length >= MAX_COMPARE) {
+                alert('Chỉ được chọn tối đa 3 sản phẩm để so sánh!');
+                return;
+            }
+            list.push({ id, name, imageUrl });
+        }
+        saveCompareList(list);
+        updateCompareButtons();
+    }
+
+    function removeFromCompare(id) {
+        let list = getCompareList().filter(item => item.id !== id);
+        saveCompareList(list);
+        updateCompareButtons();
+    }
+
+    function clearAllCompare() {
+        localStorage.removeItem(COMPARE_KEY);
+        updateCompareBar();
+        updateCompareButtons();
+    }
+
+    function goCompare() {
+        const list = getCompareList();
+        if (list.length < 2) {
+            alert('Cần chọn ít nhất 2 sản phẩm để so sánh!');
+            return;
+        }
+        const ids = list.map(item => item.id).join(',');
+        window.location.href = '/compare?ids=' + ids;
+    }
+
+    function updateCompareBar() {
+        const list = getCompareList();
+        const bar = document.getElementById('compareBar');
+        const items = document.getElementById('compareItems');
+        const count = document.getElementById('compareCount');
+        const btn = document.getElementById('compareBtn');
+
+        count.textContent = list.length;
+        btn.disabled = list.length < 2;
+
+        if (list.length > 0) {
+            bar.classList.remove('translate-y-full');
+        } else {
+            bar.classList.add('translate-y-full');
+        }
+
+        items.innerHTML = list.map(item => `
+            <div class="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-1.5 flex-shrink-0">
+                <img src="${item.imageUrl || ''}" alt="" class="w-10 h-10 object-cover rounded-lg border" 
+                     onerror="this.style.display='none'" />
+                <span class="text-sm font-medium text-gray-700 max-w-[120px] truncate">${item.name}</span>
+                <button onclick="removeFromCompare('${item.id}')" class="text-gray-400 hover:text-red-500 transition-colors">
+                    <span class="material-symbols-outlined text-[16px]">close</span>
+                </button>
+            </div>
+        `).join('');
+    }
+
+    function updateCompareButtons() {
+        const list = getCompareList();
+        document.querySelectorAll('.compare-toggle-btn').forEach(btn => {
+            const id = btn.dataset.productId;
+            const isSelected = list.some(item => item.id === id);
+            if (isSelected) {
+                btn.classList.add('text-primary', 'bg-primary/10');
+                btn.classList.remove('text-gray-400', 'hover:text-primary');
+            } else {
+                btn.classList.remove('text-primary', 'bg-primary/10');
+                btn.classList.add('text-gray-400', 'hover:text-primary');
+            }
+        });
+    }
+
+    // Init on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        updateCompareBar();
+        updateCompareButtons();
+    });
+</script>

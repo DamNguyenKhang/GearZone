@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 DotNetEnv.Env.Load();
 builder.Configuration.AddEnvironmentVariables();
 
-var connectionString = builder.Configuration.GetConnectionString("GearZoneDB");
+var connectionString = builder.Configuration["DB_CONNECTION_STRING"];
 
 // Add services to the container.
 builder.Services.AddRazorPages();

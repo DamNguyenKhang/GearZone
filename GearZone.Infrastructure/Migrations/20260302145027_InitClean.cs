@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace GearZone.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitClean : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -32,8 +34,14 @@ namespace GearZone.Infrastructure.Migrations
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     FullName = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true),
                     AvatarUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    IdentityNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IdentityIssuedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IdentityIssuedPlace = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -52,6 +60,22 @@ namespace GearZone.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Brands",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Slug = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    LogoUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    IsApproved = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Brands", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -74,6 +98,23 @@ namespace GearZone.Infrastructure.Migrations
                         principalTable: "Categories",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SystemSettings",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Key = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Value = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DataType = table.Column<int>(type: "int", nullable: false),
+                    GroupName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SystemSettings", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -183,45 +224,27 @@ namespace GearZone.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Businesses",
+                name: "Stores",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     OwnerUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    BusinessName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    StoreName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Slug = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    LogoUrl = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    BusinessType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     TaxCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Phone = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
                     AddressLine = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     Province = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    BankAccountNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BankAccountName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BankName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    RejectReason = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ApprovedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Businesses", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Businesses_AspNetUsers_OwnerUserId",
-                        column: x => x.OwnerUserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Stores",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    BusinessId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    StoreName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Slug = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
-                    LogoUrl = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    LockReason = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    RejectReason = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    LockReason = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     CommissionRate = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ApprovedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -231,11 +254,34 @@ namespace GearZone.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_Stores", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Stores_Businesses_BusinessId",
-                        column: x => x.BusinessId,
-                        principalTable: "Businesses",
+                        name: "FK_Stores_AspNetUsers_OwnerUserId",
+                        column: x => x.OwnerUserId,
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CategoryAttributes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CategoryId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    FilterType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    IsFilterable = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CategoryAttributes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CategoryAttributes_Categories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -280,8 +326,8 @@ namespace GearZone.Infrastructure.Migrations
                     ReceiverName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ReceiverPhone = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ShippingAddress = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ShippingProvider = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    TrackingNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ShippingProvider = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TrackingNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     PaidAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
@@ -310,11 +356,14 @@ namespace GearZone.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     StoreId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CategoryId = table.Column<int>(type: "int", nullable: false),
+                    BrandId = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
                     Slug = table.Column<string>(type: "nvarchar(300)", maxLength: 300, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SpecsJson = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    BasePrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    SoldCount = table.Column<int>(type: "int", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
@@ -322,6 +371,12 @@ namespace GearZone.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Products", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Products_Brands_BrandId",
+                        column: x => x.BrandId,
+                        principalTable: "Brands",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Products_Categories_CategoryId",
                         column: x => x.CategoryId,
@@ -337,28 +392,24 @@ namespace GearZone.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "StoreUsers",
+                name: "StoreStaffs",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    StoreId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Role = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    StaffStoresId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    StaffsId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_StoreUsers", x => x.Id);
+                    table.PrimaryKey("PK_StoreStaffs", x => new { x.StaffStoresId, x.StaffsId });
                     table.ForeignKey(
-                        name: "FK_StoreUsers_AspNetUsers_UserId",
-                        column: x => x.UserId,
+                        name: "FK_StoreStaffs_AspNetUsers_StaffsId",
+                        column: x => x.StaffsId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_StoreUsers_Stores_StoreId",
-                        column: x => x.StoreId,
+                        name: "FK_StoreStaffs_Stores_StaffStoresId",
+                        column: x => x.StaffStoresId,
                         principalTable: "Stores",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -370,11 +421,11 @@ namespace GearZone.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     OrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    OldStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OldStatus = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     NewStatus = table.Column<string>(type: "nvarchar(30)", maxLength: 30, nullable: false),
                     ChangedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ChangedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Note = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false)
+                    Note = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -403,7 +454,7 @@ namespace GearZone.Infrastructure.Migrations
                     Provider = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    TransactionRef = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    TransactionRef = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -550,6 +601,55 @@ namespace GearZone.Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "VariantAttributeValues",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    VariantId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CategoryAttributeId = table.Column<int>(type: "int", nullable: false),
+                    Value = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_VariantAttributeValues", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_VariantAttributeValues_CategoryAttributes_CategoryAttributeId",
+                        column: x => x.CategoryAttributeId,
+                        principalTable: "CategoryAttributes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_VariantAttributeValues_ProductVariants_VariantId",
+                        column: x => x.VariantId,
+                        principalTable: "ProductVariants",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.InsertData(
+                table: "SystemSettings",
+                columns: new[] { "Id", "DataType", "Description", "GroupName", "Key", "UpdatedAt", "Value" },
+                values: new object[,]
+                {
+                    { new Guid("11111111-1111-1111-1111-111111111111"), 1, "Commission Rate (Decimal: 0.05 = 5%)", "Payment", "Payment_CommissionRate", null, "0.05" },
+                    { new Guid("11111111-1111-1111-1111-111111111112"), 1, "Minimum Payout (VND)", "Payment", "Payment_MinimumPayout", null, "50000" },
+                    { new Guid("11111111-1111-1111-1111-111111111113"), 2, "Allow credit cards & e-wallets", "Payment", "Payment_OnlinePayments", null, "true" },
+                    { new Guid("11111111-1111-1111-1111-111111111114"), 2, "Allow payment upon receipt", "Payment", "Payment_CashOnDelivery", null, "true" },
+                    { new Guid("11111111-1111-1111-1111-111111111115"), 0, "Webhook signature secret", "Payment", "Payment_WebhookSecret", null, "" },
+                    { new Guid("22222222-2222-2222-2222-222222222221"), 2, "Manually approve new vendors", "Store", "Store_NewStoreApproval", null, "true" },
+                    { new Guid("22222222-2222-2222-2222-222222222222"), 2, "Allow non-business entities to sell", "Store", "Store_IndividualSellers", null, "true" },
+                    { new Guid("22222222-2222-2222-2222-222222222223"), 0, "Default Store Status (Active, Pending Review, Inactive)", "Store", "Store_DefaultStatus", null, "Pending" },
+                    { new Guid("33333333-3333-3333-3333-333333333331"), 1, "Auto Complete (Days)", "Order", "Order_AutoCompleteDays", null, "7" },
+                    { new Guid("33333333-3333-3333-3333-333333333332"), 1, "Auto Cancel (Minutes)", "Order", "Order_AutoCancelMinutes", null, "30" },
+                    { new Guid("33333333-3333-3333-3333-333333333333"), 2, "Allow buyers to cancel pending orders", "Order", "Order_BuyerCancellation", null, "true" },
+                    { new Guid("44444444-4444-4444-4444-444444444441"), 2, "Vendors must request payouts manually", "Finance", "Finance_ManualWithdraw", null, "true" },
+                    { new Guid("44444444-4444-4444-4444-444444444442"), 2, "Release funds only after order completion", "Finance", "Finance_HoldFunds", null, "true" },
+                    { new Guid("44444444-4444-4444-4444-444444444443"), 1, "Hold funds before payout (days)", "Finance", "Finance_PayoutDelayDays", null, "7" },
+                    { new Guid("55555555-5555-5555-5555-555555555551"), 2, "Require sellers to upload ID documents", "Security", "Security_KYCRequired", null, "false" },
+                    { new Guid("55555555-5555-5555-5555-555555555552"), 2, "Mandatory tax code input", "Security", "Security_TaxCodeVerification", null, "true" }
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -600,14 +700,15 @@ namespace GearZone.Infrastructure.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Businesses_OwnerUserId",
-                table: "Businesses",
-                column: "OwnerUserId");
+                name: "IX_Brands_IsApproved",
+                table: "Brands",
+                column: "IsApproved");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Businesses_Status",
-                table: "Businesses",
-                column: "Status");
+                name: "IX_Brands_Slug",
+                table: "Brands",
+                column: "Slug",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_CartItems_CartId_VariantId",
@@ -646,6 +747,11 @@ namespace GearZone.Infrastructure.Migrations
                 table: "Categories",
                 column: "Slug",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CategoryAttributes_CategoryId_IsFilterable",
+                table: "CategoryAttributes",
+                columns: new[] { "CategoryId", "IsFilterable" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_InventoryTransactions_CreatedAt",
@@ -729,9 +835,24 @@ namespace GearZone.Infrastructure.Migrations
                 columns: new[] { "ProductId", "IsPrimary" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Products_BasePrice",
+                table: "Products",
+                column: "BasePrice");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Products_BrandId_Status",
+                table: "Products",
+                columns: new[] { "BrandId", "Status" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Products_CategoryId_Status",
                 table: "Products",
                 columns: new[] { "CategoryId", "Status" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Products_SoldCount",
+                table: "Products",
+                column: "SoldCount");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Products_StoreId_Slug",
@@ -756,9 +877,9 @@ namespace GearZone.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Stores_BusinessId",
+                name: "IX_Stores_OwnerUserId",
                 table: "Stores",
-                column: "BusinessId");
+                column: "OwnerUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Stores_Slug",
@@ -772,20 +893,26 @@ namespace GearZone.Infrastructure.Migrations
                 column: "Status");
 
             migrationBuilder.CreateIndex(
-                name: "IX_StoreUsers_StoreId",
-                table: "StoreUsers",
-                column: "StoreId");
+                name: "IX_StoreStaffs_StaffsId",
+                table: "StoreStaffs",
+                column: "StaffsId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_StoreUsers_StoreId_UserId",
-                table: "StoreUsers",
-                columns: new[] { "StoreId", "UserId" },
+                name: "IX_SystemSettings_Key",
+                table: "SystemSettings",
+                column: "Key",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_StoreUsers_UserId",
-                table: "StoreUsers",
-                column: "UserId");
+                name: "IX_VariantAttributeValues_CategoryAttributeId_Value",
+                table: "VariantAttributeValues",
+                columns: new[] { "CategoryAttributeId", "Value" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VariantAttributeValues_VariantId_CategoryAttributeId",
+                table: "VariantAttributeValues",
+                columns: new[] { "VariantId", "CategoryAttributeId" },
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -825,7 +952,13 @@ namespace GearZone.Infrastructure.Migrations
                 name: "ProductImages");
 
             migrationBuilder.DropTable(
-                name: "StoreUsers");
+                name: "StoreStaffs");
+
+            migrationBuilder.DropTable(
+                name: "SystemSettings");
+
+            migrationBuilder.DropTable(
+                name: "VariantAttributeValues");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
@@ -834,22 +967,25 @@ namespace GearZone.Infrastructure.Migrations
                 name: "Carts");
 
             migrationBuilder.DropTable(
-                name: "ProductVariants");
-
-            migrationBuilder.DropTable(
                 name: "Orders");
 
             migrationBuilder.DropTable(
+                name: "CategoryAttributes");
+
+            migrationBuilder.DropTable(
+                name: "ProductVariants");
+
+            migrationBuilder.DropTable(
                 name: "Products");
+
+            migrationBuilder.DropTable(
+                name: "Brands");
 
             migrationBuilder.DropTable(
                 name: "Categories");
 
             migrationBuilder.DropTable(
                 name: "Stores");
-
-            migrationBuilder.DropTable(
-                name: "Businesses");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");

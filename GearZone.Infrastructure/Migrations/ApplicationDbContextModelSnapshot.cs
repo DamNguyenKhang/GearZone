@@ -1067,16 +1067,165 @@ namespace GearZone.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("StoreId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("StoreId", "UserId")
+                    b.HasIndex("Key")
                         .IsUnique();
 
-                    b.ToTable("StoreUsers", (string)null);
+                    b.ToTable("SystemSettings");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
+                            DataType = 1,
+                            Description = "Commission Rate (Decimal: 0.05 = 5%)",
+                            GroupName = "Payment",
+                            Key = "Payment_CommissionRate",
+                            Value = "0.05"
+                        },
+                        new
+                        {
+                            Id = new Guid("11111111-1111-1111-1111-111111111112"),
+                            DataType = 1,
+                            Description = "Minimum Payout (VND)",
+                            GroupName = "Payment",
+                            Key = "Payment_MinimumPayout",
+                            Value = "50000"
+                        },
+                        new
+                        {
+                            Id = new Guid("11111111-1111-1111-1111-111111111113"),
+                            DataType = 2,
+                            Description = "Allow credit cards & e-wallets",
+                            GroupName = "Payment",
+                            Key = "Payment_OnlinePayments",
+                            Value = "true"
+                        },
+                        new
+                        {
+                            Id = new Guid("11111111-1111-1111-1111-111111111114"),
+                            DataType = 2,
+                            Description = "Allow payment upon receipt",
+                            GroupName = "Payment",
+                            Key = "Payment_CashOnDelivery",
+                            Value = "true"
+                        },
+                        new
+                        {
+                            Id = new Guid("11111111-1111-1111-1111-111111111115"),
+                            DataType = 0,
+                            Description = "Webhook signature secret",
+                            GroupName = "Payment",
+                            Key = "Payment_WebhookSecret",
+                            Value = ""
+                        },
+                        new
+                        {
+                            Id = new Guid("22222222-2222-2222-2222-222222222221"),
+                            DataType = 2,
+                            Description = "Manually approve new vendors",
+                            GroupName = "Store",
+                            Key = "Store_NewStoreApproval",
+                            Value = "true"
+                        },
+                        new
+                        {
+                            Id = new Guid("22222222-2222-2222-2222-222222222222"),
+                            DataType = 2,
+                            Description = "Allow non-business entities to sell",
+                            GroupName = "Store",
+                            Key = "Store_IndividualSellers",
+                            Value = "true"
+                        },
+                        new
+                        {
+                            Id = new Guid("22222222-2222-2222-2222-222222222223"),
+                            DataType = 0,
+                            Description = "Default Store Status (Active, Pending Review, Inactive)",
+                            GroupName = "Store",
+                            Key = "Store_DefaultStatus",
+                            Value = "Pending"
+                        },
+                        new
+                        {
+                            Id = new Guid("33333333-3333-3333-3333-333333333331"),
+                            DataType = 1,
+                            Description = "Auto Complete (Days)",
+                            GroupName = "Order",
+                            Key = "Order_AutoCompleteDays",
+                            Value = "7"
+                        },
+                        new
+                        {
+                            Id = new Guid("33333333-3333-3333-3333-333333333332"),
+                            DataType = 1,
+                            Description = "Auto Cancel (Minutes)",
+                            GroupName = "Order",
+                            Key = "Order_AutoCancelMinutes",
+                            Value = "30"
+                        },
+                        new
+                        {
+                            Id = new Guid("33333333-3333-3333-3333-333333333333"),
+                            DataType = 2,
+                            Description = "Allow buyers to cancel pending orders",
+                            GroupName = "Order",
+                            Key = "Order_BuyerCancellation",
+                            Value = "true"
+                        },
+                        new
+                        {
+                            Id = new Guid("44444444-4444-4444-4444-444444444441"),
+                            DataType = 2,
+                            Description = "Vendors must request payouts manually",
+                            GroupName = "Finance",
+                            Key = "Finance_ManualWithdraw",
+                            Value = "true"
+                        },
+                        new
+                        {
+                            Id = new Guid("44444444-4444-4444-4444-444444444442"),
+                            DataType = 2,
+                            Description = "Release funds only after order completion",
+                            GroupName = "Finance",
+                            Key = "Finance_HoldFunds",
+                            Value = "true"
+                        },
+                        new
+                        {
+                            Id = new Guid("44444444-4444-4444-4444-444444444443"),
+                            DataType = 1,
+                            Description = "Hold funds before payout (days)",
+                            GroupName = "Finance",
+                            Key = "Finance_PayoutDelayDays",
+                            Value = "7"
+                        },
+                        new
+                        {
+                            Id = new Guid("55555555-5555-5555-5555-555555555551"),
+                            DataType = 2,
+                            Description = "Require sellers to upload ID documents",
+                            GroupName = "Security",
+                            Key = "Security_KYCRequired",
+                            Value = "false"
+                        },
+                        new
+                        {
+                            Id = new Guid("55555555-5555-5555-5555-555555555552"),
+                            DataType = 2,
+                            Description = "Mandatory tax code input",
+                            GroupName = "Security",
+                            Key = "Security_TaxCodeVerification",
+                            Value = "true"
+                        });
                 });
 
             modelBuilder.Entity("GearZone.Domain.Entities.VariantAttributeValue", b =>
@@ -1458,25 +1607,6 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("OwnerUser");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.StoreUser", b =>
-                {
-                    b.HasOne("GearZone.Domain.Entities.Store", "Store")
-                        .WithMany("StoreUsers")
-                        .HasForeignKey("StoreId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GearZone.Domain.Entities.ApplicationUser", "User")
-                        .WithMany("StoreUsers")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Store");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("GearZone.Domain.Entities.VariantAttributeValue", b =>
                 {
                     b.HasOne("GearZone.Domain.Entities.CategoryAttribute", "CategoryAttribute")
@@ -1554,8 +1684,6 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Orders");
 
                     b.Navigation("OwnedStores");
-
-                    b.Navigation("StoreUsers");
                 });
 
             modelBuilder.Entity("GearZone.Domain.Entities.Brand", b =>

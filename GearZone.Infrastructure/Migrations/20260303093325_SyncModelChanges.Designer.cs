@@ -4,6 +4,7 @@ using GearZone.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GearZone.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260303093325_SyncModelChanges")]
+    partial class SyncModelChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -635,49 +638,6 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("ProductVariants", (string)null);
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Review", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Comment")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsVerifiedPurchase")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Rating")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("ProductId", "UserId")
-                        .IsUnique();
-
-                    b.ToTable("Reviews", (string)null);
-                });
-
             modelBuilder.Entity("GearZone.Domain.Entities.Store", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1092,25 +1052,6 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.Review", b =>
-                {
-                    b.HasOne("GearZone.Domain.Entities.Product", "Product")
-                        .WithMany("Reviews")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GearZone.Domain.Entities.ApplicationUser", "User")
-                        .WithMany("Reviews")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("GearZone.Domain.Entities.Store", b =>
                 {
                     b.HasOne("GearZone.Domain.Entities.Business", "Business")
@@ -1200,8 +1141,6 @@ namespace GearZone.Infrastructure.Migrations
 
                     b.Navigation("OwnedBusinesses");
 
-                    b.Navigation("Reviews");
-
                     b.Navigation("StoreUsers");
                 });
 
@@ -1234,8 +1173,6 @@ namespace GearZone.Infrastructure.Migrations
             modelBuilder.Entity("GearZone.Domain.Entities.Product", b =>
                 {
                     b.Navigation("Images");
-
-                    b.Navigation("Reviews");
 
                     b.Navigation("Variants");
                 });

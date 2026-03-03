@@ -1,8 +1,8 @@
-@model GearZone.Web.Pages.Shared.Models.ProductCardViewModel
+@model GearZone.Application.Abstractions.Services.ProductCardViewModel
 
 <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
     <!-- Image Section -->
-    <a href="/products/@Model.Slug" class="block">
+    <a href="/product/@Model.Slug" class="block">
         <div class="relative aspect-[4/3] bg-gray-100 overflow-hidden">
             @if (!string.IsNullOrEmpty(Model.PrimaryImageUrl))
             {
@@ -36,7 +36,7 @@
 
     <!-- Info Section -->
     <div class="p-4">
-        <a href="/products/@Model.Slug">
+        <a href="/product/@Model.Slug">
             <h3 class="text-gray-900 font-medium line-clamp-2 min-h-[3rem] mb-2 group-hover:text-primary transition-colors">
                 @Model.Name
             </h3>
@@ -47,15 +47,15 @@
             <div class="flex text-yellow-400 text-sm">
                 @for (int i = 0; i < Model.FullStars; i++)
                 {
-                    <span class="material-symbols-outlined text-[16px] fill-current">star</span>
+                    <span class="material-symbols-outlined text-[16px] star-fill">star</span>
                 }
                 @if (Model.HasHalfStar)
                 {
-                    <span class="material-symbols-outlined text-[16px] fill-current">star_half</span>
+                    <span class="material-symbols-outlined text-[16px] star-fill">star_half</span>
                 }
                 @for (int i = 0; i < Model.EmptyStars; i++)
                 {
-                    <span class="material-symbols-outlined text-[16px] text-gray-300">star</span>
+                    <span class="material-symbols-outlined text-[16px] star-fill text-gray-300">star</span>
                 }
             </div>
             <span class="text-xs text-gray-500">(@Model.ReviewCount)</span>
@@ -75,7 +75,7 @@
             <button class="flex-1 py-2.5 rounded-lg border border-primary text-primary font-medium hover:bg-primary hover:text-white transition-colors flex items-center justify-center gap-2"
                     data-product-id="@Model.Id">
                 <span class="material-symbols-outlined text-[18px]">add_shopping_cart</span>
-                Add to Cart
+                Thêm vào giỏ
             </button>
             <button class="compare-toggle-btn px-3 py-2.5 rounded-lg border border-gray-200 text-gray-400 hover:text-primary hover:border-primary transition-colors"
                     data-product-id="@Model.Id"

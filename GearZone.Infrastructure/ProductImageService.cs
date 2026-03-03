@@ -128,7 +128,7 @@ namespace GearZone.Infrastructure
             await _context.SaveChangesAsync();
 
             result.Success = true;
-            result.UploadedImages = newImages.Select(MapToDto).ToList();
+            result.UploadedImages = newImages.Select(MapToViewModel).ToList();
             return result;
             }
             finally
@@ -191,7 +191,7 @@ namespace GearZone.Infrastructure
             return true;
         }
 
-        public async Task<List<ProductImageDto>> GetProductImagesAsync(Guid productId)
+        public async Task<List<ProductImageViewModel>> GetProductImagesAsync(Guid productId)
         {
             var images = await _context.ProductImages
                 .Where(pi => pi.ProductId == productId)
@@ -199,12 +199,12 @@ namespace GearZone.Infrastructure
                 .AsNoTracking()
                 .ToListAsync();
 
-            return images.Select(MapToDto).ToList();
+            return images.Select(MapToViewModel).ToList();
         }
 
-        private static ProductImageDto MapToDto(ProductImage image)
+        private static ProductImageViewModel MapToViewModel(ProductImage image)
         {
-            return new ProductImageDto
+            return new ProductImageViewModel
             {
                 Id = image.Id,
                 ImageUrl = image.ImageUrl,

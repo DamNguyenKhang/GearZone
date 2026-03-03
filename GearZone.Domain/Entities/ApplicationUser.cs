@@ -15,5 +15,6 @@ namespace GearZone.Domain.Entities
         public ICollection<StoreUser> StoreUsers { get; set; } = new List<StoreUser>();
         public ICollection<Cart> Carts { get; set; } = new List<Cart>();
         public ICollection<Order> Orders { get; set; } = new List<Order>();
+        public ICollection<Review> Reviews { get; set; } = new List<Review>();
     }
 }

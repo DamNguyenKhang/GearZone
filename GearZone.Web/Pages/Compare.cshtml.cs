@@ -17,7 +17,7 @@ namespace GearZone.Web.Pages
             _catalogService = catalogService;
         }
 
-        public List<ProductDetailDto> Products { get; set; } = new();
+        public List<ProductDetailViewModel> Products { get; set; } = new();
         public List<string> AllSpecKeys { get; set; } = new();
 
         public async Task<IActionResult> OnGetAsync(string? ids)

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace GearZone.Application.Abstractions.Services
 {
-    public class ProductCardDto
+    public class ProductCardViewModel
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
@@ -17,9 +17,16 @@ namespace GearZone.Application.Abstractions.Services
         public int ReviewCount { get; set; }
         public string StoreName { get; set; } = string.Empty;
         public string CategoryName { get; set; } = string.Empty;
+
+        // Computed display properties
+        public string FormattedPrice => MinPrice.ToString("#,0").Replace(",", ".") + " ₫";
+        public string? FormattedOriginalPrice => OriginalPrice?.ToString("#,0").Replace(",", ".") + " ₫";
+        public int FullStars => (int)Math.Floor(AverageRating);
+        public bool HasHalfStar => AverageRating - FullStars >= 0.25 && AverageRating - FullStars < 0.75;
+        public int EmptyStars => 5 - FullStars - (HasHalfStar ? 1 : 0);
     }
 
-    public class ProductVariantDto
+    public class ProductVariantViewModel
     {
         public Guid Id { get; set; }
         public string VariantName { get; set; } = string.Empty;
@@ -29,15 +36,9 @@ namespace GearZone.Application.Abstractions.Services
         public bool IsActive { get; set; }
     }
 
-    public class ProductImageDetailDto
-    {
-        public Guid Id { get; set; }
-        public string ImageUrl { get; set; } = string.Empty;
-        public bool IsPrimary { get; set; }
-        public int SortOrder { get; set; }
-    }
+    // ProductImageViewModel is defined in IProductImageService.cs
 
-    public class StoreInfoDto
+    public class StoreInfoViewModel
     {
         public Guid Id { get; set; }
         public string StoreName { get; set; } = string.Empty;
@@ -51,7 +52,7 @@ namespace GearZone.Application.Abstractions.Services
         public string? Slug { get; set; }
     }
 
-    public class ProductDetailDto
+    public class ProductDetailViewModel
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
@@ -65,24 +66,24 @@ namespace GearZone.Application.Abstractions.Services
         public decimal MinPrice { get; set; }
         public decimal MaxPrice { get; set; }
 
-        // Rating (placeholder for Sprint 3)
+        // Rating
         public double AverageRating { get; set; }
         public int ReviewCount { get; set; }
 
         // Relations
-        public List<ProductImageDetailDto> Images { get; set; } = new();
-        public List<ProductVariantDto> Variants { get; set; } = new();
-        public StoreInfoDto Store { get; set; } = new();
+        public List<ProductImageViewModel> Images { get; set; } = new();
+        public List<ProductVariantViewModel> Variants { get; set; } = new();
+        public StoreInfoViewModel Store { get; set; } = new();
         public List<BreadcrumbItem> Breadcrumbs { get; set; } = new();
         public string CategoryName { get; set; } = string.Empty;
     }
 
     public interface ICatalogService
     {
-        Task<List<ProductCardDto>> GetProductCardsAsync(int page = 1, int pageSize = 12);
-        Task<List<ProductCardDto>> GetFlashSaleProductsAsync(int count = 4);
-        Task<ProductCardDto?> GetProductCardByIdAsync(Guid productId);
-        Task<ProductDetailDto?> GetProductDetailBySlugAsync(string slug);
-        Task<List<ProductDetailDto>> GetProductsForCompareAsync(List<Guid> productIds);
+        Task<List<ProductCardViewModel>> GetProductCardsAsync(int page = 1, int pageSize = 12);
+        Task<List<ProductCardViewModel>> GetFlashSaleProductsAsync(int count = 4);
+        Task<ProductCardViewModel?> GetProductCardByIdAsync(Guid productId);
+        Task<ProductDetailViewModel?> GetProductDetailBySlugAsync(string slug);
+        Task<List<ProductDetailViewModel>> GetProductsForCompareAsync(List<Guid> productIds);
     }
 }

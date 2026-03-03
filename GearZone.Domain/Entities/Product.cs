@@ -22,6 +22,7 @@ namespace GearZone.Domain.Entities
         public Category Category { get; set; } = null!;
         public ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
         public ICollection<ProductVariant> Variants { get; set; } = new List<ProductVariant>();
+        public ICollection<Review> Reviews { get; set; } = new List<Review>();
     }
 
 }

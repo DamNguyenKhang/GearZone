@@ -21,7 +21,7 @@ namespace GearZone.Web.Pages.Seller
         [BindProperty(SupportsGet = true)]
         public Guid ProductId { get; set; }
 
-        public List<ProductImageDto> Images { get; set; } = new();
+        public List<ProductImageViewModel> Images { get; set; } = new();
         public List<string> Errors { get; set; } = new();
         public string? SuccessMessage { get; set; }
 

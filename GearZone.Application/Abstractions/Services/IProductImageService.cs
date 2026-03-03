@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace GearZone.Application.Abstractions.Services
 {
-    public class ProductImageDto
+    public class ProductImageViewModel
     {
         public Guid Id { get; set; }
         public string ImageUrl { get; set; } = string.Empty;
@@ -16,7 +16,7 @@ namespace GearZone.Application.Abstractions.Services
     public class UploadResult
     {
         public bool Success { get; set; }
-        public List<ProductImageDto> UploadedImages { get; set; } = new();
+        public List<ProductImageViewModel> UploadedImages { get; set; } = new();
         public List<string> Errors { get; set; } = new();
     }
 
@@ -25,6 +25,6 @@ namespace GearZone.Application.Abstractions.Services
         Task<UploadResult> UploadProductImagesAsync(Guid productId, List<IFormFile> files);
         Task<bool> DeleteProductImageAsync(Guid imageId);
         Task<bool> SetPrimaryImageAsync(Guid productId, Guid imageId);
-        Task<List<ProductImageDto>> GetProductImagesAsync(Guid productId);
+        Task<List<ProductImageViewModel>> GetProductImagesAsync(Guid productId);
     }
 }

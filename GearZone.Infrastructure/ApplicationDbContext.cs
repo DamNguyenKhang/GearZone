@@ -26,6 +26,7 @@ namespace GearZone.Infrastructure
         public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
 
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<Review> Reviews { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder builder)

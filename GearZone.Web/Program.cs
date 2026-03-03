@@ -40,7 +40,7 @@ builder.Services.ConfigureApplicationCookie(opt =>
     opt.SlidingExpiration = true;
 });
 
-builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(GearZone.Application.DependencyInjection).Assembly);
+builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(GearZone.Application.Abstractions.Services.IAuthService).Assembly);
 
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>

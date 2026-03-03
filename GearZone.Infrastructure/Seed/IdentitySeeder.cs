@@ -43,7 +43,13 @@ namespace GearZone.Infrastructure.Seed
 
             var existingUser = await userManager.FindByEmailAsync(superAdminEmail);
             if (existingUser != null)
+            {
+                if (!await userManager.IsInRoleAsync(existingUser, "Super Admin"))
+                {
+                    await userManager.AddToRoleAsync(existingUser, "Super Admin");
+                }
                 return;
+            }
 
             var user = new ApplicationUser
             {

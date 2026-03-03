@@ -9,6 +9,7 @@ public interface IAdminStoreService
 {
     Task<PagedResult<StoreApplicationDto>> GetStoreApplicationsAsync(StoreApplicationQueryDto query);
     Task<StoreApplicationDto?> GetStoreApplicationByIdAsync(Guid storeId);
+    Task<IEnumerable<GearZone.Domain.Entities.Store>> GetPendingStoresAsync();
     Task<bool> ApproveStoreAsync(Guid storeId);
     Task<bool> RejectStoreAsync(Guid storeId, string reason);
     Task<bool> RequestInfoAsync(Guid storeId, string note);

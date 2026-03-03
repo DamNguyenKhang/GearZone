@@ -1,0 +1,79 @@
+@page
+@model GearZone.Web.Pages.Public.User.RegisterSellerModel
+@{
+    ViewData["Title"] = "Register as Seller - GearZone";
+}
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="bg-primary/5 border-b border-primary/10 p-8 text-center">
+            <span class="material-symbols-outlined text-4xl text-primary mb-2">storefront</span>
+            <h1 class="text-3xl font-bold text-gray-900">Become a GearZone Seller</h1>
+            <p class="text-gray-500 mt-2">Reach thousands of customers by opening your own store.</p>
+        </div>
+
+        <div class="p-8 md:p-12">
+            <form method="post" class="space-y-8">
+                <!-- Store Basic Information -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Business Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-sm font-semibold text-gray-700">Store Name <span class="text-red-500">*</span></label>
+                            <input asp-for="Input.StoreName" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all" required placeholder="e.g. Acme Electronics" />
+                            <span asp-validation-for="Input.StoreName" class="text-red-500 text-xs"></span>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-semibold text-gray-700">Tax Code / ID <span class="text-red-500">*</span></label>
+                            <input asp-for="Input.TaxCode" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all" required placeholder="10-digit or 13-digit code" />
+                            <span asp-validation-for="Input.TaxCode" class="text-red-500 text-xs"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Contact Details</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-sm font-semibold text-gray-700">Business Email <span class="text-red-500">*</span></label>
+                            <input asp-for="Input.Email" type="email" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all" required placeholder="contact@store.com" />
+                            <span asp-validation-for="Input.Email" class="text-red-500 text-xs"></span>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-semibold text-gray-700">Phone Number <span class="text-red-500">*</span></label>
+                            <input asp-for="Input.Phone" type="tel" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all" required placeholder="Phone for customer support" />
+                            <span asp-validation-for="Input.Phone" class="text-red-500 text-xs"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Address -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Store Address</h3>
+                    <div class="space-y-6">
+                        <div class="space-y-2">
+                            <label class="text-sm font-semibold text-gray-700">Address Line <span class="text-red-500">*</span></label>
+                            <input asp-for="Input.AddressLine" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all" required placeholder="Street address, building, floor" />
+                            <span asp-validation-for="Input.AddressLine" class="text-red-500 text-xs"></span>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-semibold text-gray-700">Province / City <span class="text-red-500">*</span></label>
+                            <input asp-for="Input.Province" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all" required placeholder="e.g. Ho Chi Minh City" />
+                            <span asp-validation-for="Input.Province" class="text-red-500 text-xs"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Agreement & Submit -->
+                <div class="pt-6 border-t border-gray-100 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <p class="text-sm text-gray-500">By submitting this application, you agree to GearZone's <a href="#" class="text-primary font-semibold hover:underline">Seller Terms & Conditions</a>.</p>
+                    <button type="submit" class="w-full md:w-auto px-8 py-3.5 bg-primary text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+                        Submit Application
+                        <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

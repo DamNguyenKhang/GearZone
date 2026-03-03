@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>@ViewData["Title"] - GearZone Admin</title>
+    <title>@ViewData["Title"] - GearZone Seller Center</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
@@ -112,53 +112,33 @@
     </style>
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="bg-background-light text-text-body h-screen flex overflow-hidden">
+<body class="bg-background-light text-text-body min-h-screen flex overflow-hidden">
     <!-- Sidebar -->
     <aside id="sidebar" class="sidebar w-64 bg-surface-light border-r border-border-light flex flex-col shrink-0 shadow-sm z-30">
         <div class="h-16 flex items-center px-6 border-b border-border-light logo-container">
             <div class="flex items-center gap-2 text-primary font-bold text-xl">
-                <span class="material-symbols-outlined text-3xl filled text-primary">hexagon</span>
-                <span class="text-text-heading tracking-tight sidebar-logo-text">GearZone Admin</span>
+                <span class="material-symbols-outlined text-3xl filled text-primary">store</span>
+                <span class="text-text-heading tracking-tight sidebar-logo-text">Seller Center</span>
             </div>
         </div>
         <nav class="flex-1 overflow-y-auto py-6 px-3 flex flex-col gap-1">
-            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" asp-page="/Admin/Dashboard">
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" asp-page="/StoreOwner/Dashboard">
                 <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "filled" : "")">dashboard</span>
                 <span class="font-medium text-sm sidebar-text">Overview</span>
             </a>
             
-            <div class="px-3 py-2 mt-1 sidebar-text">
+            <div class="px-3 py-4 mt-2 sidebar-text">
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Management</span>
             </div>
 
-            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Stores" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" asp-page="/Admin/StoreApplications/Index">
-                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Stores" ? "filled" : "")">storefront</span>
-                <span class="font-medium text-sm sidebar-text">Store Applications</span>
-            </a>
-
-            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Users" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" asp-page="/Admin/Users/Index">
-                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Users" ? "filled" : "")">group</span>
-                <span class="font-medium text-sm sidebar-text">User Management</span>
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Products" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" href="#">
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Products" ? "filled" : "")">inventory_2</span>
+                <span class="font-medium text-sm sidebar-text">Products</span>
             </a>
 
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Orders" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" href="#">
                 <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Orders" ? "filled" : "")">shopping_bag</span>
-                <span class="font-medium text-sm sidebar-text">Orders Management</span>
-            </a>
-
-            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Products" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" href="#">
-                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Products" ? "filled" : "")">inventory_2</span>
-                <span class="font-medium text-sm sidebar-text">Product Management</span>
-            </a>
-
-            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Categories" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" asp-page="/Admin/Categories/Index">
-                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Categories" ? "filled" : "")">category</span>
-                <span class="font-medium text-sm sidebar-text">Category Management</span>
-            </a>
-
-            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Commission" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" href="#">
-                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Commission" ? "filled" : "")">payments</span>
-                <span class="font-medium text-sm sidebar-text">Commission & Payout</span>
+                <span class="font-medium text-sm sidebar-text">Orders</span>
             </a>
 
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Disputes" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" href="#">
@@ -167,7 +147,7 @@
                 <span class="ml-auto bg-red-100 text-red-600 text-xs px-2 py-0.5 rounded-full font-bold badge-count">7</span>
             </a>
 
-            <div class="px-3 py-2 mt-1 sidebar-text">
+            <div class="px-3 py-4 mt-2 sidebar-text">
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">System</span>
             </div>
 
@@ -176,18 +156,8 @@
                 <span class="font-medium text-sm sidebar-text">Revenue</span>
             </a>
 
-            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Reports" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" asp-page="/Admin/Reports/Index">
-                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Reports" ? "filled" : "")">bar_chart</span>
-                <span class="font-medium text-sm sidebar-text">Reports</span>
-            </a>
-
-            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Logs" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" href="#">
-                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Logs" ? "filled" : "")">receipt_long</span>
-                <span class="font-medium text-sm sidebar-text">System Logs</span>
-            </a>
-
-            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Settings" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" asp-page="/Admin/Settings/Index">
-                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Settings" ? "filled" : "")">settings</span>
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:text-primary hover:bg-slate-50 transition-colors group" href="#">
+                <span class="material-symbols-outlined">settings</span>
                 <span class="font-medium text-sm sidebar-text">Settings</span>
             </a>
 
@@ -210,7 +180,7 @@
                 <div class="flex flex-col">
                     <h1 class="text-text-heading text-lg font-semibold leading-tight">@ViewData["PageHeader"]</h1>
                     <nav class="flex items-center gap-1.5 text-slate-500 text-xs mt-0.5">
-                        <a asp-page="/Admin/Dashboard" class="hover:text-primary">Admin</a>
+                        <a asp-page="/StoreOwner/Dashboard" class="hover:text-primary">Seller Center</a>
                         @if (ViewData["Breadcrumb"] != null)
                         {
                             var crumbs = (string[])ViewData["Breadcrumb"];
@@ -237,11 +207,11 @@
 
                 <div class="flex items-center gap-3 pl-4 border-l border-border-light">
                     <div class="size-9 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-primary/20">
-                        AD
+                        @(User.Identity?.Name?.Substring(0, 2).ToUpper() ?? "SO")
                     </div>
                     <div class="hidden sm:flex flex-col">
-                        <span class="text-sm font-bold text-text-heading leading-none">Admin User</span>
-                        <span class="text-[10px] font-medium text-slate-400 mt-0.5">Administrator</span>
+                        <span class="text-sm font-bold text-text-heading leading-none">@(User.Identity?.Name ?? "Store Owner")</span>
+                        <span class="text-[10px] font-medium text-slate-400 mt-0.5">Store Owner</span>
                     </div>
                 </div>
             </div>

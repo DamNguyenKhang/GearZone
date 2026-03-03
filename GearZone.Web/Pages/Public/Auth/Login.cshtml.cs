@@ -54,6 +54,16 @@ namespace GearZone.Web.Pages.Public.Auth
 
             if (result.Status == LoginStatus.Success)
             {
+                var role = await _authService.GetUserRoleAsync(result.UserId!);
+                if (role == "Super Admin")
+                {
+                    return LocalRedirect("/Admin/Dashboard");
+                }
+                if (role == "Store Owner")
+                {
+                    return LocalRedirect("/StoreOwner/Dashboard");
+                }
+                
                 return LocalRedirect(ReturnUrl ?? "/");
             }
 
@@ -149,9 +159,21 @@ namespace GearZone.Web.Pages.Public.Auth
                 return Page();
             }
 
-            var (succeeded, error) = await _authService.HandleExternalLoginCallbackAsync();
+            var (succeeded, error, userId) = await _authService.HandleExternalLoginCallbackAsync();
             if (succeeded)
             {
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    var role = await _authService.GetUserRoleAsync(userId);
+                    if (role == "Super Admin")
+                    {
+                        return LocalRedirect("/Admin/Dashboard");
+                    }
+                    if (role == "Store Owner")
+                    {
+                        return LocalRedirect("/StoreOwner/Dashboard");
+                    }
+                }
                 return LocalRedirect(returnUrl);
             }
 

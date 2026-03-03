@@ -1,11 +1,11 @@
 @page
-@model GearZone.Web.Pages.Admin.DashboardModel
+@model GearZone.Web.Pages.StoreOwner.DashboardModel
 @{
-    ViewData["Title"] = "Dashboard";
-    ViewData["PageHeader"] = "Platform Overview";
+    ViewData["Title"] = "Seller Dashboard";
+    ViewData["PageHeader"] = "Store Overview";
     ViewData["ActivePage"] = "Dashboard";
     ViewData["Breadcrumb"] = new string[] { "Dashboard" };
-    Layout = "_AdminLayout";
+    Layout = "_StoreOwnerLayout";
 }
 
 <!-- Stats Cards -->
@@ -14,11 +14,11 @@
         <div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <div class="flex justify-between items-start relative z-10">
             <div>
-                <p class="text-slate-500 text-sm font-medium mb-1">Total Users</p>
+                <p class="text-slate-500 text-sm font-medium mb-1">Total Sales</p>
                 <h3 class="text-2xl font-bold text-text-heading">15,234</h3>
             </div>
             <div class="p-2 bg-primary/10 rounded-lg text-primary">
-                <span class="material-symbols-outlined">group</span>
+                <span class="material-symbols-outlined">shopping_cart</span>
             </div>
         </div>
         <div class="mt-4 flex items-center text-xs relative z-10">
@@ -33,16 +33,16 @@
         <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <div class="flex justify-between items-start relative z-10">
             <div>
-                <p class="text-slate-500 text-sm font-medium mb-1">Active Stores</p>
+                <p class="text-slate-500 text-sm font-medium mb-1">Active Products</p>
                 <h3 class="text-2xl font-bold text-text-heading">842</h3>
             </div>
             <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
-                <span class="material-symbols-outlined">storefront</span>
+                <span class="material-symbols-outlined">inventory_2</span>
             </div>
         </div>
         <div class="mt-4 flex items-center text-xs relative z-10">
-            <a href="/Admin/Stores/Pending" class="bg-amber-100 text-amber-700 hover:bg-amber-200 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors inline-block cursor-pointer">
-                12 Pending Approval
+            <a href="#" class="bg-amber-100 text-amber-700 hover:bg-amber-200 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors inline-block cursor-pointer">
+                12 Low Stock
             </a>
         </div>
     </div>
@@ -69,16 +69,16 @@
         <div class="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
         <div class="flex justify-between items-start relative z-10">
             <div>
-                <p class="text-slate-500 text-sm font-medium mb-1">Open Disputes</p>
+                <p class="text-slate-500 text-sm font-medium mb-1">Customer Messages</p>
                 <h3 class="text-2xl font-bold text-text-heading">24</h3>
             </div>
             <div class="p-2 bg-red-100 rounded-lg text-red-600">
-                <span class="material-symbols-outlined">warning</span>
+                <span class="material-symbols-outlined">chat</span>
             </div>
         </div>
         <div class="mt-4 flex items-center text-xs relative z-10">
             <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
-                7 Critical Issues
+                7 Unread
             </span>
         </div>
     </div>
@@ -181,8 +181,8 @@
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6">
     <div class="bg-surface-light border border-border-light rounded-xl overflow-hidden flex flex-col shadow-soft">
         <div class="p-6 border-b border-border-light flex justify-between items-center bg-gray-50/50">
-            <h3 class="text-text-heading font-semibold">Stores Pending Approval</h3>
-            <a class="text-primary text-sm hover:underline font-medium" href="/Admin/Stores/Pending">View All</a>
+            <h3 class="text-text-heading font-semibold">Low Stock Products</h3>
+            <a class="text-primary text-sm hover:underline font-medium" href="#">View All</a>
         </div>
         <div class="flex-1">
             <div class="p-4 flex items-center justify-between border-b border-border-light hover:bg-slate-50 transition-colors">
@@ -191,18 +191,13 @@
                         <span class="material-symbols-outlined text-lg">store</span>
                     </div>
                     <div>
-                        <h4 class="text-text-heading text-sm font-medium">ElectroWorld VN</h4>
-                        <p class="text-slate-500 text-xs">Applied: Oct 23, 10:30 AM</p>
+                        <h4 class="text-text-heading text-sm font-medium">Logitech G Pro X Superlight</h4>
+                        <p class="text-slate-500 text-xs">Stock: 3 units remaining</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button class="p-2 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors" title="Approve">
-                        <span class="material-symbols-outlined text-xl">check_circle</span>
+                    <button class="p-2 text-primary hover:bg-blue-100 rounded-lg transition-colors" title="Restock">
+                        <span class="material-symbols-outlined text-xl">inventory</span>
                     </button>
-                    <button class="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors" title="Reject">
-                        <span class="material-symbols-outlined text-xl">cancel</span>
-                    </button>
-                </div>
             </div>
             <div class="p-4 flex items-center justify-between border-b border-border-light hover:bg-slate-50 transition-colors">
                 <div class="flex items-center gap-4">
@@ -210,24 +205,19 @@
                         <span class="material-symbols-outlined text-lg">memory</span>
                     </div>
                     <div>
-                        <h4 class="text-text-heading text-sm font-medium">Saigon Chips</h4>
-                        <p class="text-slate-500 text-xs">Applied: Oct 22, 04:15 PM</p>
+                        <h4 class="text-text-heading text-sm font-medium">Razer Huntsman Mini</h4>
+                        <p class="text-slate-500 text-xs">Stock: 0 units remaining</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button class="p-2 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors" title="Approve">
-                        <span class="material-symbols-outlined text-xl">check_circle</span>
+                    <button class="p-2 text-primary hover:bg-blue-100 rounded-lg transition-colors" title="Restock">
+                        <span class="material-symbols-outlined text-xl">inventory</span>
                     </button>
-                    <button class="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors" title="Reject">
-                        <span class="material-symbols-outlined text-xl">cancel</span>
-                    </button>
-                </div>
             </div>
         </div>
     </div>
     <div class="bg-surface-light border border-border-light rounded-xl overflow-hidden flex flex-col shadow-soft">
         <div class="p-6 border-b border-border-light flex justify-between items-center bg-gray-50/50">
-            <h3 class="text-text-heading font-semibold">Recent Disputes</h3>
+            <h3 class="text-text-heading font-semibold">Recent Orders</h3>
             <a class="text-primary text-sm hover:underline font-medium" href="#">View All</a>
         </div>
         <div class="flex-1">
@@ -235,12 +225,24 @@
                 <div class="flex flex-col gap-1">
                     <div class="flex items-center gap-2">
                         <h4 class="text-text-heading text-sm font-medium">Order #9921</h4>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-600 uppercase">High</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-600 uppercase">Processing</span>
                     </div>
-                    <p class="text-slate-500 text-xs">Item Not Received - <span class="text-slate-400">Buyer: Minh T.</span></p>
+                    <p class="text-slate-500 text-xs">Total: ₫1,250,000 - <span class="text-slate-400">Buyer: Minh T.</span></p>
                 </div>
                 <button class="px-3 py-1.5 bg-white hover:bg-gray-50 text-slate-700 text-xs font-medium rounded border border-slate-200 shadow-sm transition-colors">
-                    View Details
+                    Fulfill
+                </button>
+            </div>
+            <div class="p-4 flex items-center justify-between border-b border-border-light hover:bg-slate-50 transition-colors">
+                <div class="flex flex-col gap-1">
+                    <div class="flex items-center gap-2">
+                        <h4 class="text-text-heading text-sm font-medium">Order #9920</h4>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 uppercase">Shipped</span>
+                    </div>
+                    <p class="text-slate-500 text-xs">Total: ₫540,000 - <span class="text-slate-400">Buyer: Lan A.</span></p>
+                </div>
+                <button class="px-3 py-1.5 bg-white hover:bg-gray-50 text-slate-700 text-xs font-medium rounded border border-slate-200 shadow-sm transition-colors">
+                    Details
                 </button>
             </div>
         </div>

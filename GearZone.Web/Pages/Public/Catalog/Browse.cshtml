@@ -38,11 +38,11 @@
             <nav class="flex items-center gap-2 text-sm text-text-secondary">
                 <a class="hover:text-primary transition-colors" href="/">Home</a>
                 <span class="material-symbols-outlined text-[16px]">chevron_right</span>
-                <span class="text-text-main dark:text-white font-medium capitalize">@Model.Filter.CategorySlug?.Replace("-", " ")</span>
+                <span class="text-text-main dark:text-white font-medium capitalize">@(string.IsNullOrEmpty(Model.Filter.CategorySlug) ? "All Products" : Model.Filter.CategorySlug.Replace("-", " "))</span>
             </nav>
             <div class="flex flex-wrap items-baseline justify-between gap-4">
                 <h1 class="text-3xl font-bold tracking-tight text-text-main dark:text-white capitalize">
-                    @Model.Filter.CategorySlug?.Replace("-", " ") 
+                    @(string.IsNullOrEmpty(Model.Filter.CategorySlug) ? "All Products" : Model.Filter.CategorySlug.Replace("-", " ")) 
                     <span class="text-lg font-normal text-text-secondary ml-2" id="total-count-text">(@Model.Products.TotalCount products)</span>
                 </h1>
             </div>
@@ -54,7 +54,9 @@
                 <form id="filter-form" class="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark p-5 h-full overflow-y-auto hide-scrollbar">
                     <input type="hidden" name="CategorySlug" value="@Model.Filter.CategorySlug" />
                     <input type="hidden" name="PageNumber" id="page-number-input" value="1" />
+                    <input type="hidden" name="PageSize" value="@Model.Filter.PageSize" />
                     <input type="hidden" name="SortBy" id="sort-by-input" value="@Model.Filter.SortBy" />
+                    <input type="hidden" name="ViewMode" id="view-mode-input" value="@Model.Filter.ViewMode" />
 
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="font-bold text-lg">Filter by</h3>
@@ -140,7 +142,7 @@
                                                      && Model.Filter.Attributes[attr.Name].Contains(val.Value);
 
                                     <label class="cursor-pointer">
-                                        <input type="checkbox" name="Attributes[@attr.Name][]" value="@val.Value" class="peer sr-only filter-checkbox" @(isChecked ? "checked" : "") />
+                                        <input type="checkbox" name="Attributes[@attr.Name]" value="@val.Value" class="peer sr-only filter-checkbox" @(isChecked ? "checked" : "") />
                                         <div class="px-3 py-1.5 rounded-full border border-border-light dark:border-border-dark bg-white dark:bg-surface-dark text-xs font-medium text-text-secondary peer-checked:bg-primary/10 peer-checked:text-primary peer-checked:border-primary transition-all">
                                             @val.Value
                                         </div>
@@ -179,18 +181,18 @@
                     </div>
                     
                     <div class="flex items-center gap-1 border-l border-border-light dark:border-border-dark pl-2 sm:pl-4">
-                        <button class="p-1.5 text-primary bg-primary/10 rounded hover:bg-primary/20 transition-colors" title="Grid View">
+                        <button type="button" data-view="grid" class="view-btn p-1.5 rounded transition-all @(Model.Filter.ViewMode == "grid" ? "text-primary bg-primary/10" : "text-text-secondary hover:bg-background-light dark:hover:bg-gray-800")" title="Grid View">
                             <span class="material-symbols-outlined text-[20px]">grid_view</span>
                         </button>
-                        <button class="p-1.5 text-text-secondary hover:text-text-main dark:hover:text-white rounded transition-colors" title="List View">
+                        <button type="button" data-view="list" class="view-btn p-1.5 rounded transition-all @(Model.Filter.ViewMode == "list" ? "text-primary bg-primary/10" : "text-text-secondary hover:bg-background-light dark:hover:bg-gray-800")" title="List View">
                             <span class="material-symbols-outlined text-[20px]">view_list</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Products Grid -->
-                <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                    @await Html.PartialAsync("_ProductGridPartial", Model.Products.Items)
+                <div id="product-grid" class="@(Model.Filter.ViewMode == "list" ? "flex flex-col gap-4" : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6")">
+                    @await Html.PartialAsync("_ProductGridPartial", Model.Products.Items, new ViewDataDictionary(ViewData) { { "ViewMode", Model.Filter.ViewMode } })
                 </div>
 
                 <!-- Infinite Scroll Loading Indicator -->
@@ -200,7 +202,7 @@
                     </div>
                 </div>
                 
-                <div id="no-more-products" class="@(Model.Products.PageNumber >= Model.Products.TotalPages ? "block" : "hidden") text-center text-text-secondary mt-8 py-4">
+                <div id="no-more-products" data-total-pages="@Model.Products.TotalPages" class="@(Model.Products.PageNumber >= Model.Products.TotalPages ? "block" : "hidden") text-center text-text-secondary mt-8 py-4">
                     You've reached the end of the list.
                 </div>
             </div>
@@ -219,8 +221,6 @@
             const grid = document.getElementById('product-grid');
             const loadingIndicator = document.getElementById('loading-indicator');
             const noMoreProducts = document.getElementById('no-more-products');
-            const sortInput = document.getElementById('sort-by-input');
-            const pageInput = document.getElementById('page-number-input');
 
             // Handle sorting clicks
             document.querySelectorAll('.sort-btn').forEach(btn => {
@@ -232,7 +232,33 @@
                     this.className = "sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors bg-primary/10 text-primary";
                     
                     // Update input and submit
-                    sortInput.value = this.dataset.sort;
+                    document.getElementById('sort-by-input').value = this.dataset.sort;
+                    applyFilters();
+                });
+            });
+
+            // Handle view toggle
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const view = this.dataset.view;
+                    document.getElementById('view-mode-input').value = view;
+                    
+                    // Update UI buttons
+                    document.querySelectorAll('.view-btn').forEach(b => {
+                        b.classList.remove('text-primary', 'bg-primary/10');
+                        b.classList.add('text-text-secondary');
+                    });
+                    this.classList.add('text-primary', 'bg-primary/10');
+                    this.classList.remove('text-text-secondary');
+
+                    // Immediate UI switch for better UX
+                    if (view === 'list') {
+                        grid.className = "flex flex-col gap-4";
+                    } else {
+                        grid.className = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6";
+                    }
+                    
+                    // We also trigger applyFilters to ensure state is saved and URL is updated
                     applyFilters();
                 });
             });
@@ -244,95 +270,154 @@
                 });
             });
 
-            // Handle Reset button
-            document.getElementById('reset-filters-btn').addEventListener('click', function() {
-                document.querySelectorAll('.filter-checkbox').forEach(cb => cb.checked = false);
-                // Reset Price Slider
-                minRange.value = 0;
-                maxRange.value = 100000000;
-                updateSlider();
-                
-                sortInput.value = 'popular';
-                document.querySelectorAll('.sort-btn').forEach(b => {
-                        b.className = b.dataset.sort === 'popular' 
-                            ? "sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors bg-primary/10 text-primary"
-                            : "sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors text-text-secondary hover:bg-background-light dark:hover:bg-gray-800";
+            // Intercept Layout Category Links for AJAX filtering
+            document.querySelectorAll('.category-nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Check if we are already on the Browse page
+                    if (window.location.pathname.toLowerCase().startsWith('/public/catalog/browse')) {
+                        e.preventDefault();
+                        
+                        const slug = this.dataset.categorySlug;
+                        const slugInput = document.querySelector('input[name="CategorySlug"]');
+                        if (slugInput) slugInput.value = slug;
+
+                        // Update Active Styling in Layout Nav
+                        document.querySelectorAll('.category-nav-link').forEach(navLink => {
+                            navLink.classList.remove('text-primary', 'border-b-2', 'border-primary', 'font-bold', 'bg-gray-50');
+                            
+                            if (navLink.classList.contains('block')) {
+                                // Subcategory link
+                                navLink.classList.add('text-gray-700');
+                            } else {
+                                // Top level link
+                                navLink.classList.add('text-text-secondary', 'border-b-2', 'border-transparent');
+                            }
+                        });
+
+                        // Currently active link logic
+                        this.classList.remove('text-text-secondary', 'border-transparent', 'text-gray-700');
+                        if (this.classList.contains('block')) {
+                           this.classList.add('text-primary', 'font-bold', 'bg-gray-50');
+                           // Make parent active too
+                           var parentLink = this.closest('.group')?.querySelector('a:not(.block)');
+                           if (parentLink) {
+                               parentLink.classList.remove('text-text-secondary', 'border-transparent');
+                               parentLink.classList.add('text-primary', 'border-primary', 'border-b-2');
+                           }
+                        } else {
+                           this.classList.add('text-primary', 'border-b-2', 'border-primary');
+                        }
+
+                        // We delay applyFilters slightly to ensure DOM inputs are ready, 
+                        // but immediately update title / breadcrumb text
+                        const titleText = slug ? slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : "All Products";
+                        document.querySelector('h1').childNodes[0].nodeValue = titleText + " ";
+                        document.querySelector('nav .text-text-main').textContent = titleText;
+
+                        // Clear checkboxes when switching categories
+                        document.querySelectorAll('.filter-checkbox').forEach(cb => cb.checked = false);
+
+                        applyFilters();
+                    }
                 });
-                applyFilters();
             });
 
-            // Price Slider Logic
-            const minRange = document.getElementById('price-min-range');
-            const maxRange = document.getElementById('price-max-range');
-            const minDisplay = document.getElementById('min-price-display');
-            const maxDisplay = document.getElementById('max-price-display');
-            const minHidden = document.getElementById('min-price-hidden');
-            const maxHidden = document.getElementById('max-price-hidden');
-            const track = document.getElementById('price-slider-track');
-            const thumbMin = document.getElementById('thumb-min');
-            const thumbMax = document.getElementById('thumb-max');
-            const gap = 5000000; // 5M gap between handles
-
-            function updateSlider() {
-                const minVal = parseInt(minRange.value);
-                const maxVal = parseInt(maxRange.value);
-                const maxTotal = parseInt(minRange.max);
-
-                // Update UI
-                const minPercent = (minVal / maxTotal) * 100;
-                const maxPercent = (maxVal / maxTotal) * 100;
-
-                track.style.left = minPercent + '%';
-                track.style.right = (100 - maxPercent) + '%';
-                thumbMin.style.left = minPercent + '%';
-                thumbMax.style.left = maxPercent + '%';
-
-                minDisplay.innerText = minVal.toLocaleString('vi-VN') + '₫';
-                maxDisplay.innerText = maxVal === maxTotal ? '100M+ ₫' : maxVal.toLocaleString('vi-VN') + '₫';
+            function initPriceSlider() {
+                const minRange = document.getElementById('price-min-range');
+                const maxRange = document.getElementById('price-max-range');
+                const minDisplay = document.getElementById('min-price-display');
+                const maxDisplay = document.getElementById('max-price-display');
+                const minHidden = document.getElementById('min-price-hidden');
+                const maxHidden = document.getElementById('max-price-hidden');
+                const track = document.getElementById('price-slider-track');
+                const thumbMin = document.getElementById('thumb-min');
+                const thumbMax = document.getElementById('thumb-max');
                 
-                minHidden.value = minVal;
-                maxHidden.value = maxVal === maxTotal ? null : maxVal;
+                if (!minRange || !maxRange) return;
+
+                const gap = 5000000; // 5M gap between handles
+
+                function updateSlider() {
+                    const minVal = parseInt(minRange.value);
+                    const maxVal = parseInt(maxRange.value);
+                    const maxTotal = parseInt(minRange.max);
+
+                    const minPercent = (minVal / maxTotal) * 100;
+                    const maxPercent = (maxVal / maxTotal) * 100;
+
+                    track.style.left = minPercent + '%';
+                    track.style.right = (100 - maxPercent) + '%';
+                    thumbMin.style.left = minPercent + '%';
+                    thumbMax.style.left = maxPercent + '%';
+
+                    minDisplay.innerText = minVal.toLocaleString('vi-VN') + '₫';
+                    maxDisplay.innerText = maxVal === maxTotal ? '100M+ ₫' : maxVal.toLocaleString('vi-VN') + '₫';
+                    
+                    minHidden.value = minVal;
+                    maxHidden.value = maxVal === maxTotal ? "" : maxVal;
+                }
+
+                updateSlider();
+                let priceTimeout;
+
+                minRange.addEventListener('input', () => {
+                    const minVal = parseInt(minRange.value);
+                    const maxVal = parseInt(maxRange.value);
+                    if (maxVal - minVal <= gap) {
+                        minRange.value = maxVal - gap;
+                    }
+                    minRange.style.zIndex = 31;
+                    maxRange.style.zIndex = 30;
+                    updateSlider();
+                });
+                minRange.addEventListener('change', () => {
+                    clearTimeout(priceTimeout);
+                    priceTimeout = setTimeout(applyFilters, 500);
+                });
+
+                maxRange.addEventListener('input', () => {
+                    const minVal = parseInt(minRange.value);
+                    const maxVal = parseInt(maxRange.value);
+                    if (maxVal - minVal <= gap) {
+                        maxRange.value = minVal + gap;
+                    }
+                    maxRange.style.zIndex = 31;
+                    minRange.style.zIndex = 30;
+                    updateSlider();
+                });
+                maxRange.addEventListener('change', () => {
+                    clearTimeout(priceTimeout);
+                    priceTimeout = setTimeout(applyFilters, 500);
+                });
+
+                // Clear old reset listeners by cloning
+                const resetBtn = document.getElementById('reset-filters-btn');
+                if (resetBtn) {
+                    const newResetBtn = resetBtn.cloneNode(true);
+                    resetBtn.parentNode.replaceChild(newResetBtn, resetBtn);
+                    newResetBtn.addEventListener('click', function() {
+                        document.querySelectorAll('.filter-checkbox').forEach(cb => cb.checked = false);
+                        minRange.value = 0;
+                        maxRange.value = maxTotal;
+                        updateSlider();
+                        
+                        document.getElementById('sort-by-input').value = 'popular';
+                        document.querySelectorAll('.sort-btn').forEach(b => {
+                            b.className = b.dataset.sort === 'popular' 
+                                ? "sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors bg-primary/10 text-primary"
+                                : "sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors text-text-secondary hover:bg-background-light dark:hover:bg-gray-800";
+                        });
+                        applyFilters();
+                    });
+                }
             }
 
-            // Initial call
-            updateSlider();
-
-            let priceTimeout;
-
-            minRange.addEventListener('input', () => {
-                const minVal = parseInt(minRange.value);
-                const maxVal = parseInt(maxRange.value);
-                if (maxVal - minVal <= gap) {
-                    minRange.value = maxVal - gap;
-                }
-                minRange.style.zIndex = 31;
-                maxRange.style.zIndex = 30;
-                updateSlider();
-            });
-            minRange.addEventListener('change', () => {
-                clearTimeout(priceTimeout);
-                priceTimeout = setTimeout(applyFilters, 500);
-            });
-
-            maxRange.addEventListener('input', () => {
-                const minVal = parseInt(minRange.value);
-                const maxVal = parseInt(maxRange.value);
-                if (maxVal - minVal <= gap) {
-                    maxRange.value = minVal + gap;
-                }
-                maxRange.style.zIndex = 31;
-                minRange.style.zIndex = 30;
-                updateSlider();
-            });
-            maxRange.addEventListener('change', () => {
-                clearTimeout(priceTimeout);
-                priceTimeout = setTimeout(applyFilters, 500);
-            });
+            initPriceSlider();
 
             function applyFilters() {
                 // Reset to page 1 for new filters
                 currentPage = 1;
-                pageInput.value = 1;
+                document.getElementById('page-number-input').value = 1;
                 noMoreProducts.classList.add('hidden');
                 
                 const formData = new FormData(form);
@@ -342,22 +427,73 @@
                 const newUrl = window.location.pathname + '?' + queryString;
                 window.history.pushState({path: newUrl}, '', newUrl);
 
-                // Fetch new data
+                // Fetch new data (Products and Sidebar)
                 grid.style.opacity = '0.5';
                 
-                fetch(window.location.pathname + '?handler=LoadMore&' + queryString)
+                // For category switching we also need to update the sidebar.
+                // We will fetch the full page via XHR and extract the grid and sidebar.
+                fetch(newUrl, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
                     .then(response => response.text())
                     .then(html => {
-                        grid.innerHTML = html;
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        
+                        // Update grid
+                        const newGrid = doc.getElementById('product-grid');
+                        if (newGrid) {
+                            grid.innerHTML = newGrid.innerHTML;
+                        }
+
+                        // Extract TotalPages from doc via data attribute
+                        const newNoMore = doc.getElementById('no-more-products');
+                        if (newNoMore) {
+                            const newTotalPages = parseInt(newNoMore.dataset.totalPages);
+                            if (!isNaN(newTotalPages)) {
+                                totalPages = newTotalPages;
+                            }
+                            // replace the element completely to keep state correct
+                            const oldNoMore = document.getElementById('no-more-products');
+                            if (oldNoMore) {
+                                oldNoMore.parentNode.replaceChild(newNoMore, oldNoMore);
+                            }
+                        }
+
+                        setupObserver();
+
+                        // Update sidebar
+                        const newSidebar = doc.getElementById('filter-form');
+                        if (newSidebar) {
+                            const currentSidebar = document.getElementById('filter-form');
+                            // Replace innerHTML to keep event listeners on the form itself, 
+                            // BUT we need to rebind listeners to new checkboxes!
+                            currentSidebar.innerHTML = newSidebar.innerHTML;
+                            rebindSidebarEvents();
+                        }
+
+                        // Update total count
+                        const newCount = doc.getElementById('total-count-text');
+                        if (newCount) {
+                            document.getElementById('total-count-text').textContent = newCount.textContent;
+                        }
+
                         grid.style.opacity = '1';
-                        // Re-evaluate total pages if needed, though this requires JSON wrapper or custom header.
-                        // Assuming the user doesn't scroll immediately, we will just keep pulling until empty.
-                        // But best to re-fetch if we can. For now, infinite scroll continues until empty HTML.
                     })
                     .catch(err => {
                         console.error("Filter error", err);
                         grid.style.opacity = '1';
                     });
+            }
+
+            function rebindSidebarEvents() {
+                 document.querySelectorAll('.filter-checkbox').forEach(cb => {
+                    cb.addEventListener('change', function() {
+                        applyFilters();
+                    });
+                });
+                
+                initPriceSlider();
             }
 
             // Infinite Scroll setup
@@ -366,7 +502,7 @@
                 
                 isLoading = true;
                 currentPage++;
-                pageInput.value = currentPage;
+                document.getElementById('page-number-input').value = currentPage;
                 loadingIndicator.classList.remove('hidden');
 
                 const formData = new FormData(form);
@@ -399,12 +535,25 @@
                 }
             }, { rootMargin: '200px' });
 
-            // Since we need to observe the end of the grid, let's observe the loading indicator
-            // or the no more products div. Let's create an invisible footer element to observe.
-            const sentinel = document.createElement('div');
-            sentinel.style.height = '1px';
-            document.getElementById('no-more-products').parentNode.appendChild(sentinel);
-            observer.observe(sentinel);
+            function setupObserver() {
+                // Remove old sentinel if exists
+                const oldSentinel = document.getElementById('scroll-sentinel');
+                if (oldSentinel) {
+                    observer.unobserve(oldSentinel);
+                    oldSentinel.remove();
+                }
+
+                const noMoreEl = document.getElementById('no-more-products');
+                if (noMoreEl && currentPage < totalPages) {
+                    const sentinel = document.createElement('div');
+                    sentinel.id = 'scroll-sentinel';
+                    sentinel.style.height = '1px';
+                    noMoreEl.parentNode.insertBefore(sentinel, noMoreEl);
+                    observer.observe(sentinel);
+                }
+            }
+            
+            setupObserver();
         });
     </script>
 }

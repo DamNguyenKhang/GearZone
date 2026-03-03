@@ -57,6 +57,29 @@ namespace GearZone.Application.Features.Catalog
             return new PagedResult<CatalogProductDto>(dtos, pagedProducts.TotalCount, pagedProducts.PageNumber, pagedProducts.PageSize);
         }
 
+        public async Task<List<CatalogCategoryDto>> GetCategoriesAsync()
+        {
+            return await _categoryRepository.Query()
+                .Include(c => c.Children)
+                .Where(c => c.IsActive && !c.IsDeleted && c.ParentId == null)
+                .Select(c => new CatalogCategoryDto
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    Slug = c.Slug,
+                    SubCategories = c.Children
+                        .Where(child => child.IsActive && !child.IsDeleted)
+                        .Select(child => new CatalogCategoryDto
+                        {
+                            Id = child.Id,
+                            Name = child.Name,
+                            Slug = child.Slug
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
+        }
+
         public async Task<CatalogFilterSidebarDto> GetFiltersForCategoryAsync(string categorySlug)
         {
             var result = new CatalogFilterSidebarDto();

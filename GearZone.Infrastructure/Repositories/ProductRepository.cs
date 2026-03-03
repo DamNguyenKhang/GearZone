@@ -71,14 +71,14 @@ namespace GearZone.Infrastructure.Repositories
                 }
             }
 
-            // Ordering
-            query = filter.SortBy switch
+            // Ordering - Add ThenBy(p => p.Id) for deterministic pagination
+            query = (filter.SortBy?.ToLower()) switch
             {
-                "newest" => query.OrderByDescending(p => p.CreatedAt),
-                "price_asc" => query.OrderBy(p => p.BasePrice),
-                "price_desc" => query.OrderByDescending(p => p.BasePrice),
-                // "rating" => query.OrderByDescending(p => p.AverageRating), // Add later if Rating is implemented
-                _ => query.OrderByDescending(p => p.SoldCount) // Default "popular"
+                "newest" => query.OrderByDescending(p => p.CreatedAt).ThenBy(p => p.Id),
+                "price_asc" => query.OrderBy(p => p.BasePrice).ThenBy(p => p.Id),
+                "price_desc" => query.OrderByDescending(p => p.BasePrice).ThenBy(p => p.Id),
+                // "rating" => query.OrderByDescending(p => p.AverageRating).ThenBy(p => p.Id), // Add later if Rating is implemented
+                _ => query.OrderByDescending(p => p.SoldCount).ThenBy(p => p.Id) // Default "popular"
             };
 
             var totalCount = await query.CountAsync();

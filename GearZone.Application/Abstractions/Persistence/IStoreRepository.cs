@@ -10,6 +10,7 @@ namespace GearZone.Application.Abstractions.Persistence
     {
         Task<PagedResult<Store>> GetStoreApplicationsAsync(StoreApplicationQueryDto query);
         Task<Store?> GetStoreApplicationByIdAsync(Guid storeId);
+        Task<Store?> GetStoreByOwnerIdAsync(string userId);
         Task<StoreApplicationStatsDto> GetStoreApplicationStatsAsync();
     }
 }

@@ -43,7 +43,13 @@ namespace GearZone.Infrastructure.Seed
 
             var existingUser = await userManager.FindByEmailAsync(superAdminEmail);
             if (existingUser != null)
+            {
+                if (!await userManager.IsInRoleAsync(existingUser, "Super Admin"))
+                {
+                    await userManager.AddToRoleAsync(existingUser, "Super Admin");
+                }
                 return;
+            }
 
             var user = new ApplicationUser
             {
@@ -60,7 +66,7 @@ namespace GearZone.Infrastructure.Seed
                 throw new Exception($"Cannot create SuperAdmin: {errors}");
             }
 
-            await userManager.AddToRoleAsync(user, "SuperAdmin");
+            await userManager.AddToRoleAsync(user, "Super Admin");
         }
     }
 }

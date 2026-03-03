@@ -5,6 +5,8 @@ using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Admin.Dtos;
 using GearZone.Domain.Enums;
+using GearZone.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -17,13 +19,31 @@ public class AdminStoreService : IAdminStoreService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IEmailService _emailService;
+    private readonly UserManager<ApplicationUser> _userManager;
 
-    public AdminStoreService(IStoreRepository storeRepository, IUnitOfWork unitOfWork, IMapper mapper, IEmailService emailService)
+    public AdminStoreService(
+        IStoreRepository storeRepository, 
+        IUnitOfWork unitOfWork, 
+        IMapper mapper, 
+        IEmailService emailService,
+        UserManager<ApplicationUser> userManager)
     {
         _storeRepository = storeRepository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _emailService = emailService;
+        _userManager = userManager;
+    }
+
+    public async Task<IEnumerable<Domain.Entities.Store>> GetPendingStoresAsync()
+    {
+        var query = new StoreApplicationQueryDto 
+        { 
+            Status = StoreStatus.Pending,
+            PageSize = 100 // Get all pending for the simple list
+        };
+        var result = await _storeRepository.GetStoreApplicationsAsync(query);
+        return result.Items;
     }
 
     public async Task<PagedResult<StoreApplicationDto>> GetStoreApplicationsAsync(StoreApplicationQueryDto query)
@@ -59,7 +79,22 @@ public class AdminStoreService : IAdminStoreService
         store.ApprovedAt = DateTime.UtcNow;
         store.UpdatedAt = DateTime.UtcNow;
 
-        _storeRepository.UpdateAsync(store);
+        // Role Transition Logic
+        var user = store.OwnerUser;
+        if (user != null)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            if (!roles.Contains("Store Owner"))
+            {
+                await _userManager.AddToRoleAsync(user, "Store Owner");
+            }
+            if (roles.Contains("Customer"))
+            {
+                await _userManager.RemoveFromRoleAsync(user, "Customer");
+            }
+        }
+
+        await _storeRepository.UpdateAsync(store);
         await _unitOfWork.SaveChangesAsync();
 
         if (store.OwnerUser != null && !string.IsNullOrWhiteSpace(store.OwnerUser.Email))

@@ -1,10 +1,13 @@
 ﻿using GearZone.Application.Abstractions.External;
 using GearZone.Application.Abstractions.Persistence;
+using GearZone.Application.Abstractions.Services;
+using GearZone.Application.Features.Admin;
+using GearZone.Application.Features.Auth;
+using GearZone.Application.Features.Seller;
 using GearZone.Infrastructure.External;
 using GearZone.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using GearZone.Application.Abstractions.Persistence;
 
 namespace GearZone.Infrastructure
 {
@@ -12,6 +15,7 @@ namespace GearZone.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services)
         {
+            services.AddMemoryCache();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IFileStorageService, CloudinaryStorageService>();
             services.AddScoped<IEmailService, SmtpEmailService>();
@@ -30,6 +34,11 @@ namespace GearZone.Infrastructure
             services.AddScoped<IStoreRepository, StoreRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IAdminUserService, AdminUserService>();
+            services.AddScoped<IAdminStoreService, AdminStoreService>();
+            services.AddScoped<ISellerStoreService, SellerStoreService>();
+            services.AddScoped<ISystemSettingService, SystemSettingService>();
 
             return services;
         }

@@ -22,6 +22,7 @@ namespace GearZone.Application.Features.Seller
         private readonly IProductVariantRepository _productVariantRepository;
         private readonly IInventoryTransactionRepository _inventoryRepository;
         private readonly IVariantAttributeValueRepository _attributeValueRepository;
+        private readonly ICategoryAttributeRepository _categoryAttributeRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public SellerProductService(
@@ -32,6 +33,7 @@ namespace GearZone.Application.Features.Seller
             IProductVariantRepository productVariantRepository,
             IInventoryTransactionRepository inventoryRepository,
             IVariantAttributeValueRepository attributeValueRepository,
+            ICategoryAttributeRepository categoryAttributeRepository,
             IUnitOfWork unitOfWork)
         {
             _productRepository = productRepository;
@@ -41,6 +43,7 @@ namespace GearZone.Application.Features.Seller
             _productVariantRepository = productVariantRepository;
             _inventoryRepository = inventoryRepository;
             _attributeValueRepository = attributeValueRepository;
+            _categoryAttributeRepository = categoryAttributeRepository;
             _unitOfWork = unitOfWork;
         }
 
@@ -122,6 +125,7 @@ namespace GearZone.Application.Features.Seller
                 Description = dto.Description,
                 BasePrice = dto.BasePrice,
                 Status = dto.IsDraft ? ProductStatus.Draft : ProductStatus.Active,
+                SoldCount = 0,
                 CreatedAt = DateTime.UtcNow,
                 SpecsJson = JsonSerializer.Serialize(dto.Specifications.ToDictionary(s => s.Key, s => s.Value))
             };
@@ -183,7 +187,7 @@ namespace GearZone.Application.Features.Seller
                 }
 
                 // 5. Dynamic Attributes for Variant (if any)
-                foreach (var attr in dto.Attributes)
+                foreach (var attr in vDto.Attributes)
                 {
                     await _attributeValueRepository.AddAsync(new VariantAttributeValue
                     {
@@ -211,6 +215,27 @@ namespace GearZone.Application.Features.Seller
             return await _brandRepository.Query()
                 .Where(b => b.IsApproved)
                 .ToListAsync();
+        }
+
+        public async Task<List<CategoryAttributeDto>> GetCategoryAttributesAsync(int categoryId)
+        {
+            var attributes = await _categoryAttributeRepository.Query()
+                .Include(a => a.Options)
+                .Where(a => a.CategoryId == categoryId)
+                .OrderBy(a => a.DisplayOrder)
+                .ToListAsync();
+
+            return attributes.Select(a => new CategoryAttributeDto
+            {
+                Id = a.Id,
+                Name = a.Name,
+                FilterType = a.FilterType,
+                Options = a.Options.Select(o => new CategoryAttributeOptionDto
+                {
+                    Id = o.Id,
+                    Value = o.Value
+                }).ToList()
+            }).ToList();
         }
     }
 }

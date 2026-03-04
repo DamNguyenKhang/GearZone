@@ -12,28 +12,31 @@ namespace GearZone.Infrastructure.Seed
     {
         public static async Task SeedAsync(ApplicationDbContext context)
         {
-            if (await context.Products.AnyAsync()) return;
-
             // 1. Get a user for store owner (Super Admin from identity seeder)
             var owner = await context.Users.FirstOrDefaultAsync();
             if (owner == null) return;
 
-            // 2. Create Dummy Store
-            var store = new Store
+            // 2. Get or Create Dummy Store
+            var store = await context.Stores.FirstOrDefaultAsync(s => s.OwnerUserId == owner.Id);
+            if (store == null)
             {
-                Id = Guid.NewGuid(),
-                OwnerUserId = owner.Id,
-                StoreName = "GearZone Official Store",
-                Slug = "gearzone-official",
-                BusinessType = BusinessType.Individual,
-                Phone = "0123456789",
-                Email = "official@gearzone.com",
-                AddressLine = "123 Tech Street",
-                Province = "Ho Chi Minh City",
-                Status = StoreStatus.Approved,
-                CreatedAt = DateTime.UtcNow
-            };
-            context.Stores.Add(store);
+                store = new Store
+                {
+                    Id = Guid.NewGuid(),
+                    OwnerUserId = owner.Id,
+                    StoreName = "GearZone Official Store",
+                    Slug = "gearzone-official",
+                    BusinessType = BusinessType.Individual,
+                    Phone = "0123456789",
+                    Email = "official@gearzone.com",
+                    AddressLine = "123 Tech Street",
+                    Province = "Ho Chi Minh City",
+                    Status = StoreStatus.Approved,
+                    CreatedAt = DateTime.UtcNow
+                };
+                context.Stores.Add(store);
+                await context.SaveChangesAsync();
+            }
 
             // 3. Fetch Categories (Seeded by CategorySeeder)
             var gpuCategory = await context.Categories.FirstOrDefaultAsync(c => c.Slug == "gpus");
@@ -45,71 +48,93 @@ namespace GearZone.Infrastructure.Seed
                 return; // Guard clause in case migrations haven't run properly
             }
 
-            // 4. Create Brands
-            var nvidia = new Brand { Name = "NVIDIA", Slug = "nvidia", IsApproved = true };
-            var asus = new Brand { Name = "ASUS", Slug = "asus", IsApproved = true };
-            var msi = new Brand { Name = "MSI", Slug = "msi", IsApproved = true };
-            var gigabyte = new Brand { Name = "Gigabyte", Slug = "gigabyte", IsApproved = true };
-            var intel = new Brand { Name = "Intel", Slug = "intel", IsApproved = true };
-            var amd = new Brand { Name = "AMD", Slug = "amd", IsApproved = true };
-            var samsung = new Brand { Name = "Samsung", Slug = "samsung", IsApproved = true };
-            var lg = new Brand { Name = "LG", Slug = "lg", IsApproved = true };
-            
-            context.Brands.AddRange(nvidia, asus, msi, gigabyte, intel, amd, samsung, lg);
-            await context.SaveChangesAsync();
+            // 4. Create Brands (Idempotent)
+            async Task<Brand> GetOrCreateBrandAsync(string name, string slug)
+            {
+                var existing = await context.Brands.FirstOrDefaultAsync(b => b.Slug == slug);
+                if (existing != null) return existing;
+                var brand = new Brand { Name = name, Slug = slug, IsApproved = true };
+                context.Brands.Add(brand);
+                await context.SaveChangesAsync();
+                return brand;
+            }
 
-            // 5. Create Category Attributes
+            var nvidia = await GetOrCreateBrandAsync("NVIDIA", "nvidia");
+            var asus = await GetOrCreateBrandAsync("ASUS", "asus");
+            var msi = await GetOrCreateBrandAsync("MSI", "msi");
+            var gigabyte = await GetOrCreateBrandAsync("Gigabyte", "gigabyte");
+            var intel = await GetOrCreateBrandAsync("Intel", "intel");
+            var amd = await GetOrCreateBrandAsync("AMD", "amd");
+            var samsung = await GetOrCreateBrandAsync("Samsung", "samsung");
+            var lg = await GetOrCreateBrandAsync("LG", "lg");
+
+            // 5. Create Category Attributes (Idempotent)
+            async Task<CategoryAttribute> GetOrCreateAttrAsync(int categoryId, string name, string filterType, bool isFilterable, int displayOrder)
+            {
+                var existing = await context.CategoryAttributes.FirstOrDefaultAsync(a => a.CategoryId == categoryId && a.Name == name);
+                if (existing != null) return existing;
+                var attr = new CategoryAttribute { CategoryId = categoryId, Name = name, FilterType = filterType, IsFilterable = isFilterable, DisplayOrder = displayOrder };
+                context.CategoryAttributes.Add(attr);
+                await context.SaveChangesAsync();
+                return attr;
+            }
+
             // GPU Attributes
-            var vramAttr = new CategoryAttribute { CategoryId = gpuCategory.Id, Name = "VRAM", FilterType = "Checkbox", IsFilterable = true, DisplayOrder = 1 };
-            var gpuSeriesAttr = new CategoryAttribute { CategoryId = gpuCategory.Id, Name = "Series", FilterType = "Checkbox", IsFilterable = true, DisplayOrder = 2 };
+            var vramAttr = await GetOrCreateAttrAsync(gpuCategory.Id, "VRAM", "Checkbox", true, 1);
+            var gpuSeriesAttr = await GetOrCreateAttrAsync(gpuCategory.Id, "Series", "Checkbox", true, 2);
             // CPU Attributes
-            var socketAttr = new CategoryAttribute { CategoryId = cpuCategory.Id, Name = "Socket", FilterType = "Checkbox", IsFilterable = true, DisplayOrder = 1 };
-            var coresAttr = new CategoryAttribute { CategoryId = cpuCategory.Id, Name = "Cores", FilterType = "Checkbox", IsFilterable = true, DisplayOrder = 2 };
+            var socketAttr = await GetOrCreateAttrAsync(cpuCategory.Id, "Socket", "Checkbox", true, 1);
+            var coresAttr = await GetOrCreateAttrAsync(cpuCategory.Id, "Cores", "Checkbox", true, 2);
             // Monitor Attributes
-            var resolutionAttr = new CategoryAttribute { CategoryId = monitorCategory.Id, Name = "Resolution", FilterType = "Checkbox", IsFilterable = true, DisplayOrder = 1 };
-            var refreshRateAttr = new CategoryAttribute { CategoryId = monitorCategory.Id, Name = "Refresh Rate", FilterType = "Checkbox", IsFilterable = true, DisplayOrder = 2 };
-            var panelAttr = new CategoryAttribute { CategoryId = monitorCategory.Id, Name = "Panel Type", FilterType = "Checkbox", IsFilterable = true, DisplayOrder = 3 };
+            var resolutionAttr = await GetOrCreateAttrAsync(monitorCategory.Id, "Resolution", "Checkbox", true, 1);
+            var refreshRateAttr = await GetOrCreateAttrAsync(monitorCategory.Id, "Refresh Rate", "Checkbox", true, 2);
+            var panelAttr = await GetOrCreateAttrAsync(monitorCategory.Id, "Panel Type", "Checkbox", true, 3);
 
-            context.CategoryAttributes.AddRange(vramAttr, gpuSeriesAttr, socketAttr, coresAttr, resolutionAttr, refreshRateAttr, panelAttr);
-            await context.SaveChangesAsync();
+            // 5b. Create Options for Attributes (Idempotent)
+            async Task<CategoryAttributeOption> GetOrCreateOptionAsync(int attrId, string value)
+            {
+                var existing = await context.CategoryAttributeOptions.FirstOrDefaultAsync(o => o.CategoryAttributeId == attrId && o.Value == value);
+                if (existing != null) return existing;
+                var option = new CategoryAttributeOption { CategoryAttributeId = attrId, Value = value };
+                context.CategoryAttributeOptions.Add(option);
+                await context.SaveChangesAsync();
+                return option;
+            }
 
-            // 5b. Create Options for Attributes
-            var options = new List<CategoryAttributeOption>();
             // GPU VRAM
-            var vram8 = new CategoryAttributeOption { CategoryAttributeId = vramAttr.Id, Value = "8GB" };
-            var vram12 = new CategoryAttributeOption { CategoryAttributeId = vramAttr.Id, Value = "12GB" };
-            var vram16 = new CategoryAttributeOption { CategoryAttributeId = vramAttr.Id, Value = "16GB" };
-            var vram24 = new CategoryAttributeOption { CategoryAttributeId = vramAttr.Id, Value = "24GB" };
+            var vram8 = await GetOrCreateOptionAsync(vramAttr.Id, "8GB");
+            var vram12 = await GetOrCreateOptionAsync(vramAttr.Id, "12GB");
+            var vram16 = await GetOrCreateOptionAsync(vramAttr.Id, "16GB");
+            var vram24 = await GetOrCreateOptionAsync(vramAttr.Id, "24GB");
             // GPU Series
-            var rtx40 = new CategoryAttributeOption { CategoryAttributeId = gpuSeriesAttr.Id, Value = "RTX 40 Series" };
-            var rx7000 = new CategoryAttributeOption { CategoryAttributeId = gpuSeriesAttr.Id, Value = "Radeon RX 7000" };
+            var rtx40 = await GetOrCreateOptionAsync(gpuSeriesAttr.Id, "RTX 40 Series");
+            var rx7000 = await GetOrCreateOptionAsync(gpuSeriesAttr.Id, "Radeon RX 7000");
             // CPU Sockets
-            var lga1700 = new CategoryAttributeOption { CategoryAttributeId = socketAttr.Id, Value = "LGA 1700" };
-            var am5 = new CategoryAttributeOption { CategoryAttributeId = socketAttr.Id, Value = "AM5" };
+            var lga1700 = await GetOrCreateOptionAsync(socketAttr.Id, "LGA 1700");
+            var am5 = await GetOrCreateOptionAsync(socketAttr.Id, "AM5");
             // CPU Cores
-            var cores6 = new CategoryAttributeOption { CategoryAttributeId = coresAttr.Id, Value = "6 Cores" };
-            var cores8 = new CategoryAttributeOption { CategoryAttributeId = coresAttr.Id, Value = "8 Cores" };
-            var cores14 = new CategoryAttributeOption { CategoryAttributeId = coresAttr.Id, Value = "14 Cores" };
-            var cores24 = new CategoryAttributeOption { CategoryAttributeId = coresAttr.Id, Value = "24 Cores" };
+            var cores6 = await GetOrCreateOptionAsync(coresAttr.Id, "6 Cores");
+            var cores8 = await GetOrCreateOptionAsync(coresAttr.Id, "8 Cores");
+            var cores14 = await GetOrCreateOptionAsync(coresAttr.Id, "14 Cores");
+            var cores24 = await GetOrCreateOptionAsync(coresAttr.Id, "24 Cores");
             // Monitor Res
-            var res2k = new CategoryAttributeOption { CategoryAttributeId = resolutionAttr.Id, Value = "1440p (2K)" };
+            var res2k = await GetOrCreateOptionAsync(resolutionAttr.Id, "1440p (2K)");
             // Monitor Refresh
-            var hz165 = new CategoryAttributeOption { CategoryAttributeId = refreshRateAttr.Id, Value = "165Hz" };
-            var hz240 = new CategoryAttributeOption { CategoryAttributeId = refreshRateAttr.Id, Value = "240Hz" };
+            var hz165 = await GetOrCreateOptionAsync(refreshRateAttr.Id, "165Hz");
+            var hz240 = await GetOrCreateOptionAsync(refreshRateAttr.Id, "240Hz");
             // Monitor Panel
-            var ips = new CategoryAttributeOption { CategoryAttributeId = panelAttr.Id, Value = "IPS" };
-            var va = new CategoryAttributeOption { CategoryAttributeId = panelAttr.Id, Value = "VA" };
-            var oled = new CategoryAttributeOption { CategoryAttributeId = panelAttr.Id, Value = "OLED" };
+            var ips = await GetOrCreateOptionAsync(panelAttr.Id, "IPS");
+            var va = await GetOrCreateOptionAsync(panelAttr.Id, "VA");
+            var oled = await GetOrCreateOptionAsync(panelAttr.Id, "OLED");
 
-            options.AddRange(new[] { vram8, vram12, vram16, vram24, rtx40, rx7000, lga1700, am5, cores6, cores8, cores14, cores24, res2k, hz165, hz240, ips, va, oled });
-            context.CategoryAttributeOptions.AddRange(options);
-            await context.SaveChangesAsync();
+            var options = new List<CategoryAttributeOption> { vram8, vram12, vram16, vram24, rtx40, rx7000, lga1700, am5, cores6, cores8, cores14, cores24, res2k, hz165, hz240, ips, va, oled };
 
             // Helper to find option id
             int GetOptionId(int attrId, string val) => options.First(o => o.CategoryAttributeId == attrId && o.Value == val).Id;
 
-            // 6. Create Products
-            var products = new List<Product>
+            // 6. Create Products if they don't exist
+            var productsToAdd = new List<Product>();
+            var sampleProducts = new List<Product>
             {
                 // GPUs
                 new Product { 
@@ -190,7 +215,14 @@ namespace GearZone.Infrastructure.Seed
                 }
             };
 
-            foreach(var p in products)
+            foreach (var p in sampleProducts)
+            {
+                if (await context.Products.AnyAsync(existing => existing.Slug == p.Slug)) continue;
+                
+                productsToAdd.Add(p);
+            }
+
+            foreach(var p in productsToAdd)
             {
                 // Add a variant for each product
                 var variant = new ProductVariant

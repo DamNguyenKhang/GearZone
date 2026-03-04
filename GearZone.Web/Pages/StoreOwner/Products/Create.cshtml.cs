@@ -66,14 +66,26 @@ namespace GearZone.Web.Pages.StoreOwner.Products
             }
         }
 
+        public async Task<JsonResult> OnGetAttributesAsync(int categoryId)
+        {
+            var attributes = await _productService.GetCategoryAttributesAsync(categoryId);
+            return new JsonResult(attributes);
+        }
+
         private async Task LoadMetadataAsync()
         {
-            var categories = await _productService.GetCategoriesAsync();
-            CategoryOptions = categories.Select(c => new SelectListItem 
-            { 
-                Value = c.Id.ToString(), 
-                Text = c.Name 
-            }).ToList();
+            var allCategories = await _productService.GetCategoriesAsync();
+            
+            // Build hierarchy for display
+            CategoryOptions = allCategories
+                .Where(c => c.ParentId != null || !allCategories.Any(child => child.ParentId == c.Id)) // Only leaves or parents if they have no children (though we usually want leaves)
+                .Select(c => {
+                    var parent = c.ParentId.HasValue ? allCategories.FirstOrDefault(pc => pc.Id == c.ParentId.Value) : null;
+                    var text = parent != null ? $"{parent.Name} > {c.Name}" : c.Name;
+                    return new SelectListItem { Value = c.Id.ToString(), Text = text };
+                })
+                .OrderBy(s => s.Text)
+                .ToList();
 
             var brands = await _productService.GetBrandsAsync();
             BrandOptions = brands.Select(b => new SelectListItem 

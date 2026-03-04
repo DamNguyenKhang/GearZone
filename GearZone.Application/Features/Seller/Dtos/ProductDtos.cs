@@ -46,9 +46,6 @@ namespace GearZone.Application.Features.Seller.Dtos
         public List<ProductSpecDto> Specifications { get; set; } = new();
         public List<ProductVariantDto> Variants { get; set; } = new();
         public List<IFormFile> Images { get; set; } = new();
-        
-        // For dynamic attributes
-        public List<AttributeSelectionDto> Attributes { get; set; } = new();
     }
 
     public class ProductSpecDto
@@ -63,11 +60,28 @@ namespace GearZone.Application.Features.Seller.Dtos
         public string Sku { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public int StockQuantity { get; set; }
+        
+        // For dynamic attributes per variant
+        public List<AttributeSelectionDto> Attributes { get; set; } = new();
     }
 
     public class AttributeSelectionDto
     {
         public int AttributeId { get; set; }
         public int OptionId { get; set; }
+    }
+
+    public class CategoryAttributeDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string FilterType { get; set; } = string.Empty;
+        public List<CategoryAttributeOptionDto> Options { get; set; } = new();
+    }
+
+    public class CategoryAttributeOptionDto
+    {
+        public int Id { get; set; }
+        public string Value { get; set; } = string.Empty;
     }
 }

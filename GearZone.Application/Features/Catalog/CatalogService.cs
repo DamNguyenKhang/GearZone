@@ -30,31 +30,7 @@ namespace GearZone.Application.Features.Catalog
 
         public async Task<PagedResult<CatalogProductDto>> GetProductsAsync(ProductFilterDto filter)
         {
-            var pagedProducts = await _productRepository.GetFilteredProductsAsync(filter);
-
-            var dtos = pagedProducts.Items.Select(p => new CatalogProductDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Slug = p.Slug,
-                BrandName = p.Brand?.Name ?? "",
-                BasePrice = p.BasePrice,
-                ImageUrl = p.Images.FirstOrDefault(i => i.IsPrimary)?.ImageUrl 
-                           ?? p.Images.FirstOrDefault()?.ImageUrl ?? "",
-                Rating = 0, // Placeholder
-                ReviewCount = 0, // Placeholder
-                StoreName = p.Store?.StoreName ?? "GearZone", // Adjust logic if Store is loaded
-                StoreLogoUrl = p.Store?.LogoUrl ?? "",
-                IsInStock = p.Variants.Any(v => v.StockQuantity > 0),
-                HighlightTags = p.Variants
-                    .SelectMany(v => v.AttributeValues)
-                    .Select(av => av.Value)
-                    .Distinct()
-                    .Take(3)
-                    .ToList()
-            }).ToList();
-
-            return new PagedResult<CatalogProductDto>(dtos, pagedProducts.TotalCount, pagedProducts.PageNumber, pagedProducts.PageSize);
+            return await _productRepository.GetFilteredProductsAsync(filter);
         }
 
         public async Task<List<CatalogCategoryDto>> GetCategoriesAsync()
@@ -122,12 +98,13 @@ namespace GearZone.Application.Features.Catalog
                     .SelectMany(p => p.Variants)
                     .SelectMany(v => v.AttributeValues)
                     .Where(av => av.CategoryAttributeId == attr.Id)
-                    .GroupBy(av => av.Value)
+                    .GroupBy(av => av.CategoryAttributeOption)
                     .Select(g => new AttributeValueFilterDto
                     {
-                        Value = g.Key,
+                        Value = g.Key.Value,
                         ProductCount = g.Select(x => x.Variant.ProductId).Distinct().Count()
                     })
+                    .OrderBy(x => x.Value)
                     .ToListAsync();
 
                 if (attrDto.Values.Any())

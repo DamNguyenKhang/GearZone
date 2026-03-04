@@ -73,6 +73,41 @@ namespace GearZone.Infrastructure.Seed
             context.CategoryAttributes.AddRange(vramAttr, gpuSeriesAttr, socketAttr, coresAttr, resolutionAttr, refreshRateAttr, panelAttr);
             await context.SaveChangesAsync();
 
+            // 5b. Create Options for Attributes
+            var options = new List<CategoryAttributeOption>();
+            // GPU VRAM
+            var vram8 = new CategoryAttributeOption { CategoryAttributeId = vramAttr.Id, Value = "8GB" };
+            var vram12 = new CategoryAttributeOption { CategoryAttributeId = vramAttr.Id, Value = "12GB" };
+            var vram16 = new CategoryAttributeOption { CategoryAttributeId = vramAttr.Id, Value = "16GB" };
+            var vram24 = new CategoryAttributeOption { CategoryAttributeId = vramAttr.Id, Value = "24GB" };
+            // GPU Series
+            var rtx40 = new CategoryAttributeOption { CategoryAttributeId = gpuSeriesAttr.Id, Value = "RTX 40 Series" };
+            var rx7000 = new CategoryAttributeOption { CategoryAttributeId = gpuSeriesAttr.Id, Value = "Radeon RX 7000" };
+            // CPU Sockets
+            var lga1700 = new CategoryAttributeOption { CategoryAttributeId = socketAttr.Id, Value = "LGA 1700" };
+            var am5 = new CategoryAttributeOption { CategoryAttributeId = socketAttr.Id, Value = "AM5" };
+            // CPU Cores
+            var cores6 = new CategoryAttributeOption { CategoryAttributeId = coresAttr.Id, Value = "6 Cores" };
+            var cores8 = new CategoryAttributeOption { CategoryAttributeId = coresAttr.Id, Value = "8 Cores" };
+            var cores14 = new CategoryAttributeOption { CategoryAttributeId = coresAttr.Id, Value = "14 Cores" };
+            var cores24 = new CategoryAttributeOption { CategoryAttributeId = coresAttr.Id, Value = "24 Cores" };
+            // Monitor Res
+            var res2k = new CategoryAttributeOption { CategoryAttributeId = resolutionAttr.Id, Value = "1440p (2K)" };
+            // Monitor Refresh
+            var hz165 = new CategoryAttributeOption { CategoryAttributeId = refreshRateAttr.Id, Value = "165Hz" };
+            var hz240 = new CategoryAttributeOption { CategoryAttributeId = refreshRateAttr.Id, Value = "240Hz" };
+            // Monitor Panel
+            var ips = new CategoryAttributeOption { CategoryAttributeId = panelAttr.Id, Value = "IPS" };
+            var va = new CategoryAttributeOption { CategoryAttributeId = panelAttr.Id, Value = "VA" };
+            var oled = new CategoryAttributeOption { CategoryAttributeId = panelAttr.Id, Value = "OLED" };
+
+            options.AddRange(new[] { vram8, vram12, vram16, vram24, rtx40, rx7000, lga1700, am5, cores6, cores8, cores14, cores24, res2k, hz165, hz240, ips, va, oled });
+            context.CategoryAttributeOptions.AddRange(options);
+            await context.SaveChangesAsync();
+
+            // Helper to find option id
+            int GetOptionId(int attrId, string val) => options.First(o => o.CategoryAttributeId == attrId && o.Value == val).Id;
+
             // 6. Create Products
             var products = new List<Product>
             {
@@ -172,46 +207,46 @@ namespace GearZone.Infrastructure.Seed
                 if (p.CategoryId == gpuCategory.Id) 
                 {
                     if (p.Name.Contains("4090")) {
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = vramAttr.Id, Value = "24GB" });
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = gpuSeriesAttr.Id, Value = "RTX 40 Series" });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = vramAttr.Id, CategoryAttributeOptionId = GetOptionId(vramAttr.Id, "24GB") });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = gpuSeriesAttr.Id, CategoryAttributeOptionId = GetOptionId(gpuSeriesAttr.Id, "RTX 40 Series") });
                     } else if (p.Name.Contains("4080")) {
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = vramAttr.Id, Value = "16GB" });
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = gpuSeriesAttr.Id, Value = "RTX 40 Series" });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = vramAttr.Id, CategoryAttributeOptionId = GetOptionId(vramAttr.Id, "16GB") });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = gpuSeriesAttr.Id, CategoryAttributeOptionId = GetOptionId(gpuSeriesAttr.Id, "RTX 40 Series") });
                     } else if (p.Name.Contains("4070")) {
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = vramAttr.Id, Value = "12GB" });
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = gpuSeriesAttr.Id, Value = "RTX 40 Series" });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = vramAttr.Id, CategoryAttributeOptionId = GetOptionId(vramAttr.Id, "12GB") });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = gpuSeriesAttr.Id, CategoryAttributeOptionId = GetOptionId(gpuSeriesAttr.Id, "RTX 40 Series") });
                     } else if (p.Name.Contains("4060")) {
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = vramAttr.Id, Value = "8GB" });
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = gpuSeriesAttr.Id, Value = "RTX 40 Series" });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = vramAttr.Id, CategoryAttributeOptionId = GetOptionId(vramAttr.Id, "8GB") });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = gpuSeriesAttr.Id, CategoryAttributeOptionId = GetOptionId(gpuSeriesAttr.Id, "RTX 40 Series") });
                     } else if (p.Name.Contains("7900 XTX")) {
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = vramAttr.Id, Value = "24GB" });
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = gpuSeriesAttr.Id, Value = "Radeon RX 7000" });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = vramAttr.Id, CategoryAttributeOptionId = GetOptionId(vramAttr.Id, "24GB") });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = gpuSeriesAttr.Id, CategoryAttributeOptionId = GetOptionId(gpuSeriesAttr.Id, "Radeon RX 7000") });
                     }
                 }
                 else if (p.CategoryId == cpuCategory.Id)
                 {
                     if (p.Name.Contains("14900K") || p.Name.Contains("13600K")) {
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = socketAttr.Id, Value = "LGA 1700" });
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = coresAttr.Id, Value = p.Name.Contains("14900K") ? "24 Cores" : "14 Cores" });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = socketAttr.Id, CategoryAttributeOptionId = GetOptionId(socketAttr.Id, "LGA 1700") });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = coresAttr.Id, CategoryAttributeOptionId = GetOptionId(coresAttr.Id, p.Name.Contains("14900K") ? "24 Cores" : "14 Cores") });
                     } else if (p.Name.Contains("7800X3D") || p.Name.Contains("7600X")) {
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = socketAttr.Id, Value = "AM5" });
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = coresAttr.Id, Value = p.Name.Contains("7800X3D") ? "8 Cores" : "6 Cores" });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = socketAttr.Id, CategoryAttributeOptionId = GetOptionId(socketAttr.Id, "AM5") });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = coresAttr.Id, CategoryAttributeOptionId = GetOptionId(coresAttr.Id, p.Name.Contains("7800X3D") ? "8 Cores" : "6 Cores") });
                     }
                 }
                 else if (p.CategoryId == monitorCategory.Id)
                 {
                     if (p.Name.Contains("OLED")) {
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = resolutionAttr.Id, Value = "1440p (2K)" });
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = refreshRateAttr.Id, Value = "240Hz" });
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = panelAttr.Id, Value = "OLED" });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = resolutionAttr.Id, CategoryAttributeOptionId = GetOptionId(resolutionAttr.Id, "1440p (2K)") });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = refreshRateAttr.Id, CategoryAttributeOptionId = GetOptionId(refreshRateAttr.Id, "240Hz") });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = panelAttr.Id, CategoryAttributeOptionId = GetOptionId(panelAttr.Id, "OLED") });
                     } else if (p.Name.Contains("G7")) {
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = resolutionAttr.Id, Value = "1440p (2K)" });
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = refreshRateAttr.Id, Value = "240Hz" });
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = panelAttr.Id, Value = "VA" });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = resolutionAttr.Id, CategoryAttributeOptionId = GetOptionId(resolutionAttr.Id, "1440p (2K)") });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = refreshRateAttr.Id, CategoryAttributeOptionId = GetOptionId(refreshRateAttr.Id, "240Hz") });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = panelAttr.Id, CategoryAttributeOptionId = GetOptionId(panelAttr.Id, "VA") });
                     } else if (p.Name.Contains("LG")) {
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = resolutionAttr.Id, Value = "1440p (2K)" });
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = refreshRateAttr.Id, Value = "165Hz" });
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = panelAttr.Id, Value = "IPS" });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = resolutionAttr.Id, CategoryAttributeOptionId = GetOptionId(resolutionAttr.Id, "1440p (2K)") });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = refreshRateAttr.Id, CategoryAttributeOptionId = GetOptionId(refreshRateAttr.Id, "165Hz") });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = panelAttr.Id, CategoryAttributeOptionId = GetOptionId(panelAttr.Id, "IPS") });
                     }
                 }
 

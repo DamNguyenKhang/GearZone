@@ -12,6 +12,7 @@ namespace GearZone.Infrastructure
         public DbSet<Brand> Brands { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<CategoryAttribute> CategoryAttributes { get; set; }
+        public DbSet<CategoryAttributeOption> CategoryAttributeOptions { get; set; }
 
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }

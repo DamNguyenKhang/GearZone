@@ -52,7 +52,7 @@
                 <div class="flex flex-col gap-2 pt-2">
                     <div class="flex justify-between items-start">
                         <div class="flex items-center gap-2 mb-1">
-                            <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold text-[10px] uppercase tracking-wider">@p.Category.Name</span>
+                            <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold text-[10px] uppercase tracking-wider">@p.Category?.Name</span>
                             
                             @if (p.Status == "Active")
                             {
@@ -86,7 +86,7 @@
                     <div class="flex flex-wrap items-center gap-y-2 gap-x-6 text-sm text-slate-500 mt-2">
                         <span class="flex items-center gap-1.5">
                             <span class="material-symbols-outlined text-[16px]">label</span>
-                            <span class="font-medium text-slate-700">Brand:</span> @p.Brand.Name
+                            <span class="font-medium text-slate-700">Brand:</span> @p.Brand?.Name
                         </span>
                         <span class="flex items-center gap-1.5">
                             <span class="material-symbols-outlined text-[16px]">qr_code_2</span>
@@ -96,7 +96,7 @@
                             <span class="material-symbols-outlined text-[16px]">storefront</span>
                             <span class="font-medium text-slate-700">Store:</span>
                             <a class="text-primary hover:underline font-bold flex items-center gap-0.5" href="#">
-                                @p.Store.Name
+                                @p.Store?.Name
                                 <span class="material-symbols-outlined text-[14px]">open_in_new</span>
                             </a>
                         </span>
@@ -144,6 +144,7 @@
                             <tr>
                                 <th class="px-6 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider">SKU</th>
                                 <th class="px-6 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider">Variant Name</th>
+                                <th class="px-6 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider">Attributes</th>
                                 <th class="px-6 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider text-right">Price</th>
                                 <th class="px-6 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider text-right">Stock</th>
                             </tr>
@@ -156,7 +157,21 @@
                                     <tr class="group hover:bg-slate-50">
                                         <td class="px-6 py-3 text-slate-500 font-mono text-xs">@v.Sku</td>
                                         <td class="px-6 py-3 font-medium text-slate-900">@v.Name</td>
-                                        <td class="px-6 py-3 text-slate-900 text-right font-medium text-primary">@v.Price.ToString("N0") ₫</td>
+                                        <td class="px-6 py-3">
+                                            @if (v.Attributes != null && v.Attributes.Any())
+                                            {
+                                                <div class="flex flex-wrap gap-1.5">
+                                                    @foreach (var attr in v.Attributes)
+                                                    {
+                                                        <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-white border border-slate-200 text-xs font-medium text-slate-600 tracking-wide shadow-sm">
+                                                            <span class="text-slate-400">@attr.AttributeName:</span>
+                                                            <span class="text-slate-900 text-xs">@attr.Value</span>
+                                                        </span>
+                                                    }
+                                                </div>
+                                            }
+                                        </td>
+                                        <td class="px-6 py-3 text-slate-900 text-right font-medium text-primary whitespace-nowrap">@v.Price.ToString("N0") ₫</td>
                                         <td class="px-6 py-3 text-slate-900 text-right">
                                             @if (v.Stock > 0)
                                             {
@@ -172,7 +187,7 @@
                             }
                             else
                             {
-                                <tr><td colspan="4" class="px-6 py-4 text-center text-slate-500">No variants. Product uses base configuration.</td></tr>
+                                <tr><td colspan="5" class="px-6 py-4 text-center text-slate-500">No variants. Product uses base configuration.</td></tr>
                             }
                         </tbody>
                     </table>
@@ -247,15 +262,15 @@
             <!-- Vendor Info Mini Card -->
             <div class="bg-white rounded-xl shadow-card border border-slate-100 p-5 group flex flex-col gap-4">
                 <div class="flex items-center gap-4">
-                    <div class="size-14 rounded-full bg-slate-100 flex-shrink-0 bg-cover bg-center border border-slate-200 group-hover:border-primary/50 transition-colors shadow-sm" style="background-image: url('@p.Store.AvatarUrl');"></div>
+                    <div class="size-14 rounded-full bg-slate-100 flex-shrink-0 bg-cover bg-center border border-slate-200 group-hover:border-primary/50 transition-colors shadow-sm" style="background-image: url('@(p.Store?.AvatarUrl ?? "")');"></div>
                     <div class="flex-1 min-w-0">
-                        <h4 class="text-base font-bold text-slate-900 truncate">@p.Store.Name</h4>
-                        <p class="text-xs font-medium text-slate-500 mt-0.5">@p.Store.VendorId</p>
+                        <h4 class="text-base font-bold text-slate-900 truncate">@(p.Store?.Name ?? "N/A")</h4>
+                        <p class="text-xs font-medium text-slate-500 mt-0.5">@(p.Store?.VendorId ?? "")</p>
                     </div>
                 </div>
                 <div class="bg-slate-50 rounded-lg p-3 border border-slate-100 text-xs flex justify-between items-center">
                     <span class="text-slate-500">Joined Date</span>
-                    <span class="font-bold text-slate-700">@p.Store.JoinedAt.ToString("MMM yyyy")</span>
+                    <span class="font-bold text-slate-700">@(p.Store != null ? p.Store.JoinedAt.ToString("MMM yyyy") : "N/A")</span>
                 </div>
                 <a href="#" class="w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-sm text-center border border-slate-200 transition-colors rounded-lg flex justify-center items-center gap-2">
                     <span class="material-symbols-outlined text-[18px]">store</span>

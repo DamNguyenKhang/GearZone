@@ -13,4 +13,5 @@ public interface IAdminStoreService
     Task<bool> RejectStoreAsync(Guid storeId, string reason);
     Task<bool> RequestInfoAsync(Guid storeId, string note);
     Task<StoreApplicationStatsDto> GetStoreApplicationStatsAsync();
+    Task<List<StoreApplicationDto>> GetAllStoresAsync();
 }

@@ -1,0 +1,214 @@
+@page
+@model GearZone.Web.Pages.Admin.Brands.IndexModel
+@{
+    ViewData["Title"] = "Brand Management";
+    ViewData["PageHeader"] = "Brand Management";
+    ViewData["ActivePage"] = "Brands";
+    ViewData["Breadcrumb"] = new string[] { "Dashboard", "Brand Management" };
+    Layout = "_AdminLayout";
+}
+
+<div class="flex flex-col gap-6">
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
+            <div class="size-12 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                <span class="material-symbols-outlined">branding_watermark</span>
+            </div>
+            <div>
+                <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Total Brands</p>
+                <h3 class="text-2xl font-bold text-slate-900">@Model.BrandStats.TotalBrands</h3>
+            </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
+            <div class="size-12 rounded-lg bg-green-50 text-green-600 flex items-center justify-center">
+                <span class="material-symbols-outlined">verified</span>
+            </div>
+            <div>
+                <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Approved</p>
+                <h3 class="text-2xl font-bold text-slate-900">@Model.BrandStats.ApprovedBrands</h3>
+            </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
+            <div class="size-12 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                <span class="material-symbols-outlined">pending_actions</span>
+            </div>
+            <div>
+                <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Pending</p>
+                <h3 class="text-2xl font-bold text-slate-900">@Model.BrandStats.PendingBrands</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & Actions Bar -->
+    <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-end">
+        <form method="get" class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto flex-1">
+            <!-- Search -->
+            <div class="relative w-full sm:max-w-xs">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <span class="material-symbols-outlined text-[20px]">search</span>
+                </span>
+                <input asp-for="Query.SearchTerm" class="form-input w-full rounded-lg border-slate-200 bg-slate-50 pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-primary" placeholder="Search brands..." type="text" />
+            </div>
+            <!-- Status Filter -->
+            <div class="w-full sm:w-40">
+                <select asp-for="Query.IsApproved" class="form-select w-full rounded-lg border-slate-200 bg-slate-50 py-2.5 text-sm text-slate-900 focus:border-primary focus:ring-primary" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    <option value="true">Approved</option>
+                    <option value="false">Pending</option>
+                </select>
+            </div>
+            <!-- Search Submit Button -->
+            <button type="submit" class="hidden">Search</button>
+            <!-- Reset Button -->
+            <a asp-page="/Admin/Brands/Index" class="flex items-center justify-center px-4 py-2.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+                <span class="material-symbols-outlined text-[20px]">restart_alt</span>
+            </a>
+        </form>
+    </div>
+
+    <!-- Brands Table Card -->
+    <div class="bg-white rounded-xl shadow-card border border-slate-100 overflow-hidden flex flex-col">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-slate-100 bg-slate-50/50">
+                        <th class="py-4 pl-6 pr-3 text-xs font-semibold uppercase tracking-wider text-slate-500 w-[50px]">ID</th>
+                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Brand</th>
+                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Slug</th>
+                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Status</th>
+                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 hidden md:table-cell">Products</th>
+                        <th class="py-4 pl-3 pr-6 text-xs font-semibold uppercase tracking-wider text-slate-500 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @if (Model.Brands.Items.Any())
+                    {
+                        foreach (var brand in Model.Brands.Items)
+                        {
+                            <tr class="group hover:bg-slate-50 transition-all">
+                                <td class="py-4 pl-6 pr-3 text-sm text-slate-500 font-medium">#@brand.Id</td>
+                                <td class="py-4 px-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="relative flex-shrink-0">
+                                            @if (!string.IsNullOrEmpty(brand.LogoUrl))
+                                            {
+                                                <img src="@brand.LogoUrl" alt="@brand.Name" class="size-10 rounded-lg object-contain bg-white shadow-sm border border-slate-100 p-1" />
+                                            }
+                                            else
+                                            {
+                                                <div class="size-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200 shadow-sm">
+                                                    <span class="material-symbols-outlined">image_not_supported</span>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-semibold text-slate-900">@brand.Name</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-3">
+                                    <span class="text-sm text-slate-500">@brand.Slug</span>
+                                </td>
+                                <td class="py-4 px-3">
+                                    @if (brand.IsApproved)
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+                                            <span class="size-1.5 rounded-full bg-green-600"></span> Approved
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                                            <span class="size-1.5 rounded-full bg-amber-500"></span> Pending
+                                        </span>
+                                    }
+                                </td>
+                                <td class="py-4 px-3 hidden md:table-cell">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-[16px] text-slate-400">inventory_2</span>
+                                        <span class="text-sm font-medium text-slate-700">@brand.ProductCount</span>
+                                    </div>
+                                </td>
+                                <td class="py-4 pl-3 pr-6 text-right">
+                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity stop-propagation">
+                                        @if (!brand.IsApproved)
+                                        {
+                                            <form method="post" asp-page-handler="Approve" asp-route-id="@brand.Id" class="inline">
+                                                <button type="submit" class="text-slate-400 hover:text-green-600 transition-colors p-1" title="Approve Brand">
+                                                    <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                                                </button>
+                                            </form>
+                                        }
+                                        <form method="post" asp-page-handler="Delete" asp-route-id="@brand.Id" class="inline">
+                                            <button type="submit" class="text-slate-400 hover:text-red-600 transition-colors p-1" title="Delete Brand" onclick="return confirm('Are you sure you want to delete this brand?');">
+                                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="py-8 text-center text-slate-500">
+                                <div class="flex flex-col items-center justify-center space-y-3">
+                                    <span class="material-symbols-outlined text-4xl text-slate-300">search_off</span>
+                                    <p class="text-base font-medium">No brands found</p>
+                                    <p class="text-sm">Try adjusting your filters or search term.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="border-t border-slate-100 px-6 py-4 bg-slate-50/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-sm text-slate-500">
+                Showing <span class="font-medium text-slate-900">@((Model.Brands.PageNumber - 1) * Model.Brands.PageSize + (Model.Brands.Items.Any() ? 1 : 0))</span> to
+                <span class="font-medium text-slate-900">
+                    @(Math.Min(Model.Brands.PageNumber * Model.Brands.PageSize, Model.Brands.TotalCount))
+                </span> of
+                <span class="font-medium text-slate-900">@Model.Brands.TotalCount</span> brands
+            </div>
+
+            @if (Model.Brands.TotalPages > 1)
+            {
+                <nav aria-label="Pagination" class="flex items-center gap-1">
+                    <a asp-page="/Admin/Brands/Index"
+                       asp-route-Query.PageNumber="@(Model.Brands.PageNumber - 1)"
+                       asp-route-Query.SearchTerm="@Model.Query.SearchTerm"
+                       asp-route-Query.IsApproved="@Model.Query.IsApproved"
+                       class="@(Model.Brands.PageNumber <= 1 ? "pointer-events-none opacity-50" : "") p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-primary hover:border-primary transition-all shadow-sm" title="Previous">
+                        <span class="material-symbols-outlined text-lg leading-none">chevron_left</span>
+                    </a>
+
+                    <div class="flex items-center gap-1 px-1">
+                        @for (int i = 1; i <= Model.Brands.TotalPages; i++)
+                        {
+                            <a asp-page="/Admin/Brands/Index"
+                               asp-route-Query.PageNumber="@i"
+                               asp-route-Query.SearchTerm="@Model.Query.SearchTerm"
+                               asp-route-Query.IsApproved="@Model.Query.IsApproved"
+                               class="min-w-[36px] h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all @(i == Model.Brands.PageNumber ? "bg-primary text-white shadow-sm shadow-blue-500/20" : "border border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-primary")">
+                                @i
+                            </a>
+                        }
+                    </div>
+
+                    <a asp-page="/Admin/Brands/Index"
+                       asp-route-Query.PageNumber="@(Model.Brands.PageNumber + 1)"
+                       asp-route-Query.SearchTerm="@Model.Query.SearchTerm"
+                       asp-route-Query.IsApproved="@Model.Query.IsApproved"
+                       class="@(Model.Brands.PageNumber >= Model.Brands.TotalPages ? "pointer-events-none opacity-50" : "") p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-primary hover:border-primary transition-all shadow-sm" title="Next">
+                        <span class="material-symbols-outlined text-lg leading-none">chevron_right</span>
+                    </a>
+                </nav>
+            }
+        </div>
+    </div>
+</div>

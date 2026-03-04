@@ -55,15 +55,15 @@
                 }
             </div>
             
-            <div class="flex items-center gap-4">
-                <div class="hidden sm:flex items-center gap-2">
+            <div class="@(isList ? "flex items-center gap-4" : "flex flex-col gap-1")">
+                <div class="@(isList ? "hidden sm:flex" : "flex") items-center gap-2">
                     <div class="w-5 h-5 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
                         <img alt="Store Logo" class="w-full h-full object-cover" src="@(string.IsNullOrEmpty(Model.StoreLogoUrl) ? "/images/store-placeholder.png" : Model.StoreLogoUrl)"/>
                     </div>
                     <span class="text-xs text-text-secondary truncate">@Model.StoreName</span>
                 </div>
                 
-                <button class="@(isList ? "w-auto px-4 sm:px-6" : "w-full") bg-secondary/10 hover:bg-secondary text-secondary hover:text-white font-semibold py-2 rounded-lg text-sm transition-all flex items-center justify-center gap-2 group-btn mt-1 sm:mt-0" @(Model.IsInStock ? "" : "disabled")>
+                <button class="@(isList ? "w-auto px-4 sm:px-6 mt-0" : "w-full mt-2") bg-secondary/10 hover:bg-secondary text-secondary hover:text-white font-semibold py-2 rounded-lg text-sm transition-all flex items-center justify-center gap-2 group-btn" @(Model.IsInStock ? "" : "disabled")>
                     <span class="material-symbols-outlined text-[18px]">shopping_cart</span>
                     @(Model.IsInStock ? (isList ? "" : "Add to Cart") : "Out of Stock")
                     @if(isList && Model.IsInStock) { <span class="hidden sm:inline">Add to Cart</span> }

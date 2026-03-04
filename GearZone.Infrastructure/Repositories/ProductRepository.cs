@@ -16,20 +16,16 @@ namespace GearZone.Infrastructure.Repositories
         {
         }
 
-        public async Task<PagedResult<Product>> GetFilteredProductsAsync(ProductFilterDto filter)
+        public async Task<PagedResult<CatalogProductDto>> GetFilteredProductsAsync(ProductFilterDto filter)
         {
+            // Use AsNoTracking for read-only query performance
+            // REMOVED: All .Include() calls to avoid Cartesian explosion and over-fetching
             var query = _context.Products
-                .Include(p => p.Brand)
-                .Include(p => p.Category)
-                .Include(p => p.Images)
-                .Include(p => p.Variants)
-                    .ThenInclude(v => v.AttributeValues)
-                        .ThenInclude(av => av.CategoryAttribute)
+                .AsNoTracking()
                 .Where(p => !p.IsDeleted && p.Status == ProductStatus.Active);
 
             if (!string.IsNullOrEmpty(filter.CategorySlug))
             {
-                // This could be enhanced to include child categories if needed
                 query = query.Where(p => p.Category.Slug == filter.CategorySlug);
             }
 
@@ -64,31 +60,54 @@ namespace GearZone.Infrastructure.Repositories
                         query = query.Where(p => p.Variants.Any(v => 
                             v.AttributeValues.Any(av => 
                                 av.CategoryAttribute.Name == attrName && 
-                                attrValues.Contains(av.Value)
+                                attrValues.Contains(av.CategoryAttributeOption.Value)
                             )
                         ));
                     }
                 }
             }
 
-            // Ordering
-            query = filter.SortBy switch
-            {
-                "newest" => query.OrderByDescending(p => p.CreatedAt),
-                "price_asc" => query.OrderBy(p => p.BasePrice),
-                "price_desc" => query.OrderByDescending(p => p.BasePrice),
-                // "rating" => query.OrderByDescending(p => p.AverageRating), // Add later if Rating is implemented
-                _ => query.OrderByDescending(p => p.SoldCount) // Default "popular"
-            };
-
+            // Efficient CountAsync: Navigation loading is stripped out by EF for counts
             var totalCount = await query.CountAsync();
 
+            // Ordering - Add ThenBy(p => p.Id) for deterministic pagination
+            query = (filter.SortBy?.ToLower()) switch
+            {
+                "newest" => query.OrderByDescending(p => p.CreatedAt).ThenBy(p => p.Id),
+                "price_asc" => query.OrderBy(p => p.BasePrice).ThenBy(p => p.Id),
+                "price_desc" => query.OrderByDescending(p => p.BasePrice).ThenBy(p => p.Id),
+                _ => query.OrderByDescending(p => p.SoldCount).ThenBy(p => p.Id) // Default "popular"
+            };
+
+            // PRODUCTION OPTIMIZED PROJECTION
+            // Maps directly to DTO to fetch ONLY required columns and avoid Cartesian joins
             var items = await query
                 .Skip((filter.PageNumber - 1) * filter.PageSize)
                 .Take(filter.PageSize)
+                .Select(p => new CatalogProductDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Slug = p.Slug,
+                    BrandName = p.Brand.Name,
+                    BasePrice = p.BasePrice,
+                    ImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault() 
+                               ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? "",
+                    Rating = 0, // Placeholder
+                    ReviewCount = 0,
+                    StoreName = p.Store.StoreName,
+                    StoreLogoUrl = p.Store.LogoUrl,
+                    IsInStock = p.Variants.Any(v => v.StockQuantity > 0),
+                    HighlightTags = p.Variants
+                        .SelectMany(v => v.AttributeValues)
+                        .Select(av => av.CategoryAttributeOption.Value)
+                        .Distinct()
+                        .Take(3)
+                        .ToList()
+                })
                 .ToListAsync();
 
-            return new PagedResult<Product>(items, totalCount, filter.PageNumber, filter.PageSize);
+            return new PagedResult<CatalogProductDto>(items, totalCount, filter.PageNumber, filter.PageSize);
         }
     }
 }

@@ -21,6 +21,11 @@ namespace GearZone.Infrastructure.Configurations
                    .WithMany(x => x.Attributes)
                    .HasForeignKey(x => x.CategoryId)
                    .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(x => x.Options)
+                   .WithOne(x => x.CategoryAttribute)
+                   .HasForeignKey(x => x.CategoryAttributeId)
+                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

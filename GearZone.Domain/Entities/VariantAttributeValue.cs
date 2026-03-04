@@ -6,9 +6,10 @@ namespace GearZone.Domain.Entities
     {
         public Guid VariantId { get; set; }
         public int CategoryAttributeId { get; set; }
-        public string Value { get; set; } = string.Empty;
+        public int CategoryAttributeOptionId { get; set; }
 
         public ProductVariant Variant { get; set; } = null!;
         public CategoryAttribute CategoryAttribute { get; set; } = null!;
+        public CategoryAttributeOption CategoryAttributeOption { get; set; } = null!;
     }
 }

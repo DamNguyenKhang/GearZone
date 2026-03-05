@@ -66,12 +66,12 @@
                     <!-- Brand Filter -->
                     @if (Model.Sidebar.Brands.Any())
                     {
-                        <div class="mb-6">
-                            <button type="button" class="flex items-center justify-between w-full mb-3 group">
+                        <div class="mb-3">
+                            <button type="button" data-filter-toggle class="flex items-center justify-between w-full mb-2 group">
                                 <span class="font-semibold text-sm">Brand</span>
-                                <span class="material-symbols-outlined text-[20px] text-text-secondary group-hover:text-primary transition-colors">expand_less</span>
+                                <span class="material-symbols-outlined text-[20px] text-text-secondary group-hover:text-primary transition-transform duration-200">expand_less</span>
                             </button>
-                            <div class="space-y-2.5">
+                            <div data-filter-body class="space-y-2.5 px-1 transition-all duration-300" style="overflow: visible;">
                                 @foreach (var brand in Model.Sidebar.Brands)
                                 {
                                     <label class="flex items-center gap-3 cursor-pointer group">
@@ -83,18 +83,19 @@
                                 }
                             </div>
                         </div>
-                        <div class="w-full h-px bg-border-light dark:bg-border-dark mb-6"></div>
+                        <div class="w-full h-px bg-border-light dark:bg-border-dark mb-3"></div>
                     }
 
                     <!-- Price Range -->
-                    <div class="mb-6">
-                        <div class="flex items-center justify-between mb-4">
+                    <div class="mb-3">
+                        <button type="button" data-filter-toggle class="flex items-center justify-between w-full mb-2 group">
                             <span class="font-semibold text-sm">Price (VND)</span>
-                            <span class="material-symbols-outlined text-[20px] text-text-secondary">expand_less</span>
-                        </div>
+                            <span class="material-symbols-outlined text-[20px] text-text-secondary group-hover:text-primary transition-transform duration-200">expand_less</span>
+                        </button>
+                        <div data-filter-body class="transition-all duration-300" style="overflow: visible;">
                         
                         <!-- Dual Range Slider -->
-                        <div class="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full mb-8 mt-2 mx-2">
+                        <div class="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full mb-8 mt-2 mx-3">
                             <div id="price-slider-track" class="absolute h-full bg-primary rounded-full z-10" style="left: 0%; right: 0%;"></div>
                             <input type="range" id="price-min-range" min="0" max="100000000" step="500000" value="@(Model.Filter.MinPrice ?? 0)" 
                                    class="absolute w-full h-full opacity-0 z-30 bg-transparent dual-slider-input m-0 cursor-pointer" />
@@ -123,18 +124,19 @@
                                 </div>
                             </div>
                         </div>
+                        </div>
                     </div>
-                    <div class="w-full h-px bg-border-light dark:bg-border-dark mb-6"></div>
+                    <div class="w-full h-px bg-border-light dark:bg-border-dark mb-3"></div>
 
                     <!-- Dynamic Attributes -->
                     @foreach (var attr in Model.Sidebar.Attributes)
                     {
-                        <div class="mb-6">
-                            <div class="flex items-center justify-between mb-3">
+                        <div class="mb-3">
+                            <button type="button" data-filter-toggle class="flex items-center justify-between w-full mb-2 group">
                                 <span class="font-semibold text-sm">@attr.Name</span>
-                                <span class="material-symbols-outlined text-[20px] text-text-secondary">expand_less</span>
-                            </div>
-                            <div class="flex flex-wrap gap-2">
+                                <span class="material-symbols-outlined text-[20px] text-text-secondary group-hover:text-primary transition-transform duration-200">expand_less</span>
+                            </button>
+                            <div data-filter-body class="flex flex-wrap gap-2 overflow-hidden transition-all duration-300">
                                 @foreach (var val in attr.Values)
                                 {
                                     bool isChecked = Model.Filter.Attributes != null 
@@ -150,6 +152,7 @@
                                 }
                             </div>
                         </div>
+                        <div class="w-full h-px bg-border-light dark:bg-border-dark mb-3"></div>
                     }
 
                     <!-- Availability Toggle -->
@@ -414,6 +417,47 @@
 
             initPriceSlider();
 
+            // ── Filter expand / collapse ─────────────────────────────────────
+            function initFilterToggles() {
+                document.querySelectorAll('[data-filter-toggle]').forEach(btn => {
+                    const newBtn = btn.cloneNode(true);
+                    btn.parentNode.replaceChild(newBtn, btn);
+
+                    const body = newBtn.nextElementSibling;
+                    if (!body || !body.hasAttribute('data-filter-body')) return;
+
+                    const icon = newBtn.querySelector('.material-symbols-outlined');
+                    let collapsed = false;
+
+                    // Save original overflow so we can restore it on expand
+                    const originalOverflow = body.style.overflow || getComputedStyle(body).overflow;
+
+                    body.style.maxHeight = body.scrollHeight + 'px';
+                    body.style.opacity = '1';
+
+                    newBtn.addEventListener('click', () => {
+                        collapsed = !collapsed;
+                        if (collapsed) {
+                            // Must set overflow:hidden BEFORE shrinking so content clips
+                            body.style.overflow = 'hidden';
+                            body.style.maxHeight = '0px';
+                            body.style.opacity   = '0';
+                            if (icon) icon.style.transform = 'rotate(180deg)';
+                        } else {
+                            body.style.maxHeight = body.scrollHeight + 'px';
+                            body.style.opacity   = '1';
+                            if (icon) icon.style.transform = 'rotate(0deg)';
+                            // Restore original overflow after transition ends
+                            body.addEventListener('transitionend', () => {
+                                if (!collapsed) body.style.overflow = originalOverflow;
+                            }, { once: true });
+                        }
+                    });
+                });
+            }
+
+            initFilterToggles();
+
             function applyFilters() {
                 // Reset to page 1 for new filters
                 currentPage = 1;
@@ -494,6 +538,7 @@
                 });
                 
                 initPriceSlider();
+                initFilterToggles();
             }
 
             // Infinite Scroll setup

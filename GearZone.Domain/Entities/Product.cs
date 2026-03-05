@@ -14,7 +14,6 @@ namespace GearZone.Domain.Entities
         public string Name { get; set; } = string.Empty;
         public string Slug { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public string SpecsJson { get; set; } = "{}";
         public ProductStatus Status { get; set; } = ProductStatus.Draft;
         public decimal BasePrice { get; set; }
         public int SoldCount { get; set; }

@@ -27,7 +27,13 @@ namespace GearZone.Infrastructure.Repositories
 
             if (!string.IsNullOrEmpty(filter.CategorySlug))
             {
-                query = query.Where(p => p.Category.Slug == filter.CategorySlug);
+                // Collect IDs: the matched category itself + all its direct children
+                var categoryIds = await _context.Categories
+                    .Where(c => c.Slug == filter.CategorySlug || c.Parent.Slug == filter.CategorySlug)
+                    .Select(c => c.Id)
+                    .ToListAsync();
+
+                query = query.Where(p => categoryIds.Contains(p.CategoryId));
             }
 
             if (filter.BrandSlugs != null && filter.BrandSlugs.Any())

@@ -11,6 +11,8 @@ namespace GearZone.Application.Abstractions.Services
         Task<List<SellerProductListDto>> GetProductsByStoreAsync(Guid storeId);
         Task<SellerProductDetailDto?> GetProductByIdAsync(Guid productId, Guid storeId);
         Task<Guid> CreateProductAsync(CreateProductDto dto, Guid storeId, string userId);
+        Task<UpdateProductDto?> GetProductForEditAsync(Guid productId, Guid storeId);
+        Task UpdateProductAsync(Guid productId, UpdateProductDto dto, Guid storeId, string userId);
         Task<List<Category>> GetCategoriesAsync();
         Task<List<Brand>> GetBrandsAsync();
         Task<List<CategoryAttributeDto>> GetCategoryAttributesAsync(int categoryId);

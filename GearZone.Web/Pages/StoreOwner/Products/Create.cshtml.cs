@@ -34,7 +34,7 @@ namespace GearZone.Web.Pages.StoreOwner.Products
             
             // Initialize with one default variant and one spec row
             Input.Variants.Add(new ProductVariantDto { VariantName = "Default", StockQuantity = 0 });
-            Input.Specifications.Add(new ProductSpecDto { Key = "", Value = "" });
+
 
             return Page();
         }
@@ -58,9 +58,15 @@ namespace GearZone.Web.Pages.StoreOwner.Products
                 TempData["SuccessMessage"] = "Product created successfully!";
                 return RedirectToPage("./Index");
             }
+            catch (InvalidOperationException ex)
+            {
+                ModelState.AddModelError("", ex.Message);
+                await LoadMetadataAsync();
+                return Page();
+            }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", $"An error occurred during creation: {ex.Message}");
+                ModelState.AddModelError("", $"An unexpected error occurred: {ex.Message}");
                 await LoadMetadataAsync();
                 return Page();
             }

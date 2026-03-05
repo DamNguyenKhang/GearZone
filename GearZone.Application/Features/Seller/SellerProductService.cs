@@ -74,6 +74,11 @@ namespace GearZone.Application.Features.Seller
                 .Include(p => p.Brand)
                 .Include(p => p.Images)
                 .Include(p => p.Variants)
+                    .ThenInclude(v => v.AttributeValues)
+                        .ThenInclude(av => av.CategoryAttribute)
+                .Include(p => p.Variants)
+                    .ThenInclude(v => v.AttributeValues)
+                        .ThenInclude(av => av.CategoryAttributeOption)
                 .FirstOrDefaultAsync(p => p.Id == productId && p.StoreId == storeId && !p.IsDeleted);
 
             if (product == null) return null;
@@ -97,6 +102,7 @@ namespace GearZone.Application.Features.Seller
                 CategoryName = product.Category.Name,
                 BrandName = product.Brand.Name,
                 BasePrice = product.BasePrice,
+                SoldCount = product.SoldCount,
                 Status = product.Status.ToString(),
                 CreatedAt = product.CreatedAt,
                 Specifications = specs,
@@ -106,13 +112,45 @@ namespace GearZone.Application.Features.Seller
                     VariantName = v.VariantName ?? "",
                     Sku = v.Sku,
                     Price = v.Price,
-                    StockQuantity = v.StockQuantity
+                    StockQuantity = v.StockQuantity,
+                    Attributes = v.AttributeValues.Select(av => new AttributeSelectionDto
+                    {
+                        AttributeId = av.CategoryAttributeId,
+                        OptionId = av.CategoryAttributeOptionId,
+                        AttributeName = av.CategoryAttribute?.Name ?? "",
+                        OptionValue = av.CategoryAttributeOption?.Value ?? ""
+                    }).ToList()
                 }).ToList()
             };
         }
 
         public async Task<Guid> CreateProductAsync(CreateProductDto dto, Guid storeId, string userId)
         {
+            // 0. Validation
+            var slug = string.IsNullOrEmpty(dto.Slug) ? dto.Name.ToLower().Replace(" ", "-") : dto.Slug;
+            
+            var existingProduct = await _productRepository.Query()
+                .AnyAsync(p => p.StoreId == storeId && p.Slug == slug && !p.IsDeleted);
+            
+            if (existingProduct)
+            {
+                throw new InvalidOperationException($"A product with the slug '{slug}' already exists in your store.");
+            }
+
+            if (dto.Variants != null && dto.Variants.Any())
+            {
+                var skus = dto.Variants.Select(v => v.Sku).ToList();
+                var existingSkus = await _productVariantRepository.Query()
+                    .Where(v => skus.Contains(v.Sku))
+                    .Select(v => v.Sku)
+                    .ToListAsync();
+                
+                if (existingSkus.Any())
+                {
+                    throw new InvalidOperationException($"The following SKUs already exist in the system: {string.Join(", ", existingSkus)}");
+                }
+            }
+
             // 1. Create Product
             var product = new Product
             {
@@ -121,13 +159,15 @@ namespace GearZone.Application.Features.Seller
                 CategoryId = dto.CategoryId,
                 BrandId = dto.BrandId,
                 Name = dto.Name,
-                Slug = string.IsNullOrEmpty(dto.Slug) ? dto.Name.ToLower().Replace(" ", "-") : dto.Slug,
+                Slug = slug,
                 Description = dto.Description,
                 BasePrice = dto.BasePrice,
                 Status = dto.IsDraft ? ProductStatus.Draft : ProductStatus.Active,
                 SoldCount = 0,
                 CreatedAt = DateTime.UtcNow,
-                SpecsJson = JsonSerializer.Serialize(dto.Specifications.ToDictionary(s => s.Key, s => s.Value))
+                SpecsJson = JsonSerializer.Serialize(dto.Specifications?
+                    .Where(s => !string.IsNullOrWhiteSpace(s.Key))
+                    .ToDictionary(s => s.Key, s => s.Value) ?? new Dictionary<string, string>())
             };
 
             await _productRepository.AddAsync(product);

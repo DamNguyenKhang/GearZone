@@ -1,0 +1,473 @@
+@page "/store/{slug}"
+@model GearZone.Web.Pages.Public.StoreProfile.DetailModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    ViewData["Title"] = Model.Store.StoreName;
+    var totalPages = (int)Math.Ceiling((double)Model.Products.TotalCount / 20);
+    var currentSort = Model.SortBy ?? "popular";
+    var requestToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken;
+}
+
+<!-- Store Header Banner -->
+<section class="bg-gradient-to-r from-[#0f1729] to-[#1a2744] text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
+            <!-- Store Logo -->
+            <div class="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-white/20 overflow-hidden bg-white flex-shrink-0 shadow-lg">
+                @if (!string.IsNullOrEmpty(Model.Store.LogoUrl))
+                {
+                    <img src="@Model.Store.LogoUrl" alt="@Model.Store.StoreName" class="w-full h-full object-cover" />
+                }
+                else
+                {
+                    <div class="w-full h-full flex items-center justify-center bg-primary/10">
+                        <span class="material-symbols-outlined text-4xl text-primary">storefront</span>
+                    </div>
+                }
+            </div>
+
+            <!-- Store Info -->
+            <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2">
+                    <h1 class="text-2xl md:text-3xl font-bold">@Model.Store.StoreName</h1>
+                    <span class="bg-green-500/20 text-green-400 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <span class="w-2 h-2 bg-green-400 rounded-full"></span>
+                        Verified
+                    </span>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.Store.Province))
+                {
+                    <p class="text-gray-300 text-sm flex items-center gap-1 mb-3">
+                        <span class="material-symbols-outlined text-[16px]">location_on</span>
+                        @Model.Store.Province
+                    </p>
+                }
+                @if (!string.IsNullOrEmpty(Model.Store.Description))
+                {
+                    <p class="text-gray-400 text-sm max-w-2xl line-clamp-2">@Model.Store.Description</p>
+                }
+            </div>
+
+            <!-- Store Actions -->
+            <div class="flex items-center gap-3 flex-shrink-0">
+                <button id="followBtn" onclick="toggleFollow()"
+                        class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm @(Model.Store.IsFollowing ? "bg-white/10 border border-white/20 text-white hover:bg-red-500/20 hover:border-red-400 hover:text-red-300" : "bg-secondary hover:bg-orange-600 text-white")">
+                    <span class="material-symbols-outlined text-[18px]" id="followIcon" style="font-variation-settings: 'FILL' @(Model.Store.IsFollowing ? "1" : "0")">@(Model.Store.IsFollowing ? "favorite" : "add")</span>
+                    <span id="followText">@(Model.Store.IsFollowing ? "Following" : "Follow")</span>
+                    <span id="followerCount" class="bg-white/10 px-2 py-0.5 rounded-full text-xs">@Model.Store.FollowerCount</span>
+                </button>
+                <button onclick="openChat()"
+                        class="flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-semibold transition-colors border border-white/20">
+                    <span class="material-symbols-outlined text-[18px]">chat</span>
+                    Chat
+                </button>
+            </div>
+        </div>
+
+        <!-- Store Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-white/10">
+            <div class="text-center md:text-left">
+                <p class="text-2xl font-bold text-white">@Model.Store.ProductCount</p>
+                <p class="text-xs text-gray-400 uppercase tracking-wider mt-1">Products</p>
+            </div>
+            <div class="text-center md:text-left">
+                <p class="text-2xl font-bold text-white">@Model.Store.TotalSold.ToString("N0")</p>
+                <p class="text-xs text-gray-400 uppercase tracking-wider mt-1">Total Sold</p>
+            </div>
+            <div class="text-center md:text-left">
+                @if (Model.Store.ReviewCount > 0)
+                {
+                    <div class="flex items-center justify-center md:justify-start gap-1">
+                        <span class="material-symbols-outlined text-amber-400 text-xl" style="font-variation-settings: 'FILL' 1">star</span>
+                        <p class="text-2xl font-bold text-white">@Model.Store.Rating.ToString("0.0")</p>
+                        <span class="text-gray-400 text-sm">/5</span>
+                    </div>
+                    <p class="text-xs text-gray-400 uppercase tracking-wider mt-1">@Model.Store.ReviewCount.ToString("N0") Reviews</p>
+                }
+                else
+                {
+                    <div class="flex items-center justify-center md:justify-start gap-1">
+                        <span class="material-symbols-outlined text-gray-500 text-xl">star</span>
+                        <p class="text-lg font-bold text-gray-400">—</p>
+                    </div>
+                    <p class="text-xs text-gray-400 uppercase tracking-wider mt-1">No Reviews Yet</p>
+                }
+            </div>
+            <div class="text-center md:text-left">
+                @{
+                    var storeAge = DateTime.Now - Model.Store.CreatedAt;
+                    var storeAgeText = storeAge.TotalDays >= 365
+                        ? $"{(int)(storeAge.TotalDays / 365)} year(s)"
+                        : storeAge.TotalDays >= 30
+                            ? $"{(int)(storeAge.TotalDays / 30)} month(s)"
+                            : $"{(int)storeAge.TotalDays} day(s)";
+                }
+                <p class="text-2xl font-bold text-white">@storeAgeText</p>
+                <p class="text-xs text-gray-400 uppercase tracking-wider mt-1">Joined</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sorting Tabs -->
+<section class="bg-white border-b border-gray-200 sticky top-[80px] z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center gap-1 h-12 overflow-x-auto hide-scrollbar">
+            <a href="/store/@Model.Store.Slug?SortBy=popular&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+               class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors @(currentSort == "popular" ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100")">
+                <span class="material-symbols-outlined text-[16px] align-middle mr-1">trending_up</span>
+                Popular
+            </a>
+            <a href="/store/@Model.Store.Slug?SortBy=newest&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+               class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors @(currentSort == "newest" ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100")">
+                <span class="material-symbols-outlined text-[16px] align-middle mr-1">schedule</span>
+                Newest
+            </a>
+            <a href="/store/@Model.Store.Slug?SortBy=best_selling&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+               class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors @(currentSort == "best_selling" ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100")">
+                <span class="material-symbols-outlined text-[16px] align-middle mr-1">local_fire_department</span>
+                Best Selling
+            </a>
+            <div class="h-6 w-px bg-gray-200 mx-2"></div>
+            <a href="/store/@Model.Store.Slug?SortBy=price_asc&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+               class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors @(currentSort == "price_asc" ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100")">
+                Price ↑
+            </a>
+            <a href="/store/@Model.Store.Slug?SortBy=price_desc&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+               class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors @(currentSort == "price_desc" ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100")">
+                Price ↓
+            </a>
+            <div class="ml-auto text-sm text-gray-500 whitespace-nowrap">
+                <span class="font-semibold text-gray-700">@Model.Products.TotalCount</span> products found
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Main Content: Sidebar + Product Grid -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="flex gap-6">
+        <!-- Sidebar Filters -->
+        <aside class="hidden lg:block w-60 flex-shrink-0">
+            <div class="sticky top-[140px] space-y-6">
+                <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <h3 class="font-bold text-sm text-gray-900 mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px] text-primary">category</span>
+                        Categories
+                    </h3>
+                    <ul class="space-y-1">
+                        <li>
+                            <a href="/store/@Model.Store.Slug?SortBy=@currentSort&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+                               class="block px-3 py-2 text-sm rounded-lg transition-colors @(string.IsNullOrEmpty(Model.CategorySlug) ? "bg-primary/10 text-primary font-semibold" : "text-gray-600 hover:bg-gray-50")">
+                                All Products
+                            </a>
+                        </li>
+                        @foreach (var cat in Model.Categories)
+                        {
+                            <li>
+                                <a href="/store/@Model.Store.Slug?SortBy=@currentSort&CategorySlug=@cat.Slug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+                                   class="block px-3 py-2 text-sm rounded-lg transition-colors @(Model.CategorySlug == cat.Slug ? "bg-primary/10 text-primary font-semibold" : "text-gray-600 hover:bg-gray-50")">
+                                    @cat.Name
+                                </a>
+                                @if (cat.SubCategories.Any())
+                                {
+                                    <ul class="ml-4 mt-1 space-y-0.5">
+                                        @foreach (var sub in cat.SubCategories)
+                                        {
+                                            <li>
+                                                <a href="/store/@Model.Store.Slug?SortBy=@currentSort&CategorySlug=@sub.Slug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+                                                   class="block px-3 py-1.5 text-xs rounded-lg transition-colors @(Model.CategorySlug == sub.Slug ? "bg-primary/10 text-primary font-semibold" : "text-gray-500 hover:bg-gray-50")">
+                                                    @sub.Name
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                            </li>
+                        }
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <h3 class="font-bold text-sm text-gray-900 mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px] text-primary">payments</span>
+                        Price Range
+                    </h3>
+                    <form method="get" action="/store/@Model.Store.Slug">
+                        <input type="hidden" name="SortBy" value="@currentSort" />
+                        <input type="hidden" name="CategorySlug" value="@Model.CategorySlug" />
+                        <div class="flex items-center gap-2 mb-3">
+                            <input type="number" name="MinPrice" value="@Model.MinPrice" placeholder="From"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
+                            <span class="text-gray-400">-</span>
+                            <input type="number" name="MaxPrice" value="@Model.MaxPrice" placeholder="To"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" />
+                        </div>
+                        <button type="submit"
+                                class="w-full bg-primary/10 hover:bg-primary text-primary hover:text-white font-semibold py-2 rounded-lg text-sm transition-all">
+                            Apply
+                        </button>
+                    </form>
+                </div>
+
+                @if (Model.CategorySlug != null || Model.MinPrice != null || Model.MaxPrice != null)
+                {
+                    <a href="/store/@Model.Store.Slug" class="flex items-center justify-center gap-2 text-sm text-red-500 hover:text-red-600 font-medium py-2">
+                        <span class="material-symbols-outlined text-[16px]">filter_alt_off</span>
+                        Clear All Filters
+                    </a>
+                }
+            </div>
+        </aside>
+
+        <!-- Product Grid -->
+        <div class="flex-1 min-w-0">
+            @if (Model.Products.Items.Any())
+            {
+                <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+                    @foreach (var product in Model.Products.Items)
+                    {
+                        <partial name="_ProductCard" model="product" />
+                    }
+                </div>
+
+                @if (totalPages > 1)
+                {
+                    <nav class="flex items-center justify-center gap-2 mt-8">
+                        @if (Model.PageNumber > 1)
+                        {
+                            <a href="/store/@Model.Store.Slug?PageNumber=@(Model.PageNumber - 1)&SortBy=@currentSort&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+                               class="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors">
+                                <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+                            </a>
+                        }
+                        @for (int i = 1; i <= totalPages; i++)
+                        {
+                            var isCurrentPage = i == Model.PageNumber;
+                            if (i <= 3 || i >= totalPages - 1 || Math.Abs(i - Model.PageNumber) <= 1)
+                            {
+                                <a href="/store/@Model.Store.Slug?PageNumber=@i&SortBy=@currentSort&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+                                   class="flex items-center justify-center w-10 h-10 rounded-lg text-sm font-medium transition-colors @(isCurrentPage ? "bg-primary text-white shadow-sm" : "border border-gray-300 text-gray-600 hover:bg-gray-100")">
+                                    @i
+                                </a>
+                            }
+                            else if (i == 4 || i == totalPages - 2)
+                            {
+                                <span class="text-gray-400 px-1">...</span>
+                            }
+                        }
+                        @if (Model.PageNumber < totalPages)
+                        {
+                            <a href="/store/@Model.Store.Slug?PageNumber=@(Model.PageNumber + 1)&SortBy=@currentSort&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+                               class="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors">
+                                <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                            </a>
+                        }
+                    </nav>
+                }
+            }
+            else
+            {
+                <div class="flex flex-col items-center justify-center py-20 text-center">
+                    <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <span class="material-symbols-outlined text-5xl text-gray-300">inventory_2</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">No Products Found</h3>
+                    <p class="text-sm text-gray-500 mb-4">This store hasn't listed any products matching your filters yet.</p>
+                    <a href="/store/@Model.Store.Slug" class="text-primary hover:text-primary/80 text-sm font-medium flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+                        View all products
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Chat Panel (hidden by default) -->
+<div id="chatPanel" class="fixed bottom-6 right-6 w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 hidden flex-col overflow-hidden" style="height: 500px;">
+    <!-- Chat Header -->
+    <div class="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-primary to-primary/80 text-white rounded-t-2xl">
+        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+            <span class="material-symbols-outlined text-[20px]">storefront</span>
+        </div>
+        <div class="flex-1">
+            <p class="font-semibold text-sm">@Model.Store.StoreName</p>
+            <p class="text-xs text-white/70">Chat with this store</p>
+        </div>
+        <button onclick="closeChat()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+    </div>
+
+    <!-- Chat Messages -->
+    <div id="chatMessages" class="flex-1 overflow-y-auto px-4 py-3 space-y-3" style="height: 380px;">
+        <div class="text-center text-sm text-gray-400 py-8">
+            <span class="material-symbols-outlined text-4xl text-gray-300 mb-2 block">forum</span>
+            Start a conversation with @Model.Store.StoreName
+        </div>
+    </div>
+
+    <!-- Chat Input -->
+    <div class="px-4 py-3 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+        <form id="chatForm" onsubmit="sendMessage(event)" class="flex gap-2">
+            <input type="text" id="chatInput" placeholder="Type a message..."
+                   class="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" 
+                   maxlength="2000" autocomplete="off" />
+            <button type="submit" id="chatSendBtn"
+                    class="w-10 h-10 bg-primary hover:bg-primary/90 text-white rounded-xl flex items-center justify-center transition-colors flex-shrink-0">
+                <span class="material-symbols-outlined text-[20px]">send</span>
+            </button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const storeSlug = '@Model.Store.Slug';
+    const antiforgeryToken = '@requestToken';
+    let isFollowing = @(Model.Store.IsFollowing ? "true" : "false");
+    let chatLoaded = false;
+
+    // ===== FOLLOW =====
+    async function toggleFollow() {
+        const btn = document.getElementById('followBtn');
+        btn.disabled = true;
+        try {
+            const res = await fetch(`/store/${storeSlug}?handler=Follow`, {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': antiforgeryToken,
+                    'Content-Type': 'application/json'
+                }
+            });
+            if (res.status === 401) {
+                window.location.href = '/Auth/Login';
+                return;
+            }
+            const data = await res.json();
+            if (data.success) {
+                isFollowing = data.isFollowing;
+                updateFollowButton(data.isFollowing, data.followerCount);
+            }
+        } catch (e) { console.error(e); }
+        finally { btn.disabled = false; }
+    }
+
+    function updateFollowButton(following, count) {
+        const btn = document.getElementById('followBtn');
+        const icon = document.getElementById('followIcon');
+        const text = document.getElementById('followText');
+        const countEl = document.getElementById('followerCount');
+        
+        if (following) {
+            btn.className = 'flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm bg-white/10 border border-white/20 text-white hover:bg-red-500/20 hover:border-red-400 hover:text-red-300';
+            icon.textContent = 'favorite';
+            icon.style.fontVariationSettings = "'FILL' 1";
+            text.textContent = 'Following';
+        } else {
+            btn.className = 'flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm bg-secondary hover:bg-orange-600 text-white';
+            icon.textContent = 'add';
+            icon.style.fontVariationSettings = "'FILL' 0";
+            text.textContent = 'Follow';
+        }
+        countEl.textContent = count;
+    }
+
+    // ===== CHAT =====
+    function openChat() {
+        const panel = document.getElementById('chatPanel');
+        panel.classList.remove('hidden');
+        panel.classList.add('flex');
+        if (!chatLoaded) {
+            loadMessages();
+            chatLoaded = true;
+        }
+        document.getElementById('chatInput').focus();
+    }
+
+    function closeChat() {
+        const panel = document.getElementById('chatPanel');
+        panel.classList.add('hidden');
+        panel.classList.remove('flex');
+    }
+
+    async function loadMessages() {
+        try {
+            const res = await fetch(`/store/${storeSlug}?handler=Messages`);
+            const data = await res.json();
+            if (data.success && data.messages.length > 0) {
+                const container = document.getElementById('chatMessages');
+                container.innerHTML = '';
+                data.messages.forEach(msg => appendMessage(msg));
+                container.scrollTop = container.scrollHeight;
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function sendMessage(e) {
+        e.preventDefault();
+        const input = document.getElementById('chatInput');
+        const content = input.value.trim();
+        if (!content) return;
+
+        const btn = document.getElementById('chatSendBtn');
+        btn.disabled = true;
+        input.disabled = true;
+
+        try {
+            const res = await fetch(`/store/${storeSlug}?handler=SendMessage`, {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': antiforgeryToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ content })
+            });
+            if (res.status === 401) {
+                window.location.href = '/Auth/Login';
+                return;
+            }
+            const data = await res.json();
+            if (data.success) {
+                // Clear welcome message if first message
+                const container = document.getElementById('chatMessages');
+                if (container.querySelector('.text-center')) {
+                    container.innerHTML = '';
+                }
+                appendMessage(data.message);
+                container.scrollTop = container.scrollHeight;
+                input.value = '';
+            }
+        } catch (e) { console.error(e); }
+        finally {
+            btn.disabled = false;
+            input.disabled = false;
+            input.focus();
+        }
+    }
+
+    function appendMessage(msg) {
+        const container = document.getElementById('chatMessages');
+        const isStore = msg.isFromStore;
+        const time = new Date(msg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        const div = document.createElement('div');
+        div.className = `flex ${isStore ? 'justify-start' : 'justify-end'}`;
+        div.innerHTML = `
+            <div class="max-w-[75%] ${isStore ? 'bg-gray-100 text-gray-800' : 'bg-primary text-white'} rounded-2xl px-4 py-2.5 ${isStore ? 'rounded-bl-md' : 'rounded-br-md'}">
+                ${isStore ? `<p class="text-xs font-semibold text-primary mb-1">${msg.senderName}</p>` : ''}
+                <p class="text-sm leading-relaxed">${escapeHtml(msg.content)}</p>
+                <p class="text-[10px] ${isStore ? 'text-gray-400' : 'text-white/60'} mt-1 text-right">${time}</p>
+            </div>
+        `;
+        container.appendChild(div);
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>
+}

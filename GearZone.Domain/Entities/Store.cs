@@ -32,5 +32,7 @@ namespace GearZone.Domain.Entities
         public ApplicationUser OwnerUser { get; set; } = null!;
         public ICollection<ApplicationUser> Staffs { get; set; } = new List<ApplicationUser>();
         public ICollection<Product> Products { get; set; } = new List<Product>();
+        public ICollection<StoreFollow> StoreFollows { get; set; } = new List<StoreFollow>();
+        public ICollection<Conversation> Conversations { get; set; } = new List<Conversation>();
     }
 }

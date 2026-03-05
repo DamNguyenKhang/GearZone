@@ -24,6 +24,8 @@ namespace GearZone.Domain.Entities
         public ICollection<Store> StaffStores { get; set; } = new List<Store>();
         public ICollection<Cart> Carts { get; set; } = new List<Cart>();
         public ICollection<Order> Orders { get; set; } = new List<Order>();
+        public ICollection<StoreFollow> StoreFollows { get; set; } = new List<StoreFollow>();
+        public ICollection<Conversation> Conversations { get; set; } = new List<Conversation>();
     }
 }
   

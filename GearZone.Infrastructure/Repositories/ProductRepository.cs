@@ -24,6 +24,11 @@ namespace GearZone.Infrastructure.Repositories
                 .AsNoTracking()
                 .Where(p => !p.IsDeleted && p.Status == ProductStatus.Active);
 
+            if (filter.StoreId.HasValue)
+            {
+                query = query.Where(p => p.StoreId == filter.StoreId.Value);
+            }
+
             if (!string.IsNullOrEmpty(filter.CategorySlug))
             {
                 query = query.Where(p => p.Category.Slug == filter.CategorySlug);

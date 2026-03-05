@@ -26,6 +26,7 @@ namespace GearZone.Application.Features.Seller.Dtos
         public string CategoryName { get; set; } = string.Empty;
         public string BrandName { get; set; } = string.Empty;
         public decimal BasePrice { get; set; }
+        public int SoldCount { get; set; }
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public Dictionary<string, string> Specifications { get; set; } = new();
@@ -46,6 +47,21 @@ namespace GearZone.Application.Features.Seller.Dtos
         public List<ProductSpecDto> Specifications { get; set; } = new();
         public List<ProductVariantDto> Variants { get; set; } = new();
         public List<IFormFile> Images { get; set; } = new();
+    }
+
+    public class UpdateProductDto
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public int CategoryId { get; set; }
+        public int BrandId { get; set; }
+        public decimal BasePrice { get; set; }
+        public bool IsDraft { get; set; }
+
+        public List<ProductVariantDto> Variants { get; set; } = new();
+        public List<IFormFile> NewImages { get; set; } = new();
+        public List<string> ExistingImageUrls { get; set; } = new();
     }
 
     public class ProductSpecDto
@@ -69,6 +85,8 @@ namespace GearZone.Application.Features.Seller.Dtos
     {
         public int AttributeId { get; set; }
         public int OptionId { get; set; }
+        public string AttributeName { get; set; } = string.Empty;
+        public string OptionValue { get; set; } = string.Empty;
     }
 
     public class CategoryAttributeDto

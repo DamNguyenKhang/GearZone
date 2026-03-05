@@ -11,6 +11,7 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
     <form method="post" enctype="multipart/form-data" id="createProductForm">
+        <div asp-validation-summary="ModelOnly" class="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm font-medium"></div>
         <!-- Header -->
         <div class="flex items-center justify-between mb-8">
             <div>
@@ -93,37 +94,7 @@
                     </div>
                 </div>
 
-                <!-- Technical Specifications -->
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary">engineering</span>
-                            <h2 class="text-lg font-bold text-gray-900">Technical Specifications</h2>
-                        </div>
-                        <button type="button" id="btnAddSpec" class="text-primary text-sm font-bold flex items-center gap-1 hover:underline">
-                            <span class="material-symbols-outlined text-[18px]">add</span> Add Spec
-                        </button>
-                    </div>
 
-                    <div id="specsContainer" class="space-y-3">
-                        @for (int i = 0; i < Model.Input.Specifications.Count; i++)
-                        {
-                            <div class="grid grid-cols-12 gap-3 spec-row">
-                                <div class="col-span-5">
-                                    <input name="Input.Specifications[@i].Key" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50/50" placeholder="Specification (e.g. Memory Size)">
-                                </div>
-                                <div class="col-span-6">
-                                    <input name="Input.Specifications[@i].Value" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50/50" placeholder="Value (e.g. 24GB GDDR6X)">
-                                </div>
-                                <div class="col-span-1 flex items-center justify-center">
-                                    <button type="button" class="text-gray-400 hover:text-red-600 btnRemoveRow">
-                                        <span class="material-symbols-outlined text-[20px]">delete</span>
-                                    </button>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </div>
 
 
 
@@ -311,25 +282,7 @@
                 });
             });
 
-            // Add Spec
-            $('#btnAddSpec').click(function() {
-                let index = $('#specsContainer .spec-row').length;
-                let html = `
-                    <div class="grid grid-cols-12 gap-3 spec-row animate-fadeIn">
-                        <div class="col-span-5">
-                            <input name="Input.Specifications[${index}].Key" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50/50" placeholder="Specification">
-                        </div>
-                        <div class="col-span-6">
-                            <input name="Input.Specifications[${index}].Value" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50/50" placeholder="Value">
-                        </div>
-                        <div class="col-span-1 flex items-center justify-center">
-                            <button type="button" class="text-gray-400 hover:text-red-600 btnRemoveRow">
-                                <span class="material-symbols-outlined text-[20px]">delete</span>
-                            </button>
-                        </div>
-                    </div>`;
-                $('#specsContainer').append(html);
-            });
+
 
             // Add Variant
             $('#btnAddVariant').click(function() {
@@ -371,8 +324,8 @@
                 let rowClass = $(this).closest('.spec-row, .variant-row').attr('class').split(' ')[0];
                 $(this).closest('.spec-row, .variant-row').remove();
                 
-                if (container.attr('id') === 'specsContainer') {
-                    updateIndices('specsContainer', 'spec-row', 'Input.Specifications');
+                if (rowClass === 'spec-row') {
+                    // updateIndices('specsContainer', 'spec-row', 'Input.Specifications');
                 } else {
                     updateIndices('variantsContainer', 'variant-row', 'Input.Variants');
                     // Refresh attributes indices just in case

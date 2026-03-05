@@ -243,6 +243,210 @@ namespace GearZone.Application.Features.Seller
             return product.Id;
         }
 
+        public async Task<UpdateProductDto?> GetProductForEditAsync(Guid productId, Guid storeId)
+        {
+            var product = await _productRepository.Query()
+                .Include(p => p.Images)
+                .Include(p => p.Variants)
+                    .ThenInclude(v => v.AttributeValues)
+                .FirstOrDefaultAsync(p => p.Id == productId && p.StoreId == storeId && !p.IsDeleted);
+
+            if (product == null) return null;
+
+            return new UpdateProductDto
+            {
+                Name = product.Name,
+                Slug = product.Slug,
+                Description = product.Description,
+                CategoryId = product.CategoryId,
+                BrandId = product.BrandId,
+                BasePrice = product.BasePrice,
+                IsDraft = product.Status == ProductStatus.Draft,
+                ExistingImageUrls = product.Images.OrderBy(i => i.SortOrder).Select(i => i.ImageUrl).ToList(),
+                Variants = product.Variants.Where(v => !v.IsDeleted).Select(v => new ProductVariantDto
+                {
+                    VariantName = v.VariantName,
+                    Sku = v.Sku,
+                    Price = v.Price,
+                    StockQuantity = v.StockQuantity,
+                    Attributes = v.AttributeValues.Select(av => new AttributeSelectionDto
+                    {
+                        AttributeId = av.CategoryAttributeId,
+                        OptionId = av.CategoryAttributeOptionId
+                    }).ToList()
+                }).ToList()
+            };
+        }
+
+        public async Task UpdateProductAsync(Guid productId, UpdateProductDto dto, Guid storeId, string userId)
+        {
+            var product = await _productRepository.Query()
+                .Include(p => p.Images)
+                .Include(p => p.Variants)
+                    .ThenInclude(v => v.AttributeValues)
+                .FirstOrDefaultAsync(p => p.Id == productId && p.StoreId == storeId && !p.IsDeleted);
+
+            if (product == null) throw new InvalidOperationException("Product not found.");
+
+            // 1. Validation for Slug (if changed)
+            var slug = string.IsNullOrEmpty(dto.Slug) ? dto.Name.ToLower().Replace(" ", "-") : dto.Slug;
+            if (slug != product.Slug)
+            {
+                var existingSlug = await _productRepository.Query()
+                    .AnyAsync(p => p.StoreId == storeId && p.Slug == slug && p.Id != productId && !p.IsDeleted);
+                if (existingSlug) throw new InvalidOperationException($"Slug '{slug}' is already in use.");
+            }
+
+            // 2. Update Basic Info
+            product.Name = dto.Name;
+            product.Slug = slug;
+            product.Description = dto.Description;
+            product.CategoryId = dto.CategoryId;
+            product.BrandId = dto.BrandId;
+            product.BasePrice = dto.BasePrice;
+            product.Status = dto.IsDraft ? ProductStatus.Draft : ProductStatus.Active;
+            product.UpdatedAt = DateTime.UtcNow;
+
+            await _productRepository.UpdateAsync(product);
+
+            // 3. Handle Images (Simulated)
+            if (dto.NewImages != null && dto.NewImages.Any())
+            {
+                // Simple logic: Append new images up to 5 total
+                var currentImageCount = product.Images.Count;
+                int sortOrder = currentImageCount;
+
+                foreach (var file in dto.NewImages.Take(5 - currentImageCount))
+                {
+                    var imageUrl = $"/uploads/products/{file.FileName}";
+                    await _productImageRepository.AddAsync(new ProductImage
+                    {
+                        Id = Guid.NewGuid(),
+                        ProductId = product.Id,
+                        ImageUrl = imageUrl,
+                        IsPrimary = sortOrder == 0,
+                        SortOrder = sortOrder++
+                    });
+                }
+            }
+
+            // 4. Handle Variants
+            // Logic: 
+            // - If SKU exists in Input, update it.
+            // - If SKU doesn't exist in DB, add it.
+            // - If SKU exists in DB but NOT in Input, delete it (soft delete).
+
+            var existingVariants = product.Variants.ToList();
+            var inputVariants = dto.Variants ?? new List<ProductVariantDto>();
+
+            // Soft delete removed variants
+            foreach (var ev in existingVariants.Where(v => !v.IsDeleted))
+            {
+                if (!inputVariants.Any(iv => iv.Sku == ev.Sku))
+                {
+                    ev.IsDeleted = true;
+                    ev.UpdatedAt = DateTime.UtcNow;
+                    await _productVariantRepository.UpdateAsync(ev);
+                }
+            }
+
+            // Update or Add
+            foreach (var iv in inputVariants)
+            {
+                var ev = existingVariants.FirstOrDefault(v => v.Sku == iv.Sku);
+                if (ev != null)
+                {
+                    // Update existing
+                    ev.VariantName = iv.VariantName;
+                    ev.Price = iv.Price;
+                    ev.IsActive = true;
+                    ev.IsDeleted = false; // Re-active if it was deleted
+                    ev.UpdatedAt = DateTime.UtcNow;
+                    
+                    // Stock adjustment via transaction if changed
+                    if (iv.StockQuantity != ev.StockQuantity)
+                    {
+                        var diff = iv.StockQuantity - ev.StockQuantity;
+                        await _inventoryRepository.AddAsync(new InventoryTransaction
+                        {
+                            Id = Guid.NewGuid(),
+                            VariantId = ev.Id,
+                            Type = diff > 0 ? "AdjustmentIn" : "AdjustmentOut",
+                            QuantityChange = diff,
+                            Reason = "Manual adjustment during product update",
+                            CreatedAt = DateTime.UtcNow,
+                            CreatedByUserId = userId
+                        });
+                        ev.StockQuantity = iv.StockQuantity;
+                    }
+
+                    await _productVariantRepository.UpdateAsync(ev);
+
+                    // Attributes (Sync: remove existing and re-add for simplicity in this case)
+                    // Note: In a large scale app, we'd do a more surgical update.
+                    foreach (var attr in ev.AttributeValues.ToList())
+                    {
+                        await _attributeValueRepository.DeleteAsync(attr);
+                    }
+
+                    foreach (var attr in iv.Attributes)
+                    {
+                        await _attributeValueRepository.AddAsync(new VariantAttributeValue
+                        {
+                            Id = Guid.NewGuid(),
+                            VariantId = ev.Id,
+                            CategoryAttributeId = attr.AttributeId,
+                            CategoryAttributeOptionId = attr.OptionId
+                        });
+                    }
+                }
+                else
+                {
+                    // Add new variant
+                    var newVariant = new ProductVariant
+                    {
+                        Id = Guid.NewGuid(),
+                        ProductId = product.Id,
+                        Sku = iv.Sku,
+                        VariantName = iv.VariantName,
+                        Price = iv.Price,
+                        StockQuantity = iv.StockQuantity,
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    await _productVariantRepository.AddAsync(newVariant);
+
+                    if (newVariant.StockQuantity > 0)
+                    {
+                        await _inventoryRepository.AddAsync(new InventoryTransaction
+                        {
+                            Id = Guid.NewGuid(),
+                            VariantId = newVariant.Id,
+                            Type = "StockIn",
+                            QuantityChange = newVariant.StockQuantity,
+                            Reason = "Initial stock for new variant",
+                            CreatedAt = DateTime.UtcNow,
+                            CreatedByUserId = userId
+                        });
+                    }
+
+                    foreach (var attr in iv.Attributes)
+                    {
+                        await _attributeValueRepository.AddAsync(new VariantAttributeValue
+                        {
+                            Id = Guid.NewGuid(),
+                            VariantId = newVariant.Id,
+                            CategoryAttributeId = attr.AttributeId,
+                            CategoryAttributeOptionId = attr.OptionId
+                        });
+                    }
+                }
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+        }
+
         public async Task<List<Category>> GetCategoriesAsync()
         {
             return await _categoryRepository.Query()

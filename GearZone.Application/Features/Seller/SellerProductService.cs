@@ -1,5 +1,6 @@
 ﻿using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Abstractions.Services;
+using GearZone.Application.Abstractions.External;
 using GearZone.Application.Features.Seller.Dtos;
 using GearZone.Domain.Entities;
 using GearZone.Domain.Enums;
@@ -23,6 +24,7 @@ namespace GearZone.Application.Features.Seller
         private readonly IInventoryTransactionRepository _inventoryRepository;
         private readonly IVariantAttributeValueRepository _attributeValueRepository;
         private readonly ICategoryAttributeRepository _categoryAttributeRepository;
+        private readonly IFileStorageService _fileStorageService;
         private readonly IUnitOfWork _unitOfWork;
 
         public SellerProductService(
@@ -34,6 +36,7 @@ namespace GearZone.Application.Features.Seller
             IInventoryTransactionRepository inventoryRepository,
             IVariantAttributeValueRepository attributeValueRepository,
             ICategoryAttributeRepository categoryAttributeRepository,
+            IFileStorageService fileStorageService,
             IUnitOfWork unitOfWork)
         {
             _productRepository = productRepository;
@@ -44,6 +47,7 @@ namespace GearZone.Application.Features.Seller
             _inventoryRepository = inventoryRepository;
             _attributeValueRepository = attributeValueRepository;
             _categoryAttributeRepository = categoryAttributeRepository;
+            _fileStorageService = fileStorageService;
             _unitOfWork = unitOfWork;
         }
 
@@ -172,17 +176,13 @@ namespace GearZone.Application.Features.Seller
 
             await _productRepository.AddAsync(product);
 
-            // 2. Handle Images (Simulated path for now, usually handled by a separate storage service)
+            // 2. Handle Images (Cloudinary)
             if (dto.Images != null && dto.Images.Any())
             {
+                var imageUrls = await _fileStorageService.UploadAsync(dto.Images);
                 int sortOrder = 0;
-                foreach (var file in dto.Images.Take(5))
+                foreach (var imageUrl in imageUrls)
                 {
-                    // In a real app, we'd save to disk/cloud here
-                    // e.g., var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-                    // For this task, we'll assume they are saved and just store a dummy path or original name
-                    var imageUrl = $"/uploads/products/{file.FileName}"; 
-                    
                     await _productImageRepository.AddAsync(new ProductImage
                     {
                         Id = Guid.NewGuid(),
@@ -309,16 +309,17 @@ namespace GearZone.Application.Features.Seller
 
             await _productRepository.UpdateAsync(product);
 
-            // 3. Handle Images (Simulated)
+            // 3. Handle Images (Cloudinary)
             if (dto.NewImages != null && dto.NewImages.Any())
             {
-                // Simple logic: Append new images up to 5 total
                 var currentImageCount = product.Images.Count;
+                var imageUrls = await _fileStorageService.UploadAsync(dto.NewImages);
                 int sortOrder = currentImageCount;
 
-                foreach (var file in dto.NewImages.Take(5 - currentImageCount))
+                foreach (var imageUrl in imageUrls)
                 {
-                    var imageUrl = $"/uploads/products/{file.FileName}";
+                    if (sortOrder >= 5) break;
+
                     await _productImageRepository.AddAsync(new ProductImage
                     {
                         Id = Guid.NewGuid(),

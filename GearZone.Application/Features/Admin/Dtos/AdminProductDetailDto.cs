@@ -21,8 +21,17 @@ namespace GearZone.Application.Features.Admin.Dtos
         public AdminStoreInfoDto Store { get; set; } = null!;
 
         public List<string> Images { get; set; } = new List<string>();
-        public Dictionary<string, string> Specs { get; set; } = new Dictionary<string, string>();
+        /// <summary>Technical specs aggregated from all variant attribute values (attribute name → distinct option values).</summary>
+        public List<AdminProductSpecDto> Specs { get; set; } = new();
         public List<AdminProductVariantDto> Variants { get; set; } = new List<AdminProductVariantDto>();
+    }
+
+    /// <summary>One row in the Technical Specifications table.</summary>
+    public class AdminProductSpecDto
+    {
+        public string AttributeName { get; set; } = string.Empty;
+        /// <summary>All unique option values that appear across every variant for this attribute.</summary>
+        public List<string> Values { get; set; } = new();
     }
 
     public class AdminCategoryInfoDto

@@ -58,10 +58,7 @@ namespace GearZone.Application.Features.Admin
                 var category = await _categoryRepository.GetByIdAsync(dto.Id);
                 if (category == null) return false;
 
-                category.Name = dto.Name;
-                category.Slug = dto.Slug;
-                category.ParentId = dto.ParentId;
-                category.IsActive = dto.IsActive;
+                _mapper.Map(dto, category);
 
                 await _categoryRepository.UpdateAsync(category);
                 await _unitOfWork.SaveChangesAsync();
@@ -115,21 +112,7 @@ namespace GearZone.Application.Features.Admin
         public async Task<List<CategoryAttributeDto>> GetAttributesByCategoryIdAsync(int categoryId)
         {
             var attrs = await _categoryAttributeRepository.GetByCategoryIdAsync(categoryId);
-            return attrs.Select(a => new CategoryAttributeDto
-            {
-                Id = a.Id,
-                CategoryId = a.CategoryId,
-                Name = a.Name,
-                FilterType = a.FilterType,
-                DisplayOrder = a.DisplayOrder,
-                IsFilterable = a.IsFilterable,
-                Options = a.Options.Select(o => new CategoryAttributeOptionDto
-                {
-                    Id = o.Id,
-                    Value = o.Value,
-                    DisplayOrder = o.DisplayOrder
-                }).ToList()
-            }).ToList();
+            return _mapper.Map<List<CategoryAttributeDto>>(attrs);
         }
 
         public async Task<bool> SaveCategoryAttributesAsync(SaveCategoryAttributesRequest request)

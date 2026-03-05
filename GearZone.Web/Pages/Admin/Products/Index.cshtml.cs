@@ -35,16 +35,61 @@ namespace GearZone.Web.Pages.Admin.Products
         public List<SelectListItem> Categories { get; set; } = new List<SelectListItem>();
         public List<SelectListItem> Stores { get; set; } = new List<SelectListItem>();
 
+        /// <summary>Attributes for the currently selected category, used to render dynamic filters.</summary>
+        public List<CategoryAttributeDto> CategoryAttributes { get; set; } = new();
+
         public async Task OnGetAsync()
         {
             Stats = await _productService.GetProductStatsAsync();
             Products = await _productService.GetProductsAsync(Query);
 
+            // Build hierarchical category list: roots first, then their children with "└ " prefix
             var categories = await _categoryService.GetAllCategoriesListAsync();
-            Categories = categories.Select(c => new SelectListItem(c.Name, c.Id.ToString())).ToList();
+            var roots = categories.Where(c => c.ParentId == null).OrderBy(c => c.Name);
+            var categoryItems = new List<SelectListItem>();
+            foreach (var root in roots)
+            {
+                categoryItems.Add(new SelectListItem(root.Name, root.Id.ToString()));
+                var children = categories
+                    .Where(c => c.ParentId == root.Id)
+                    .OrderBy(c => c.Name);
+                foreach (var child in children)
+                {
+                    categoryItems.Add(new SelectListItem($"└ {child.Name}", child.Id.ToString()));
+                }
+            }
+            Categories = categoryItems;
+
+
 
             var stores = await _storeService.GetAllStoresAsync();
             Stores = stores.Select(s => new SelectListItem(s.StoreName, s.Id.ToString())).ToList();
+
+            // Load attributes for the selected category (if any)
+            if (Query.CategoryId.HasValue && Query.CategoryId.Value > 0)
+            {
+                CategoryAttributes = await _categoryService.GetAttributesByCategoryIdAsync(Query.CategoryId.Value);
+            }
+        }
+
+        /// <summary>AJAX endpoint: returns category attributes as JSON for dynamic filter rendering.</summary>
+        public async Task<JsonResult> OnGetCategoryAttributesAsync(int categoryId)
+        {
+            if (categoryId <= 0)
+                return new JsonResult(new List<object>());
+
+            var attrs = await _categoryService.GetAttributesByCategoryIdAsync(categoryId);
+            var result = attrs
+                .Where(a => a.IsFilterable)
+                .Select(a => new
+                {
+                    a.Id,
+                    a.Name,
+                    a.FilterType,
+                    Options = a.Options.Select(o => new { o.Id, o.Value })
+                });
+            return new JsonResult(result);
         }
     }
 }
+

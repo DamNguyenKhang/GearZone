@@ -117,6 +117,7 @@ namespace GearZone.Infrastructure.Repositories
                 .Include(p => p.Store)
                 .Include(p => p.Category)
                 .Include(p => p.Variants)
+                    .ThenInclude(v => v.AttributeValues)
                 .Include(p => p.Images)
                 .AsQueryable();
 
@@ -180,6 +181,15 @@ namespace GearZone.Infrastructure.Repositories
                 query = query.Where(p => !p.Variants.Any(v => v.StockQuantity > 0));
             }
 
+            // Filter by selected attribute option IDs (products must have at least one matching variant)
+            if (queryDto.AttributeOptionIds != null && queryDto.AttributeOptionIds.Any())
+            {
+                query = query.Where(p =>
+                    p.Variants.Any(v =>
+                        v.AttributeValues.Any(av =>
+                            queryDto.AttributeOptionIds.Contains(av.CategoryAttributeOptionId))));
+            }
+
             query = query.OrderByDescending(p => p.CreatedAt);
 
             var totalCount = await query.CountAsync();
@@ -220,6 +230,9 @@ namespace GearZone.Infrastructure.Repositories
                 .Include(p => p.Variants)
                     .ThenInclude(v => v.AttributeValues)
                         .ThenInclude(av => av.CategoryAttribute)
+                .Include(p => p.Variants)
+                    .ThenInclude(v => v.AttributeValues)
+                        .ThenInclude(av => av.CategoryAttributeOption)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
     }

@@ -62,14 +62,17 @@
                         foreach (var root in Model.HierarchicalCategories)
                         {
                             <!-- Root Category Row -->
-                            <tr class="group hover:bg-slate-50 transition-all cursor-pointer bg-white">
+                            <tr class="group hover:bg-slate-50 transition-all bg-white @(root.Children.Any() ? "cursor-pointer has-children" : "")"
+                                data-category-id="@root.Id"
+                                data-expanded="false">
                                 <td class="py-3.5 px-6">
                                     <div class="flex items-center gap-2.5">
                                         @if (root.Children.Any())
                                         {
-                                            <span class="text-slate-400 flex-shrink-0">
+                                            <span class="toggle-icon text-slate-400 flex-shrink-0 transition-transform duration-200"
+                                                  data-toggle-id="@root.Id">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                                                 </svg>
                                             </span>
                                         }
@@ -116,21 +119,24 @@
                                 <td class="py-3.5 pl-3 pr-6 text-right">
                                     <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                         <a asp-page="/Admin/Categories/Edit" asp-route-id="@root.Id"
-                                           class="text-slate-400 hover:text-amber-500 transition-colors p-1.5 rounded-lg hover:bg-amber-50" title="Edit Category">
+                                           class="text-slate-400 hover:text-amber-500 transition-colors p-1.5 rounded-lg hover:bg-amber-50" title="Edit Category"
+                                           onclick="event.stopPropagation()">
                                             <span class="material-symbols-outlined text-[20px]">edit</span>
                                         </a>
                                         <button class="delete-category-btn text-slate-400 hover:text-red-600 transition-colors p-1.5 rounded-lg hover:bg-red-50"
-                                                title="Delete Category" data-id="@root.Id" data-name="@root.Name">
+                                                title="Delete Category" data-id="@root.Id" data-name="@root.Name"
+                                                onclick="event.stopPropagation()">
                                             <span class="material-symbols-outlined text-[20px]">delete</span>
                                         </button>
                                     </div>
                                 </td>
                             </tr>
 
-                            <!-- Child Category Rows -->
+                            <!-- Child Category Rows (hidden by default, toggled by JS) -->
                             @foreach (var child in root.Children)
                             {
-                                <tr class="group hover:bg-indigo-50/30 transition-all cursor-pointer bg-slate-50/40">
+                                <tr class="child-category-row group hover:bg-indigo-50/30 transition-all bg-slate-50/40 hidden"
+                                    data-parent-id="@root.Id">
                                     <td class="py-3 px-6">
                                         <div class="flex items-center gap-2.5 pl-7">
                                             <span class="text-slate-300 flex-shrink-0">
@@ -251,7 +257,38 @@
 
 @section Scripts {
     <script>
-        // Delete modal logic
+        // ─── Expand / Collapse Category Children ───────────────────────────────
+        document.querySelectorAll('tr.has-children').forEach(rootRow => {
+            rootRow.addEventListener('click', function () {
+                const categoryId = this.getAttribute('data-category-id');
+                const isExpanded = this.getAttribute('data-expanded') === 'true';
+
+                // Toggle child rows
+                document.querySelectorAll(`.child-category-row[data-parent-id="${categoryId}"]`).forEach(childRow => {
+                    if (isExpanded) {
+                        childRow.classList.add('hidden');
+                    } else {
+                        childRow.classList.remove('hidden');
+                    }
+                });
+
+                // Rotate toggle icon: right (→) collapsed, down (↓) expanded
+                const icon = document.querySelector(`.toggle-icon[data-toggle-id="${categoryId}"]`);
+                if (icon) {
+                    icon.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(90deg)';
+                }
+
+                // Swap folder icon
+                const folderIcon = this.querySelector('td:first-child .material-symbols-outlined');
+                if (folderIcon) {
+                    folderIcon.textContent = isExpanded ? 'folder' : 'folder_open';
+                }
+
+                this.setAttribute('data-expanded', isExpanded ? 'false' : 'true');
+            });
+        });
+
+        // ─── Delete Modal ───────────────────────────────────────────────────────
         const deleteModal = document.getElementById('delete-category-modal');
         const deleteForm = document.getElementById('delete-category-form');
         const deleteIdInput = document.getElementById('delete-category-id');

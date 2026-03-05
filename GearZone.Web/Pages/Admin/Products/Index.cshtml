@@ -102,53 +102,100 @@
             </div>
 
             <!-- Advanced Filters (Collapsible) -->
-            <div id="advanced-filters" class="hidden border-t border-slate-100 pt-4 mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-                <!-- Category Filter -->
-                <div class="space-y-1">
-                    <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Category</label>
-                    <select asp-for="Query.CategoryId" asp-items="Model.Categories" class="form-select w-full rounded-lg border-slate-200 bg-white py-2 text-sm text-slate-900 focus:border-primary focus:ring-primary shadow-sm">
-                        <option value="">All Categories</option>
-                    </select>
-                </div>
+            <div id="advanced-filters" class="hidden border-t border-slate-100 pt-4 mt-2 flex flex-col gap-4">
+                <!-- Row 1: Basic Filters -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
+                    <!-- Category Filter -->
+                    <div class="space-y-1 lg:col-span-1">
+                        <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Category</label>
+                        <select id="category-filter-select" asp-for="Query.CategoryId" asp-items="Model.Categories" class="form-select w-full rounded-lg border-slate-200 bg-white py-2 text-sm text-slate-900 focus:border-primary focus:ring-primary shadow-sm">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
 
-                <!-- Store Filter -->
-                <div class="space-y-1">
-                    <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Store</label>
-                    <select asp-for="Query.StoreId" asp-items="Model.Stores" class="form-select w-full rounded-lg border-slate-200 bg-white py-2 text-sm text-slate-900 focus:border-primary focus:ring-primary shadow-sm">
-                        <option value="">All Stores</option>
-                    </select>
-                </div>
+                    <!-- Store Filter -->
+                    <div class="space-y-1 lg:col-span-1">
+                        <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Store</label>
+                        <select asp-for="Query.StoreId" asp-items="Model.Stores" class="form-select w-full rounded-lg border-slate-200 bg-white py-2 text-sm text-slate-900 focus:border-primary focus:ring-primary shadow-sm">
+                            <option value="">All Stores</option>
+                        </select>
+                    </div>
 
-                <!-- Price Range -->
-                <div class="space-y-1">
-                    <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Price Range (₫)</label>
-                    <div class="flex items-center gap-2">
-                        <input asp-for="Query.MinPrice" type="number" placeholder="Min" class="form-input w-full rounded-lg border-slate-200 bg-white py-2 text-sm px-3 shadow-sm" />
-                        <span class="text-slate-400">-</span>
-                        <input asp-for="Query.MaxPrice" type="number" placeholder="Max" class="form-input w-full rounded-lg border-slate-200 bg-white py-2 text-sm px-3 shadow-sm" />
+                    <!-- Price Range -->
+                    <div class="space-y-1 lg:col-span-2">
+                        <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Price Range (₫)</label>
+                        <div class="flex items-center gap-1.5">
+                            <input asp-for="Query.MinPrice" type="number" placeholder="Min" class="form-input min-w-0 w-full rounded-lg border-slate-200 bg-white py-2 text-sm px-2 shadow-sm" />
+                            <span class="text-slate-400 flex-shrink-0">–</span>
+                            <input asp-for="Query.MaxPrice" type="number" placeholder="Max" class="form-input min-w-0 w-full rounded-lg border-slate-200 bg-white py-2 text-sm px-2 shadow-sm" />
+                        </div>
+                    </div>
+
+                    <!-- Date Range -->
+                    <div class="space-y-1 lg:col-span-2">
+                        <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Created Date</label>
+                        <div class="flex items-center gap-1.5">
+                            <input asp-for="Query.StartDate" type="date" class="form-input min-w-0 w-full rounded-lg border-slate-200 bg-white py-2 text-xs px-2 shadow-sm" />
+                            <span class="text-slate-400 flex-shrink-0">–</span>
+                            <input asp-for="Query.EndDate" type="date" class="form-input min-w-0 w-full rounded-lg border-slate-200 bg-white py-2 text-xs px-2 shadow-sm" />
+                        </div>
+                    </div>
+
+                    <!-- Out of Stock Only -->
+                    <div class="flex items-center gap-2 pb-2 lg:col-span-1">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input asp-for="Query.OutOfStock" type="checkbox" class="sr-only peer" onchange="this.form.submit()">
+                            <div class="w-9 h-5 bg-slate-200 rounded-full peer peer-focus:ring-2 peer-focus:ring-primary/20 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-500 shadow-inner"></div>
+                        </label>
+                        <span class="text-sm font-medium text-slate-700 whitespace-nowrap">Out of Stock</span>
                     </div>
                 </div>
 
-                <!-- Date Range -->
-                <div class="space-y-1">
-                    <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Created Date</label>
-                    <div class="flex items-center gap-2">
-                        <input asp-for="Query.StartDate" type="date" class="form-input w-full rounded-lg border-slate-200 bg-white py-2 text-sm px-3 shadow-sm" />
-                        <span class="text-slate-400">-</span>
-                        <input asp-for="Query.EndDate" type="date" class="form-input w-full rounded-lg border-slate-200 bg-white py-2 text-sm px-3 shadow-sm" />
-                    </div>
+                <!-- Row 2: Category Attribute Filters (dynamic) -->
+                @{ var attrContainerClass = Model.CategoryAttributes.Any() ? "" : "hidden"; }
+                <div id="category-attr-filters-container" class="@attrContainerClass">
+                    @if (Model.CategoryAttributes.Any())
+                    {
+                        <div id="category-attr-filters" class="border-t border-slate-100 pt-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="material-symbols-outlined text-[18px] text-primary">filter_list</span>
+                                <span class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Filter by Category Attributes</span>
+                            </div>
+                            <div class="flex flex-wrap gap-6">
+                                @foreach (var attr in Model.CategoryAttributes.Where(a => a.IsFilterable))
+                                {
+                                    <div class="attr-group min-w-[140px]">
+                                        <p class="text-xs font-semibold text-slate-700 mb-2">@attr.Name</p>
+                                        <div class="flex flex-col gap-1.5">
+                                            @foreach (var opt in attr.Options)
+                                            {
+                                                var inputType = attr.FilterType == "Radio" ? "radio" : "checkbox";
+                                                var inputName = "Query.AttributeOptionIds";
+                                                var isChecked = Model.Query.AttributeOptionIds.Contains(opt.Id);
+                                                <label class="flex items-center gap-2 cursor-pointer group">
+                                                    <input type="@inputType"
+                                                           name="@inputName"
+                                                           value="@opt.Id"
+                                                           @(isChecked ? "checked" : "")
+                                                           class="rounded border-slate-300 text-primary focus:ring-primary size-3.5" />
+                                                    <span class="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">@opt.Value</span>
+                                                </label>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Placeholder: populated via JS when user picks a category -->
+                        <div id="category-attr-filters" class="hidden border-t border-slate-100 pt-4"></div>
+                    }
                 </div>
 
-                <!-- Out of Stock Only -->
-                <div class="flex items-center gap-2 pb-2">
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input asp-for="Query.OutOfStock" type="checkbox" class="sr-only peer" onchange="this.form.submit()">
-                        <div class="w-9 h-5 bg-slate-200 rounded-full peer peer-focus:ring-2 peer-focus:ring-primary/20 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-500 shadow-inner"></div>
-                    </label>
-                    <span class="text-sm font-medium text-slate-700">Out of Stock Only</span>
-                </div>
-
-                <div class="lg:col-span-4 flex justify-end">
+                <!-- Apply Button -->
+                <div class="flex justify-end border-t border-slate-100 pt-3">
                     <button type="submit" class="bg-slate-800 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-slate-900 transition-colors shadow-sm">
                         Apply Filters
                     </button>
@@ -339,33 +386,105 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Advanced Filters Toggle
             const toggleAdvancedBtn = document.querySelector('.toggle-advanced-btn');
             const advancedFilters = document.getElementById('advanced-filters');
-            
+            const categorySelect = document.getElementById('category-filter-select');
+            const attrFiltersContainer = document.getElementById('category-attr-filters-container');
+            const attrFiltersPanel = document.getElementById('category-attr-filters');
+
+            // ─── Current selected option IDs (from server-side model) ───
+            const preselectedOptionIds = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Query.AttributeOptionIds));
+
+            // ─── Auto-open advanced filters if category or attr options are active ───
+            const hasCategorySelected = categorySelect && categorySelect.value;
+            const hasAttrSelected = preselectedOptionIds && preselectedOptionIds.length > 0;
+            if (hasCategorySelected || hasAttrSelected) {
+                advancedFilters.classList.remove('hidden');
+                toggleAdvancedBtn.classList.add('bg-slate-50', 'text-slate-900', 'border-slate-300');
+            }
+
+            // ─── Toggle Advanced Filters Panel ───
             toggleAdvancedBtn.addEventListener('click', function() {
                 advancedFilters.classList.toggle('hidden');
-                
-                // Update icon or styling if needed
                 if (advancedFilters.classList.contains('hidden')) {
                     this.classList.remove('bg-slate-50', 'text-slate-900', 'border-slate-300');
                 } else {
                     this.classList.add('bg-slate-50', 'text-slate-900', 'border-slate-300');
                 }
             });
-            
-            // Auto submit on certain inputs
-            document.querySelectorAll('#filter-form .form-select').forEach(select => {
-                // Ignore the Search Type dropdown since it just changes what the text input means
-                if (select.id !== 'Query_SearchType' && !select.onchange) {
-                    select.addEventListener('change', () => {
-                        // don't auto-submit if it's in advanced filters, let them click apply
-                        if (!advancedFilters.contains(select)) {
-                            // document.getElementById('filter-form').submit();
+
+            // ─── Category change → fetch and render attribute filters via AJAX ───
+            if (categorySelect) {
+                categorySelect.addEventListener('change', async function() {
+                    const categoryId = parseInt(this.value);
+
+                    // Clear existing attribute filters
+                    attrFiltersPanel.innerHTML = '';
+                    attrFiltersPanel.classList.add('hidden');
+                    attrFiltersContainer.classList.add('hidden');
+
+                    if (!categoryId || categoryId <= 0) return;
+
+                    // Show loading indicator
+                    attrFiltersPanel.innerHTML = '<div class="flex items-center gap-2 text-slate-400 text-sm"><span class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span> Loading attributes...</div>';
+                    attrFiltersPanel.classList.remove('hidden');
+                    attrFiltersContainer.classList.remove('hidden');
+
+                    try {
+                        const resp = await fetch(`?handler=CategoryAttributes&categoryId=${categoryId}`, {
+                            headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || '' }
+                        });
+                        if (!resp.ok) throw new Error('Network error');
+                        const attributes = await resp.json();
+
+                        if (!attributes || attributes.length === 0) {
+                            attrFiltersPanel.classList.add('hidden');
+                            attrFiltersContainer.classList.add('hidden');
+                            return;
                         }
-                    });
+
+                        renderAttributeFilters(attributes, []);
+                    } catch (e) {
+                        attrFiltersPanel.innerHTML = '<p class="text-xs text-red-500">Failed to load attributes.</p>';
+                    }
+                });
+            }
+
+            // ─── Render attribute filter checkboxes/radios dynamically ───
+            function renderAttributeFilters(attributes, selectedIds) {
+                let html = `
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="material-symbols-outlined text-[18px] text-primary">filter_list</span>
+                        <span class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Filter by Category Attributes</span>
+                    </div>
+                    <div class="flex flex-wrap gap-6">`;
+
+                for (const attr of attributes) {
+                    const inputType = attr.filterType === 'Radio' ? 'radio' : 'checkbox';
+                    html += `<div class="attr-group min-w-[140px]">`;
+                    html += `<p class="text-xs font-semibold text-slate-700 mb-2">${escapeHtml(attr.name)}</p>`;
+                    html += `<div class="flex flex-col gap-1.5">`;
+                    for (const opt of attr.options) {
+                        const checked = selectedIds.includes(opt.id) ? 'checked' : '';
+                        html += `
+                            <label class="flex items-center gap-2 cursor-pointer group">
+                                <input type="${inputType}" name="Query.AttributeOptionIds" value="${opt.id}" ${checked}
+                                       class="rounded border-slate-300 text-primary focus:ring-primary size-3.5" />
+                                <span class="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">${escapeHtml(opt.value)}</span>
+                            </label>`;
+                    }
+                    html += `</div></div>`;
                 }
-            });
+
+                html += `</div>`;
+                attrFiltersPanel.innerHTML = html;
+                attrFiltersPanel.classList.remove('hidden');
+                attrFiltersContainer.classList.remove('hidden');
+            }
+
+            function escapeHtml(str) {
+                return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+            }
         });
     </script>
 }

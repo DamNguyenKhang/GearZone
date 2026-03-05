@@ -1,0 +1,286 @@
+@page "{id:Guid}"
+@model GearZone.Web.Pages.StoreOwner.Products.EditModel
+@{
+    ViewData["Title"] = "Edit Product";
+    ViewData["ActivePage"] = "Products";
+    ViewData["PageHeader"] = "Edit Product";
+    ViewData["Breadcrumb"] = new string[] { "Products", "Edit Product" };
+    Layout = "_StoreOwnerLayout";
+}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <form method="post" enctype="multipart/form-data" id="editProductForm">
+        <div asp-validation-summary="ModelOnly" class="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm font-medium"></div>
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Edit Product</h1>
+                <p class="text-sm text-gray-500 mt-1">Update your product details and variants.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <a asp-page="./Details" asp-route-id="@Model.ProductId" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Discard</a>
+                <button type="submit" class="px-5 py-2.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-dark transition-colors shadow-sm">Update Product</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column -->
+            <div class="lg:col-span-2 space-y-8">
+                
+                <!-- Basic Information -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <div class="flex items-center gap-2 mb-6">
+                        <span class="material-symbols-outlined text-primary">info</span>
+                        <h2 class="text-lg font-bold text-gray-900">Basic Information</h2>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                            <input asp-for="Input.Name" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition-all bg-gray-50/50" placeholder="e.g., ASUS ROG Strix GeForce RTX 4090 OC Edition" required>
+                            <span asp-validation-for="Input.Name" class="text-xs text-red-500 mt-1"></span>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Custom Slug (Optional)</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 text-sm">/product/</span>
+                                <input asp-for="Input.Slug" class="w-full pl-20 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition-all bg-gray-50/50 text-sm" placeholder="leave-blank-to-auto-generate">
+                            </div>
+                            <span asp-validation-for="Input.Slug" class="text-xs text-red-500 mt-1"></span>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea asp-for="Input.Description" rows="5" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition-all bg-gray-50/50" placeholder="Describe your product..."></textarea>
+                            <span asp-validation-for="Input.Description" class="text-xs text-red-500 mt-1"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Media (Existing and New) -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <div class="flex items-center gap-2 mb-6">
+                        <span class="material-symbols-outlined text-primary">image</span>
+                        <h2 class="text-lg font-bold text-gray-900">Product Media</h2>
+                    </div>
+
+                    <!-- Existing Images -->
+                    @if (Model.Input.ExistingImageUrls.Any())
+                    {
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Current Images</label>
+                            <div class="grid grid-cols-5 gap-4">
+                                @foreach (var url in Model.Input.ExistingImageUrls)
+                                {
+                                    <div class="relative group aspect-square rounded-lg overflow-hidden border border-gray-200">
+                                        <img src="@url" class="w-full h-full object-cover" />
+                                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <span class="text-white text-xs font-bold uppercase">Keep</span>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-primary transition-colors cursor-pointer bg-gray-50/30">
+                        <input type="file" asp-for="Input.NewImages" class="hidden" id="imageUpload" multiple accept="image/*">
+                        <label for="imageUpload" class="cursor-pointer block">
+                            <span class="material-symbols-outlined text-4xl text-gray-400 mb-2">cloud_upload</span>
+                            <p class="text-sm font-medium text-gray-900">Upload New Images</p>
+                            <p class="text-xs text-gray-500 mt-1">PNG, JPG up to 10MB (max 5 images total)</p>
+                        </label>
+                    </div>
+                    <div id="imagePreview" class="grid grid-cols-5 gap-4 mt-4"></div>
+                </div>
+
+                <!-- Variants & Pricing (Simplified logic for now, similar to Create) -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">sell</span>
+                            <h2 class="text-lg font-bold text-gray-900">Variants & Pricing</h2>
+                        </div>
+                        <button type="button" id="btnAddVariant" class="px-3 py-1.5 text-xs font-bold text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[16px]">add</span> Add Variant
+                        </button>
+                    </div>
+
+                    <div id="variantsContainer" class="space-y-4">
+                        @for (int i = 0; i < Model.Input.Variants.Count; i++)
+                        {
+                            <div class="variant-row bg-gray-50/50 border border-gray-200 rounded-lg p-4 relative group">
+                                <button type="button" class="btnRemoveRow absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1 shadow-sm hover:bg-red-200 transition-colors hidden group-hover:block">
+                                    <span class="material-symbols-outlined text-[16px]">close</span>
+                                </button>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Variant Name</label>
+                                        <input asp-for="Input.Variants[i].VariantName" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white" placeholder="Standard / 16GB RAM">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">SKU</label>
+                                        <input asp-for="Input.Variants[i].Sku" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white" placeholder="Unique SKU" readonly="@(Model.Input.Variants[i].Sku != "")">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Price (₫)</label>
+                                        <input asp-for="Input.Variants[i].Price" type="number" step="0.01" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Stock</label>
+                                        <input asp-for="Input.Variants[i].StockQuantity" type="number" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white">
+                                    </div>
+                                </div>
+                                <div class="mt-4 attributes-list grid grid-cols-2 md:grid-cols-3 gap-3">
+                                    @for (int j = 0; j < Model.Input.Variants[i].Attributes.Count; j++)
+                                    {
+                                        <div class="flex items-center gap-2 p-2 bg-white border border-gray-100 rounded text-xs">
+                                            <span class="font-bold text-gray-700">@Model.Input.Variants[i].Attributes[j].AttributeName:</span>
+                                            <span class="text-gray-500">@Model.Input.Variants[i].Attributes[j].OptionValue</span>
+                                            <input type="hidden" asp-for="Input.Variants[i].Attributes[j].AttributeId" />
+                                            <input type="hidden" asp-for="Input.Variants[i].Attributes[j].OptionId" />
+                                            <input type="hidden" asp-for="Input.Variants[i].Attributes[j].AttributeName" />
+                                            <input type="hidden" asp-for="Input.Variants[i].Attributes[j].OptionValue" />
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="space-y-8">
+                <!-- Organization -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <div class="flex items-center gap-2 mb-6">
+                        <span class="material-symbols-outlined text-primary">category</span>
+                        <h2 class="text-lg font-bold text-gray-900">Organization</h2>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                            <select asp-for="Input.CategoryId" asp-items="Model.CategoryOptions" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/50" required>
+                                <option value="">Select Category</option>
+                            </select>
+                            <span asp-validation-for="Input.CategoryId" class="text-xs text-red-500 mt-1"></span>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+                            <select asp-for="Input.BrandId" asp-items="Model.BrandOptions" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/50" required>
+                                <option value="">Select Brand</option>
+                            </select>
+                            <span asp-validation-for="Input.BrandId" class="text-xs text-red-500 mt-1"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status & Global Price -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <div class="flex items-center gap-2 mb-6">
+                        <span class="material-symbols-outlined text-primary">payments</span>
+                        <h2 class="text-lg font-bold text-gray-900">Pricing & Status</h2>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Base Price (₫)</label>
+                            <input asp-for="Input.BasePrice" type="number" step="0.01" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/50 font-bold text-primary" placeholder="0">
+                            <p class="text-[10px] text-gray-400 mt-1 italic">* Lowest price among variants will be shown as starting price.</p>
+                        </div>
+
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <span class="text-sm font-medium text-gray-700">Save as Draft</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" asp-for="Input.IsDraft" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<template id="variantTemplate">
+    <div class="variant-row bg-white border border-gray-200 rounded-lg p-4 relative group shadow-sm">
+        <button type="button" class="btnRemoveRow absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1 shadow-sm hover:bg-red-200 transition-colors hidden group-hover:block">
+            <span class="material-symbols-outlined text-[16px]">close</span>
+        </button>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Variant Name</label>
+                <input name="Input.Variants[{index}].VariantName" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30" placeholder="e.g., White / 128GB">
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">SKU</label>
+                <input name="Input.Variants[{index}].Sku" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30" placeholder="SKU-AUTO-123">
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Price (₫)</label>
+                <input name="Input.Variants[{index}].Price" type="number" step="0.01" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30">
+            </div>
+            <div>
+                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Stock</label>
+                <input name="Input.Variants[{index}].StockQuantity" type="number" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30">
+            </div>
+        </div>
+    </div>
+</template>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            // Variant logic
+            function updateIndices() {
+                $('#variantsContainer .variant-row').each(function (index) {
+                    $(this).find('input').each(function () {
+                        if ($(this).attr('name')) {
+                            var name = $(this).attr('name').replace(/\[\d+\]/, '[' + index + ']');
+                            $(this).attr('name', name);
+                        }
+                    });
+                });
+            }
+
+            $('#btnAddVariant').click(function () {
+                var index = $('#variantsContainer .variant-row').length;
+                var html = $('#variantTemplate').html().replace(/{index}/g, index);
+                $('#variantsContainer').append(html);
+                updateIndices();
+            });
+
+            $(document).on('click', '.btnRemoveRow', function () {
+                $(this).closest('.variant-row').remove();
+                updateIndices();
+            });
+
+            // Image Preview
+            $('#imageUpload').change(function () {
+                const preview = $('#imagePreview');
+                preview.empty();
+                if (this.files) {
+                    Array.from(this.files).forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            preview.append(`
+                                <div class="aspect-square rounded-lg overflow-hidden border border-gray-200">
+                                    <img src="${e.target.result}" class="w-full h-full object-cover" />
+                                </div>
+                            `);
+                        }
+                        reader.readAsDataURL(file);
+                    });
+                }
+            });
+        });
+    </script>
+}

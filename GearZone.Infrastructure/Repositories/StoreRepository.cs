@@ -73,6 +73,13 @@ namespace GearZone.Infrastructure.Repositories
                 .FirstOrDefaultAsync(s => s.Id == storeId);
         }
 
+        public async Task<Store?> GetStoreByOwnerIdAsync(string userId)
+        {
+            return await _dbSet
+                .Include(s => s.OwnerUser)
+                .FirstOrDefaultAsync(s => s.OwnerUserId == userId);
+        }
+
         public async Task<StoreApplicationStatsDto> GetStoreApplicationStatsAsync()
         {
             var query = _dbSet.AsQueryable();

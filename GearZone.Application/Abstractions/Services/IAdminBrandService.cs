@@ -12,5 +12,7 @@ namespace GearZone.Application.Abstractions.Services
         Task<bool> RejectBrandAsync(int brandId);
         Task<bool> DeleteBrandAsync(int brandId);
         Task<AdminBrandStatsDto> GetBrandStatsAsync();
+        Task<bool> CreateBrandAsync(CreateBrandDto dto);
+        Task<bool> UpdateBrandAsync(EditBrandDto dto);
     }
 }

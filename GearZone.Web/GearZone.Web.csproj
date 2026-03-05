@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <Folder Include="Middlewares\" />
-    <Folder Include="Pages\Admin\Stores\" />
     <Folder Include="Pages\Admin\Users\Models\" />
     <Folder Include="Pages\Cart\Models\" />
     <Folder Include="Pages\Checkout\" />

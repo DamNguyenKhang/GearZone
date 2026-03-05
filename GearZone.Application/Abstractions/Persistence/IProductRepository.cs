@@ -9,9 +9,9 @@ namespace GearZone.Application.Abstractions.Persistence
 {
     public interface IProductRepository : IRepository<Product, Guid>
     {
-        Task<PagedResult<Product>> GetFilteredProductsAsync(ProductFilterDto filter);
         Task<PagedResult<Product>> GetAdminProductsAsync(AdminProductQueryDto query);
         Task<AdminProductStatsDto> GetAdminProductStatsAsync();
         Task<Product?> GetAdminProductDetailAsync(Guid id);
+        Task<PagedResult<CatalogProductDto>> GetFilteredProductsAsync(ProductFilterDto filter);
     }
 }

@@ -10,5 +10,8 @@ public class AdminBrandProfile : Profile
     {
         CreateMap<Brand, AdminBrandDto>()
             .ForMember(dest => dest.ProductCount, opt => opt.MapFrom(src => src.Products.Count));
+
+        CreateMap<CreateBrandDto, Brand>();
+        CreateMap<EditBrandDto, Brand>();
     }
 }

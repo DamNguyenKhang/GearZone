@@ -18,12 +18,60 @@ namespace GearZone.Web.Pages.Admin.Brands
         [BindProperty(SupportsGet = true)]
         public AdminBrandQueryDto Query { get; set; } = new AdminBrandQueryDto();
 
+        [BindProperty]
+        public CreateBrandDto CreateInput { get; set; } = new CreateBrandDto();
+
+        [BindProperty]
+        public EditBrandDto EditInput { get; set; } = new EditBrandDto();
+
         public PagedResult<AdminBrandDto> Brands { get; set; } = new PagedResult<AdminBrandDto>();
         public AdminBrandStatsDto BrandStats { get; set; } = new AdminBrandStatsDto();
 
         public async Task OnGetAsync()
         {
             await LoadDataAsync();
+        }
+
+        public async Task<IActionResult> OnPostCreateAsync()
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = "Validation failed. Please check the inputs.";
+                return RedirectToPage();
+            }
+
+            var result = await _adminBrandService.CreateBrandAsync(CreateInput);
+            if (result)
+            {
+                TempData["SuccessMessage"] = "Brand created successfully.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to create brand. Please try again.";
+            }
+
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostEditAsync()
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = "Validation failed. Please check the inputs.";
+                return RedirectToPage();
+            }
+
+            var result = await _adminBrandService.UpdateBrandAsync(EditInput);
+            if (result)
+            {
+                TempData["SuccessMessage"] = "Brand updated successfully.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to update brand. Please try again.";
+            }
+
+            return RedirectToPage();
         }
 
         public async Task<IActionResult> OnPostApproveAsync(int id)

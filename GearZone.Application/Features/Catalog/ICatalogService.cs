@@ -9,6 +9,15 @@ namespace GearZone.Application.Features.Catalog
     {
         Task<PagedResult<CatalogProductDto>> GetProductsAsync(ProductFilterDto filter);
         Task<CatalogFilterSidebarDto> GetFiltersForCategoryAsync(string categorySlug);
+        Task<List<CatalogCategoryDto>> GetCategoriesAsync();
+    }
+
+    public class CatalogCategoryDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
+        public List<CatalogCategoryDto> SubCategories { get; set; } = new();
     }
 
     public class CatalogFilterSidebarDto

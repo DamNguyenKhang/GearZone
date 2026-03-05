@@ -2,6 +2,7 @@
 using GearZone.Application.Features.Admin;
 using GearZone.Application.Features.Auth;
 using GearZone.Application.Features.Catalog;
+using GearZone.Application.Features.Seller;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GearZone.Application
@@ -19,6 +20,8 @@ namespace GearZone.Application
             services.AddScoped<IAdminProductService, AdminProductService>();
             services.AddScoped<IAdminBrandService, AdminBrandService>();
             services.AddScoped<ICatalogService, CatalogService>();
+            services.AddScoped<ISellerStoreService, SellerStoreService>();
+            services.AddScoped<ISellerProductService, SellerProductService>();
             return services;
         }
     }

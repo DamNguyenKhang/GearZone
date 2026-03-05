@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using GearZone.Application.Features.Admin.Dtos;
 
 namespace GearZone.Application.Abstractions.Services
 {
@@ -25,9 +27,12 @@ namespace GearZone.Application.Abstractions.Services
         Task<string> GenerateEmailConfirmationTokenAsync(string userId);
         Task<bool> ConfirmEmailAsync(string userId, string token);
         Task SignInAsync(string userId, bool isPersistent = false);
+        Task SignOutAsync();
+        Task<UserDto?> GetUserAsync(ClaimsPrincipal user);
+        Task<string?> GetUserRoleAsync(string userId);
         Task<string?> GetUserIdAsync(string emailOrUsername);
         Task SendVerificationEmailAsync(string userId, string email, string callbackUrl);
         AuthenticationProperties GetExternalAuthenticationProperties(string provider, string redirectUrl);
-        Task<(bool Succeeded, string? Error)> HandleExternalLoginCallbackAsync();
+        Task<(bool Succeeded, string? Error, string? UserId)> HandleExternalLoginCallbackAsync();
     }
 }

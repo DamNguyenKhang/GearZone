@@ -3,6 +3,8 @@ using GearZone.Application.Features.Catalog.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace GearZone.Web.Pages.Public.Catalog
 {
@@ -16,7 +18,7 @@ namespace GearZone.Web.Pages.Public.Catalog
         }
 
         [BindProperty(SupportsGet = true)]
-        public ProductFilterDto Filter { get; set; } = new ProductFilterDto { PageSize = 12 };
+        public ProductFilterDto Filter { get; set; } = new ProductFilterDto();
 
         public CatalogFilterSidebarDto Sidebar { get; set; } = new CatalogFilterSidebarDto();
 
@@ -24,11 +26,6 @@ namespace GearZone.Web.Pages.Public.Catalog
 
         public async Task<IActionResult> OnGetAsync()
         {
-            if (string.IsNullOrEmpty(Filter.CategorySlug))
-            {
-                // Default fallback if needed
-                Filter.CategorySlug = "graphics-cards";
-            }
 
             Sidebar = await _catalogService.GetFiltersForCategoryAsync(Filter.CategorySlug);
             Products = await _catalogService.GetProductsAsync(Filter);
@@ -38,9 +35,12 @@ namespace GearZone.Web.Pages.Public.Catalog
 
         public async Task<IActionResult> OnGetLoadMoreAsync()
         {
-            // For AJAX infinite scroll
             Products = await _catalogService.GetProductsAsync(Filter);
-            return Partial("_ProductGridPartial", Products.Items);
+            return new PartialViewResult
+            {
+                ViewName = "_ProductGridPartial",
+                ViewData = new ViewDataDictionary<List<CatalogProductDto>>(ViewData, Products.Items) { ["ViewMode"] = Filter.ViewMode }
+            };
         }
     }
 }

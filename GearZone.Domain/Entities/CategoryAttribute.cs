@@ -12,6 +12,6 @@ namespace GearZone.Domain.Entities
         public bool IsFilterable { get; set; } = true;
 
         public Category Category { get; set; } = null!;
-        public ICollection<VariantAttributeValue> Values { get; set; } = new List<VariantAttributeValue>();
+        public ICollection<CategoryAttributeOption> Options { get; set; } = new List<CategoryAttributeOption>();
     }
 }

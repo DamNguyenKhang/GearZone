@@ -87,15 +87,6 @@ namespace GearZone.Application.Features.Seller
 
             if (product == null) return null;
 
-            var specs = new Dictionary<string, string>();
-            if (!string.IsNullOrEmpty(product.SpecsJson))
-            {
-                try
-                {
-                    specs = JsonSerializer.Deserialize<Dictionary<string, string>>(product.SpecsJson) ?? new();
-                }
-                catch { /* Ignore invalid JSON */ }
-            }
 
             return new SellerProductDetailDto
             {
@@ -109,7 +100,6 @@ namespace GearZone.Application.Features.Seller
                 SoldCount = product.SoldCount,
                 Status = product.Status.ToString(),
                 CreatedAt = product.CreatedAt,
-                Specifications = specs,
                 ImageUrls = product.Images.OrderBy(i => i.SortOrder).Select(i => i.ImageUrl).ToList(),
                 Variants = product.Variants.Select(v => new ProductVariantDto
                 {
@@ -169,9 +159,6 @@ namespace GearZone.Application.Features.Seller
                 Status = dto.IsDraft ? ProductStatus.Draft : ProductStatus.Active,
                 SoldCount = 0,
                 CreatedAt = DateTime.UtcNow,
-                SpecsJson = JsonSerializer.Serialize(dto.Specifications?
-                    .Where(s => !string.IsNullOrWhiteSpace(s.Key))
-                    .ToDictionary(s => s.Key, s => s.Value) ?? new Dictionary<string, string>())
             };
 
             await _productRepository.AddAsync(product);

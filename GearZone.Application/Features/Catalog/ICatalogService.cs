@@ -10,6 +10,8 @@ namespace GearZone.Application.Features.Catalog
         Task<PagedResult<CatalogProductDto>> GetProductsAsync(ProductFilterDto filter);
         Task<CatalogFilterSidebarDto> GetFiltersForCategoryAsync(string categorySlug);
         Task<List<CatalogCategoryDto>> GetCategoriesAsync();
+        Task<ProductDetailDto?> GetProductDetailBySlugAsync(string slug);
+        Task<List<CatalogProductDto>> GetRelatedProductsAsync(int categoryId, Guid currentProductId, int limit = 5);
     }
 
     public class CatalogCategoryDto

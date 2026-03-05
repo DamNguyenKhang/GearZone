@@ -152,5 +152,128 @@ namespace GearZone.Application.Features.Catalog
 
             return result;
         }
+
+        public async Task<ProductDetailDto?> GetProductDetailBySlugAsync(string slug)
+        {
+            var product = await _productRepository.Query()
+                .AsNoTracking()
+                .Include(p => p.Store)
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .Include(p => p.Images)
+                .Include(p => p.Variants.Where(v => v.IsActive && !v.IsDeleted))
+                    .ThenInclude(v => v.AttributeValues)
+                        .ThenInclude(av => av.CategoryAttribute)
+                .Include(p => p.Variants.Where(v => v.IsActive && !v.IsDeleted))
+                    .ThenInclude(v => v.AttributeValues)
+                        .ThenInclude(av => av.CategoryAttributeOption)
+                .FirstOrDefaultAsync(p => p.Slug == slug && p.Status == GearZone.Domain.Enums.ProductStatus.Active && !p.IsDeleted);
+
+            if (product == null) return null;
+
+            var dto = new ProductDetailDto
+            {
+                Id = product.Id,
+                CategoryId = product.CategoryId,
+                Name = product.Name,
+                Slug = product.Slug,
+                Description = product.Description,
+                BasePrice = product.BasePrice,
+                SoldCount = product.SoldCount,
+                BrandName = product.Brand.Name,
+                BrandSlug = product.Brand.Slug,
+                CategoryName = product.Category.Name,
+                CategorySlug = product.Category.Slug,
+                StoreId = product.StoreId,
+                StoreName = product.Store.StoreName,
+                ImageUrls = product.Images.OrderByDescending(i => i.IsPrimary).Select(i => i.ImageUrl).ToList(),
+            };
+
+            // Process Variants & Generate Attribute Selections
+            if (product.Variants.Any())
+            {
+                var allAttributeValues = product.Variants.SelectMany(v => v.AttributeValues).ToList();
+
+                // 1. Group by Attribute to build the Shopee-style selection UI
+                dto.AttributeSelections = allAttributeValues
+                    .GroupBy(av => av.CategoryAttribute)
+                    .Select(g => new AttributeSelectionDto
+                    {
+                        AttributeId = g.Key.Id,
+                        Name = g.Key.Name,
+                        Options = g.Select(av => av.CategoryAttributeOption)
+                                   .DistinctBy(opt => opt.Id)
+                                   .Select(opt => new AttributeOptionDto
+                                   {
+                                       OptionId = opt.Id,
+                                       Value = opt.Value
+                                   }).ToList()
+                    }).ToList();
+
+                // 2. Map Variants for JS matching
+                dto.Variants = product.Variants.Select(v => new VariantDetailDto
+                {
+                    Id = v.Id,
+                    Sku = v.Sku,
+                    VariantName = v.VariantName,
+                    Price = v.Price,
+                    StockQuantity = v.StockQuantity,
+                    SelectedOptionIds = v.AttributeValues.Select(av => av.CategoryAttributeOptionId).ToList()
+                }).ToList();
+
+                // 3. Aggregate Specifications (Unique Key-Value pairs)
+                dto.Specifications = allAttributeValues
+                    .GroupBy(av => av.CategoryAttribute.Name)
+                    .Select(g => new SpecificationDto
+                    {
+                        Name = g.Key,
+                        Value = string.Join(", ", g.Select(av => av.CategoryAttributeOption.Value).Distinct())
+                    }).ToList();
+            }
+
+            return dto;
+        }
+
+        public async Task<List<CatalogProductDto>> GetRelatedProductsAsync(int categoryId, Guid currentProductId, int limit = 5)
+        {
+            var relatedProducts = await _productRepository.Query()
+                .AsNoTracking()
+                .Include(p => p.Brand)
+                .Include(p => p.Images)
+                .Include(p => p.Store)
+                .Include(p => p.Variants.Where(v => v.IsActive && !v.IsDeleted))
+                    .ThenInclude(v => v.AttributeValues)
+                        .ThenInclude(av => av.CategoryAttributeOption)
+                .Where(p => p.CategoryId == categoryId 
+                         && p.Id != currentProductId 
+                         && p.Status == GearZone.Domain.Enums.ProductStatus.Active 
+                         && !p.IsDeleted)
+                .OrderByDescending(p => p.SoldCount) // Best selling in the same category
+                .Take(limit)
+                .Select(p => new CatalogProductDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Slug = p.Slug,
+                    BrandName = p.Brand.Name,
+                    BasePrice = p.BasePrice,
+                    ImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault() 
+                               ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? "",
+                    Rating = 0, // Placeholder
+                    ReviewCount = 0,
+                    StoreName = p.Store.StoreName,
+                    StoreLogoUrl = p.Store.LogoUrl,
+                    IsInStock = p.Variants.Any(v => v.StockQuantity > 0),
+                    HighlightTags = p.Variants
+                        .SelectMany(v => v.AttributeValues)
+                        .Select(av => av.CategoryAttributeOption.Value)
+                        .Distinct()
+                        .Take(3)
+                        .ToList()
+                })
+                .ToListAsync();
+
+            return relatedProducts;
+        }
     }
 }

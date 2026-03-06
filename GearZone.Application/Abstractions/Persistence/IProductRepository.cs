@@ -13,5 +13,6 @@ namespace GearZone.Application.Abstractions.Persistence
         Task<AdminProductStatsDto> GetAdminProductStatsAsync();
         Task<Product?> GetAdminProductDetailAsync(Guid id);
         Task<PagedResult<CatalogProductDto>> GetFilteredProductsAsync(ProductFilterDto filter);
+        Task<List<ProductSuggestionDto>> GetProductSuggestionsAsync(string query, int limit = 5);
     }
 }

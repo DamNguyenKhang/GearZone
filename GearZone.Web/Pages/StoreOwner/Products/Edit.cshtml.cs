@@ -11,52 +11,58 @@ using System.Threading.Tasks;
 namespace GearZone.Web.Pages.StoreOwner.Products
 {
     [Authorize(Roles = "Store Owner")]
-    public class CreateModel : PageModel
+    public class EditModel : PageModel
     {
         private readonly ISellerProductService _productService;
         private readonly ISellerStoreService _storeService;
 
-        public CreateModel(ISellerProductService productService, ISellerStoreService storeService)
+        public EditModel(ISellerProductService productService, ISellerStoreService storeService)
         {
             _productService = productService;
             _storeService = storeService;
         }
 
         [BindProperty]
-        public CreateProductDto Input { get; set; } = new();
+        public UpdateProductDto Input { get; set; } = new();
 
         public List<SelectListItem> CategoryOptions { get; set; } = new();
         public List<SelectListItem> BrandOptions { get; set; } = new();
+        public Guid ProductId { get; set; }
 
-        public async Task<IActionResult> OnGetAsync()
+        public async Task<IActionResult> OnGetAsync(Guid id)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var store = await _storeService.GetStoreByOwnerIdAsync(userId!);
+
+            if (store == null) return RedirectToPage("/StoreOwner/Dashboard");
+
+            var product = await _productService.GetProductForEditAsync(id, store.Id);
+            if (product == null) return NotFound();
+
+            Input = product;
+            ProductId = id;
+
             await LoadMetadataAsync();
-            
-            // Initialize with one default variant and one spec row
-            Input.Variants.Add(new ProductVariantDto { VariantName = "Default", StockQuantity = 0 });
-
-
             return Page();
         }
 
-        public async Task<IActionResult> OnPostAsync()
+        public async Task<IActionResult> OnPostAsync(Guid id)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var store = await _storeService.GetStoreByOwnerIdAsync(userId!);
+            if (store == null) return RedirectToPage("/StoreOwner/Dashboard");
+
             if (!ModelState.IsValid)
             {
                 await LoadMetadataAsync();
                 return Page();
             }
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var store = await _storeService.GetStoreByOwnerIdAsync(userId!);
-            
-            if (store == null) return RedirectToPage("/StoreOwner/Dashboard");
-
             try
             {
-                await _productService.CreateProductAsync(Input, store.Id, userId!);
-                TempData["SuccessMessage"] = "Product created successfully!";
-                return RedirectToPage("./Index");
+                await _productService.UpdateProductAsync(id, Input, store.Id, userId!);
+                TempData["SuccessMessage"] = "Product updated successfully!";
+                return RedirectToPage("./Details", new { id });
             }
             catch (InvalidOperationException ex)
             {
@@ -72,19 +78,11 @@ namespace GearZone.Web.Pages.StoreOwner.Products
             }
         }
 
-        public async Task<JsonResult> OnGetAttributesAsync(int categoryId)
-        {
-            var attributes = await _productService.GetCategoryAttributesAsync(categoryId);
-            return new JsonResult(attributes);
-        }
-
         private async Task LoadMetadataAsync()
         {
             var allCategories = await _productService.GetCategoriesAsync();
-            
-            // Build hierarchy for display
             CategoryOptions = allCategories
-                .Where(c => c.ParentId != null || !allCategories.Any(child => child.ParentId == c.Id)) // Only leaves or parents if they have no children (though we usually want leaves)
+                .Where(c => c.ParentId != null || !allCategories.Any(child => child.ParentId == c.Id))
                 .Select(c => {
                     var parent = c.ParentId.HasValue ? allCategories.FirstOrDefault(pc => pc.Id == c.ParentId.Value) : null;
                     var text = parent != null ? $"{parent.Name} > {c.Name}" : c.Name;

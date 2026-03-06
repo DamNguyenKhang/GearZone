@@ -1,4 +1,4 @@
-@page "{CategorySlug?}"
+@page "/products/{slug?}"
 @model GearZone.Web.Pages.Public.Catalog.BrowseModel
 @{
     ViewData["Title"] = "Browse Products";
@@ -52,11 +52,9 @@
             <!-- Left Sidebar Filters -->
             <aside class="w-full lg:w-[260px] flex-shrink-0 lg:sticky lg:top-24 lg:self-start lg:h-[calc(100vh-7rem)] transition-all duration-300">
                 <form id="filter-form" class="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark p-5 h-full overflow-y-auto hide-scrollbar">
-                    <input type="hidden" name="CategorySlug" value="@Model.Filter.CategorySlug" />
-                    <input type="hidden" name="PageNumber" id="page-number-input" value="1" />
-                    <input type="hidden" name="PageSize" value="@Model.Filter.PageSize" />
-                    <input type="hidden" name="SortBy" id="sort-by-input" value="@Model.Filter.SortBy" />
-                    <input type="hidden" name="ViewMode" id="view-mode-input" value="@Model.Filter.ViewMode" />
+                    <input type="hidden" name="page" id="page-number-input" value="1" />
+                    <input type="hidden" name="sort" id="sort-by-input" value="@Model.Sort" />
+                    <input type="hidden" name="viewMode" id="viewMode-input" value="@Model.Filter.ViewMode" />
 
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="font-bold text-lg">Filter by</h3>
@@ -75,7 +73,7 @@
                                 @foreach (var brand in Model.Sidebar.Brands)
                                 {
                                     <label class="flex items-center gap-3 cursor-pointer group">
-                                        <input type="checkbox" name="BrandSlugs" value="@brand.Slug" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/20 filter-checkbox" 
+                                        <input type="checkbox" name="brand" value="@brand.Slug" class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/20 filter-checkbox" 
                                                @(Model.Filter.BrandSlugs?.Contains(brand.Slug) == true ? "checked" : "") />
                                         <span class="text-sm text-text-secondary group-hover:text-text-main dark:group-hover:text-white transition-colors">@brand.Name</span>
                                         <span class="ml-auto text-xs text-text-secondary">@brand.ProductCount</span>
@@ -110,7 +108,7 @@
                         <div class="flex items-center justify-between gap-3">
                             <div class="flex flex-col gap-1 w-full text-center">
                                 <span class="text-[10px] text-text-secondary font-medium">Min</span>
-                                <input type="hidden" name="MinPrice" id="min-price-hidden" value="@Model.Filter.MinPrice" />
+                                <input type="hidden" name="minPrice" id="min-price-hidden" value="@Model.MinPrice" />
                                 <div id="min-price-display" class="bg-background-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded px-1 py-1.5 text-[11px] font-bold w-full truncate">
                                     @(Model.Filter.MinPrice?.ToString("N0") ?? "0")
                                 </div>
@@ -118,7 +116,7 @@
                             <span class="text-text-secondary mt-4 font-bold">-</span>
                             <div class="flex flex-col gap-1 w-full text-center">
                                 <span class="text-[10px] text-text-secondary font-medium">Max</span>
-                                <input type="hidden" name="MaxPrice" id="max-price-hidden" value="@Model.Filter.MaxPrice" />
+                                <input type="hidden" name="maxPrice" id="max-price-hidden" value="@Model.MaxPrice" />
                                 <div id="max-price-display" class="bg-background-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded px-1 py-1.5 text-[11px] font-bold w-full truncate">
                                     @(Model.Filter.MaxPrice?.ToString("N0") ?? "100M+")
                                 </div>
@@ -144,7 +142,7 @@
                                                      && Model.Filter.Attributes[attr.Name].Contains(val.Value);
 
                                     <label class="cursor-pointer">
-                                        <input type="checkbox" name="Attributes[@attr.Name]" value="@val.Value" class="peer sr-only filter-checkbox" @(isChecked ? "checked" : "") />
+                                        <input type="checkbox" name="@attr.Name" value="@val.Value" class="peer sr-only filter-checkbox" @(isChecked ? "checked" : "") />
                                         <div class="px-3 py-1.5 rounded-full border border-border-light dark:border-border-dark bg-white dark:bg-surface-dark text-xs font-medium text-text-secondary peer-checked:bg-primary/10 peer-checked:text-primary peer-checked:border-primary transition-all">
                                             @val.Value
                                         </div>
@@ -159,7 +157,7 @@
                     <div class="flex items-center justify-between py-2">
                         <span class="font-semibold text-sm">In Stock Only</span>
                         <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" name="InStockOnly" value="true" class="sr-only peer filter-checkbox" @(Model.Filter.InStockOnly == true ? "checked" : "") />
+                            <input type="checkbox" name="inStock" value="true" class="sr-only peer filter-checkbox" @(Model.Filter.InStockOnly == true ? "checked" : "") />
                             <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
                         </label>
                     </div>
@@ -174,13 +172,13 @@
                     <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 sm:pb-0 px-2 sort-container">
                         <span class="text-sm font-medium text-text-secondary whitespace-nowrap mr-2">Sort by:</span>
                         
-                        <button type="button" data-sort="popular" class="sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors @(string.IsNullOrEmpty(Model.Filter.SortBy) || Model.Filter.SortBy == "popular" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-background-light dark:hover:bg-gray-800")">Popular</button>
+                        <button type="button" data-sort="popular" class="sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors @(string.IsNullOrEmpty(Model.Sort) || Model.Sort == "popular" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-background-light dark:hover:bg-gray-800")">Popular</button>
                         
-                        <button type="button" data-sort="newest" class="sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors @(Model.Filter.SortBy == "newest" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-background-light dark:hover:bg-gray-800")">Newest</button>
+                        <button type="button" data-sort="newest" class="sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors @(Model.Sort == "newest" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-background-light dark:hover:bg-gray-800")">Newest</button>
                         
-                        <button type="button" data-sort="price_asc" class="sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors @(Model.Filter.SortBy == "price_asc" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-background-light dark:hover:bg-gray-800")">Price: Low-High</button>
+                        <button type="button" data-sort="price_asc" class="sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors @(Model.Sort == "price_asc" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-background-light dark:hover:bg-gray-800")">Price: Low-High</button>
                         
-                        <button type="button" data-sort="price_desc" class="sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors @(Model.Filter.SortBy == "price_desc" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-background-light dark:hover:bg-gray-800")">Price: High-Low</button>
+                        <button type="button" data-sort="price_desc" class="sort-btn px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors @(Model.Sort == "price_desc" ? "bg-primary/10 text-primary" : "text-text-secondary hover:bg-background-light dark:hover:bg-gray-800")">Price: High-Low</button>
                     </div>
                     
                     <div class="flex items-center gap-1 border-l border-border-light dark:border-border-dark pl-2 sm:pl-4">
@@ -244,7 +242,8 @@
             document.querySelectorAll('.view-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const view = this.dataset.view;
-                    document.getElementById('view-mode-input').value = view;
+                    localStorage.setItem('catalogViewMode', view);
+                    document.getElementById('viewMode-input').value = view;
                     
                     // Update UI buttons
                     document.querySelectorAll('.view-btn').forEach(b => {
@@ -254,17 +253,24 @@
                     this.classList.add('text-primary', 'bg-primary/10');
                     this.classList.remove('text-text-secondary');
 
-                    // Immediate UI switch for better UX
+                    // Immediate UI switch for better UX container
                     if (view === 'list') {
                         grid.className = "flex flex-col gap-4";
                     } else {
                         grid.className = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6";
                     }
                     
-                    // We also trigger applyFilters to ensure state is saved and URL is updated
-                    applyFilters();
+                    applyFilters(); // Trigger AJAX so server replaces grid with newly rendered list/grid items
                 });
             });
+            
+            // Restore View Mode on load
+            const savedView = localStorage.getItem('catalogViewMode');
+            if (savedView && savedView !== document.getElementById('viewMode-input').value) {
+                // Initial load: the server defaults to 'grid' or query params. 
+                // If local storage is different and we haven't synced yet, we hit the toggle.
+                document.querySelector(`.view-btn[data-view="${savedView}"]`)?.click();
+            }
 
             // Handle checkbox changes for auto-submission
             document.querySelectorAll('.filter-checkbox').forEach(cb => {
@@ -276,13 +282,15 @@
             // Intercept Layout Category Links for AJAX filtering
             document.querySelectorAll('.category-nav-link').forEach(link => {
                 link.addEventListener('click', function(e) {
-                    // Check if we are already on the Browse page
-                    if (window.location.pathname.toLowerCase().startsWith('/public/catalog/browse')) {
+                    // Check if we are already on the Browse page path (now starts with /products)
+                    if (window.location.pathname.toLowerCase().startsWith('/products')) {
                         e.preventDefault();
                         
                         const slug = this.dataset.categorySlug;
-                        const slugInput = document.querySelector('input[name="CategorySlug"]');
-                        if (slugInput) slugInput.value = slug;
+                        const newPath = slug ? `/products/${slug}` : `/products`;
+                        
+                        // Push new URL without query history first, we will apply filters which will replaceState/pushState
+                        window.history.pushState({path: newPath}, '', newPath);
 
                         // Update Active Styling in Layout Nav
                         document.querySelectorAll('.category-nav-link').forEach(navLink => {
@@ -432,12 +440,17 @@
                     // Save original overflow so we can restore it on expand
                     const originalOverflow = body.style.overflow || getComputedStyle(body).overflow;
 
-                    body.style.maxHeight = body.scrollHeight + 'px';
+                    // Initialize as expanded naturally
+                    body.style.maxHeight = 'none';
                     body.style.opacity = '1';
 
                     newBtn.addEventListener('click', () => {
                         collapsed = !collapsed;
                         if (collapsed) {
+                            // Set exact height before animating to 0
+                            body.style.maxHeight = body.scrollHeight + 'px';
+                            // Force reflow
+                            void body.offsetHeight;
                             // Must set overflow:hidden BEFORE shrinking so content clips
                             body.style.overflow = 'hidden';
                             body.style.maxHeight = '0px';
@@ -447,9 +460,12 @@
                             body.style.maxHeight = body.scrollHeight + 'px';
                             body.style.opacity   = '1';
                             if (icon) icon.style.transform = 'rotate(0deg)';
-                            // Restore original overflow after transition ends
+                            // Restore original overflow and natural height after transition ends
                             body.addEventListener('transitionend', () => {
-                                if (!collapsed) body.style.overflow = originalOverflow;
+                                if (!collapsed) {
+                                    body.style.overflow = originalOverflow;
+                                    body.style.maxHeight = 'none';
+                                }
                             }, { once: true });
                         }
                     });
@@ -465,10 +481,20 @@
                 noMoreProducts.classList.add('hidden');
                 
                 const formData = new FormData(form);
-                const queryString = new URLSearchParams(formData).toString();
+                
+                // Build clean query string manually from formData
+                const urlParams = new URLSearchParams();
+                for (const [key, value] of formData.entries()) {
+                    if (value && value !== "" && value !== "0" && !(key === 'page' && value === '1') && !(key === 'sort' && value === 'popular')) {
+                        // For maxPrice, we might have empty value if it's 100M+
+                        if (key === 'maxPrice' && !value) continue;
+                        urlParams.append(key, value);
+                    }
+                }
+                const queryString = urlParams.toString();
                 
                 // Update URL without reloading
-                const newUrl = window.location.pathname + '?' + queryString;
+                const newUrl = window.location.pathname + (queryString ? '?' + queryString : '');
                 window.history.pushState({path: newUrl}, '', newUrl);
 
                 // Fetch new data (Products and Sidebar)
@@ -551,7 +577,16 @@
                 loadingIndicator.classList.remove('hidden');
 
                 const formData = new FormData(form);
-                const queryString = new URLSearchParams(formData).toString();
+                
+                // Build clean query string
+                const urlParams = new URLSearchParams();
+                for (const [key, value] of formData.entries()) {
+                    if (value && value !== "") {
+                        if (key === 'maxPrice' && !value) continue;
+                        urlParams.append(key, value);
+                    }
+                }
+                const queryString = urlParams.toString();
 
                 fetch(window.location.pathname + '?handler=LoadMore&' + queryString)
                     .then(response => response.text())

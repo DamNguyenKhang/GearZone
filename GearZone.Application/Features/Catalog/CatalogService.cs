@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Common.Models;
@@ -36,7 +37,6 @@ namespace GearZone.Application.Features.Catalog
         public async Task<List<CatalogCategoryDto>> GetCategoriesAsync()
         {
             return await _categoryRepository.Query()
-                .Include(c => c.Children)
                 .Where(c => c.IsActive && !c.IsDeleted && c.ParentId == null)
                 .Select(c => new CatalogCategoryDto
                 {
@@ -196,11 +196,11 @@ namespace GearZone.Application.Features.Catalog
 
                 // 1. Group by Attribute to build the Shopee-style selection UI
                 dto.AttributeSelections = allAttributeValues
-                    .GroupBy(av => av.CategoryAttribute)
+                    .GroupBy(av => av.CategoryAttributeId)
                     .Select(g => new AttributeSelectionDto
                     {
-                        AttributeId = g.Key.Id,
-                        Name = g.Key.Name,
+                        AttributeId = g.Key,
+                        Name = g.First().CategoryAttribute.Name,
                         Options = g.Select(av => av.CategoryAttributeOption)
                                    .DistinctBy(opt => opt.Id)
                                    .Select(opt => new AttributeOptionDto
@@ -221,14 +221,42 @@ namespace GearZone.Application.Features.Catalog
                     SelectedOptionIds = v.AttributeValues.Select(av => av.CategoryAttributeOptionId).ToList()
                 }).ToList();
 
-                // 3. Aggregate Specifications (Unique Key-Value pairs)
-                dto.Specifications = allAttributeValues
+                // 3. Build Specifications = SpecsJson first, then variant attribute aggregations
+                var specs = new List<SpecificationDto>();
+
+                // 3a. Parse SpecsJson (static technical specs from product)
+                var rawJson = product.SpecsJson;
+                if (!string.IsNullOrWhiteSpace(rawJson) && rawJson != "{}")
+                {
+                    try
+                    {
+                        var parsed = JsonSerializer.Deserialize<Dictionary<string, string>>(rawJson);
+                        if (parsed != null)
+                        {
+                            specs.AddRange(parsed.Select(kv => new SpecificationDto
+                            {
+                                Name = kv.Key,
+                                Value = kv.Value
+                            }));
+                        }
+                    }
+                    catch { /* ignore malformed JSON */ }
+                }
+
+                // 3b. Aggregate variant attribute values (e.g. "Memory Type: DDR4, DDR5")
+                //     Only add if that attribute name is not already in SpecsJson
+                var existingNames = new HashSet<string>(specs.Select(s => s.Name), StringComparer.OrdinalIgnoreCase);
+                var variantAttributeSpecs = allAttributeValues
                     .GroupBy(av => av.CategoryAttribute.Name)
+                    .Where(g => !existingNames.Contains(g.Key))
                     .Select(g => new SpecificationDto
                     {
                         Name = g.Key,
                         Value = string.Join(", ", g.Select(av => av.CategoryAttributeOption.Value).Distinct())
-                    }).ToList();
+                    });
+
+                specs.AddRange(variantAttributeSpecs);
+                dto.Specifications = specs;
             }
 
             return dto;
@@ -238,12 +266,6 @@ namespace GearZone.Application.Features.Catalog
         {
             var relatedProducts = await _productRepository.Query()
                 .AsNoTracking()
-                .Include(p => p.Brand)
-                .Include(p => p.Images)
-                .Include(p => p.Store)
-                .Include(p => p.Variants.Where(v => v.IsActive && !v.IsDeleted))
-                    .ThenInclude(v => v.AttributeValues)
-                        .ThenInclude(av => av.CategoryAttributeOption)
                 .Where(p => p.CategoryId == categoryId 
                          && p.Id != currentProductId 
                          && p.Status == GearZone.Domain.Enums.ProductStatus.Active 
@@ -263,8 +285,9 @@ namespace GearZone.Application.Features.Catalog
                     ReviewCount = 0,
                     StoreName = p.Store.StoreName,
                     StoreLogoUrl = p.Store.LogoUrl,
-                    IsInStock = p.Variants.Any(v => v.StockQuantity > 0),
+                    IsInStock = p.Variants.Where(v => v.IsActive && !v.IsDeleted).Any(v => v.StockQuantity > 0),
                     HighlightTags = p.Variants
+                        .Where(v => v.IsActive && !v.IsDeleted)
                         .SelectMany(v => v.AttributeValues)
                         .Select(av => av.CategoryAttributeOption.Value)
                         .Distinct()

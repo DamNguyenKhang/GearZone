@@ -163,7 +163,7 @@
     <nav class="bg-white border-b border-gray-200 hidden md:block relative z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center space-x-8 h-12 text-sm font-medium relative">
-                <a class="category-nav-link flex items-center gap-2 @(string.IsNullOrEmpty(currentSlug) ? "text-primary border-b-2 border-primary" : "text-text-secondary border-b-2 border-transparent") hover:text-primary whitespace-nowrap h-full px-1 transition-colors cursor-pointer" data-category-slug="" asp-page="/Public/Catalog/Browse" asp-route-CategorySlug="">
+                <a class="category-nav-link flex items-center gap-2 @(string.IsNullOrEmpty(currentSlug) ? "text-primary border-b-2 border-primary" : "text-text-secondary border-b-2 border-transparent") hover:text-primary whitespace-nowrap h-full px-1 transition-colors cursor-pointer" data-category-slug="" asp-page="/Public/Catalog/Browse" asp-route-slug="">
                     <span class="material-symbols-outlined text-[20px]">grid_view</span>
                     All Categories
                 </a>
@@ -173,21 +173,21 @@
                     if (category.SubCategories.Any())
                     {
                         <div class="relative group h-full flex items-center">
-                            <a class="category-nav-link @(isActive ? "text-primary border-b-2 border-primary" : "text-text-secondary border-b-2 border-transparent") hover:text-primary transition-colors whitespace-nowrap h-full flex items-center px-1 cursor-pointer" data-category-slug="@category.Slug" asp-page="/Public/Catalog/Browse" asp-route-CategorySlug="@category.Slug">
+                            <a class="category-nav-link @(isActive ? "text-primary border-b-2 border-primary" : "text-text-secondary border-b-2 border-transparent") hover:text-primary transition-colors whitespace-nowrap h-full flex items-center px-1 cursor-pointer" data-category-slug="@category.Slug" asp-page="/Public/Catalog/Browse" asp-route-slug="@category.Slug">
                                 @category.Name
                                 <span class="material-symbols-outlined text-[16px] ml-1">expand_more</span>
                             </a>
                             <div class="absolute left-0 top-full mt-0 w-48 bg-white border border-gray-200 shadow-xl rounded-md py-1 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-50">
                                 @foreach (var sub in category.SubCategories)
                                 {
-                                    <a class="category-nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary @(sub.Slug == currentSlug ? "bg-gray-50 text-primary font-bold" : "") cursor-pointer" data-category-slug="@sub.Slug" asp-page="/Public/Catalog/Browse" asp-route-CategorySlug="@sub.Slug">@sub.Name</a>
+                                    <a class="category-nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary @(sub.Slug == currentSlug ? "bg-gray-50 text-primary font-bold" : "") cursor-pointer" data-category-slug="@sub.Slug" asp-page="/Public/Catalog/Browse" asp-route-slug="@sub.Slug">@sub.Name</a>
                                 }
                             </div>
                         </div>
                     }
                     else
                     {
-                        <a class="category-nav-link @(isActive ? "text-primary border-b-2 border-primary" : "text-text-secondary border-b-2 border-transparent") hover:text-primary transition-colors whitespace-nowrap h-full flex items-center px-1 cursor-pointer" data-category-slug="@category.Slug" asp-page="/Public/Catalog/Browse" asp-route-CategorySlug="@category.Slug">@category.Name</a>
+                        <a class="category-nav-link @(isActive ? "text-primary border-b-2 border-primary" : "text-text-secondary border-b-2 border-transparent") hover:text-primary transition-colors whitespace-nowrap h-full flex items-center px-1 cursor-pointer" data-category-slug="@category.Slug" asp-page="/Public/Catalog/Browse" asp-route-slug="@category.Slug">@category.Name</a>
                     }
                 }
                 <a class="text-red-600 hover:text-red-700 font-semibold transition-colors whitespace-nowrap h-full flex items-center px-1 ml-auto" href="#">

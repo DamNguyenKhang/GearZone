@@ -5,6 +5,7 @@ using GearZone.Infrastructure.Seed;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Rewrite;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -91,6 +92,13 @@ using (var scope = app.Services.CreateScope())
 
 app.UseHttpsRedirection();
 app.UseCors();
+
+// URL Rewrite for backward compatibility
+var rewriteOptions = new RewriteOptions()
+    .AddRedirect("(?i)Public/Catalog/Browse/?$", "products")
+    .AddRedirect("(?i)Public/Catalog/Browse(.*)", "products$1");
+app.UseRewriter(rewriteOptions);
+
 app.UseRouting();
 
 app.UseAuthentication();

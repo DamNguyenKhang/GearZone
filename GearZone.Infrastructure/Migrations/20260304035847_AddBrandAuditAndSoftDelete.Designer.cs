@@ -4,6 +4,7 @@ using GearZone.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GearZone.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260304035847_AddBrandAuditAndSoftDelete")]
+    partial class AddBrandAuditAndSoftDelete
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -556,32 +559,6 @@ namespace GearZone.Infrastructure.Migrations
                     b.HasIndex("CategoryId", "IsFilterable");
 
                     b.ToTable("CategoryAttributes", (string)null);
-                });
-
-            modelBuilder.Entity("GearZone.Domain.Entities.CategoryAttributeOption", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CategoryAttributeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CategoryAttributeId");
-
-                    b.ToTable("CategoryAttributeOptions");
                 });
 
             modelBuilder.Entity("GearZone.Domain.Entities.InventoryTransaction", b =>
@@ -1273,17 +1250,17 @@ namespace GearZone.Infrastructure.Migrations
                     b.Property<int>("CategoryAttributeId")
                         .HasColumnType("int");
 
-                    b.Property<int>("CategoryAttributeOptionId")
-                        .HasColumnType("int");
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<Guid>("VariantId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CategoryAttributeOptionId");
-
-                    b.HasIndex("CategoryAttributeId", "CategoryAttributeOptionId");
+                    b.HasIndex("CategoryAttributeId", "Value");
 
                     b.HasIndex("VariantId", "CategoryAttributeId")
                         .IsUnique();
@@ -1496,17 +1473,6 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.CategoryAttributeOption", b =>
-                {
-                    b.HasOne("GearZone.Domain.Entities.CategoryAttribute", "CategoryAttribute")
-                        .WithMany("Options")
-                        .HasForeignKey("CategoryAttributeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CategoryAttribute");
-                });
-
             modelBuilder.Entity("GearZone.Domain.Entities.InventoryTransaction", b =>
                 {
                     b.HasOne("GearZone.Domain.Entities.ApplicationUser", "CreatedByUser")
@@ -1657,14 +1623,8 @@ namespace GearZone.Infrastructure.Migrations
             modelBuilder.Entity("GearZone.Domain.Entities.VariantAttributeValue", b =>
                 {
                     b.HasOne("GearZone.Domain.Entities.CategoryAttribute", "CategoryAttribute")
-                        .WithMany()
+                        .WithMany("Values")
                         .HasForeignKey("CategoryAttributeId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("GearZone.Domain.Entities.CategoryAttributeOption", "CategoryAttributeOption")
-                        .WithMany("VariantSelections")
-                        .HasForeignKey("CategoryAttributeOptionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
@@ -1675,8 +1635,6 @@ namespace GearZone.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("CategoryAttribute");
-
-                    b.Navigation("CategoryAttributeOption");
 
                     b.Navigation("Variant");
                 });
@@ -1762,12 +1720,7 @@ namespace GearZone.Infrastructure.Migrations
 
             modelBuilder.Entity("GearZone.Domain.Entities.CategoryAttribute", b =>
                 {
-                    b.Navigation("Options");
-                });
-
-            modelBuilder.Entity("GearZone.Domain.Entities.CategoryAttributeOption", b =>
-                {
-                    b.Navigation("VariantSelections");
+                    b.Navigation("Values");
                 });
 
             modelBuilder.Entity("GearZone.Domain.Entities.Order", b =>

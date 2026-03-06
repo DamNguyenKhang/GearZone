@@ -12,5 +12,9 @@ namespace GearZone.Application.Abstractions.Services
         Task<bool> SoftDeleteCategoryAsync(int id);
         Task<CategoryDto?> GetCategoryByIdAsync(int id);
         Task<List<CategoryDto>> GetAllCategoriesListAsync();
+        Task<List<CategoryDto>> GetHierarchicalCategoriesAsync(CategoryQueryDto query);
+        Task<List<CategoryAttributeDto>> GetAttributesByCategoryIdAsync(int categoryId);
+        Task<bool> SaveCategoryAttributesAsync(SaveCategoryAttributesRequest request);
     }
 }
+

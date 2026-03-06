@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Catalog.DTOs;
 using GearZone.Domain.Enums;
+using GearZone.Application.Features.Admin.Dtos;
 
 namespace GearZone.Infrastructure.Repositories
 {
@@ -108,6 +109,147 @@ namespace GearZone.Infrastructure.Repositories
                 .ToListAsync();
 
             return new PagedResult<CatalogProductDto>(items, totalCount, filter.PageNumber, filter.PageSize);
+        }
+
+        public async Task<PagedResult<Product>> GetAdminProductsAsync(AdminProductQueryDto queryDto)
+        {
+            var query = _context.Products
+                .Include(p => p.Store)
+                .Include(p => p.Category)
+                .Include(p => p.Brand)
+                .Include(p => p.Variants)
+                    .ThenInclude(v => v.AttributeValues)
+                .Include(p => p.Images)
+                .AsQueryable();
+
+            // Search across Name, SKU (any variant) and StoreName simultaneously
+            if (!string.IsNullOrEmpty(queryDto.SearchTerm))
+            {
+                var searchTerm = queryDto.SearchTerm.ToLower();
+                query = query.Where(p =>
+                    p.Name.ToLower().Contains(searchTerm) ||
+                    p.Variants.Any(v => v.Sku.ToLower().Contains(searchTerm)) ||
+                    p.Store.StoreName.ToLower().Contains(searchTerm));
+            }
+
+            if (!string.IsNullOrEmpty(queryDto.Status))
+            {
+                if (Enum.TryParse<ProductStatus>(queryDto.Status, true, out var status))
+                {
+                    query = query.Where(p => p.Status == status);
+                }
+            }
+
+            if (queryDto.CategoryId.HasValue && queryDto.CategoryId.Value > 0)
+            {
+                query = query.Where(p => p.CategoryId == queryDto.CategoryId.Value);
+            }
+
+            if (queryDto.BrandId.HasValue && queryDto.BrandId.Value > 0)
+            {
+                query = query.Where(p => p.BrandId == queryDto.BrandId.Value);
+            }
+
+            if (queryDto.StoreId.HasValue && queryDto.StoreId.Value != Guid.Empty)
+            {
+                query = query.Where(p => p.StoreId == queryDto.StoreId.Value);
+            }
+
+            if (queryDto.MinPrice.HasValue)
+            {
+                query = query.Where(p => p.BasePrice >= queryDto.MinPrice.Value);
+            }
+
+            if (queryDto.MaxPrice.HasValue)
+            {
+                query = query.Where(p => p.BasePrice <= queryDto.MaxPrice.Value);
+            }
+
+            if (queryDto.StartDate.HasValue)
+            {
+                query = query.Where(p => p.CreatedAt >= queryDto.StartDate.Value);
+            }
+
+            if (queryDto.EndDate.HasValue)
+            {
+                query = query.Where(p => p.CreatedAt <= queryDto.EndDate.Value);
+            }
+
+            if (queryDto.OutOfStock)
+            {
+                query = query.Where(p => !p.Variants.Any(v => v.StockQuantity > 0));
+            }
+
+            // Filter by selected attribute option IDs (products must have at least one matching variant)
+            if (queryDto.AttributeOptionIds != null && queryDto.AttributeOptionIds.Any())
+            {
+                query = query.Where(p =>
+                    p.Variants.Any(v =>
+                        v.AttributeValues.Any(av =>
+                            queryDto.AttributeOptionIds.Contains(av.CategoryAttributeOptionId))));
+            }
+
+            // Dynamic sort: SortBy controls column, SortDirection controls asc/desc
+            // If no SortBy, default to newest first
+            var sortBy = (queryDto.SortBy ?? "").ToLower();
+            var isAsc = (queryDto.SortDirection ?? "").ToLower() == "asc";
+
+            query = sortBy switch
+            {
+                "stock" => isAsc
+                    ? query.OrderBy(p => p.Variants.Sum(v => (int?)v.StockQuantity) ?? 0).ThenBy(p => p.CreatedAt)
+                    : query.OrderByDescending(p => p.Variants.Sum(v => (int?)v.StockQuantity) ?? 0).ThenByDescending(p => p.CreatedAt),
+                "price" => isAsc
+                    ? query.OrderBy(p => p.BasePrice).ThenBy(p => p.CreatedAt)
+                    : query.OrderByDescending(p => p.BasePrice).ThenByDescending(p => p.CreatedAt),
+                "createdat" => isAsc
+                    ? query.OrderBy(p => p.CreatedAt)
+                    : query.OrderByDescending(p => p.CreatedAt),
+                _ => query.OrderByDescending(p => p.CreatedAt) // default
+            };
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .Skip((queryDto.PageNumber - 1) * queryDto.PageSize)
+                .Take(queryDto.PageSize)
+                .ToListAsync();
+
+            return new PagedResult<Product>(items, totalCount, queryDto.PageNumber, queryDto.PageSize);
+        }
+
+        public async Task<AdminProductStatsDto> GetAdminProductStatsAsync()
+        {
+            var totalProducts = await _context.Products.CountAsync();
+            var activeProducts = await _context.Products.CountAsync(p => p.Status == ProductStatus.Active);
+            var pendingApproval = await _context.Products.CountAsync(p => p.Status == ProductStatus.Pending);
+            
+            // Out of stock means no variant has stock > 0
+            var outOfStock = await _context.Products.CountAsync(p => !p.Variants.Any(v => v.StockQuantity > 0));
+
+            return new AdminProductStatsDto
+            {
+                TotalProducts = totalProducts,
+                ActiveProducts = activeProducts,
+                PendingApproval = pendingApproval,
+                OutOfStock = outOfStock
+            };
+        }
+
+        public async Task<Product?> GetAdminProductDetailAsync(Guid id)
+        {
+            return await _context.Products
+                .Include(p => p.Brand)
+                .Include(p => p.Category)
+                .Include(p => p.Store)
+                .Include(p => p.Images)
+                .Include(p => p.Variants)
+                    .ThenInclude(v => v.AttributeValues)
+                        .ThenInclude(av => av.CategoryAttribute)
+                .Include(p => p.Variants)
+                    .ThenInclude(v => v.AttributeValues)
+                        .ThenInclude(av => av.CategoryAttributeOption)
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
     }
 }

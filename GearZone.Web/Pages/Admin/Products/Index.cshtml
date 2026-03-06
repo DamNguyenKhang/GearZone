@@ -1,0 +1,609 @@
+@page
+@model GearZone.Web.Pages.Admin.Products.IndexModel
+@{
+    ViewData["Title"] = "Product Management";
+    ViewData["PageHeader"] = "Product Management";
+    ViewData["ActivePage"] = "Products";
+    ViewData["Breadcrumb"] = new string[] { "Dashboard", "Product Management" };
+    Layout = "_AdminLayout";
+}
+
+<div class="flex flex-col gap-6">
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
+            <div class="size-12 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100/50">
+                <span class="material-symbols-outlined">inventory_2</span>
+            </div>
+            <div>
+                <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Total Products</p>
+                <h3 class="text-2xl font-bold text-slate-900">@Model.Stats.TotalProducts.ToString("N0")</h3>
+            </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
+            <div class="size-12 rounded-lg bg-green-50 text-green-600 flex items-center justify-center border border-green-100/50">
+                <span class="material-symbols-outlined">check_circle</span>
+            </div>
+            <div>
+                <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Active Products</p>
+                <h3 class="text-2xl font-bold text-slate-900">@Model.Stats.ActiveProducts.ToString("N0")</h3>
+            </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
+            <div class="size-12 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100/50">
+                <span class="material-symbols-outlined">pending_actions</span>
+            </div>
+            <div>
+                <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Pending Approval</p>
+                <h3 class="text-2xl font-bold text-slate-900">@Model.Stats.PendingApproval.ToString("N0")</h3>
+            </div>
+        </div>
+        <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
+            <div class="size-12 rounded-lg bg-red-50 text-red-600 flex items-center justify-center border border-red-100/50">
+                <span class="material-symbols-outlined">production_quantity_limits</span>
+            </div>
+            <div>
+                <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Out of Stock</p>
+                <h3 class="text-2xl font-bold text-slate-900">@Model.Stats.OutOfStock.ToString("N0")</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & Actions Bar -->
+    <div class="bg-white rounded-xl shadow-card border border-slate-100 overflow-hidden">
+        <form method="get" id="filter-form" class="flex flex-col">
+            <input type="hidden" name="Query.SortBy" id="sort-by-input" value="@Model.Query.SortBy" />
+            <input type="hidden" name="Query.SortDirection" id="sort-dir-input" value="@Model.Query.SortDirection" />
+
+            <!-- Primary toolbar -->
+            <div class="flex flex-col lg:flex-row gap-3 p-4 items-start lg:items-center">
+
+                <!-- Search box (unified: name / SKU / store) -->
+                <div class="relative flex-1 w-full">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none">
+                        <span class="material-symbols-outlined text-[20px]">search</span>
+                    </span>
+                    <input asp-for="Query.SearchTerm"
+                           class="form-input w-full rounded-lg border-slate-200 bg-slate-50 pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-primary focus:bg-white transition-colors"
+                           placeholder="Search by name, SKU or store…"
+                           type="text"
+                           autocomplete="off" />
+                </div>
+
+                <!-- Status quick-filter -->
+                <div class="shrink-0 w-full lg:w-40">
+                    <select asp-for="Query.Status"
+                            class="form-select w-full rounded-lg border-slate-200 bg-slate-50 py-2.5 text-sm text-slate-900 focus:border-primary focus:ring-primary shadow-sm"
+                            onchange="this.form.submit()">
+                        <option value="">All Statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Suspended">Suspended</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
+
+                <!-- Brand quick-filter -->
+                <div class="shrink-0 w-full lg:w-44">
+                    <select asp-for="Query.BrandId" asp-items="Model.Brands"
+                            class="form-select w-full rounded-lg border-slate-200 bg-slate-50 py-2.5 text-sm text-slate-900 focus:border-primary focus:ring-primary shadow-sm"
+                            onchange="this.form.submit()">
+                        <option value="">All Brands</option>
+                    </select>
+                </div>
+
+                <!-- Toolbar actions -->
+                <div class="flex items-center gap-2 shrink-0 w-full lg:w-auto">
+                    <button type="submit"
+                            class="flex-1 lg:flex-none flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm shadow-blue-500/20 transition-all">
+                        <span class="material-symbols-outlined text-[18px]">search</span>
+                        <span>Search</span>
+                    </button>
+
+                    <button type="button" id="toggle-advanced-btn"
+                            class="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-sm text-sm whitespace-nowrap">
+                        <span class="material-symbols-outlined text-[18px]">tune</span>
+                        <span class="hidden sm:inline font-medium">Filters</span>
+                        @{
+                            var advancedActiveCount = 0;
+                            if (Model.Query.CategoryId.HasValue && Model.Query.CategoryId.Value > 0) advancedActiveCount++;
+                            if (Model.Query.StoreId.HasValue && Model.Query.StoreId.Value != Guid.Empty) advancedActiveCount++;
+                            if (Model.Query.MinPrice.HasValue || Model.Query.MaxPrice.HasValue) advancedActiveCount++;
+                            if (Model.Query.StartDate.HasValue || Model.Query.EndDate.HasValue) advancedActiveCount++;
+                            if (Model.Query.OutOfStock) advancedActiveCount++;
+                            if (Model.Query.AttributeOptionIds.Any()) advancedActiveCount++;
+                        }
+                        @if (advancedActiveCount > 0)
+                        {
+                            <span class="inline-flex items-center justify-center size-5 rounded-full bg-primary text-white text-[10px] font-bold">@advancedActiveCount</span>
+                        }
+                    </button>
+
+                    <a asp-page="/Admin/Products/Index"
+                       class="flex items-center justify-center p-2.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors bg-white shadow-sm"
+                       title="Reset all filters">
+                        <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+                    </a>
+
+                    <button type="button"
+                            class="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors shadow-sm text-sm whitespace-nowrap">
+                        <span class="material-symbols-outlined text-[18px]">file_download</span>
+                        <span class="hidden sm:inline font-medium">Export</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Advanced Filters (Collapsible) -->
+            @{
+                var hasAdvanced = advancedActiveCount > 0
+                    || (Model.Query.CategoryId.HasValue && Model.Query.CategoryId.Value > 0);
+            }
+            <div id="advanced-filters"
+                 class="@(hasAdvanced ? "" : "hidden") border-t border-slate-100 bg-slate-50/40 px-4 pt-4 pb-5 flex flex-col gap-5">
+
+                <!-- Row 1: Category / Store / Price / Date -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+
+                    <!-- Category -->
+                    <div class="space-y-1">
+                        <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[14px]">category</span> Category
+                        </label>
+                        <select id="category-filter-select" asp-for="Query.CategoryId" asp-items="Model.Categories"
+                                class="form-select w-full rounded-lg border-slate-200 bg-white py-2 text-sm text-slate-900 focus:border-primary focus:ring-primary shadow-sm">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+
+                    <!-- Store -->
+                    <div class="space-y-1">
+                        <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[14px]">storefront</span> Store
+                        </label>
+                        <select asp-for="Query.StoreId" asp-items="Model.Stores"
+                                class="form-select w-full rounded-lg border-slate-200 bg-white py-2 text-sm text-slate-900 focus:border-primary focus:ring-primary shadow-sm">
+                            <option value="">All Stores</option>
+                        </select>
+                    </div>
+
+                    <!-- Price Range -->
+                    <div class="space-y-1">
+                        <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[14px]">payments</span> Price Range (₫)
+                        </label>
+                        <div class="flex items-center gap-1.5">
+                            <input asp-for="Query.MinPrice" type="number" placeholder="Min"
+                                   class="form-input min-w-0 w-full rounded-lg border-slate-200 bg-white py-2 text-sm px-2.5 shadow-sm" />
+                            <span class="text-slate-300 flex-shrink-0 text-lg font-light">—</span>
+                            <input asp-for="Query.MaxPrice" type="number" placeholder="Max"
+                                   class="form-input min-w-0 w-full rounded-lg border-slate-200 bg-white py-2 text-sm px-2.5 shadow-sm" />
+                        </div>
+                    </div>
+
+                    <!-- Date Range -->
+                    <div class="space-y-1">
+                        <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[14px]">calendar_today</span> Created Date
+                        </label>
+                        <div class="flex items-center gap-1.5">
+                            <input asp-for="Query.StartDate" type="date"
+                                   class="form-input min-w-0 w-full rounded-lg border-slate-200 bg-white py-2 text-xs px-2 shadow-sm" />
+                            <span class="text-slate-300 flex-shrink-0 text-lg font-light">—</span>
+                            <input asp-for="Query.EndDate" type="date"
+                                   class="form-input min-w-0 w-full rounded-lg border-slate-200 bg-white py-2 text-xs px-2 shadow-sm" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Row 2: Toggles + Actions -->
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <!-- Out of Stock toggle -->
+                    <label class="flex items-center gap-2.5 cursor-pointer select-none">
+                        <div class="relative">
+                            <input asp-for="Query.OutOfStock" type="checkbox" class="sr-only peer" onchange="this.form.submit()">
+                            <div class="w-9 h-5 bg-slate-200 rounded-full peer peer-focus:ring-2 peer-focus:ring-primary/20 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-500 shadow-inner"></div>
+                        </div>
+                        <span class="text-sm font-medium text-slate-700">Out of Stock only</span>
+                    </label>
+
+                    <!-- Apply button -->
+                    <button type="submit"
+                            class="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white px-6 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                        <span class="material-symbols-outlined text-[17px]">check</span>
+                        Apply Filters
+                    </button>
+                </div>
+
+                <!-- Row 3: Category Attribute Filters (dynamic) -->
+                @{ var attrContainerClass = Model.CategoryAttributes.Any() ? "" : "hidden"; }
+                <div id="category-attr-filters-container" class="@attrContainerClass">
+                    @if (Model.CategoryAttributes.Any())
+                    {
+                        <div id="category-attr-filters" class="border-t border-slate-200 pt-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="material-symbols-outlined text-[16px] text-primary">filter_list</span>
+                                <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Filter by Attributes</span>
+                            </div>
+                            <div class="flex flex-wrap gap-6">
+                                @foreach (var attr in Model.CategoryAttributes.Where(a => a.IsFilterable))
+                                {
+                                    <div class="attr-group min-w-[140px]">
+                                        <p class="text-xs font-semibold text-slate-700 mb-2">@attr.Name</p>
+                                        <div class="flex flex-col gap-1.5">
+                                            @foreach (var opt in attr.Options)
+                                            {
+                                                var inputType = attr.FilterType == "Radio" ? "radio" : "checkbox";
+                                                var inputName = "Query.AttributeOptionIds";
+                                                var isChecked = Model.Query.AttributeOptionIds.Contains(opt.Id);
+                                                <label class="flex items-center gap-2 cursor-pointer group">
+                                                    <input type="@inputType"
+                                                           name="@inputName"
+                                                           value="@opt.Id"
+                                                           @(isChecked ? "checked" : "")
+                                                           class="rounded border-slate-300 text-primary focus:ring-primary size-3.5" />
+                                                    <span class="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">@opt.Value</span>
+                                                </label>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Placeholder: populated via JS when user picks a category -->
+                        <div id="category-attr-filters" class="hidden border-t border-slate-200 pt-4"></div>
+                    }
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+
+    <!-- Products Table Card -->
+    <div class="bg-white rounded-xl shadow-card border border-slate-100 overflow-hidden flex flex-col">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-slate-100 bg-slate-50/50">
+                        <th class="py-4 pl-6 pr-3 text-xs font-semibold uppercase tracking-wider text-slate-500 w-[50px]">
+                            <input class="rounded border-slate-300 text-primary focus:ring-primary size-4" type="checkbox" />
+                        </th>
+                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Product Info</th>
+                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 hidden md:table-cell">Category</th>
+                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Store</th>
+                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 text-right">
+                            <button type="button" class="sort-header inline-flex items-center justify-end gap-1 w-full hover:text-primary transition-colors group" data-col="price">
+                                Price
+                                <span class="sort-icon material-symbols-outlined text-[16px] transition-all @(Model.Query.SortBy == "price" && Model.Query.SortDirection == "desc" ? "text-primary" : Model.Query.SortBy == "price" && Model.Query.SortDirection == "asc" ? "text-primary" : "text-slate-300 group-hover:text-slate-400")">
+                                    @(Model.Query.SortBy == "price" && Model.Query.SortDirection == "asc" ? "arrow_upward" : Model.Query.SortBy == "price" && Model.Query.SortDirection == "desc" ? "arrow_downward" : "unfold_more")
+                                </span>
+                            </button>
+                        </th>
+                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 text-center">
+                            <button type="button" class="sort-header inline-flex items-center justify-center gap-1 w-full hover:text-primary transition-colors group" data-col="stock">
+                                Stock
+                                <span class="sort-icon material-symbols-outlined text-[16px] transition-all @(Model.Query.SortBy == "stock" && Model.Query.SortDirection == "desc" ? "text-primary" : Model.Query.SortBy == "stock" && Model.Query.SortDirection == "asc" ? "text-primary" : "text-slate-300 group-hover:text-slate-400")">
+                                    @(Model.Query.SortBy == "stock" && Model.Query.SortDirection == "asc" ? "arrow_upward" : Model.Query.SortBy == "stock" && Model.Query.SortDirection == "desc" ? "arrow_downward" : "unfold_more")
+                                </span>
+                            </button>
+                        </th>
+                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 text-center">Status</th>
+                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 hidden lg:table-cell">
+                            <button type="button" class="sort-header inline-flex items-center justify-start gap-1 w-full hover:text-primary transition-colors group" data-col="createdAt">
+                                Created
+                                <span class="sort-icon material-symbols-outlined text-[16px] transition-all @(Model.Query.SortBy == "createdAt" && Model.Query.SortDirection == "desc" ? "text-primary" : Model.Query.SortBy == "createdAt" && Model.Query.SortDirection == "asc" ? "text-primary" : "text-slate-300 group-hover:text-slate-400")">
+                                    @(Model.Query.SortBy == "createdAt" && Model.Query.SortDirection == "asc" ? "arrow_upward" : Model.Query.SortBy == "createdAt" && Model.Query.SortDirection == "desc" ? "arrow_downward" : "unfold_more")
+                                </span>
+                            </button>
+                        </th>
+                        <th class="py-4 pl-3 pr-6 text-xs font-semibold uppercase tracking-wider text-slate-500 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @if (Model.Products.Items.Any())
+                    {
+                        foreach (var product in Model.Products.Items)
+                        {
+                            <tr class="group hover:bg-slate-50 transition-all">
+                                <td class="py-4 pl-6 pr-3 align-middle">
+                                    <input class="rounded border-slate-300 text-primary focus:ring-primary size-4" type="checkbox" value="@product.Id" />
+                                </td>
+                                <td class="py-4 px-3">
+                                    <a asp-page="/Admin/Products/Detail" asp-route-id="@product.Id" class="flex items-center gap-3 group/info">
+                                        <div class="relative flex-shrink-0">
+                                            <div class="size-12 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center group-hover/info:border-primary transition-colors">
+                                                <img src="@product.ThumbnailUrl" alt="@product.Name" class="w-full h-full object-cover" />
+                                            </div>
+                                        </div>
+                                        <div class="flex flex-col max-w-[200px] xl:max-w-xs xl:truncate">
+                                            <span class="text-sm font-semibold text-slate-900 group-hover/info:text-primary transition-colors truncate" title="@product.Name">@product.Name</span>
+                                            <span class="text-xs text-slate-500 font-mono mt-0.5">@product.Sku</span>
+                                        </div>
+                                    </a>
+                                </td>
+                                <td class="py-4 px-3 hidden md:table-cell align-middle whitespace-nowrap">
+                                    <span class="text-sm text-slate-600">@product.Category</span>
+                                </td>
+                                <td class="py-4 px-3 align-middle whitespace-nowrap">
+                                    <span class="text-sm font-medium text-blue-600 cursor-pointer hover:underline">@product.StoreName</span>
+                                </td>
+                                <td class="py-4 px-3 text-right text-sm font-semibold text-slate-900 align-middle whitespace-nowrap">
+                                    @product.Price.ToString("N0") ₫
+                                </td>
+                                <td class="py-4 px-3 text-center align-middle whitespace-nowrap">
+                                    @if (product.Stock > 10)
+                                    {
+                                        <span class="text-sm font-semibold text-slate-700">@product.Stock</span>
+                                    }
+                                    else if (product.Stock > 0)
+                                    {
+                                        <span class="text-sm font-bold text-amber-600">@product.Stock</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-sm font-bold text-red-600">0</span>
+                                    }
+                                </td>
+                                <td class="py-4 px-3 text-center align-middle whitespace-nowrap">
+                                    @if (product.Status == "Active")
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1.5 text-xs font-semibold text-green-700 ring-1 ring-inset ring-green-600/20">
+                                            <span class="size-1.5 rounded-full bg-green-600"></span> Active
+                                        </span>
+                                    }
+                                    else if (product.Status == "Pending")
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                                            <span class="size-1.5 rounded-full bg-amber-500 pr-0.5"></span> Pending
+                                        </span>
+                                    }
+                                    else if (product.Status == "Suspended")
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 ring-1 ring-inset ring-slate-500/20">
+                                            <span class="size-1.5 rounded-full bg-slate-500 pr-0.5"></span> Suspended
+                                        </span>
+                                    }
+                                    else if (product.Status == "Rejected")
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-700 ring-1 ring-inset ring-red-600/20">
+                                            <span class="size-1.5 rounded-full bg-red-600 pr-0.5"></span> Rejected
+                                        </span>
+                                    }
+                                </td>
+                                <td class="py-4 px-3 hidden lg:table-cell align-middle whitespace-nowrap">
+                                    <p class="text-sm text-slate-500">@product.CreatedAt.ToString("MMM dd, yyyy")</p>
+                                </td>
+                                <td class="py-4 pl-3 pr-6 text-right align-middle whitespace-nowrap">
+                                    <div class="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <a asp-page="/Admin/Products/Detail" asp-route-id="@product.Id" class="text-slate-400 hover:text-primary transition-colors p-1.5 rounded-lg hover:bg-blue-50" title="View Details">
+                                            <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                        </a>
+                                        
+                                        @if (product.Status == "Pending")
+                                        {
+                                            <button class="text-slate-400 hover:text-green-600 transition-colors p-1.5 rounded-lg hover:bg-green-50" title="Approve Product">
+                                                <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                                            </button>
+                                            <button class="text-slate-400 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50" title="Reject Product">
+                                                <span class="material-symbols-outlined text-[20px]">cancel</span>
+                                            </button>
+                                        }
+                                        else if (product.Status == "Active")
+                                        {
+                                            <button class="text-slate-400 hover:text-amber-500 transition-colors p-1.5 rounded-lg hover:bg-amber-50" title="Suspend Product">
+                                                <span class="material-symbols-outlined text-[20px]">block</span>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="9" class="py-12 text-center text-slate-500">
+                                <div class="flex flex-col items-center justify-center space-y-3">
+                                    <div class="size-16 rounded-full bg-slate-50 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-4xl text-slate-300">inventory_2</span>
+                                    </div>
+                                    <p class="text-base font-medium text-slate-900 mt-2">No products found</p>
+                                    <p class="text-sm">We couldn't find any products matching your criteria.</p>
+                                    <button type="button" class="mt-2 text-sm text-primary font-medium hover:underline">Clear all filters</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="border-t border-slate-100 px-6 py-4 bg-slate-50/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-sm text-slate-500">
+                Showing <span class="font-medium text-slate-900">@((Model.Products.PageNumber - 1) * Model.Products.PageSize + (Model.Products.Items.Any() ? 1 : 0))</span> to
+                <span class="font-medium text-slate-900">
+                    @(Math.Min(Model.Products.PageNumber * Model.Products.PageSize, Model.Products.TotalCount))
+                </span> of
+                <span class="font-medium text-slate-900">@Model.Products.TotalCount.ToString("N0")</span> products
+            </div>
+
+            @if (Model.Products.TotalPages > 1)
+            {
+                <nav aria-label="Pagination" class="flex items-center gap-1">
+                    <a href="#" class="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-primary hover:border-primary transition-all shadow-sm">
+                        <span class="material-symbols-outlined text-lg leading-none">chevron_left</span>
+                    </a>
+                    <div class="flex items-center gap-1 px-1">
+                        @for (int i = 1; i <= Math.Min(5, Model.Products.TotalPages); i++)
+                        {
+                            <a href="#" class="min-w-[36px] h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all @(i == Model.Products.PageNumber ? "bg-primary text-white shadow-sm shadow-blue-500/20" : "border border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-primary")">
+                                @i
+                            </a>
+                        }
+                        @if (Model.Products.TotalPages > 5)
+                        {
+                            <span class="text-slate-400 px-1">...</span>
+                            <a href="#" class="min-w-[36px] h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all border border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-primary">
+                                @Model.Products.TotalPages
+                            </a>
+                        }
+                    </div>
+                    <a href="#" class="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-primary hover:border-primary transition-all shadow-sm">
+                        <span class="material-symbols-outlined text-lg leading-none">chevron_right</span>
+                    </a>
+                </nav>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleAdvancedBtn = document.getElementById('toggle-advanced-btn');
+            const advancedFilters = document.getElementById('advanced-filters');
+            const categorySelect = document.getElementById('category-filter-select');
+            const attrFiltersContainer = document.getElementById('category-attr-filters-container');
+            const attrFiltersPanel = document.getElementById('category-attr-filters');
+
+            // ─── Current selected option IDs (from server-side model) ───
+            const preselectedOptionIds = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Query.AttributeOptionIds));
+
+            // ─── Set active state if advanced panel is visible server-side ───
+            if (advancedFilters && !advancedFilters.classList.contains('hidden')) {
+                toggleAdvancedBtn?.classList.add('bg-slate-50', 'border-slate-300', 'text-slate-900');
+            }
+
+            // ─── Toggle Advanced Filters Panel ───
+            if (toggleAdvancedBtn) {
+                toggleAdvancedBtn.addEventListener('click', function() {
+                    advancedFilters.classList.toggle('hidden');
+                    if (advancedFilters.classList.contains('hidden')) {
+                        this.classList.remove('bg-slate-50', 'text-slate-900', 'border-slate-300');
+                    } else {
+                        this.classList.add('bg-slate-50', 'text-slate-900', 'border-slate-300');
+                    }
+                });
+            }
+
+            // ─── Category change → fetch and render attribute filters via AJAX ───
+            if (categorySelect) {
+                categorySelect.addEventListener('change', async function() {
+                    const categoryId = parseInt(this.value);
+
+                    // Clear existing attribute filters
+                    attrFiltersPanel.innerHTML = '';
+                    attrFiltersPanel.classList.add('hidden');
+                    attrFiltersContainer.classList.add('hidden');
+
+                    if (!categoryId || categoryId <= 0) return;
+
+                    // Show loading indicator
+                    attrFiltersPanel.innerHTML = '<div class="flex items-center gap-2 text-slate-400 text-sm"><span class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span> Loading attributes...</div>';
+                    attrFiltersPanel.classList.remove('hidden');
+                    attrFiltersContainer.classList.remove('hidden');
+
+                    try {
+                        const resp = await fetch(`?handler=CategoryAttributes&categoryId=${categoryId}`, {
+                            headers: { 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || '' }
+                        });
+                        if (!resp.ok) throw new Error('Network error');
+                        const attributes = await resp.json();
+
+                        if (!attributes || attributes.length === 0) {
+                            attrFiltersPanel.classList.add('hidden');
+                            attrFiltersContainer.classList.add('hidden');
+                            return;
+                        }
+
+                        renderAttributeFilters(attributes, []);
+                    } catch (e) {
+                        attrFiltersPanel.innerHTML = '<p class="text-xs text-red-500">Failed to load attributes.</p>';
+                    }
+                });
+            }
+
+            // ─── Render attribute filter checkboxes/radios dynamically ───
+            function renderAttributeFilters(attributes, selectedIds) {
+                let html = `
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="material-symbols-outlined text-[18px] text-primary">filter_list</span>
+                        <span class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Filter by Category Attributes</span>
+                    </div>
+                    <div class="flex flex-wrap gap-6">`;
+
+                for (const attr of attributes) {
+                    const inputType = attr.filterType === 'Radio' ? 'radio' : 'checkbox';
+                    html += `<div class="attr-group min-w-[140px]">`;
+                    html += `<p class="text-xs font-semibold text-slate-700 mb-2">${escapeHtml(attr.name)}</p>`;
+                    html += `<div class="flex flex-col gap-1.5">`;
+                    for (const opt of attr.options) {
+                        const checked = selectedIds.includes(opt.id) ? 'checked' : '';
+                        html += `
+                            <label class="flex items-center gap-2 cursor-pointer group">
+                                <input type="${inputType}" name="Query.AttributeOptionIds" value="${opt.id}" ${checked}
+                                       class="rounded border-slate-300 text-primary focus:ring-primary size-3.5" />
+                                <span class="text-sm text-slate-600 group-hover:text-slate-900 transition-colors">${escapeHtml(opt.value)}</span>
+                            </label>`;
+                    }
+                    html += `</div></div>`;
+                }
+
+                html += `</div>`;
+                attrFiltersPanel.innerHTML = html;
+                attrFiltersPanel.classList.remove('hidden');
+                attrFiltersContainer.classList.remove('hidden');
+            }
+
+            function escapeHtml(str) {
+                return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+            }
+
+            // ─── Column Sort Logic (3-state: desc → asc → default) ───
+            const sortByInput = document.getElementById('sort-by-input');
+            const sortDirInput = document.getElementById('sort-dir-input');
+            const filterForm = document.getElementById('filter-form');
+
+            document.querySelectorAll('.sort-header').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const col = this.dataset.col;
+                    const currentCol = sortByInput.value;
+                    const currentDir = sortDirInput.value;
+
+                    let nextDir = '';
+                    if (currentCol !== col) {
+                        // New column clicked → start with desc
+                        nextDir = 'desc';
+                    } else if (currentDir === 'desc') {
+                        // Same column, was desc → go asc
+                        nextDir = 'asc';
+                    } else if (currentDir === 'asc') {
+                        // Same column, was asc → reset
+                        nextDir = '';
+                    } else {
+                        // Was reset → go desc
+                        nextDir = 'desc';
+                    }
+
+                    if (nextDir === '') {
+                        sortByInput.value = '';
+                        sortDirInput.value = '';
+                    } else {
+                        sortByInput.value = col;
+                        sortDirInput.value = nextDir;
+                    }
+
+                    // Reset to page 1 when sorting changes
+                    const pageInput = filterForm.querySelector('input[name="Query.PageNumber"]');
+                    if (pageInput) pageInput.value = '1';
+
+                    filterForm.submit();
+                });
+            });
+        });
+    </script>
+}

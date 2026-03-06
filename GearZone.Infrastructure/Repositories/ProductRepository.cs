@@ -25,6 +25,13 @@ namespace GearZone.Infrastructure.Repositories
                 .AsNoTracking()
                 .Where(p => !p.IsDeleted && p.Status == ProductStatus.Active);
 
+            if (!string.IsNullOrEmpty(filter.Search))
+            {
+                var searchTerm = filter.Search.Trim().ToLower();
+                query = query.Where(p => p.Name.ToLower().Contains(searchTerm) || 
+                                       p.Brand.Name.ToLower().Contains(searchTerm));
+            }
+
             if (!string.IsNullOrEmpty(filter.CategorySlug))
             {
                 // Collect IDs: the matched category itself + all its direct children
@@ -115,6 +122,30 @@ namespace GearZone.Infrastructure.Repositories
                 .ToListAsync();
 
             return new PagedResult<CatalogProductDto>(items, totalCount, filter.PageNumber, filter.PageSize);
+        }
+
+        public async Task<List<ProductSuggestionDto>> GetProductSuggestionsAsync(string query, int limit = 5)
+        {
+            if (string.IsNullOrWhiteSpace(query)) return new List<ProductSuggestionDto>();
+
+            var searchTerm = query.Trim().ToLower();
+
+            return await _context.Products
+                .AsNoTracking()
+                .Where(p => !p.IsDeleted && p.Status == ProductStatus.Active &&
+                           (p.Name.ToLower().Contains(searchTerm) || p.Brand.Name.ToLower().Contains(searchTerm)))
+                .OrderByDescending(p => p.SoldCount)
+                .Take(limit)
+                .Select(p => new ProductSuggestionDto
+                {
+                    Name = p.Name,
+                    Slug = p.Slug,
+                    BrandName = p.Brand.Name,
+                    Price = p.BasePrice,
+                    ImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault() 
+                               ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? ""
+                })
+                .ToListAsync();
         }
 
         public async Task<PagedResult<Product>> GetAdminProductsAsync(AdminProductQueryDto queryDto)

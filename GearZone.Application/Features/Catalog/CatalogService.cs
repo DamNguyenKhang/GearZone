@@ -298,5 +298,10 @@ namespace GearZone.Application.Features.Catalog
 
             return relatedProducts;
         }
+
+        public async Task<List<ProductSuggestionDto>> GetProductSuggestionsAsync(string query, int limit = 5)
+        {
+            return await _productRepository.GetProductSuggestionsAsync(query, limit);
+        }
     }
 }

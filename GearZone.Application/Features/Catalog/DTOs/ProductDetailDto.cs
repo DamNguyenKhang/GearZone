@@ -64,4 +64,13 @@ namespace GearZone.Application.Features.Catalog.DTOs
         public string Name { get; set; } = string.Empty;
         public string Value { get; set; } = string.Empty;
     }
+
+    public class ProductSuggestionDto
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public string BrandName { get; set; } = string.Empty;
+    }
 }

@@ -35,6 +35,9 @@ namespace GearZone.Web.Pages.Public.Catalog
         [BindProperty(Name = "viewMode", SupportsGet = true)]
         public string? ViewMode { get; set; }
 
+        [BindProperty(Name = "search", SupportsGet = true)]
+        public string? Search { get; set; }
+
         public string? CategorySlug { get; set; }
         
         public ProductFilterDto Filter { get; set; } = new ProductFilterDto();
@@ -67,6 +70,12 @@ namespace GearZone.Web.Pages.Public.Catalog
             };
         }
 
+        public async Task<IActionResult> OnGetSuggestionsAsync(string query)
+        {
+            var suggestions = await _catalogService.GetProductSuggestionsAsync(query);
+            return new JsonResult(suggestions);
+        }
+
         private void BuildFilterFromQuery()
         {
             // Fallback bindings for AJAX handler requests
@@ -75,10 +84,12 @@ namespace GearZone.Web.Pages.Public.Catalog
             if (decimal.TryParse(Request.Query["maxPrice"], out decimal max)) MaxPrice = max;
             if (Request.Query.TryGetValue("sort", out var s)) Sort = s;
             if (Request.Query.TryGetValue("viewMode", out var vm)) ViewMode = vm;
+            if (Request.Query.TryGetValue("search", out var q)) Search = q;
             if (Request.Query.TryGetValue("brand", out var b)) Brand = b.ToList();
 
             Filter = new ProductFilterDto
             {
+                Search = Search,
                 CategorySlug = CategorySlug,
                 BrandSlugs = Brand.Any() ? Brand.SelectMany(br => br.Split(',')).ToList() : null,
                 MinPrice = MinPrice,
@@ -94,7 +105,7 @@ namespace GearZone.Web.Pages.Public.Catalog
             // Parse dynamic attributes from query string (excluding known parameters)
             var knownParams = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase) 
             { 
-                "brand", "minPrice", "maxPrice", "sort", "page", "inStock", "handler", "viewMode" 
+                "brand", "minPrice", "maxPrice", "sort", "page", "inStock", "handler", "viewMode", "search" 
             };
 
             foreach (var key in Request.Query.Keys)

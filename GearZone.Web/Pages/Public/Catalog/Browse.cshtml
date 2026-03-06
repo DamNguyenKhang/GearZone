@@ -38,11 +38,27 @@
             <nav class="flex items-center gap-2 text-sm text-text-secondary">
                 <a class="hover:text-primary transition-colors" href="/">Home</a>
                 <span class="material-symbols-outlined text-[16px]">chevron_right</span>
-                <span class="text-text-main dark:text-white font-medium capitalize">@(string.IsNullOrEmpty(Model.Filter.CategorySlug) ? "All Products" : Model.Filter.CategorySlug.Replace("-", " "))</span>
+                @if (!string.IsNullOrEmpty(Model.Search))
+                {
+                    <a class="hover:text-primary transition-colors" href="/products">All Products</a>
+                    <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                    <span class="text-text-main dark:text-white font-medium">Search: @Model.Search</span>
+                }
+                else
+                {
+                    <span class="text-text-main dark:text-white font-medium capitalize">@(string.IsNullOrEmpty(Model.Filter.CategorySlug) ? "All Products" : Model.Filter.CategorySlug.Replace("-", " "))</span>
+                }
             </nav>
             <div class="flex flex-wrap items-baseline justify-between gap-4">
-                <h1 class="text-3xl font-bold tracking-tight text-text-main dark:text-white capitalize">
-                    @(string.IsNullOrEmpty(Model.Filter.CategorySlug) ? "All Products" : Model.Filter.CategorySlug.Replace("-", " ")) 
+                <h1 class="text-3xl font-bold tracking-tight text-text-main dark:text-white">
+                    @if (!string.IsNullOrEmpty(Model.Search))
+                    {
+                        <span>Results for "@Model.Search"</span>
+                    }
+                    else
+                    {
+                        <span class="capitalize">@(string.IsNullOrEmpty(Model.Filter.CategorySlug) ? "All Products" : Model.Filter.CategorySlug.Replace("-", " "))</span>
+                    }
                     <span class="text-lg font-normal text-text-secondary ml-2" id="total-count-text">(@Model.Products.TotalCount products)</span>
                 </h1>
             </div>
@@ -55,6 +71,7 @@
                     <input type="hidden" name="page" id="page-number-input" value="1" />
                     <input type="hidden" name="sort" id="sort-by-input" value="@Model.Sort" />
                     <input type="hidden" name="viewMode" id="viewMode-input" value="@Model.Filter.ViewMode" />
+                    <input type="hidden" name="search" value="@Model.Search" />
 
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="font-bold text-lg">Filter by</h3>

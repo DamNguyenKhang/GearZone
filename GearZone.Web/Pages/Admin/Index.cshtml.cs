@@ -1,7 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace GearZone.Web.Pages.Admin.Reports
+namespace GearZone.Web.Pages.Admin
 {
     public class IndexModel : PageModel
     {

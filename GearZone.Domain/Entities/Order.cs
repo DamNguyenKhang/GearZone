@@ -1,4 +1,5 @@
-﻿using System;
+﻿using GearZone.Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -9,7 +10,7 @@ namespace GearZone.Domain.Entities
         public string OrderCode { get; set; } = string.Empty;
         public string UserId { get; set; } = string.Empty;
         public Guid StoreId { get; set; }
-        public string Status { get; set; } = string.Empty;
+        public OrderStatus Status { get; set; }
 
         public decimal Subtotal { get; set; }
         public decimal ShippingFee { get; set; }

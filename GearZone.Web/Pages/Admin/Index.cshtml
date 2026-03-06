@@ -1,10 +1,10 @@
 @page
-@model GearZone.Web.Pages.Admin.Reports.IndexModel
+@model GearZone.Web.Pages.Admin.IndexModel
 @{
-    ViewData["Title"] = "Platform Reports";
-    ViewData["PageHeader"] = "Platform Reports";
-    ViewData["ActivePage"] = "Reports";
-    ViewData["Breadcrumb"] = new string[] { "Reports" };
+    ViewData["Title"] = "Platform Overview";
+    ViewData["PageHeader"] = "Platform Overview";
+    ViewData["ActivePage"] = "Dashboard";
+    ViewData["Breadcrumb"] = new string[] { "Dashboard" };
     Layout = "_AdminLayout";
 }
 
@@ -18,21 +18,48 @@
     </style>
 }
 
-<div class="flex flex-wrap items-end justify-between gap-4 mb-2">
-    <div>
-        <p class="text-slate-500 text-sm mt-1">Comprehensive analytics &mdash; Updated @DateTime.Now.ToString("MMM dd, yyyy")</p>
+<div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+    <!-- Left: Time filter + custom date range -->
+    <div class="flex items-center gap-3 flex-wrap">
+        <!-- Time Range Selector -->
+        <div class="relative" id="time-filter-wrapper">
+            <select id="time-range-select"
+                    class="pl-10 pr-8 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary w-44">
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month" selected>This Month</option>
+                <option value="year">This Year</option>
+                <option value="custom">Custom Range</option>
+            </select>
+            <span class="material-symbols-outlined absolute left-3 top-2.5 text-[18px] text-primary pointer-events-none">calendar_today</span>
+            <span class="material-symbols-outlined absolute right-2 top-2.5 text-[20px] text-slate-400 pointer-events-none">expand_more</span>
+        </div>
+
+        <!-- Custom Date Range (hidden by default) -->
+        <div id="custom-date-range"
+             class="hidden items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-1.5 shadow-sm">
+            <span class="text-xs text-slate-400 font-medium">From</span>
+            <input type="date" id="date-from"
+                   class="text-sm text-slate-700 border-0 outline-none bg-transparent cursor-pointer focus:ring-0 w-32" />
+            <span class="text-slate-300 text-base">&#8594;</span>
+            <span class="text-xs text-slate-400 font-medium">To</span>
+            <input type="date" id="date-to"
+                   class="text-sm text-slate-700 border-0 outline-none bg-transparent cursor-pointer focus:ring-0 w-32" />
+            <button id="apply-date-range"
+                    class="ml-1 px-3 py-1 bg-primary text-white text-xs font-semibold rounded-md hover:bg-blue-700 transition-colors">
+                Apply
+            </button>
+        </div>
     </div>
-    <div class="flex items-center gap-3">
-        <button class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
-            <span class="material-symbols-outlined text-[20px]">calendar_today</span>
-            Last 30 days
-        </button>
-        <button class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
-            <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+
+    <!-- Right: Export actions -->
+    <div class="flex items-center gap-2">
+        <button class="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors shadow-sm">
+            <span class="material-symbols-outlined text-[18px] text-slate-500">picture_as_pdf</span>
             Export PDF
         </button>
-        <button class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200">
-            <span class="material-symbols-outlined text-[20px]">download</span>
+        <button class="flex items-center gap-1.5 px-3 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200">
+            <span class="material-symbols-outlined text-[18px]">download</span>
             Export Excel
         </button>
     </div>
@@ -414,3 +441,21 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Custom date range toggle
+        const timeSelect = document.getElementById('time-range-select');
+        const customRange = document.getElementById('custom-date-range');
+
+        timeSelect.addEventListener('change', function () {
+            if (this.value === 'custom') {
+                customRange.classList.remove('hidden');
+                customRange.classList.add('flex');
+            } else {
+                customRange.classList.add('hidden');
+                customRange.classList.remove('flex');
+            }
+        });
+    </script>
+}

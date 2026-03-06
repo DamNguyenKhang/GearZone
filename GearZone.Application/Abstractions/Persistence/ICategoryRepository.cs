@@ -9,5 +9,7 @@ namespace GearZone.Application.Abstractions.Persistence
     {
         Task<PagedResult<Category>> GetPaginatedCategoriesAsync(CategoryQueryDto query);
         Task<List<Category>> GetAllCategoriesListAsync();
+        Task<List<CategoryDto>> GetHierarchicalCategoriesAsync(CategoryQueryDto query);
     }
 }
+

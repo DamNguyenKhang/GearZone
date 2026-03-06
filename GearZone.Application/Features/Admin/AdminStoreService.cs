@@ -9,7 +9,9 @@ using GearZone.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace GearZone.Application.Features.Admin;
 
@@ -178,5 +180,11 @@ public class AdminStoreService : IAdminStoreService
     public async Task<StoreApplicationStatsDto> GetStoreApplicationStatsAsync()
     {
         return await _storeRepository.GetStoreApplicationStatsAsync();
+    }
+
+    public async Task<List<StoreApplicationDto>> GetAllStoresAsync()
+    {
+        var stores = await _storeRepository.Query().Where(s => s.Status == StoreStatus.Approved).ToListAsync();
+        return _mapper.Map<List<StoreApplicationDto>>(stores);
     }
 }

@@ -40,6 +40,12 @@ public class AdminBrandService : IAdminBrandService
         };
     }
 
+    public async Task<List<AdminBrandDto>> GetAllBrandsListAsync()
+    {
+        var brands = await _brandRepository.GetAllBrandsListAsync();
+        return _mapper.Map<List<AdminBrandDto>>(brands);
+    }
+
     public async Task<AdminBrandDto?> GetBrandByIdAsync(int brandId)
     {
         var brand = await _brandRepository.GetByIdAsync(brandId);

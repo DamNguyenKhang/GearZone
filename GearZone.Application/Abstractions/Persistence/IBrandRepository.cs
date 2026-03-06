@@ -1,6 +1,7 @@
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Admin.Dtos;
 using GearZone.Domain.Entities;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace GearZone.Application.Abstractions.Persistence
@@ -9,5 +10,6 @@ namespace GearZone.Application.Abstractions.Persistence
     {
         Task<PagedResult<Brand>> GetAdminBrandsAsync(AdminBrandQueryDto query);
         Task<AdminBrandStatsDto> GetBrandStatsAsync();
+        Task<List<Brand>> GetAllBrandsListAsync();
     }
 }

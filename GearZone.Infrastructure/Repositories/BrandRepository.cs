@@ -3,6 +3,7 @@ using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Admin.Dtos;
 using GearZone.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -44,6 +45,14 @@ namespace GearZone.Infrastructure.Repositories
                 PageNumber = query.PageNumber,
                 PageSize = query.PageSize
             };
+        }
+
+        public async Task<List<Brand>> GetAllBrandsListAsync()
+        {
+            return await _dbSet
+                .Where(b => !b.IsDeleted)
+                .OrderBy(b => b.Name)
+                .ToListAsync();
         }
 
         public async Task<AdminBrandStatsDto> GetBrandStatsAsync()

@@ -116,26 +116,20 @@ namespace GearZone.Infrastructure.Repositories
             var query = _context.Products
                 .Include(p => p.Store)
                 .Include(p => p.Category)
+                .Include(p => p.Brand)
                 .Include(p => p.Variants)
                     .ThenInclude(v => v.AttributeValues)
                 .Include(p => p.Images)
                 .AsQueryable();
 
+            // Search across Name, SKU (any variant) and StoreName simultaneously
             if (!string.IsNullOrEmpty(queryDto.SearchTerm))
             {
                 var searchTerm = queryDto.SearchTerm.ToLower();
-                if (queryDto.SearchType == "SKU")
-                {
-                    query = query.Where(p => p.Variants.Any(v => v.Sku.ToLower().Contains(searchTerm)));
-                }
-                else if (queryDto.SearchType == "Store")
-                {
-                    query = query.Where(p => p.Store.StoreName.ToLower().Contains(searchTerm));
-                }
-                else // Name
-                {
-                    query = query.Where(p => p.Name.ToLower().Contains(searchTerm));
-                }
+                query = query.Where(p =>
+                    p.Name.ToLower().Contains(searchTerm) ||
+                    p.Variants.Any(v => v.Sku.ToLower().Contains(searchTerm)) ||
+                    p.Store.StoreName.ToLower().Contains(searchTerm));
             }
 
             if (!string.IsNullOrEmpty(queryDto.Status))
@@ -149,6 +143,11 @@ namespace GearZone.Infrastructure.Repositories
             if (queryDto.CategoryId.HasValue && queryDto.CategoryId.Value > 0)
             {
                 query = query.Where(p => p.CategoryId == queryDto.CategoryId.Value);
+            }
+
+            if (queryDto.BrandId.HasValue && queryDto.BrandId.Value > 0)
+            {
+                query = query.Where(p => p.BrandId == queryDto.BrandId.Value);
             }
 
             if (queryDto.StoreId.HasValue && queryDto.StoreId.Value != Guid.Empty)
@@ -190,7 +189,24 @@ namespace GearZone.Infrastructure.Repositories
                             queryDto.AttributeOptionIds.Contains(av.CategoryAttributeOptionId))));
             }
 
-            query = query.OrderByDescending(p => p.CreatedAt);
+            // Dynamic sort: SortBy controls column, SortDirection controls asc/desc
+            // If no SortBy, default to newest first
+            var sortBy = (queryDto.SortBy ?? "").ToLower();
+            var isAsc = (queryDto.SortDirection ?? "").ToLower() == "asc";
+
+            query = sortBy switch
+            {
+                "stock" => isAsc
+                    ? query.OrderBy(p => p.Variants.Sum(v => (int?)v.StockQuantity) ?? 0).ThenBy(p => p.CreatedAt)
+                    : query.OrderByDescending(p => p.Variants.Sum(v => (int?)v.StockQuantity) ?? 0).ThenByDescending(p => p.CreatedAt),
+                "price" => isAsc
+                    ? query.OrderBy(p => p.BasePrice).ThenBy(p => p.CreatedAt)
+                    : query.OrderByDescending(p => p.BasePrice).ThenByDescending(p => p.CreatedAt),
+                "createdat" => isAsc
+                    ? query.OrderBy(p => p.CreatedAt)
+                    : query.OrderByDescending(p => p.CreatedAt),
+                _ => query.OrderByDescending(p => p.CreatedAt) // default
+            };
 
             var totalCount = await query.CountAsync();
 

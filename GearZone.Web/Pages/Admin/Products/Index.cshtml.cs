@@ -18,12 +18,14 @@ namespace GearZone.Web.Pages.Admin.Products
         private readonly IAdminProductService _productService;
         private readonly IAdminCategoryService _categoryService;
         private readonly IAdminStoreService _storeService;
+        private readonly IAdminBrandService _brandService;
 
-        public IndexModel(IAdminProductService productService, IAdminCategoryService categoryService, IAdminStoreService storeService)
+        public IndexModel(IAdminProductService productService, IAdminCategoryService categoryService, IAdminStoreService storeService, IAdminBrandService brandService)
         {
             _productService = productService;
             _categoryService = categoryService;
             _storeService = storeService;
+            _brandService = brandService;
         }
 
         [BindProperty(SupportsGet = true)]
@@ -34,6 +36,7 @@ namespace GearZone.Web.Pages.Admin.Products
 
         public List<SelectListItem> Categories { get; set; } = new List<SelectListItem>();
         public List<SelectListItem> Stores { get; set; } = new List<SelectListItem>();
+        public List<SelectListItem> Brands { get; set; } = new List<SelectListItem>();
 
         /// <summary>Attributes for the currently selected category, used to render dynamic filters.</summary>
         public List<CategoryAttributeDto> CategoryAttributes { get; set; } = new();
@@ -60,10 +63,11 @@ namespace GearZone.Web.Pages.Admin.Products
             }
             Categories = categoryItems;
 
-
-
             var stores = await _storeService.GetAllStoresAsync();
             Stores = stores.Select(s => new SelectListItem(s.StoreName, s.Id.ToString())).ToList();
+
+            var brands = await _brandService.GetAllBrandsListAsync();
+            Brands = brands.Select(b => new SelectListItem(b.Name, b.Id.ToString())).ToList();
 
             // Load attributes for the selected category (if any)
             if (Query.CategoryId.HasValue && Query.CategoryId.Value > 0)

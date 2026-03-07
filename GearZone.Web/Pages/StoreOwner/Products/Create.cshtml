@@ -11,6 +11,7 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
     <form method="post" enctype="multipart/form-data" id="createProductForm">
+        <div asp-validation-summary="ModelOnly" class="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm font-medium"></div>
         <!-- Header -->
         <div class="flex items-center justify-between mb-8">
             <div>
@@ -93,37 +94,9 @@
                     </div>
                 </div>
 
-                <!-- Technical Specifications -->
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary">engineering</span>
-                            <h2 class="text-lg font-bold text-gray-900">Technical Specifications</h2>
-                        </div>
-                        <button type="button" id="btnAddSpec" class="text-primary text-sm font-bold flex items-center gap-1 hover:underline">
-                            <span class="material-symbols-outlined text-[18px]">add</span> Add Spec
-                        </button>
-                    </div>
 
-                    <div id="specsContainer" class="space-y-3">
-                        @for (int i = 0; i < Model.Input.Specifications.Count; i++)
-                        {
-                            <div class="grid grid-cols-12 gap-3 spec-row">
-                                <div class="col-span-5">
-                                    <input name="Input.Specifications[@i].Key" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50/50" placeholder="Specification (e.g. Memory Size)">
-                                </div>
-                                <div class="col-span-6">
-                                    <input name="Input.Specifications[@i].Value" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50/50" placeholder="Value (e.g. 24GB GDDR6X)">
-                                </div>
-                                <div class="col-span-1 flex items-center justify-center">
-                                    <button type="button" class="text-gray-400 hover:text-red-600 btnRemoveRow">
-                                        <span class="material-symbols-outlined text-[20px]">delete</span>
-                                    </button>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </div>
+
+
 
                 <!-- Variants & Pricing -->
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
@@ -145,6 +118,7 @@
                                     <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">SKU</th>
                                     <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price (VNĐ)</th>
                                     <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stock</th>
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden" id="variantAttributesHeader">Attributes</th>
                                     <th class="px-1 py-3"></th>
                                 </tr>
                             </thead>
@@ -163,6 +137,11 @@
                                         </td>
                                         <td class="py-3 px-1">
                                             <input name="Input.Variants[@i].StockQuantity" value="@Model.Input.Variants[i].StockQuantity" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="0">
+                                        </td>
+                                        <td class="py-3 px-1 variant-attributes-cell hidden">
+                                            <div class="flex flex-col gap-2 attributes-wrapper">
+                                                <!-- Attributes injected here -->
+                                            </div>
                                         </td>
                                         <td class="py-3 px-1 text-center">
                                             <button type="button" class="text-gray-400 hover:text-red-600 btnRemoveRow">
@@ -248,29 +227,69 @@
                 });
             }
 
-            // Add Spec
-            $('#btnAddSpec').click(function() {
-                let index = $('#specsContainer .spec-row').length;
-                let html = `
-                    <div class="grid grid-cols-12 gap-3 spec-row animate-fadeIn">
-                        <div class="col-span-5">
-                            <input name="Input.Specifications[${index}].Key" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50/50" placeholder="Specification">
+            let currentCategoryAttributes = [];
+
+            function generateAttributesHtml(variantIndex) {
+                if (!currentCategoryAttributes || currentCategoryAttributes.length === 0) return '';
+                let html = '';
+                currentCategoryAttributes.forEach(function(attr, attrIndex) {
+                    html += `
+                        <div class="flex flex-col">
+                            <input type="hidden" name="Input.Variants[${variantIndex}].Attributes[${attrIndex}].AttributeId" value="${attr.id}" />
+                            <select name="Input.Variants[${variantIndex}].Attributes[${attrIndex}].OptionId" class="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs bg-gray-50 focus:ring-primary focus:border-primary" required>
+                                <option value="">Select ${attr.name}</option>`;
+                                
+                    attr.options.forEach(function(opt) {
+                        html += `<option value="${opt.id}">${opt.value}</option>`;
+                    });
+
+                    html += `
+                            </select>
                         </div>
-                        <div class="col-span-6">
-                            <input name="Input.Specifications[${index}].Value" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50/50" placeholder="Value">
-                        </div>
-                        <div class="col-span-1 flex items-center justify-center">
-                            <button type="button" class="text-gray-400 hover:text-red-600 btnRemoveRow">
-                                <span class="material-symbols-outlined text-[20px]">delete</span>
-                            </button>
-                        </div>
-                    </div>`;
-                $('#specsContainer').append(html);
+                    `;
+                });
+                return html;
+            }
+
+            function refreshAllVariantAttributes() {
+                if (currentCategoryAttributes.length > 0) {
+                    $('#variantAttributesHeader').removeClass('hidden');
+                    $('.variant-attributes-cell').removeClass('hidden');
+                    
+                    $('.variant-row').each(function($index) {
+                        let attrsHtml = generateAttributesHtml($index);
+                        $(this).find('.attributes-wrapper').html(attrsHtml);
+                    });
+                } else {
+                    $('#variantAttributesHeader').addClass('hidden');
+                    $('.variant-attributes-cell').addClass('hidden');
+                    $('.attributes-wrapper').empty();
+                }
+            }
+
+            // Category Attributes Fetch
+            $('#Input_CategoryId').change(function() {
+                var categoryId = $(this).val();
+                if (!categoryId) {
+                    currentCategoryAttributes = [];
+                    refreshAllVariantAttributes();
+                    return;
+                }
+
+                $.get('?handler=Attributes&categoryId=' + categoryId, function(data) {
+                    currentCategoryAttributes = data || [];
+                    refreshAllVariantAttributes();
+                });
             });
+
+
 
             // Add Variant
             $('#btnAddVariant').click(function() {
                 let index = $('#variantsContainer .variant-row').length;
+                let attrHtml = generateAttributesHtml(index);
+                let hideClass = (currentCategoryAttributes.length > 0) ? '' : 'hidden';
+                
                 let html = `
                     <tr class="variant-row animate-fadeIn">
                         <td class="py-3 px-1">
@@ -284,6 +303,11 @@
                         </td>
                         <td class="py-3 px-1">
                             <input name="Input.Variants[${index}].StockQuantity" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="0">
+                        </td>
+                        <td class="py-3 px-1 variant-attributes-cell ${hideClass}">
+                            <div class="flex flex-col gap-2 attributes-wrapper">
+                                ${attrHtml}
+                            </div>
                         </td>
                         <td class="py-3 px-1 text-center">
                             <button type="button" class="text-gray-400 hover:text-red-600 btnRemoveRow">
@@ -300,10 +324,12 @@
                 let rowClass = $(this).closest('.spec-row, .variant-row').attr('class').split(' ')[0];
                 $(this).closest('.spec-row, .variant-row').remove();
                 
-                if (container.attr('id') === 'specsContainer') {
-                    updateIndices('specsContainer', 'spec-row', 'Input.Specifications');
+                if (rowClass === 'spec-row') {
+                    // updateIndices('specsContainer', 'spec-row', 'Input.Specifications');
                 } else {
                     updateIndices('variantsContainer', 'variant-row', 'Input.Variants');
+                    // Refresh attributes indices just in case
+                    refreshAllVariantAttributes();
                 }
             });
 

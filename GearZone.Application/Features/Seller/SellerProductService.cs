@@ -5,12 +5,12 @@ using GearZone.Application.Features.Seller.Dtos;
 using GearZone.Domain.Entities;
 using GearZone.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System;
 
 namespace GearZone.Application.Features.Seller
 {
@@ -100,6 +100,9 @@ namespace GearZone.Application.Features.Seller
                 SoldCount = product.SoldCount,
                 Status = product.Status.ToString(),
                 CreatedAt = product.CreatedAt,
+                Specifications = string.IsNullOrEmpty(product.SpecsJson) 
+                    ? new Dictionary<string, string>() 
+                    : JsonSerializer.Deserialize<Dictionary<string, string>>(product.SpecsJson) ?? new Dictionary<string, string>(),
                 ImageUrls = product.Images.OrderBy(i => i.SortOrder).Select(i => i.ImageUrl).ToList(),
                 Variants = product.Variants.Select(v => new ProductVariantDto
                 {
@@ -156,6 +159,9 @@ namespace GearZone.Application.Features.Seller
                 Slug = slug,
                 Description = dto.Description,
                 BasePrice = dto.BasePrice,
+                SpecsJson = dto.Specifications != null && dto.Specifications.Any() 
+                    ? JsonSerializer.Serialize(dto.Specifications.ToDictionary(s => s.Key, s => s.Value)) 
+                    : "{}",
                 Status = dto.IsDraft ? ProductStatus.Draft : ProductStatus.Active,
                 SoldCount = 0,
                 CreatedAt = DateTime.UtcNow,
@@ -249,6 +255,10 @@ namespace GearZone.Application.Features.Seller
                 BrandId = product.BrandId,
                 BasePrice = product.BasePrice,
                 IsDraft = product.Status == ProductStatus.Draft,
+                Specifications = string.IsNullOrEmpty(product.SpecsJson) 
+                    ? new List<ProductSpecDto>() 
+                    : JsonSerializer.Deserialize<Dictionary<string, string>>(product.SpecsJson)?
+                        .Select(kvp => new ProductSpecDto { Key = kvp.Key, Value = kvp.Value }).ToList() ?? new List<ProductSpecDto>(),
                 ExistingImageUrls = product.Images.OrderBy(i => i.SortOrder).Select(i => i.ImageUrl).ToList(),
                 Variants = product.Variants.Where(v => !v.IsDeleted).Select(v => new ProductVariantDto
                 {
@@ -291,6 +301,9 @@ namespace GearZone.Application.Features.Seller
             product.CategoryId = dto.CategoryId;
             product.BrandId = dto.BrandId;
             product.BasePrice = dto.BasePrice;
+            product.SpecsJson = dto.Specifications != null && dto.Specifications.Any() 
+                ? JsonSerializer.Serialize(dto.Specifications.ToDictionary(s => s.Key, s => s.Value)) 
+                : "{}";
             product.Status = dto.IsDraft ? ProductStatus.Draft : ProductStatus.Active;
             product.UpdatedAt = DateTime.UtcNow;
 
@@ -468,6 +481,53 @@ namespace GearZone.Application.Features.Seller
                     Value = o.Value
                 }).ToList()
             }).ToList();
+        }
+
+        public async Task ToggleProductStatusAsync(Guid productId, Guid storeId)
+        {
+            var product = await _productRepository.Query()
+                .FirstOrDefaultAsync(p => p.Id == productId && p.StoreId == storeId && !p.IsDeleted);
+
+            if (product == null) throw new InvalidOperationException("Product not found.");
+
+            product.Status = product.Status == ProductStatus.Active ? ProductStatus.Inactive : ProductStatus.Active;
+            product.UpdatedAt = DateTime.UtcNow;
+
+            await _productRepository.UpdateAsync(product);
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        public async Task<int> CreateBrandByNameAsync(string name)
+        {
+            var slug = name.ToLower().Replace(" ", "-");
+            var brand = new Brand
+            {
+                Name = name,
+                Slug = slug,
+                IsApproved = true, // Auto-approve for now, or keep as false if admin review is required
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _brandRepository.AddAsync(brand);
+            await _unitOfWork.SaveChangesAsync();
+
+            return brand.Id;
+        }
+
+        public async Task<int> CreateCategoryByNameAsync(string name)
+        {
+            var slug = name.ToLower().Replace(" ", "-");
+            var category = new Category
+            {
+                Name = name,
+                Slug = slug,
+                IsActive = true
+            };
+
+            await _categoryRepository.AddAsync(category);
+            await _unitOfWork.SaveChangesAsync();
+
+            return category.Id;
         }
     }
 }

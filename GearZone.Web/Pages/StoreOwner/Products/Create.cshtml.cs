@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System;
 
 namespace GearZone.Web.Pages.StoreOwner.Products
 {
@@ -34,6 +35,7 @@ namespace GearZone.Web.Pages.StoreOwner.Products
             
             // Initialize with one default variant and one spec row
             Input.Variants.Add(new ProductVariantDto { VariantName = "Default", StockQuantity = 0 });
+            Input.Specifications.Add(new ProductSpecDto());
 
 
             return Page();
@@ -76,6 +78,36 @@ namespace GearZone.Web.Pages.StoreOwner.Products
         {
             var attributes = await _productService.GetCategoryAttributesAsync(categoryId);
             return new JsonResult(attributes);
+        }
+
+        public async Task<JsonResult> OnPostCreateBrandAsync(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return new JsonResult(new { success = false, message = "Name is required" });
+            
+            try 
+            {
+                var id = await _productService.CreateBrandByNameAsync(name);
+                return new JsonResult(new { success = true, id = id, name = name });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
+        }
+
+        public async Task<JsonResult> OnPostCreateCategoryAsync(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return new JsonResult(new { success = false, message = "Name is required" });
+
+            try
+            {
+                var id = await _productService.CreateCategoryByNameAsync(name);
+                return new JsonResult(new { success = true, id = id, name = name });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
         }
 
         private async Task LoadMetadataAsync()

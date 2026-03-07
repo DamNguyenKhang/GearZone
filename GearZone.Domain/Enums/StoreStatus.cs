@@ -2,6 +2,7 @@
 {
     public enum StoreStatus
     {
+        Draft,
         Pending,
         Approved,
         Rejected,

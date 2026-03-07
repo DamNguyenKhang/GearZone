@@ -1,6 +1,6 @@
 ﻿using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Abstractions.Services;
-using GearZone.Application.Abstractions.External;
+using GearZone.Domain.Abstractions.External;
 using GearZone.Application.Features.Seller.Dtos;
 using GearZone.Domain.Entities;
 using GearZone.Domain.Enums;

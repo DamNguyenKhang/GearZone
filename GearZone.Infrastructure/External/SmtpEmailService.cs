@@ -1,4 +1,4 @@
-﻿using GearZone.Application.Abstractions.External;
+﻿using GearZone.Domain.Abstractions.External;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Configuration;

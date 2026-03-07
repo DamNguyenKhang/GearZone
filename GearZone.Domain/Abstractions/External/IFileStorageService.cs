@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace GearZone.Application.Abstractions.External
+namespace GearZone.Domain.Abstractions.External
 {
     public interface IFileStorageService
     {

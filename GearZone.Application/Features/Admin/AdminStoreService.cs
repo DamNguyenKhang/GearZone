@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using GearZone.Application.Abstractions.External;
+using GearZone.Domain.Abstractions.External;
 using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Common.Models;

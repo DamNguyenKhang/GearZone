@@ -28,7 +28,7 @@
             </div>
             <div>
                 <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Active Stores</p>
-                <h3 class="text-2xl font-bold text-slate-900">@Model.StoreApplications.Items.Count(i => i.Status == StoreStatus.Approved || i.Status == StoreStatus.Active)</h3>
+                <h3 class="text-2xl font-bold text-slate-900">@Model.StoreApplications.Items.Count(i => i.Status == StoreStatus.Approved)</h3>
             </div>
         </div>
         <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
@@ -46,7 +46,7 @@
             </div>
             <div>
                 <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Suspended/Locked</p>
-                <h3 class="text-2xl font-bold text-slate-900">@Model.StoreApplications.Items.Count(i => i.Status == StoreStatus.Suspend || i.Status == StoreStatus.Locked)</h3>
+                <h3 class="text-2xl font-bold text-slate-900">@Model.StoreApplications.Items.Count(i => i.Status == StoreStatus.Locked)</h3>
             </div>
         </div>
     </div>
@@ -134,20 +134,20 @@
                                     {
                                         StoreStatus.Pending => "bg-amber-50 text-amber-700 ring-amber-600/20",
                                         StoreStatus.Approved => "bg-green-50 text-green-700 ring-green-600/20",
-                                        StoreStatus.Active => "bg-green-50 text-green-700 ring-green-600/20",
+                                        // StoreStatus.Active => "bg-green-50 text-green-700 ring-green-600/20",
                                         StoreStatus.Rejected => "bg-red-50 text-red-700 ring-red-600/10",
                                         StoreStatus.Locked => "bg-red-50 text-red-700 ring-red-600/10",
-                                        StoreStatus.Suspend => "bg-red-50 text-red-700 ring-red-600/10",
+                                        // StoreStatus.Suspend => "bg-red-50 text-red-700 ring-red-600/10",
                                         _ => "bg-slate-50 text-slate-700 ring-slate-600/20"
                                     };
                                     var dotClass = item.Status switch
                                     {
                                         StoreStatus.Pending => "bg-amber-500",
                                         StoreStatus.Approved => "bg-green-500",
-                                        StoreStatus.Active => "bg-green-500",
+                                        // StoreStatus.Active => "bg-green-500",
                                         StoreStatus.Rejected => "bg-red-500",
                                         StoreStatus.Locked => "bg-red-500",
-                                        StoreStatus.Suspend => "bg-red-500",
+                                        // StoreStatus.Suspend => "bg-red-500",
                                         _ => "bg-slate-500"
                                     };
                                 }
@@ -170,7 +170,7 @@
                                     <a asp-page="/Admin/StoreManagement/Detail" asp-route-id="@item.Id" class="text-slate-400 hover:text-primary transition-colors p-1" title="View Details">
                                         <span class="material-symbols-outlined text-[20px]">visibility</span>
                                     </a>
-                                    @if (item.Status == StoreStatus.Approved || item.Status == StoreStatus.Active)
+                                    @if (item.Status == StoreStatus.Approved)
                                     {
                                         <button class="text-slate-400 hover:text-amber-500 transition-colors p-1" title="Suspend" data-id="@item.Id" data-storeName="@item.StoreName" onclick="OpenStatusChangeModal(this, 'suspend')">
                                             <span class="material-symbols-outlined text-[20px]">block</span>
@@ -179,9 +179,9 @@
                                             <span class="material-symbols-outlined text-[20px]">lock</span>
                                         </button>
                                     }
-                                    @if (item.Status == StoreStatus.Locked || item.Status == StoreStatus.Suspend)
+                                    @if (item.Status == StoreStatus.Locked)
                                     {
-                                        <form method="post" asp-page-handler="ChangeStatus" asp-route-storeId="@item.Id" asp-route-status="@StoreStatus.Active" class="inline">
+                                        <form method="post" asp-page-handler="ChangeStatus" asp-route-storeId="@item.Id" asp-route-status="@StoreStatus.Approved" class="inline">
                                             <button type="submit" class="text-slate-400 hover:text-green-500 transition-colors p-1" title="Activate">
                                                 <span class="material-symbols-outlined text-[20px]">lock_open</span>
                                             </button>

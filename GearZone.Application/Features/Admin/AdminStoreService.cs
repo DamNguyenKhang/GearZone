@@ -114,7 +114,6 @@ public class AdminStoreService : IAdminStoreService
         return status switch
         {
             StoreStatus.Approved => true,
-            StoreStatus.Suspend => true,
             StoreStatus.Rejected => true,
             StoreStatus.Locked => true,
             _ => false

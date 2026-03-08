@@ -7,7 +7,7 @@ namespace GearZone.Domain.Entities
 {
     public class Order : Entity<Guid>
     {
-        public string OrderCode { get; set; } = string.Empty;
+        public long OrderCode { get; set; }
         public string UserId { get; set; } = string.Empty;
         public Guid StoreId { get; set; }
         public OrderStatus Status { get; set; }

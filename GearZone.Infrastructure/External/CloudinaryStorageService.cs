@@ -1,6 +1,6 @@
 ﻿using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
-using GearZone.Domain.Abstractions.External;
+using GearZone.Application.Abstractions.External;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 

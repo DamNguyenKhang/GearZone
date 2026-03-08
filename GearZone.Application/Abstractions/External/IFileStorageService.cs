@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace GearZone.Domain.Abstractions.External
+namespace GearZone.Application.Abstractions.External
 {
     public interface IFileStorageService
     {

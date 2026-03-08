@@ -1,5 +1,6 @@
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Admin.Dtos;
+using GearZone.Domain.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
@@ -32,7 +33,7 @@ namespace GearZone.Web.Pages.Admin.StoreApplications
 
         public async Task<IActionResult> OnPostApproveAsync(Guid id)
         {
-            var success = await _adminStoreService.ApproveStoreAsync(id);
+            var success = await _adminStoreService.UpdateStoreStatusAsync(id, StoreStatus.Approved);
             if (!success)
             {
                 TempData["ErrorMessage"] = "Failed to approve store application.";
@@ -44,7 +45,7 @@ namespace GearZone.Web.Pages.Admin.StoreApplications
 
         public async Task<IActionResult> OnPostRejectAsync(Guid id, string rejectReason)
         {
-            var success = await _adminStoreService.RejectStoreAsync(id, rejectReason);
+            var success = await _adminStoreService.UpdateStoreStatusAsync(id, StoreStatus.Rejected, rejectReason);
             if (!success)
             {
                 TempData["ErrorMessage"] = "Failed to reject store application.";

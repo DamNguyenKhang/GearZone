@@ -61,6 +61,7 @@ namespace GearZone.Application.Features.Seller.Dtos
 
         public List<ProductVariantDto> Variants { get; set; } = new();
         public List<IFormFile> NewImages { get; set; } = new();
+        public List<ProductSpecDto> Specifications { get; set; } = new();
         public List<string> ExistingImageUrls { get; set; } = new();
     }
 

@@ -26,7 +26,7 @@ namespace GearZone.Infrastructure.Seed
             "Staff",
             "Store Owner",
             "Customer"
-        };
+            };
 
             foreach (var role in roles)
             {

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System;
 
 namespace GearZone.Web.Pages.StoreOwner.Products
 {
@@ -75,6 +76,36 @@ namespace GearZone.Web.Pages.StoreOwner.Products
                 ModelState.AddModelError("", $"An unexpected error occurred: {ex.Message}");
                 await LoadMetadataAsync();
                 return Page();
+            }
+        }
+
+        public async Task<JsonResult> OnPostCreateBrandAsync(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return new JsonResult(new { success = false, message = "Name is required" });
+
+            try
+            {
+                var brandId = await _productService.CreateBrandByNameAsync(name);
+                return new JsonResult(new { success = true, id = brandId, name = name });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
+        }
+
+        public async Task<JsonResult> OnPostCreateCategoryAsync(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return new JsonResult(new { success = false, message = "Name is required" });
+
+            try
+            {
+                var id = await _productService.CreateCategoryByNameAsync(name);
+                return new JsonResult(new { success = true, id = id, name = name });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
             }
         }
 

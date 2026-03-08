@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace GearZone.Domain.Abstractions.External
+namespace GearZone.Application.Features.Payment
 {
-    public interface IPaymentService
+    public class PaymentService
     {
     }
 }

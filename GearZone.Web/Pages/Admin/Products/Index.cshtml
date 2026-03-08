@@ -52,6 +52,7 @@
     <!-- Filters & Actions Bar -->
     <div class="bg-white rounded-xl shadow-card border border-slate-100 overflow-hidden">
         <form method="get" id="filter-form" class="flex flex-col">
+            <input type="hidden" name="Query.PageNumber" id="page-number-input" value="@Model.Query.PageNumber" />
             <input type="hidden" name="Query.SortBy" id="sort-by-input" value="@Model.Query.SortBy" />
             <input type="hidden" name="Query.SortDirection" id="sort-dir-input" value="@Model.Query.SortDirection" />
 
@@ -434,27 +435,67 @@
             @if (Model.Products.TotalPages > 1)
             {
                 <nav aria-label="Pagination" class="flex items-center gap-1">
-                    <a href="#" class="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-primary hover:border-primary transition-all shadow-sm">
-                        <span class="material-symbols-outlined text-lg leading-none">chevron_left</span>
-                    </a>
+                    @if (Model.Products.PageNumber > 1)
+                    {
+                        <button type="button" onclick="gotoPage(@(Model.Products.PageNumber - 1))" class="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-primary hover:border-primary transition-all shadow-sm">
+                            <span class="material-symbols-outlined text-lg leading-none">chevron_left</span>
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="p-2 rounded-lg border border-slate-100 text-slate-300 bg-slate-50 cursor-not-allowed">
+                            <span class="material-symbols-outlined text-lg leading-none">chevron_left</span>
+                        </div>
+                    }
+
                     <div class="flex items-center gap-1 px-1">
-                        @for (int i = 1; i <= Math.Min(5, Model.Products.TotalPages); i++)
-                        {
-                            <a href="#" class="min-w-[36px] h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all @(i == Model.Products.PageNumber ? "bg-primary text-white shadow-sm shadow-blue-500/20" : "border border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-primary")">
-                                @i
-                            </a>
+                        @{
+                            int startPage = Math.Max(1, Model.Products.PageNumber - 2);
+                            int endPage = Math.Min(Model.Products.TotalPages, startPage + 4);
+                            if (endPage - startPage < 4 && startPage > 1)
+                            {
+                                startPage = Math.Max(1, endPage - 4);
+                            }
                         }
-                        @if (Model.Products.TotalPages > 5)
+                        
+                        @if (startPage > 1)
                         {
-                            <span class="text-slate-400 px-1">...</span>
-                            <a href="#" class="min-w-[36px] h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all border border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-primary">
-                                @Model.Products.TotalPages
-                            </a>
+                            <button type="button" onclick="gotoPage(1)" class="min-w-[36px] h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all border border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-primary">1</button>
+                            @if (startPage > 2)
+                            {
+                                <span class="text-slate-400 px-1">...</span>
+                            }
+                        }
+
+                        @for (int i = startPage; i <= endPage; i++)
+                        {
+                            <button type="button" @(i != Model.Products.PageNumber ? $"onclick=gotoPage({i})" : "") class="min-w-[36px] h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all @(i == Model.Products.PageNumber ? "bg-primary text-white shadow-sm shadow-blue-500/20" : "border border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-primary")">
+                                @i
+                            </button>
+                        }
+
+                        @if (endPage < Model.Products.TotalPages)
+                        {
+                            @if (endPage < Model.Products.TotalPages - 1)
+                            {
+                                <span class="text-slate-400 px-1">...</span>
+                            }
+                            <button type="button" onclick="gotoPage(@Model.Products.TotalPages)" class="min-w-[36px] h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all border border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-primary">@Model.Products.TotalPages</button>
                         }
                     </div>
-                    <a href="#" class="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-primary hover:border-primary transition-all shadow-sm">
-                        <span class="material-symbols-outlined text-lg leading-none">chevron_right</span>
-                    </a>
+
+                    @if (Model.Products.PageNumber < Model.Products.TotalPages)
+                    {
+                        <button type="button" onclick="gotoPage(@(Model.Products.PageNumber + 1))" class="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-primary hover:border-primary transition-all shadow-sm">
+                            <span class="material-symbols-outlined text-lg leading-none">chevron_right</span>
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="p-2 rounded-lg border border-slate-100 text-slate-300 bg-slate-50 cursor-not-allowed">
+                            <span class="material-symbols-outlined text-lg leading-none">chevron_right</span>
+                        </div>
+                    }
                 </nav>
             }
         </div>
@@ -463,6 +504,15 @@
 
 @section Scripts {
     <script>
+        function gotoPage(page) {
+            const pageInput = document.getElementById('page-number-input');
+            const filterForm = document.getElementById('filter-form');
+            if (pageInput && filterForm) {
+                pageInput.value = page;
+                filterForm.submit();
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const toggleAdvancedBtn = document.getElementById('toggle-advanced-btn');
             const advancedFilters = document.getElementById('advanced-filters');

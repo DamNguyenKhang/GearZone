@@ -29,6 +29,7 @@ namespace GearZone.Web.Pages.Admin.StoreManagement
         {
             if (Query.PageNumber < 1) Query.PageNumber = 1;
             if (Query.PageSize < 1) Query.PageSize = 10;
+            Query.ExcludeStatuses = new List<StoreStatus> { StoreStatus.Draft, StoreStatus.Pending, StoreStatus.Rejected };
 
             StoreApplications = await _adminStoreService.GetStoreApplicationsAsync(Query);
             Stats = await _adminStoreService.GetStoreApplicationStatsAsync();

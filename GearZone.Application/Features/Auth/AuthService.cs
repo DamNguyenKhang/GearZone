@@ -1,5 +1,5 @@
 ﻿using GearZone.Application.Abstractions.Services;
-using GearZone.Domain.Abstractions.External;
+using GearZone.Application.Abstractions.External;
 using GearZone.Domain.Entities;
 using GearZone.Application.Features.Admin.Dtos;
 using Microsoft.AspNetCore.Authentication;

@@ -2,7 +2,7 @@ using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Admin.Dtos;
 using GearZone.Domain.Entities;
 
-namespace GearZone.Application.Features.Admin.Service.AdminCategoryService
+namespace GearZone.Application.Abstractions.Services
 {
     public interface IAdminCategoryService
     {

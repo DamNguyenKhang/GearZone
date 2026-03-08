@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace GearZone.Domain.Abstractions.External
+namespace GearZone.Application.Abstractions.External
 {
     public interface IEmailService
     {

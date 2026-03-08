@@ -1,13 +1,12 @@
 using AutoMapper;
 using GearZone.Application.Abstractions.Persistence;
-using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Admin.Dtos;
 using GearZone.Domain.Entities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace GearZone.Application.Features.Admin
+namespace GearZone.Application.Features.Admin.Service.AdminCategoryService
 {
     public class AdminCategoryService : IAdminCategoryService
     {

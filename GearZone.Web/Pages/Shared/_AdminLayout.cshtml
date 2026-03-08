@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -17,8 +17,8 @@
                         "primary-light": "#dbeafe",
                         "background-light": "#F8FAFC",
                         "surface-light": "#FFFFFF",
-                        "navy-dark": "#0F172A",
-                        "text-heading": "#1E2937",
+                        "navy-dark": "0F172A",
+                        "text-heading": "#1E2937", 
                         "text-body": "#374151",
                         "border-light": "#E2E8F0",
                     },
@@ -166,6 +166,12 @@
                 <span class="font-medium text-sm sidebar-text">Commission & Payout</span>
             </a>
 
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Stores_Management" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" asp-page="/Admin/StoreManagement/Index">
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Commission" ? "filled" : "")">store</span>
+                <span class="font-medium text-sm sidebar-text">Store Management</span>
+            </a>
+
+
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Disputes" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" href="#">
                 <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Disputes" ? "filled" : "")">gavel</span>
                 <span class="font-medium text-sm sidebar-text">Disputes</span>
@@ -249,9 +255,18 @@
 
         <!-- Main Content Area -->
         <div class="flex-1 overflow-y-auto p-6 scroll-smooth bg-background-light">
-            <div class="max-w-7xl mx-auto flex flex-col gap-6">
-                @RenderBody()
-            </div>
+            @if (ViewData["FullWidth"] is bool fw && fw)
+            {
+                <div class="w-full mx-0 flex flex-col gap-6">
+                    @RenderBody()
+                </div>
+            }
+            else
+            {
+                <div class="max-w-7xl mx-auto flex flex-col gap-6">
+                    @RenderBody()
+                </div>
+            }
         </div>
     </main>
 

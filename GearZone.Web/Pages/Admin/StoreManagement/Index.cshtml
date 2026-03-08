@@ -1,0 +1,426 @@
+﻿@page
+@using GearZone.Domain.Enums
+@model GearZone.Web.Pages.Admin.StoreManagement.IndexModel
+@{
+    var Store = Model.StoreApplication;
+    ViewData["Title"] = "Store Management";
+    ViewData["PageHeader"] = "Store Management";
+    ViewData["ActivePage"] = "Stores_Management";
+    ViewData["Breadcrumb"] = new string[] { "Dashboard", "Store Management" };
+    Layout = "_AdminLayout";
+}
+
+<div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <div class="p-8">
+        <!-- KPI Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 flex flex-col justify-between">
+                <div class="flex justify-between items-start">
+                    <span class="text-slate-500 text-sm font-medium">Total Stores</span>
+                    <span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg">store</span>
+                </div>
+                <div class="mt-4">
+                    <div class="text-3xl font-bold text-slate-900">@Model.Stats.TotalCount</div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 flex flex-col justify-between">
+                <div class="flex justify-between items-start">
+                    <span class="text-slate-500 text-sm font-medium">Active Stores</span>
+                    <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 p-2 rounded-lg">check_circle</span>
+                </div>
+                <div class="mt-4">
+                    <div class="text-3xl font-bold text-slate-900">
+                        @Model.StoreApplications.Items.Count(i => i.Status == StoreStatus.Approved)
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 flex flex-col justify-between">
+                <div class="flex justify-between items-start">
+                    <span class="text-slate-500 text-sm font-medium">Pending Approval</span>
+                    <span class="material-symbols-outlined text-amber-500 bg-amber-50 p-2 rounded-lg">pending_actions</span>
+                </div>
+                <div class="mt-4 flex justify-between items-start">
+                    <div class="text-3xl font-bold text-slate-900">@Model.StoreApplications.Items.Count(i => i.Status == StoreStatus.Pending)</div>
+                    <div class="mt-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">Requires Review</div>
+                </div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 flex flex-col justify-between">
+                <div class="flex justify-between items-start">
+                    <span class="text-slate-500 text-sm font-medium">Suspended/Inactive</span>
+                    <span class="material-symbols-outlined text-red-500 bg-red-50 p-2 rounded-lg">block</span>
+                </div>
+                <div class="mt-4 flex justify-between items-start">
+                    <div class="text-3xl font-bold text-slate-900">@Model.StoreApplications.Items.Count(i => i.Status == StoreStatus.Suspend || i.Status == StoreStatus.Locked)</div>
+                    <div class="mt-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">Critical Status</div>
+                </div>
+            </div>
+        </div>
+        <!-- Main Content Table Card -->
+        <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+            <!-- Filters -->
+            <form method="get" class="p-6 border-b border-slate-200 bg-slate-50/50p-6 border-b border-slate-200 bg-slate-50/50">
+                <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto flex-1">
+                    <!-- Search -->
+                    <div class="relative w-full sm:max-w-xs">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <span class="material-symbols-outlined text-[20px]">search</span>
+                        </span>
+                        <input asp-for="Query.SearchTerm" class="form-input w-full rounded-lg border-slate-200 bg-slate-50 pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-primary" placeholder="Search Company or Tax Code..." type="text" />
+                    </div>
+                    <!-- Status Filter -->
+                    <div class="w-full sm:w-40">
+                        <select asp-for="Query.Status" asp-items="Html.GetEnumSelectList<StoreStatus>()" class="form-select w-full rounded-lg border-slate-200 bg-slate-50 py-2.5 text-sm text-slate-900 focus:border-primary focus:ring-primary">
+                            <option value="">All Status</option>
+                        </select>
+                    </div>
+                    <!-- Date Filter -->
+                    <div class="w-full flex gap-2 sm:w-80">
+                        <div class="relative w-1/2">
+                            <input type="date" asp-for="Query.StartDate" class="form-input w-full rounded-lg border-slate-200 bg-slate-50 py-2.5 px-3 text-sm text-slate-900 focus:border-primary focus:ring-primary" title="Start Date" />
+                        </div>
+                        <div class="relative w-1/2">
+                            <input type="date" asp-for="Query.EndDate" class="form-input w-full rounded-lg border-slate-200 bg-slate-50 py-2.5 px-3 text-sm text-slate-900 focus:border-primary focus:ring-primary" title="End Date" />
+                        </div>
+                    </div>
+                    <button type="submit"
+                            class="w-full sm:w-auto h-[42px] flex items-center justify-center gap-2
+                        bg-primary text-white border border-primary
+                        px-4 py-2.5 text-sm rounded-lg font-medium
+                        hover:bg-primary-dark transition-all shadow-sm">
+
+                        <span class="material-symbols-outlined text-[20px]">
+                            search
+                        </span>
+                        Search
+                    </button>
+                </div>
+            </form>
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-500 uppercase text-[11px] font-bold tracking-wider border-b border-slate-200">
+                            <th class="px-6 py-4">Store</th>
+                            <th class="px-6 py-4">Owner</th>
+                            <th class="px-6 py-4">Status</th>
+                            <th class="px-6 py-4">Joined Date</th>
+                            <th class="px-6 py-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach (var item in Model.StoreApplications.Items)
+                        {
+                            <tr class="hover:bg-slate-50/80 transition-colors group">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="size-10 rounded-lg bg-slate-100 border border-slate-200 flex-shrink-0 bg-cover bg-center" data-alt="TechNexus brand logo" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCwIU3OlcwBWM5bcdw641_i8-W0f-GlTjy23LVtGWDhCbQw3DYnRi6VAXa1E2y_n5_ftNq1W0crOK11wAKU2CL2rNKuVM6AhoWqRgtIwMYmpm4rZr7Ru0BZfBbJNu192rrO09-qn_kUCZfDoiGwkR9fq95qxSOAHQkvHELBy0lKfqHFEi067xmmh2h4gmCd8sTo1UAqn-MFDHYqZJlKdjVUpO7amv7eLGWpf7F8l2bnzYe80GCNZUoCK0GVUET5o4bgi5wY0UjnAIeT')"></div>
+                                        <div>
+                                            <div class="font-bold text-slate-900">@item.StoreName</div>
+                                            <div class="text-xs text-slate-500">ID: @item.Id</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm font-medium text-slate-900">@item.OwnerName</div>
+                                    <div class="text-xs text-slate-500">@item.Email</div>
+                                </td>
+                                <td class="py-4 px-3">
+                                    @{
+                                        var statusClass = item.Status switch
+                                        {
+                                            StoreStatus.Pending => "bg-amber-50 text-amber-700 ring-amber-600/20",
+                                            StoreStatus.Approved => "bg-green-50 text-green-700 ring-green-600/20",
+                                            StoreStatus.Rejected => "bg-red-50 text-red-700 ring-red-600/10",
+                                            StoreStatus.Active => "bg-green-50 text-green-700 ring-green-600/20",
+                                            StoreStatus.Locked => "bg-red-50 text-red-700 ring-red-600/10",
+                                            StoreStatus.Suspend => "bg-red-50 text-red-700 ring-red-600/10",
+                                            _ => "bg-slate-50 text-slate-700 ring-slate-600/20"
+                                        };
+                                        var dotClass = item.Status switch
+                                        {
+                                            StoreStatus.Pending => "bg-amber-500",
+                                            StoreStatus.Approved => "bg-green-500",
+                                            StoreStatus.Rejected => "bg-red-500",
+                                            StoreStatus.Active => "bg-green-500",
+                                            StoreStatus.Locked => "bg-red-500",
+                                            StoreStatus.Suspend => "bg-red-500",
+                                            _ => "bg-slate-500"
+                                        };
+                                    }
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium @statusClass ring-1 ring-inset">
+                                        <span class="size-1.5 rounded-full @dotClass"></span>
+                                        @item.Status
+                                    </span>
+                                </td>
+                                <td class="py-4 px-3">
+                                    <div class="flex flex-col">
+                                        <span class="text-slate-900">@item.CreatedAt.ToString("MMM dd, yyyy")</span>
+                                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">@item.CreatedAt.ToString("hh:mm tt")</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-right opacity-0 group-hover:opacity-100">
+                                    @if (item.Status == StoreStatus.Approved)
+                                    {
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button class="p-2 text-slate-400 hover:text-red-500 transition-colors" title="Lock" data-id="@item.Id" data-storeName="@item.StoreName" onclick="OpenStatusChangeModal(this, 'lock')">
+                                                <span class="material-symbols-outlined text-xl">lock</span>
+                                            </button>
+                                            <button class="p-2 text-slate-400 hover:text-red-500 transition-colors" title="Suspend" data-id="@item.Id" data-storeName="@item.StoreName" onclick="OpenStatusChangeModal(this,'suspend')">
+                                                <span class="material-symbols-outlined text-xl">block</span>
+                                            </button>
+                                        </div>
+                                    }
+                                    @if (item.Status == StoreStatus.Pending)
+                                    {
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button class="p-2 text-slate-400 hover:text-green-500 transition-colors" title="approve" data-id="@item.Id" data-storeName="@item.StoreName" onclick="OpenStatusChangeModal(this, 'approve')">
+                                                <span class="material-symbols-outlined text-xl">approve</span>
+                                            </button>
+                                            <button class="p-2 text-slate-400 hover:text-red-500 transition-colors" title="reject" data-id="@item.Id" data-storeName="@item.StoreName" onclick="OpenStatusChangeModal(this,'reject')">
+                                                <span class="material-symbols-outlined text-xl">reject</span>
+                                            </button>
+                                        </div>
+                                    }
+                                    @if (item.Status == StoreStatus.Locked)
+                                    {
+                                        <form method="post" asp-page-handler="ChangeStatus" asp-route-storeId="@item.Id" asp-route-status="@StoreStatus.Active">
+                                            <button class="p-2 text-slate-400 hover:text-green-500 transition-colors" title="active" onclick="{}">
+                                                <span class="material-symbols-outlined text-xl">lock_open</span>
+                                            </button>
+                                        </form>
+                                    }
+                                    
+                                    @if (item.Status == StoreStatus.Active)
+                                    {
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button class="p-2 text-slate-400 hover:text-red-500 transition-colors" title="Lock" data-id="@item.Id" data-storeName="@item.StoreName" onclick="OpenStatusChangeModal(this, 'lock')">
+                                                <span class="material-symbols-outlined text-xl">lock</span>
+                                            </button>
+                                            <button class="p-2 text-slate-400 hover:text-red-500 transition-colors" title="Suspend" data-id="@item.Id" data-storeName="@item.StoreName" onclick="OpenStatusChangeModal(this,'suspend')">
+                                                <span class="material-symbols-outlined text-xl">block</span>
+                                            </button>
+                                        </div>
+                                    }
+
+                                    @if (item.Status == StoreStatus.Suspend)
+                                    {
+                                        <form method="post" asp-page-handler="ChangeStatus" asp-route-storeId="@item.Id" asp-route-status="@StoreStatus.Active">
+                                            <button class="p-2 text-slate-400 hover:text-green-500 transition-colors" title="active" onclick="{}">
+                                                <span class="material-symbols-outlined text-xl">lock_open</span>
+                                            </button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.StoreApplications.Items.Any())
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-6 text-slate-500">No applications found matching your criteria.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination -->
+            <div class="border-t border-slate-100 px-6 py-4 bg-slate-50/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="text-sm text-slate-500">
+                    @{
+                        var startItem = (Model.StoreApplications.PageNumber - 1) * Model.StoreApplications.PageSize + 1;
+                        var endItem = Math.Min(Model.StoreApplications.PageNumber * Model.StoreApplications.PageSize, Model.StoreApplications.TotalCount);
+                        if (Model.StoreApplications.TotalCount == 0)
+                        {
+                            startItem = 0;
+                        }
+                    }
+                    Showing <span class="font-medium text-slate-900">@startItem</span> to
+                    <span class="font-medium text-slate-900">@endItem</span> of
+                    <span class="font-medium text-slate-900">@Model.StoreApplications.TotalCount</span> applications
+                </div>
+            
+                <nav aria-label="Pagination" class="flex items-center gap-1">
+                    @if (Model.StoreApplications.PageNumber > 1)
+                    {
+                        <a asp-page="./Index"
+                               asp-route-Query.PageNumber="@(Model.StoreApplications.PageNumber - 1)"
+                               asp-route-Query.SearchTerm="@Model.Query.SearchTerm"
+                               asp-route-Query.Status="@Model.Query.Status"
+                               class="p-2 rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-slate-600 transition-all">
+                            <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <button disabled class="p-2 rounded-lg border border-slate-200 bg-white text-slate-400 opacity-50 cursor-not-allowed">
+                            <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+                        </button>
+                    }
+
+                    <div class="flex items-center gap-1 px-1">
+                        <button class="size-9 rounded-lg border border-primary bg-primary text-white text-sm font-bold shadow-sm shadow-primary/20 transition-all">@Model.StoreApplications.PageNumber</button>
+                    </div>
+
+                    @if (Model.StoreApplications.PageNumber * Model.StoreApplications.PageSize < Model.StoreApplications.TotalCount)
+                    {
+                        <a asp-page="./Index"
+                               asp-route-Query.PageNumber="@(Model.StoreApplications.PageNumber + 1)"
+                               asp-route-Query.SearchTerm="@Model.Query.SearchTerm"
+                               asp-route-Query.Status="@Model.Query.Status"
+                               class="p-2 rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-slate-600 transition-all">
+                            <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <button disabled class="p-2 rounded-lg border border-slate-200 bg-white text-slate-400 opacity-50 cursor-not-allowed">
+                            <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+                        </button>
+                    }
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="statusModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+    <div class="relative w-full max-w-lg p-6 mx-auto bg-white rounded-2xl shadow-xl border border-slate-100">
+
+        <form method="post" asp-page-handler="ChangeStatus">
+
+            <!-- hidden fields -->
+            <input type="hidden" id="storeIdModalInput" name="storeId" />
+            <input type="hidden" id="statusModalInput" name="status" />
+
+            <div class="flex gap-4">
+                <div class="mt-1 flex size-10 items-center justify-center rounded-full bg-red-100 text-red-600">
+                    <span class="material-symbols-outlined text-2xl">warning</span>
+                </div>
+
+                <div class="w-full">
+
+                    <h3 id="modalTitle" class="text-xl font-bold text-slate-900"></h3>
+
+                    <p class="text-sm text-slate-500 mt-1">
+                        You are about to <span id="modalAction"></span> the application for
+                        <span id="storeNameModalSpa" class="font-bold text-slate-900"></span>.
+                    </p>
+
+                    <div class="mt-6 w-full">
+                        <label class="block text-sm font-bold text-slate-700 mb-2">
+                            Reason
+                        </label>
+
+                        <textarea name="reason"
+                              rows="4"
+                              class="w-full resize-none rounded-xl border border-slate-200 py-3 px-4 text-sm"
+                              placeholder="Please provide reason..."
+                                  required>
+                        </textarea>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6 pt-5 border-t border-slate-100">
+
+                <button type="button"
+                        onclick="closeModal()"
+                        class="px-5 py-2 text-sm font-bold text-slate-600 border rounded-xl">
+                    Cancel
+                </button>
+
+                <button type="submit"
+                        id="modalSubmitBtn"
+                        class="px-6 py-2 text-sm font-bold text-white bg-red-600 rounded-xl">
+                    Confirm
+                </button>
+
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Approve Modal -->
+<div id="approveModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center overflow-auto bg-slate-900/50 backdrop-blur-sm">
+    <div class="relative w-full max-w-md p-6 mx-auto bg-white rounded-2xl shadow-xl flex flex-col gap-4 border border-slate-100 animate-in fade-in zoom-in duration-200">
+        <form method="post" asp-page-handler="ChangeStatus">
+            <input type="hidden" id="storeIdInput" name="storeId" />
+            <input type="hidden" id="statusInput" name="status" />
+
+            <div class="flex flex-col items-center justify-center text-center gap-3">
+                <div class="w-16 h-16 mx-auto bg-green-50 rounded-full flex items-center justify-center mb-2 ring-8 ring-green-50/50">
+                    <span class="material-symbols-outlined text-green-600 text-3xl">check_circle</span>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900">Approve Registration</h3>
+                <p class="text-sm text-slate-500">Are you sure you want to approve the application for <span id="storeNameSpa" class="font-bold text-slate-900"></span>?</p>
+                <p class="text-xs text-slate-400 mt-2">This will notify the owner and allow them access to the seller dashboard.</p>
+            </div>
+            
+            <div class="flex justify-center gap-3 mt-8">
+                <button type="button" onclick="document.getElementById('approveModal').classList.add('hidden')" class="px-5 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-sm flex-1">Cancel</button>
+                <button type="submit" class="px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary-dark transition-colors shadow-lg shadow-primary/30 flex-1">Approve Seller</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function OpenStatusChangeModal(btn, status) {
+            if (status === 'approve') {
+                const storeIdInput = document.getElementById('storeIdInput');
+                const storeNameSpa = document.getElementById('storeNameSpa');
+                const statusInput = document.getElementById('statusInput')
+                storeIdInput.value = btn.dataset.id;
+                statusInput.value = 'Approved'
+                storeNameSpa = btn.dataset.storeName;
+                document.getElementById('approveModal').classList.remove('hidden')
+
+                return
+            }
+
+            const statusInput = document.getElementById("statusModalInput");
+            const modal = document.getElementById("statusModal");
+            const title = document.getElementById("modalTitle");
+            const action = document.getElementById("modalAction");
+            const submitBtn = document.getElementById("modalSubmitBtn");
+            const storeIdModalInput = document.getElementById("storeIdModalInput");
+            storeIdModalInput.value = btn.dataset.id;
+            storeNameSpa.innerText = btn.dataset.storeName;
+
+            debugger
+            switch (status) {
+
+                case "reject":
+                    title.innerText = "Reject Registration";
+                    action.innerText = "reject";
+                    submitBtn.innerText = "Confirm Rejection";
+                    statusInput.value = "Rejected";
+                    break;
+
+                case "lock":
+                    title.innerText = "Lock Store";
+                    action.innerText = "lock";
+                    submitBtn.innerText = "Confirm Lock";
+                    statusInput.value = "Locked";
+                    break;
+
+                case "suspend":
+                    title.innerText = "Suspend Store";
+                    action.innerText = "suspend";
+                    submitBtn.innerText = "Confirm Suspend";
+                    statusInput.value = "Suspend";
+                    break;
+            }
+
+
+            modal.classList.remove("hidden");
+        }
+
+        function closeModal(){
+            document.getElementById("statusModal").classList.add("hidden");
+        }
+    </script>
+}

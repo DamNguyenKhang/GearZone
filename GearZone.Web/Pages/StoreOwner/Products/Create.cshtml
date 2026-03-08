@@ -1,0 +1,506 @@
+@page
+@model GearZone.Web.Pages.StoreOwner.Products.CreateModel
+@{
+    ViewData["Title"] = "Add New Product";
+    ViewData["ActivePage"] = "Products";
+    ViewData["PageHeader"] = "Add New Product";
+    ViewData["Breadcrumb"] = new string[] { "Products", "Add New Product" };
+    Layout = "_StoreOwnerLayout";
+}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <form method="post" enctype="multipart/form-data" id="createProductForm">
+        <div asp-validation-summary="ModelOnly" class="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm font-medium"></div>
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Add New Product</h1>
+                <p class="text-sm text-gray-500 mt-1">Create a new product card for your store catalog.</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <a asp-page="./Index" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Discard</a>
+                <button type="submit" name="Input.IsDraft" value="true" class="px-5 py-2.5 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors">Save as Draft</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column -->
+            <div class="lg:col-span-2 space-y-8">
+                
+                <!-- Basic Information -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <div class="flex items-center gap-2 mb-6">
+                        <span class="material-symbols-outlined text-primary">info</span>
+                        <h2 class="text-lg font-bold text-gray-900">Basic Information</h2>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                            <input asp-for="Input.Name" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition-all bg-gray-50/50" placeholder="e.g., ASUS ROG Strix GeForce RTX 4090 OC Edition" required>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                                <select asp-for="Input.CategoryId" asp-items="Model.CategoryOptions" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition-all bg-gray-50/50" required>
+                                    <option value="">Select Category</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+                                <select asp-for="Input.BrandId" asp-items="Model.BrandOptions" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition-all bg-gray-50/50" required>
+                                    <option value="">Select Brand</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            <textarea asp-for="Input.Description" rows="6" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition-all bg-gray-50/50" placeholder="Enter detailed product description..."></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Base Price (VNĐ)</label>
+                            <input asp-for="Input.BasePrice" type="number" step="0.01" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition-all bg-gray-50/50" placeholder="0" required>
+                            <p class="text-xs text-gray-400 mt-1">This is the default price if variants don't specify one.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Images -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <div class="flex items-center gap-2 mb-6">
+                        <span class="material-symbols-outlined text-primary">image</span>
+                        <h2 class="text-lg font-bold text-gray-900">Product Images</h2>
+                    </div>
+
+                    <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer group relative" id="drop-area">
+                        <input type="file" asp-for="Input.Images" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" id="imageInput" accept="image/*">
+                        <span class="material-symbols-outlined text-4xl text-gray-300 group-hover:text-primary transition-colors mb-2">cloud_upload</span>
+                        <p class="text-sm text-gray-600 font-medium">Click to upload or drag and drop</p>
+                        <p class="text-xs text-gray-400 mt-1">SVG, PNG, JPG or GIF (max 5 images)</p>
+                    </div>
+
+                    <div class="grid grid-cols-5 gap-4 mt-6" id="image-preview">
+                        <!-- Preview placeholders -->
+                        @for (int i = 0; i < 5; i++)
+                        {
+                            <div class="aspect-square rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-300 border-dashed preview-box" data-index="@i">
+                                <span class="material-symbols-outlined">image</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+
+
+
+
+                <!-- Product Specifications -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">list_alt</span>
+                            <h2 class="text-lg font-bold text-gray-900">Product Specifications</h2>
+                        </div>
+                        <button type="button" id="btnAddSpec" class="text-primary text-sm font-bold flex items-center gap-1 hover:underline">
+                            <span class="material-symbols-outlined text-[18px]">add</span> Add Specification
+                        </button>
+                    </div>
+
+                    <div id="specsContainer" class="space-y-3">
+                        @for (int i = 0; i < Model.Input.Specifications.Count; i++)
+                        {
+                            <div class="spec-row grid grid-cols-1 md:grid-cols-2 gap-4 items-end bg-gray-50/50 p-4 rounded-lg border border-gray-100 relative group">
+                                <button type="button" class="btnRemoveRow absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1 shadow-sm hover:bg-red-200 transition-colors hidden group-hover:block">
+                                    <span class="material-symbols-outlined text-[16px]">close</span>
+                                </button>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Key (e.g., Color, Material)</label>
+                                    <input name="Input.Specifications[@i].Key" value="@Model.Input.Specifications[i].Key" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white" placeholder="Key">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Value (e.g., Phantom Black, Aluminum)</label>
+                                    <input name="Input.Specifications[@i].Value" value="@Model.Input.Specifications[i].Value" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white" placeholder="Value">
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Variants & Pricing -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">sell</span>
+                            <h2 class="text-lg font-bold text-gray-900">Variants & Pricing</h2>
+                        </div>
+                        <button type="button" id="btnAddVariant" class="text-primary text-sm font-bold flex items-center gap-1 hover:underline">
+                            <span class="material-symbols-outlined text-[18px]">add</span> Add Variant
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Variant Name</th>
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">SKU</th>
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Price (VNĐ)</th>
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Stock</th>
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider hidden" id="variantAttributesHeader">Attributes</th>
+                                    <th class="px-1 py-3"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="variantsContainer" class="divide-y divide-gray-100">
+                                @for (int i = 0; i < Model.Input.Variants.Count; i++)
+                                {
+                                    <tr class="variant-row">
+                                        <td class="py-3 px-1">
+                                            <input name="Input.Variants[@i].VariantName" value="@Model.Input.Variants[i].VariantName" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="e.g. Black Color">
+                                        </td>
+                                        <td class="py-3 px-1">
+                                            <input name="Input.Variants[@i].Sku" value="@Model.Input.Variants[i].Sku" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="SKU-123">
+                                        </td>
+                                        <td class="py-3 px-1">
+                                            <input name="Input.Variants[@i].Price" value="@Model.Input.Variants[i].Price" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="0">
+                                        </td>
+                                        <td class="py-3 px-1">
+                                            <input name="Input.Variants[@i].StockQuantity" value="@Model.Input.Variants[i].StockQuantity" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="0">
+                                        </td>
+                                        <td class="py-3 px-1 variant-attributes-cell hidden">
+                                            <div class="flex flex-col gap-2 attributes-wrapper">
+                                                <!-- Attributes injected here -->
+                                            </div>
+                                        </td>
+                                        <td class="py-3 px-1 text-center">
+                                            <button type="button" class="text-gray-400 hover:text-red-600 btnRemoveRow">
+                                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column -->
+            <div class="space-y-6">
+                
+                <!-- Publishing Status -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <h3 class="text-sm font-bold text-gray-900 mb-4">Publishing Status</h3>
+                    
+                    <div class="space-y-4">
+                        <label class="flex items-center justify-between p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                            <div class="flex items-center gap-3">
+                                <input type="radio" asp-for="Input.IsDraft" value="true" class="w-4 h-4 text-primary focus:ring-primary border-gray-300">
+                                <span class="text-sm font-medium text-gray-700">Draft</span>
+                            </div>
+                            <span class="material-symbols-outlined text-gray-400 text-[20px]">draft</span>
+                        </label>
+                        
+                        <label class="flex items-center justify-between p-3 rounded-lg border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                            <div class="flex items-center gap-3">
+                                <input type="radio" asp-for="Input.IsDraft" value="false" class="w-4 h-4 text-primary focus:ring-primary border-gray-300" checked>
+                                <span class="text-sm font-medium text-gray-700">Active</span>
+                            </div>
+                            <span class="material-symbols-outlined text-gray-400 text-[20px]">public</span>
+                        </label>
+                    </div>
+
+                    <div class="mt-6 pt-6 border-t border-gray-100">
+                        <button type="submit" class="w-full py-3 px-4 bg-primary text-white font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+                             <span class="material-symbols-outlined text-[20px]">publish</span>
+                             Publish Product
+                        </button>
+                        <p class="text-center text-xs text-gray-400 mt-4 underline cursor-not-allowed">Preview Product Page</p>
+                    </div>
+                </div>
+
+                <!-- Seller Tip -->
+                <div class="bg-blue-50 border border-blue-100 rounded-xl p-6">
+                    <div class="flex items-start gap-4">
+                        <div class="p-2 bg-white rounded-lg text-primary shadow-sm">
+                            <span class="material-symbols-outlined">lightbulb</span>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-blue-900 mb-1">Seller Tip</h4>
+                            <p class="text-xs text-blue-700 leading-relaxed">
+                                Adding at least 3 high-quality images increases sales conversion by up to 25%. Ensure your main image has a white background.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Dynamic Rows Handling
+            function updateIndices(containerId, rowClass, prefix) {
+                $(`#${containerId} .${rowClass}`).each(function(index) {
+                    $(this).find('input').each(function() {
+                        let name = $(this).attr('name');
+                        if (name) {
+                            let newName = name.replace(/\[\d+\]/, `[${index}]`);
+                            $(this).attr('name', newName);
+                        }
+                    });
+                });
+            }
+
+            let currentCategoryAttributes = [];
+
+            function generateAttributesHtml(variantIndex) {
+                if (!currentCategoryAttributes || currentCategoryAttributes.length === 0) return '';
+                let html = '';
+                currentCategoryAttributes.forEach(function(attr, attrIndex) {
+                    html += `
+                        <div class="flex flex-col">
+                            <input type="hidden" name="Input.Variants[${variantIndex}].Attributes[${attrIndex}].AttributeId" value="${attr.id}" />
+                            <select name="Input.Variants[${variantIndex}].Attributes[${attrIndex}].OptionId" class="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs bg-gray-50 focus:ring-primary focus:border-primary" required>
+                                <option value="">Select ${attr.name}</option>`;
+                                
+                    attr.options.forEach(function(opt) {
+                        html += `<option value="${opt.id}">${opt.value}</option>`;
+                    });
+
+                    html += `
+                            </select>
+                        </div>
+                    `;
+                });
+                return html;
+            }
+
+            function refreshAllVariantAttributes() {
+                if (currentCategoryAttributes.length > 0) {
+                    $('#variantAttributesHeader').removeClass('hidden');
+                    $('.variant-attributes-cell').removeClass('hidden');
+                    
+                    $('.variant-row').each(function($index) {
+                        let attrsHtml = generateAttributesHtml($index);
+                        $(this).find('.attributes-wrapper').html(attrsHtml);
+                    });
+                } else {
+                    $('#variantAttributesHeader').addClass('hidden');
+                    $('.variant-attributes-cell').addClass('hidden');
+                    $('.attributes-wrapper').empty();
+                }
+            }
+
+            // Category Attributes Fetch
+            $('#Input_CategoryId').change(function() {
+                var categoryId = $(this).val();
+                if (!categoryId) {
+                    currentCategoryAttributes = [];
+                    refreshAllVariantAttributes();
+                    return;
+                }
+
+                $.get('?handler=Attributes&categoryId=' + categoryId, function(data) {
+                    currentCategoryAttributes = data || [];
+                    refreshAllVariantAttributes();
+                });
+            });
+
+
+
+            // Add Variant
+            $('#btnAddVariant').click(function() {
+                let index = $('#variantsContainer .variant-row').length;
+                let attrHtml = generateAttributesHtml(index);
+                let hideClass = (currentCategoryAttributes.length > 0) ? '' : 'hidden';
+                
+                let html = `
+                    <tr class="variant-row animate-fadeIn">
+                        <td class="py-3 px-1">
+                            <input name="Input.Variants[${index}].VariantName" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Variant Name">
+                        </td>
+                        <td class="py-3 px-1">
+                            <input name="Input.Variants[${index}].Sku" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="SKU">
+                        </td>
+                        <td class="py-3 px-1">
+                            <input name="Input.Variants[${index}].Price" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="0">
+                        </td>
+                        <td class="py-3 px-1">
+                            <input name="Input.Variants[${index}].StockQuantity" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="0">
+                        </td>
+                        <td class="py-3 px-1 variant-attributes-cell ${hideClass}">
+                            <div class="flex flex-col gap-2 attributes-wrapper">
+                                ${attrHtml}
+                            </div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <button type="button" class="text-gray-400 hover:text-red-600 btnRemoveRow">
+                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                            </button>
+                        </td>
+                    </tr>`;
+                $('#variantsContainer').append(html);
+            });
+
+            // Add Specification
+            $('#btnAddSpec').click(function() {
+                let index = $('#specsContainer .spec-row').length;
+                let html = `
+                    <div class="spec-row grid grid-cols-1 md:grid-cols-2 gap-4 items-end bg-gray-50/50 p-4 rounded-lg border border-gray-100 relative group animate-fadeIn">
+                        <button type="button" class="btnRemoveRow absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1 shadow-sm hover:bg-red-200 transition-colors hidden group-hover:block">
+                            <span class="material-symbols-outlined text-[16px]">close</span>
+                        </button>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Key (e.g., Color, Material)</label>
+                            <input name="Input.Specifications[${index}].Key" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white" placeholder="Key">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Value (e.g., Phantom Black, Aluminum)</label>
+                            <input name="Input.Specifications[${index}].Value" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white" placeholder="Value">
+                        </div>
+                    </div>`;
+                $('#specsContainer').append(html);
+            });
+
+            // Remove Row
+            $(document).on('click', '.btnRemoveRow', function() {
+                let container = $(this).closest('.space-y-3, tbody');
+                let row = $(this).closest('.spec-row, .variant-row');
+                let isSpec = row.hasClass('spec-row');
+                row.remove();
+                
+                if (isSpec) {
+                    updateIndices('specsContainer', 'spec-row', 'Input.Specifications');
+                } else {
+                    updateIndices('variantsContainer', 'variant-row', 'Input.Variants');
+                    refreshAllVariantAttributes();
+                }
+            });
+
+            // Fix for Tom Select rendering (remove original select classes)
+            $('#Input_CategoryId, #Input_BrandId').removeClass('w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50/50');
+
+            // Initialize Tom Select for Category
+            new TomSelect('#Input_CategoryId', {
+                create: true,
+                placeholder: 'Search/Type new Category...',
+                allowEmptyOption: true,
+                render: {
+                    option_create: function(data, escape) {
+                        return '<div class="create px-4 py-2 text-primary font-bold bg-primary/5 hover:bg-primary/10 flex items-center gap-2 cursor-pointer border-t border-slate-100"><span class="material-symbols-outlined text-[18px]">add</span> Add Category: <strong>' + escape(data.input) + '</strong></div>';
+                    },
+                    no_results: function(data, escape) {
+                        return '<div class="no-results px-4 py-2 text-slate-400 text-sm">No results found for "' + escape(data.input) + '"</div>';
+                    }
+                },
+                onOptionAdd: function(value, data) {
+                    if (isNaN(value)) {
+                        const self = this;
+                        const token = $('input[name="__RequestVerificationToken"]').val();
+                        
+                        $.ajax({
+                            url: '?handler=CreateCategory',
+                            type: 'POST',
+                            data: { name: value },
+                            headers: { "RequestVerificationToken": token },
+                            success: function(response) {
+                                if (response.success) {
+                                    self.updateOption(value, { value: response.id, text: response.name });
+                                    self.addItem(response.id);
+                                    self.removeItem(value);
+                                } else {
+                                    alert(response.message || 'Failed to create category');
+                                    self.removeOption(value);
+                                }
+                            },
+                            error: function() {
+                                alert('An error occurred while creating the category');
+                                self.removeOption(value);
+                            }
+                        });
+                    }
+                }
+            });
+
+            // Initialize Tom Select for Brand
+            new TomSelect('#Input_BrandId', {
+                create: true,
+                placeholder: 'Search/Type new Brand...',
+                allowEmptyOption: true,
+                render: {
+                    option_create: function(data, escape) {
+                        return '<div class="create px-4 py-2 text-primary font-bold bg-primary/5 hover:bg-primary/10 flex items-center gap-2 cursor-pointer border-t border-slate-100"><span class="material-symbols-outlined text-[18px]">add</span> Add Brand: <strong>' + escape(data.input) + '</strong></div>';
+                    },
+                    no_results: function(data, escape) {
+                        return '<div class="no-results px-4 py-2 text-slate-400 text-sm">No results found for "' + escape(data.input) + '"</div>';
+                    }
+                },
+                onOptionAdd: function(value, data) {
+                    if (isNaN(value)) {
+                        const self = this;
+                        const token = $('input[name="__RequestVerificationToken"]').val();
+                        
+                        $.ajax({
+                            url: '?handler=CreateBrand',
+                            type: 'POST',
+                            data: { name: value },
+                            headers: { "RequestVerificationToken": token },
+                            success: function(response) {
+                                if (response.success) {
+                                    self.updateOption(value, { value: response.id, text: response.name });
+                                    self.addItem(response.id);
+                                    self.removeItem(value);
+                                } else {
+                                    alert(response.message || 'Failed to create brand');
+                                    self.removeOption(value);
+                                }
+                            },
+                            error: function() {
+                                alert('An error occurred while creating the brand');
+                                self.removeOption(value);
+                            }
+                        });
+                    }
+                }
+            });
+
+            // Image Preview Handling
+            $('#imageInput').on('change', function(e) {
+                const files = e.target.files;
+                const previewContainer = $('#image-preview');
+                const placeholders = $('.preview-box');
+
+                placeholders.html('<span class="material-symbols-outlined">image</span>'); // Reset
+
+                for (let i = 0; i < Math.min(files.length, 5); i++) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const box = placeholders.eq(i);
+                        box.html(`<img src="${event.target.result}" class="w-full h-full object-cover rounded-lg">`);
+                        if (i === 0) {
+                           box.addClass('ring-2 ring-primary ring-offset-2 relative after:content-["MAIN"] after:absolute after:top-0 after:left-0 after:bg-primary after:text-white after:text-[10px] after:px-1.5 after:rounded-br-lg after:font-bold');
+                        }
+                    };
+                    reader.readAsDataURL(files[i]);
+                }
+            });
+        });
+    </script>
+    <style>
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease forwards;
+        }
+    </style>
+}

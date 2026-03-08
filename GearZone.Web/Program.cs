@@ -5,13 +5,14 @@ using GearZone.Infrastructure.Seed;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Rewrite;
 
 var builder = WebApplication.CreateBuilder(args);
 
 DotNetEnv.Env.Load();
 builder.Configuration.AddEnvironmentVariables();
 
-var connectionString = builder.Configuration.GetConnectionString("GearZoneDB");
+var connectionString = builder.Configuration["DB_CONNECTION_STRING"] ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Add services to the container.
 builder.Services.AddRazorPages();
@@ -39,6 +40,8 @@ builder.Services.ConfigureApplicationCookie(opt =>
     opt.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     opt.SlidingExpiration = true;
 });
+
+builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(GearZone.Application.Abstractions.Services.IAuthService).Assembly);
 
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -81,17 +84,27 @@ using (var scope = app.Services.CreateScope())
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var configuration = services.GetRequiredService<IConfiguration>();
+    var dbContext = services.GetRequiredService<ApplicationDbContext>();
 
     await IdentitySeeder.SeedAsync(userManager, roleManager, configuration);
+    await CatalogSeeder.SeedAsync(dbContext);
 }
 
 app.UseHttpsRedirection();
 app.UseCors();
+
+// URL Rewrite for backward compatibility
+var rewriteOptions = new RewriteOptions()
+    .AddRedirect("(?i)Public/Catalog/Browse/?$", "products")
+    .AddRedirect("(?i)Public/Catalog/Browse(.*)", "products$1");
+app.UseRewriter(rewriteOptions);
+
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseStaticFiles();
 app.MapStaticAssets();
 app.MapRazorPages()
    .WithStaticAssets();

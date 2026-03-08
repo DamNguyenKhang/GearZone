@@ -16,7 +16,10 @@ namespace GearZone.Infrastructure.Configurations
             builder.HasKey(x => x.Id);
 
             builder.Property(x => x.OrderCode).HasMaxLength(50).IsRequired();
-            builder.Property(x => x.Status).HasMaxLength(30).IsRequired();
+            builder.Property(x => x.Status)
+                   .HasConversion<string>()
+                   .HasMaxLength(30)
+                   .IsRequired();
 
             builder.HasIndex(x => x.OrderCode).IsUnique();
             builder.HasIndex(x => new { x.UserId, x.CreatedAt });

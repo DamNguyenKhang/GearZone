@@ -16,29 +16,18 @@ var connectionString = builder.Configuration["DB_CONNECTION_STRING"] ?? builder.
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddControllers();
 
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
-})
-.AddCookie(options =>
-{
-    options.LoginPath = "/Auth/Login";
-    options.AccessDeniedPath = "/Auth/Login";
+    // Use Identity's scheme as the default for everything
+    options.DefaultScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
 })
 .AddGoogle(options =>
 {
     options.ClientId = builder.Configuration["GOOGLE_CLIENT_ID"] ?? "";
     options.ClientSecret = builder.Configuration["GOOGLE_CLIENT_SECRET"] ?? "";
-});
-
-builder.Services.ConfigureApplicationCookie(opt =>
-{
-    opt.LoginPath = "/Identity/Account/Login";
-    opt.AccessDeniedPath = "/Identity/Account/AccessDenied";
-    opt.ExpireTimeSpan = TimeSpan.FromMinutes(30);
-    opt.SlidingExpiration = true;
 });
 
 builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(GearZone.Application.Abstractions.Services.IAuthService).Assembly);
@@ -50,6 +39,14 @@ builder.Services
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+
+builder.Services.ConfigureApplicationCookie(opt =>
+{
+    opt.LoginPath = "/Auth/Login";
+    opt.AccessDeniedPath = "/Auth/Login";
+    opt.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+    opt.SlidingExpiration = true;
+});
 
 builder.Services
     .AddDatabase(connectionString)
@@ -106,6 +103,7 @@ app.UseAuthorization();
 
 app.UseStaticFiles();
 app.MapStaticAssets();
+app.MapControllers();
 app.MapRazorPages()
    .WithStaticAssets();
 

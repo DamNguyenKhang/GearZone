@@ -98,5 +98,13 @@ namespace GearZone.Infrastructure.Repositories
                 RejectedCount = await query.CountAsync(s => s.Status == Domain.Enums.StoreStatus.Rejected)
             };
         }
+
+        public async Task<Store?> GetBySlugAsync(string slug)
+        {
+            return await _dbSet
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.Slug == slug 
+                    && s.Status == Domain.Enums.StoreStatus.Approved);
+        }
     }
 }

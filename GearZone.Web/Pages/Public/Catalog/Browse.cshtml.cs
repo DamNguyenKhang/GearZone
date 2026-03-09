@@ -1,10 +1,10 @@
-using GearZone.Application.Features.Catalog;
 using GearZone.Application.Features.Catalog.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using GearZone.Application.Abstractions.Services;
 
 namespace GearZone.Web.Pages.Public.Catalog
 {

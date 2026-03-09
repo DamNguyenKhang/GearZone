@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using GearZone.Application.Features.Catalog;
+using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Catalog.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;

@@ -52,7 +52,7 @@ namespace GearZone.Infrastructure.External
                     BuyerName = order.User?.FullName,
                     BuyerEmail = order.User?.Email,
                     BuyerPhone = order.User?.PhoneNumber,
-                    //BuyerAddress = order.User?.Address,
+                    BuyerAddress = order.User?.Address,
 
                     Items = order.Items.Select(i => new PaymentLinkItem
                     {

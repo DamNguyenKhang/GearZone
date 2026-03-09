@@ -343,6 +343,7 @@ namespace GearZone.Application.Features.Catalog
                 CategorySlug = product.Category.Slug,
                 StoreId = product.StoreId,
                 StoreName = product.Store.StoreName,
+                StoreSlug = product.Store.Slug,
                 ImageUrls = product.Images.OrderByDescending(i => i.IsPrimary).Select(i => i.ImageUrl).ToList(),
             };
 

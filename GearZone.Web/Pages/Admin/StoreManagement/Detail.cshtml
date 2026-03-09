@@ -1,4 +1,4 @@
-@page "{id:guid}"
+@page "/admin/stores/{id:guid}"
 @using GearZone.Domain.Enums
 @model GearZone.Web.Pages.Admin.StoreManagement.DetailModel
 @{
@@ -412,7 +412,7 @@
                         <tbody class="divide-y divide-slate-100">
                             @foreach (var product in Model.Products.Items)
                             {
-                                <tr class="group hover:bg-slate-50 transition-all">
+                                <tr class="group hover:bg-slate-50 transition-all cursor-pointer" onclick="if(!event.target.closest('a, button, form, input')) window.location.href='/admin/products/@product.Id'">
                                     <td class="py-4 pl-6 pr-3">
                                         <a asp-page="/Admin/Products/Detail" asp-route-id="@product.Id" target="_blank" class="flex items-center gap-3 group/info">
                                             <div class="relative flex-shrink-0">
@@ -492,7 +492,7 @@
                 {
                     <div class="border-t border-slate-100 p-4 bg-slate-50 flex items-center justify-between">
                         <span class="text-xs font-medium text-slate-500 uppercase tracking-widest pl-2">Displaying 5 of @Model.Products.TotalCount products</span>
-                        <a href="/Admin/Products?Query.StoreId=@store.Id" target="_blank" class="text-sm font-semibold text-primary flex items-center gap-1 bg-white border border-slate-200 py-2 px-4 rounded-lg hover:shadow-sm hover:border-primary transition-all">
+                        <a href="/admin/products?Query.StoreId=@store.Id" target="_blank" class="text-sm font-semibold text-primary flex items-center gap-1 bg-white border border-slate-200 py-2 px-4 rounded-lg hover:shadow-sm hover:border-primary transition-all">
                             View more
                             <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
                         </a>
@@ -501,7 +501,7 @@
                 else
                 {
                     <div class="border-t border-slate-100 p-4 bg-slate-50 flex items-center justify-end">
-                        <a href="/Admin/Products?Query.StoreId=@store.Id" target="_blank" class="text-sm font-semibold text-primary flex items-center gap-1 bg-white border border-slate-200 py-2 px-4 rounded-lg hover:shadow-sm hover:border-primary transition-all">
+                        <a href="/admin/products?Query.StoreId=@store.Id" target="_blank" class="text-sm font-semibold text-primary flex items-center gap-1 bg-white border border-slate-200 py-2 px-4 rounded-lg hover:shadow-sm hover:border-primary transition-all">
                             Manage products
                             <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
                         </a>

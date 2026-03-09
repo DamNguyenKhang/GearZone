@@ -1,4 +1,4 @@
-@page
+@page "/admin/products"
 @model GearZone.Web.Pages.Admin.Products.IndexModel
 @{
     ViewData["Title"] = "Product Management";
@@ -308,7 +308,7 @@
                     {
                         foreach (var product in Model.Products.Items)
                         {
-                            <tr class="group hover:bg-slate-50 transition-all">
+                            <tr class="group hover:bg-slate-50 transition-all cursor-pointer" onclick="if(!event.target.closest('a, button, form, input')) window.location.href='/admin/products/@product.Id'">
                                 <td class="py-4 pl-6 pr-3 align-middle">
                                     <input class="rounded border-slate-300 text-primary focus:ring-primary size-4" type="checkbox" value="@product.Id" />
                                 </td>

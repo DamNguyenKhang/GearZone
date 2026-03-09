@@ -215,6 +215,20 @@
                 <div class="flex flex-col">
                     <h1 class="text-text-heading text-lg font-semibold leading-tight">@ViewData["PageHeader"]</h1>
                     <nav class="flex items-center gap-1.5 text-slate-500 text-xs mt-0.5">
+                        @{
+                            var breadcrumbLinks = new Dictionary<string, string>
+                            {
+                                { "Dashboard", "/admin/dashboard" },
+                                { "User Management", "/admin/users" },
+                                { "Store Management", "/admin/stores" },
+                                { "Store Applications", "/admin/store-applications" },
+                                { "Platform Settings", "/admin/settings" },
+                                { "Product Management", "/admin/products" },
+                                { "Category Management", "/admin/categories" },
+                                { "Brand Management", "/admin/brands" }
+                            };
+                        }
+                        
                         <a asp-page="/Admin/Index" class="hover:text-primary">Admin</a>
                         @if (ViewData["Breadcrumb"] != null)
                         {
@@ -222,7 +236,18 @@
                             foreach (var crumb in crumbs)
                             {
                                 <span class="material-symbols-outlined text-[10px] scale-75">chevron_right</span>
-                                <span class="@(crumb == crumbs.Last() ? "text-slate-400 font-medium" : "hover:text-primary cursor-default")">@crumb</span>
+                                @if (crumb == crumbs.Last())
+                                {
+                                    <span class="text-slate-400 font-medium">@crumb</span>
+                                }
+                                else if (breadcrumbLinks.TryGetValue(crumb, out var url))
+                                {
+                                    <a href="@url" class="hover:text-primary font-medium">@crumb</a>
+                                }
+                                else
+                                {
+                                    <span class="hover:text-primary cursor-default font-medium">@crumb</span>
+                                }
                             }
                         }
                     </nav>

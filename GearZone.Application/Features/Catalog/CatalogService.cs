@@ -286,6 +286,10 @@ namespace GearZone.Application.Features.Catalog
                     StoreName = p.Store.StoreName,
                     StoreLogoUrl = p.Store.LogoUrl,
                     IsInStock = p.Variants.Where(v => v.IsActive && !v.IsDeleted).Any(v => v.StockQuantity > 0),
+                    DefaultVariantId = p.Variants
+                        .Where(v => v.IsActive && !v.IsDeleted)
+                        .Select(v => v.Id)
+                        .FirstOrDefault(),
                     HighlightTags = p.Variants
                         .Where(v => v.IsActive && !v.IsDeleted)
                         .SelectMany(v => v.AttributeValues)

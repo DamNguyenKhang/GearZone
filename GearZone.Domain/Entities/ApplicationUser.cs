@@ -12,6 +12,8 @@ namespace GearZone.Domain.Entities
         public DateTime? IdentityIssuedDate { get; set; }
         public string? IdentityIssuedPlace { get; set; }
 
+        public string? Address { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public bool IsActive { get; set; } = true;

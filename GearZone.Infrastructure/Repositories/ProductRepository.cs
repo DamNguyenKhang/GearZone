@@ -112,6 +112,10 @@ namespace GearZone.Infrastructure.Repositories
                     StoreName = p.Store.StoreName,
                     StoreLogoUrl = p.Store.LogoUrl,
                     IsInStock = p.Variants.Any(v => v.StockQuantity > 0),
+                    DefaultVariantId = p.Variants
+                        .OrderByDescending(v => v.IsActive)
+                        .Select(v => v.Id)
+                        .FirstOrDefault(),
                     HighlightTags = p.Variants
                         .SelectMany(v => v.AttributeValues)
                         .Select(av => av.CategoryAttributeOption.Value)

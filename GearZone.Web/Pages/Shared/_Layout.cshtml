@@ -1,8 +1,18 @@
 ﻿@using GearZone.Application.Features.Catalog
+@using GearZone.Application.Abstractions.Services
+@using System.Security.Claims
 @inject ICatalogService CatalogService
+@inject ICartService CartService
 @{
     var layoutCategories = await CatalogService.GetCategoriesAsync();
     var currentSlug = ViewContext.RouteData.Values["CategorySlug"]?.ToString() ?? "";
+    
+    int cartCount = 0;
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        cartCount = await CartService.GetCartItemsCountAsync(userId);
+    }
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -112,10 +122,10 @@
                 </div>
                 <!-- Right Actions -->
                 <div class="flex items-center gap-4 flex-shrink-0">
-                    <button class="relative p-2 text-gray-500 hover:text-primary transition-colors rounded-full hover:bg-gray-100">
+                    <a href="/Cart" class="relative p-2 text-gray-500 hover:text-primary transition-colors rounded-full hover:bg-gray-100" id="header-cart-icon">
                         <span class="material-symbols-outlined">shopping_cart</span>
-                        <span class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full">3</span>
-                    </button>
+                        <span class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full @(cartCount > 0 ? "" : "hidden")" id="header-cart-count">@cartCount</span>
+                    </a>
 
                     @if (User.Identity?.IsAuthenticated == true)
                     {
@@ -295,7 +305,49 @@
         </div>
     </footer>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <!-- Login Redirect Modal -->
+    <div id="login-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
+            <div class="p-6 text-center">
+                <div class="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="material-symbols-outlined text-3xl">login</span>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Login Required</h3>
+                <p class="text-gray-500 dark:text-gray-400 mb-6">You need to be logged in to perform this action. Would you like to go to the login page now?</p>
+                <div class="flex gap-3">
+                    <button id="close-login-modal" class="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                        Cancel
+                    </button>
+                    <a id="confirm-login-modal" href="#" class="flex-1 px-4 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all text-center">
+                        Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Confirmation Modal -->
+    <div id="confirm-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
+            <div class="p-6 text-center">
+                <div id="confirm-modal-icon-container" class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span id="confirm-modal-icon" class="material-symbols-outlined text-3xl">delete</span>
+                </div>
+                <h3 id="confirm-modal-title" class="text-xl font-bold text-gray-900 dark:text-white mb-2">Are you sure?</h3>
+                <p id="confirm-modal-message" class="text-gray-500 dark:text-gray-400 mb-6">Do you really want to remove this item?</p>
+                <div class="flex gap-3">
+                    <button id="btn-confirm-cancel" class="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                        Cancel
+                    </button>
+                    <button id="btn-confirm-proceed" class="flex-1 px-4 py-2.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 shadow-lg shadow-red-500/20 transition-all">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     @* <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script> *@
     <script src="~/js/toast.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

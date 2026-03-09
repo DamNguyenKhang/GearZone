@@ -53,6 +53,9 @@ namespace GearZone.Infrastructure
             services.AddScoped<IStoreRepository, StoreRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ISystemSettingRepository, SystemSettingRepository>();
+            services.AddScoped<IStoreFollowRepository, StoreFollowRepository>();
+            services.AddScoped<IConversationRepository, ConversationRepository>();
+            services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
 
             services.AddScoped<IPaymentStrategy, PayOSPaymentStrategy>();
             services.AddScoped<IPaymentStrategy, CodPaymentStrategy>();

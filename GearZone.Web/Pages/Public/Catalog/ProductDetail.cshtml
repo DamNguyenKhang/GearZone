@@ -50,10 +50,10 @@
             <!-- Title & Header -->
             <div>
                 <div class="flex items-center gap-2 mb-3">
-                    <span class="bg-primary/10 text-primary text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1 border border-primary/20">
-                        <span class="material-symbols-outlined text-[14px]">verified</span>
-                        TechStore Official
-                    </span>
+                    <a href="/store/@Model.Product.StoreSlug" class="bg-primary/10 text-primary text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-primary/20 hover:bg-primary hover:text-white transition-colors">
+                        <span class="material-symbols-outlined text-[14px]">storefront</span>
+                        @Model.Product.StoreName
+                    </a>
                     <div class="flex items-center gap-1 text-secondary">
                         <span class="material-symbols-outlined text-[16px] fill-current">star</span>
                         <span class="text-xs font-bold text-slate-700 dark:text-slate-300">4.8 (126)</span>
@@ -133,6 +133,7 @@
                     <button id="add-to-cart-btn" class="flex-1 min-w-[160px] h-12 rounded-lg border-2 border-primary text-primary font-bold hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
                         <span class="material-symbols-outlined">add_shopping_cart</span>
                         Add to Cart
+                    </button>
                     <!-- Buy Now -->
                     <button class="flex-[1.5] min-w-[200px] h-12 rounded-lg bg-secondary text-white font-bold hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2">
                         Buy Now
@@ -396,17 +397,26 @@
                     document.getElementById('display-sku').textContent = variant.Sku;
 
                     // Update Stock
+                    const qtyInput = document.getElementById('qty-input');
                     if (variant.StockQuantity > 0) {
                         stockContainer.classList.remove('hidden');
                         oosContainer.classList.add('hidden');
                         document.getElementById('display-stock').textContent = `In Stock (${variant.StockQuantity} units available)`;
                         btn.disabled = false;
                         btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        qtyInput.setAttribute('data-max-stock', variant.StockQuantity);
+                        
+                        // If current value exceeds new max, reset it
+                        if (parseInt(qtyInput.value) > variant.StockQuantity) {
+                            qtyInput.value = variant.StockQuantity;
+                        }
                     } else {
                         stockContainer.classList.add('hidden');
                         oosContainer.classList.remove('hidden');
                         btn.disabled = true;
                         btn.classList.add('opacity-50', 'cursor-not-allowed');
+                        qtyInput.setAttribute('data-max-stock', 0);
+                        qtyInput.value = 1;
                     }
                 }
             }
@@ -458,12 +468,54 @@
             } else {
                 updateUI(); // In case there are no variants
             }
+
+            // Add to Cart
+            const addToCartBtn = document.getElementById('add-to-cart-btn');
+            if (addToCartBtn) {
+                addToCartBtn.addEventListener('click', async () => {
+                   const variant = findMatchingVariant();
+                   let variantId = null;
+
+                   if (variant) {
+                       variantId = variant.Id;
+                   } else if(variants.length === 1) { // Handle products with no explicit variants selection
+                       variantId = variants[0].Id;
+                   } else {
+                       document.getElementById('selection-warning').classList.remove('hidden');
+                       return;
+                   }
+                   
+                   const qtyInput = document.getElementById('qty-input');
+                   const quantity = parseInt(qtyInput.value);
+                   const maxStock = parseInt(qtyInput.getAttribute('data-max-stock') || '9999');
+
+                   if (quantity > maxStock) {
+                       window.showToast?.('warning', `Only ${maxStock} items available in stock.`);
+                       return;
+                   }
+
+                   const success = await addToCart(variantId, quantity, addToCartBtn);
+                   
+                   if (success) {
+                       qtyInput.value = 1;
+                   }
+                });
+            }
         });
 
         function updateQty(change) {
             const input = document.getElementById('qty-input');
+            const maxStock = parseInt(input.getAttribute('data-max-stock') || '1');
             let val = parseInt(input.value) + change;
+            
             if (val < 1) val = 1;
+            if (val > maxStock) {
+                if (maxStock > 0) {
+                    window.showToast?.('warning', `Maximum available stock: ${maxStock}`);
+                }
+                val = Math.max(1, maxStock);
+            }
+            
             input.value = val;
         }
     </script>

@@ -1,4 +1,4 @@
-@page
+@page "/admin/brands"
 @model GearZone.Web.Pages.Admin.Brands.IndexModel
 @{
     ViewData["Title"] = "Brand Management";
@@ -91,7 +91,7 @@
                     {
                         foreach (var brand in Model.Brands.Items)
                         {
-                            <tr class="group hover:bg-slate-50 transition-all">
+                            <tr class="group hover:bg-slate-50 transition-all cursor-pointer" onclick="if(!event.target.closest('a, button, form, input')) openEditModal(@brand.Id, '@brand.Name.Replace("'", "\\'")', '@brand.Slug', '@brand.LogoUrl', @brand.IsApproved.ToString().ToLower())">
                                 <td class="py-4 pl-6 pr-3 text-sm text-slate-500 font-medium">#@brand.Id</td>
                                 <td class="py-4 px-3">
                                     <div class="flex items-center gap-3">

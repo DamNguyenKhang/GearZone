@@ -30,6 +30,10 @@ namespace GearZone.Infrastructure
 
         public DbSet<Payment> Payments { get; set; }
         public DbSet<SystemSetting> SystemSettings { get; set; }
+
+        public DbSet<StoreFollow> StoreFollows { get; set; }
+        public DbSet<Conversation> Conversations { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
         
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 

@@ -8,4 +8,11 @@ public interface ISellerStoreService
 {
     Task<bool> ApplyForStoreAsync(StoreRegistrationDto storeRegistrationDto);
     Task<Store?> GetStoreByOwnerIdAsync(string userId);
+
+    // Multi-step Registration
+    Task<Guid> SaveStep1Async(string userId, Step1Dto dto);
+    Task SaveStep2Async(Guid storeId, string userId, Step2Dto dto);
+    Task SaveStep3Async(Guid storeId, Step3Dto dto);
+    Task SubmitRegistrationAsync(Guid storeId, string userId);
+    Task<RegistrationProgressDto?> GetRegistrationProgressAsync(string userId);
 }

@@ -1,13 +1,13 @@
 ﻿using GearZone.Application.Abstractions.External;
 using GearZone.Application.Abstractions.Persistence;
-using GearZone.Application.Abstractions.Services;
-using GearZone.Application.Features.Admin;
-using GearZone.Application.Features.Auth;
-using GearZone.Application.Features.Seller;
 using GearZone.Infrastructure.External;
 using GearZone.Infrastructure.Repositories;
+using GearZone.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using PayOS;
 
 namespace GearZone.Infrastructure
 {
@@ -15,11 +15,27 @@ namespace GearZone.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services)
         {
+            services.Configure<PayOSSettings>(options =>
+            {
+                options.ClientId = Environment.GetEnvironmentVariable("PAYOS_CLIENT_ID")!;
+                options.ApiKey = Environment.GetEnvironmentVariable("PAYOS_API_KEY")!;
+                options.ChecksumKey = Environment.GetEnvironmentVariable("PAYOS_CHECKSUM_KEY")!;
+                options.ReturnUrl = Environment.GetEnvironmentVariable("PAYOS_RETURN_URL")!;
+                options.CancelUrl = Environment.GetEnvironmentVariable("PAYOS_CANCEL_URL")!;
+            });
+
+            services.Configure<PayOSPayoutSettings>(options =>
+            {
+                options.ClientId = Environment.GetEnvironmentVariable("PAYOS_PAYOUT_CLIENT_ID")!;
+                options.ApiKey = Environment.GetEnvironmentVariable("PAYOS_PAYOUT_API_KEY")!;
+                options.ChecksumKey = Environment.GetEnvironmentVariable("PAYOS_PAYOUT_CHECKSUM_KEY")!;
+            });
+
             services.AddMemoryCache();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IFileStorageService, CloudinaryStorageService>();
             services.AddScoped<IEmailService, SmtpEmailService>();
-            services.AddScoped<IPaymentService, PayOSPaymentService>();
+            services.AddScoped<IPaymentStrategy, PayOSPaymentStrategy>();
             services.AddScoped<IBrandRepository, BrandRepository>();
             services.AddScoped<ICategoryAttributeRepository, CategoryAttributeRepository>();
             services.AddScoped<ICartRepository, CartRepository>();
@@ -40,11 +56,34 @@ namespace GearZone.Infrastructure
             services.AddScoped<IStoreFollowRepository, StoreFollowRepository>();
             services.AddScoped<IConversationRepository, ConversationRepository>();
             services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
-            services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<IAdminUserService, AdminUserService>();
-            services.AddScoped<IAdminStoreService, AdminStoreService>();
-            services.AddScoped<ISellerStoreService, SellerStoreService>();
-            services.AddScoped<ISystemSettingService, SystemSettingService>();
+
+            services.AddScoped<IPaymentStrategy, PayOSPaymentStrategy>();
+            services.AddScoped<IPaymentStrategy, CodPaymentStrategy>();
+            services.AddScoped<IPayoutClient, PayOSPayoutClient>();
+
+            services.AddKeyedSingleton("OrderClient", (sp, key) =>
+            {
+                var settings = sp.GetRequiredService<IOptions<PayOSSettings>>().Value;
+                return new PayOSClient(new PayOSOptions
+                {
+                    ClientId = settings.ClientId,
+                    ApiKey = settings.ApiKey,
+                    ChecksumKey = settings.ChecksumKey,
+                    LogLevel = LogLevel.Debug,
+                });
+            });
+
+            services.AddKeyedSingleton("TransferClient", (sp, key) =>
+            {
+                var settings = sp.GetRequiredService<IOptions<PayOSPayoutSettings>>().Value;
+                return new PayOSClient(new PayOSOptions
+                {
+                    ClientId = settings.ClientId,
+                    ApiKey = settings.ApiKey,
+                    ChecksumKey = settings.ChecksumKey,
+                    LogLevel = LogLevel.Debug,
+                });
+            });
 
             return services;
         }

@@ -17,7 +17,7 @@
                         "primary-light": "#dbeafe",
                         "background-light": "#F8FAFC",
                         "surface-light": "#FFFFFF",
-                        "navy-dark": "#0F172A",
+                        "navy-dark": "0F172A",
                         "text-heading": "#1E2937",
                         "text-body": "#374151",
                         "border-light": "#E2E8F0",
@@ -72,38 +72,38 @@
             width: 80px;
         }
 
-        .sidebar.collapsed .sidebar-text,
-        .sidebar.collapsed .sidebar-logo-text {
-            opacity: 0;
-            transform: translateX(-10px);
-            pointer-events: none;
-            display: none;
-        }
+            .sidebar.collapsed .sidebar-text,
+            .sidebar.collapsed .sidebar-logo-text {
+                opacity: 0;
+                transform: translateX(-10px);
+                pointer-events: none;
+                display: none;
+            }
 
-        .sidebar.collapsed .sidebar-item {
-            justify-content: center;
-            padding-left: 0;
-            padding-right: 0;
-        }
+            .sidebar.collapsed .sidebar-item {
+                justify-content: center;
+                padding-left: 0;
+                padding-right: 0;
+            }
 
-        .sidebar.collapsed .logo-container {
-            justify-content: center;
-            padding: 0;
-        }
+            .sidebar.collapsed .logo-container {
+                justify-content: center;
+                padding: 0;
+            }
 
-        .sidebar.collapsed .badge-count {
-            display: none;
-        }
+            .sidebar.collapsed .badge-count {
+                display: none;
+            }
 
         /* Active Link styles */
         .active-link {
             background-color: rgba(26, 86, 219, 0.1);
             color: #1A56DB;
         }
-        
-        .active-link span {
-            color: #1A56DB !important;
-        }
+
+            .active-link span {
+                color: #1A56DB !important;
+            }
 
         /* Material Symbols Fill */
         .filled {
@@ -122,11 +122,11 @@
             </div>
         </div>
         <nav class="flex-1 overflow-y-auto py-6 px-3 flex flex-col gap-1">
-            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" asp-page="/Admin/Dashboard">
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" asp-page="/Admin/Index">
                 <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Dashboard" ? "filled" : "")">dashboard</span>
                 <span class="font-medium text-sm sidebar-text">Overview</span>
             </a>
-            
+
             <div class="px-3 py-2 mt-1 sidebar-text">
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Management</span>
             </div>
@@ -136,24 +136,34 @@
                 <span class="font-medium text-sm sidebar-text">Store Applications</span>
             </a>
 
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Stores_Management" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" asp-page="/Admin/StoreManagement/Index">
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Commission" ? "filled" : "")">store</span>
+                <span class="font-medium text-sm sidebar-text">Stores</span>
+            </a>
+
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Users" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" asp-page="/Admin/Users/Index">
                 <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Users" ? "filled" : "")">group</span>
-                <span class="font-medium text-sm sidebar-text">User Management</span>
+                <span class="font-medium text-sm sidebar-text">Users</span>
             </a>
 
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Orders" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" href="#">
                 <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Orders" ? "filled" : "")">shopping_bag</span>
-                <span class="font-medium text-sm sidebar-text">Orders Management</span>
+                <span class="font-medium text-sm sidebar-text">Orders</span>
             </a>
 
-            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Products" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" href="#">
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Products" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" asp-page="/Admin/Products/Index">
                 <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Products" ? "filled" : "")">inventory_2</span>
-                <span class="font-medium text-sm sidebar-text">Product Management</span>
+                <span class="font-medium text-sm sidebar-text">Product</span>
             </a>
 
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Categories" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" asp-page="/Admin/Categories/Index">
                 <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Categories" ? "filled" : "")">category</span>
-                <span class="font-medium text-sm sidebar-text">Category Management</span>
+                <span class="font-medium text-sm sidebar-text">Categories</span>
+            </a>
+
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Brands" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" asp-page="/Admin/Brands/Index">
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Brands" ? "filled" : "")">branding_watermark</span>
+                <span class="font-medium text-sm sidebar-text">Brands</span>
             </a>
 
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Commission" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" href="#">
@@ -176,11 +186,6 @@
                 <span class="font-medium text-sm sidebar-text">Revenue</span>
             </a>
 
-            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Reports" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" asp-page="/Admin/Reports/Index">
-                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Reports" ? "filled" : "")">bar_chart</span>
-                <span class="font-medium text-sm sidebar-text">Reports</span>
-            </a>
-
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Logs" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" href="#">
                 <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Logs" ? "filled" : "")">receipt_long</span>
                 <span class="font-medium text-sm sidebar-text">System Logs</span>
@@ -192,7 +197,7 @@
             </a>
 
             <div class="mt-auto px-3 py-2 border-t border-border-light sidebar-text">
-                 <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors group" href="/Public/Auth/Logout">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors group" href="/Public/Auth/Logout">
                     <span class="material-symbols-outlined group-hover:text-red-600">logout</span>
                     <span class="font-medium text-sm">Log Out</span>
                 </a>
@@ -210,7 +215,7 @@
                 <div class="flex flex-col">
                     <h1 class="text-text-heading text-lg font-semibold leading-tight">@ViewData["PageHeader"]</h1>
                     <nav class="flex items-center gap-1.5 text-slate-500 text-xs mt-0.5">
-                        <a asp-page="/Admin/Dashboard" class="hover:text-primary">Admin</a>
+                        <a asp-page="/Admin/Index" class="hover:text-primary">Admin</a>
                         @if (ViewData["Breadcrumb"] != null)
                         {
                             var crumbs = (string[])ViewData["Breadcrumb"];
@@ -223,7 +228,7 @@
                     </nav>
                 </div>
             </div>
-            
+
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-1 bg-slate-50 p-1 rounded-xl">
                     <button class="p-2 text-slate-500 hover:bg-white hover:text-primary hover:shadow-sm rounded-lg transition-all relative group">
@@ -249,9 +254,18 @@
 
         <!-- Main Content Area -->
         <div class="flex-1 overflow-y-auto p-6 scroll-smooth bg-background-light">
-            <div class="max-w-7xl mx-auto flex flex-col gap-6">
-                @RenderBody()
-            </div>
+            @if (ViewData["FullWidth"] is bool fw && fw)
+            {
+                <div class="w-full mx-0 flex flex-col gap-6">
+                    @RenderBody()
+                </div>
+            }
+            else
+            {
+                <div class="max-w-7xl mx-auto flex flex-col gap-6">
+                    @RenderBody()
+                </div>
+            }
         </div>
     </main>
 
@@ -277,7 +291,7 @@
             sidebar.classList.add('collapsed');
         }
     </script>
-    
+
     <partial name="_Toast" />
     @await RenderSectionAsync("Scripts", required: false)
 </body>

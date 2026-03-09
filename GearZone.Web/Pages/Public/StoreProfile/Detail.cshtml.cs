@@ -1,10 +1,10 @@
 using GearZone.Application.Common.Models;
-using GearZone.Application.Features.Catalog;
 using GearZone.Application.Features.Catalog.DTOs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using GearZone.Domain.Entities;
+using GearZone.Application.Abstractions.Services;
 
 namespace GearZone.Web.Pages.Public.StoreProfile
 {

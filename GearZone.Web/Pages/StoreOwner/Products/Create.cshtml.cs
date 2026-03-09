@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System;
 
 namespace GearZone.Web.Pages.StoreOwner.Products
 {
@@ -34,7 +35,8 @@ namespace GearZone.Web.Pages.StoreOwner.Products
             
             // Initialize with one default variant and one spec row
             Input.Variants.Add(new ProductVariantDto { VariantName = "Default", StockQuantity = 0 });
-            Input.Specifications.Add(new ProductSpecDto { Key = "", Value = "" });
+            Input.Specifications.Add(new ProductSpecDto());
+
 
             return Page();
         }
@@ -58,22 +60,70 @@ namespace GearZone.Web.Pages.StoreOwner.Products
                 TempData["SuccessMessage"] = "Product created successfully!";
                 return RedirectToPage("./Index");
             }
+            catch (InvalidOperationException ex)
+            {
+                ModelState.AddModelError("", ex.Message);
+                await LoadMetadataAsync();
+                return Page();
+            }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", $"An error occurred during creation: {ex.Message}");
+                ModelState.AddModelError("", $"An unexpected error occurred: {ex.Message}");
                 await LoadMetadataAsync();
                 return Page();
             }
         }
 
+        public async Task<JsonResult> OnGetAttributesAsync(int categoryId)
+        {
+            var attributes = await _productService.GetCategoryAttributesAsync(categoryId);
+            return new JsonResult(attributes);
+        }
+
+        public async Task<JsonResult> OnPostCreateBrandAsync(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return new JsonResult(new { success = false, message = "Name is required" });
+            
+            try 
+            {
+                var id = await _productService.CreateBrandByNameAsync(name);
+                return new JsonResult(new { success = true, id = id, name = name });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
+        }
+
+        public async Task<JsonResult> OnPostCreateCategoryAsync(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return new JsonResult(new { success = false, message = "Name is required" });
+
+            try
+            {
+                var id = await _productService.CreateCategoryByNameAsync(name);
+                return new JsonResult(new { success = true, id = id, name = name });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
+        }
+
         private async Task LoadMetadataAsync()
         {
-            var categories = await _productService.GetCategoriesAsync();
-            CategoryOptions = categories.Select(c => new SelectListItem 
-            { 
-                Value = c.Id.ToString(), 
-                Text = c.Name 
-            }).ToList();
+            var allCategories = await _productService.GetCategoriesAsync();
+            
+            // Build hierarchy for display
+            CategoryOptions = allCategories
+                .Where(c => c.ParentId != null || !allCategories.Any(child => child.ParentId == c.Id)) // Only leaves or parents if they have no children (though we usually want leaves)
+                .Select(c => {
+                    var parent = c.ParentId.HasValue ? allCategories.FirstOrDefault(pc => pc.Id == c.ParentId.Value) : null;
+                    var text = parent != null ? $"{parent.Name} > {c.Name}" : c.Name;
+                    return new SelectListItem { Value = c.Id.ToString(), Text = text };
+                })
+                .OrderBy(s => s.Text)
+                .ToList();
 
             var brands = await _productService.GetBrandsAsync();
             BrandOptions = brands.Select(b => new SelectListItem 

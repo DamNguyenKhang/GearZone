@@ -26,6 +26,12 @@ namespace GearZone.Infrastructure.Repositories
                 dbQuery = dbQuery.Where(s => s.Status == query.Status.Value);
             }
 
+            if (query.ExcludeStatuses != null && query.ExcludeStatuses.Any())
+            {
+                dbQuery = dbQuery.Where(s => !query.ExcludeStatuses.Contains(s.Status));
+            }
+
+
             if (!string.IsNullOrWhiteSpace(query.SearchTerm))
             {
                 var search = query.SearchTerm.ToLower();

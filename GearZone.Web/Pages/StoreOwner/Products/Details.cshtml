@@ -21,7 +21,7 @@
             </div>
         </div>
         <div class="flex items-center gap-3">
-            <button class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Edit Product</button>
+            <a asp-page="./Edit" asp-route-id="@Model.Product.Id" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Edit Product</a>
             <span class="px-3 py-1.5 rounded-full text-xs font-bold @(Model.Product.Status == "Active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700")">
                 @Model.Product.Status
             </span>
@@ -85,6 +85,7 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Variant</th>
+                                <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Attributes</th>
                                 <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">SKU</th>
                                 <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Price</th>
                                 <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Stock</th>
@@ -95,6 +96,23 @@
                             {
                                 <tr>
                                     <td class="px-4 py-4 text-sm font-medium text-gray-900">@variant.VariantName</td>
+                                    <td class="px-4 py-4 text-sm text-gray-500">
+                                        @if (variant.Attributes.Any())
+                                        {
+                                            <div class="flex flex-wrap gap-1">
+                                                @foreach (var attr in variant.Attributes)
+                                                {
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                        @attr.AttributeName: @attr.OptionValue
+                                                    </span>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-gray-400 italic">None</span>
+                                        }
+                                    </td>
                                     <td class="px-4 py-4 text-sm text-gray-500">@variant.Sku</td>
                                     <td class="px-4 py-4 text-sm font-bold text-gray-900">@variant.Price.ToString("N0")₫</td>
                                     <td class="px-4 py-4 text-sm">
@@ -129,6 +147,10 @@
                         <span class="text-sm font-bold text-primary">@Model.Product.BasePrice.ToString("N0")₫</span>
                     </div>
                     <div class="flex justify-between py-2 border-b border-gray-50">
+                        <span class="text-sm text-gray-500">Sold Count</span>
+                        <span class="text-sm font-bold text-gray-900">@Model.Product.SoldCount unit(s)</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-gray-50">
                         <span class="text-sm text-gray-500">Created At</span>
                         <span class="text-sm text-gray-900">@Model.Product.CreatedAt.ToString("MMM dd, yyyy")</span>
                     </div>
@@ -139,19 +161,19 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
                 <h2 class="text-sm font-bold text-gray-900 mb-6 uppercase tracking-wider">Specifications</h2>
                 <div class="space-y-4">
-                    @if (Model.Product.Specifications.Any())
+                    @if (Model.Product.Specifications != null && Model.Product.Specifications.Any())
                     {
                         @foreach (var spec in Model.Product.Specifications)
                         {
-                            <div>
-                                <p class="text-xs text-gray-400 font-medium mb-1 uppercase">@spec.Key</p>
-                                <p class="text-sm font-medium text-gray-900">@spec.Value</p>
+                            <div class="flex flex-col py-2 border-b border-gray-50 last:border-0">
+                                <span class="text-[10px] font-bold text-gray-400 uppercase">@spec.Key</span>
+                                <span class="text-sm font-medium text-gray-900">@spec.Value</span>
                             </div>
                         }
                     }
                     else
                     {
-                        <p class="text-sm text-gray-500 italic">No technical specifications provided.</p>
+                        <p class="text-sm text-gray-400 italic">No specifications added.</p>
                     }
                 </div>
             </div>

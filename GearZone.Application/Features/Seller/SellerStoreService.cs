@@ -3,7 +3,9 @@ using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Seller.Dtos;
 using GearZone.Domain.Entities;
 using GearZone.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace GearZone.Application.Features.Seller;
@@ -24,7 +26,7 @@ public class SellerStoreService : ISellerStoreService
     public async Task<bool> ApplyForStoreAsync(StoreRegistrationDto storeRegistrationDto)
     {
         var setting = await _systemSettingRepository.GetByKeyAsync("Payment_CommissionRate");
-        decimal commissionRate = 0.05m; // Default
+        decimal commissionRate = 0.05m;
         if (setting != null && decimal.TryParse(setting.Value, out decimal parsedRate))
         {
             commissionRate = parsedRate;
@@ -54,5 +56,155 @@ public class SellerStoreService : ISellerStoreService
     public async Task<Store?> GetStoreByOwnerIdAsync(string userId)
     {
         return await _storeRepository.GetStoreByOwnerIdAsync(userId);
+    }
+
+    // ==========================================
+    // Multi-step Registration
+    // ==========================================
+
+    public async Task<Guid> SaveStep1Async(string userId, Step1Dto dto)
+    {
+        // Check if a draft already exists for this user
+        var existing = await _storeRepository.Query()
+            .FirstOrDefaultAsync(s => s.OwnerUserId == userId && s.Status == StoreStatus.Draft);
+
+        if (existing != null)
+        {
+            existing.StoreName = dto.StoreName;
+            existing.Slug = dto.StoreName.ToLower().Replace(" ", "-");
+            existing.BusinessType = dto.BusinessType;
+            existing.Phone = dto.Phone;
+            existing.Email = dto.Email;
+            existing.AddressLine = dto.AddressLine;
+            existing.Province = dto.Province;
+            existing.RegistrationStep = Math.Max(existing.RegistrationStep, 2);
+            existing.UpdatedAt = DateTime.UtcNow;
+
+            _storeRepository.UpdateAsync(existing);
+            await _unitOfWork.SaveChangesAsync();
+            return existing.Id;
+        }
+
+        var setting = await _systemSettingRepository.GetByKeyAsync("Payment_CommissionRate");
+        decimal commissionRate = 0.05m;
+        if (setting != null && decimal.TryParse(setting.Value, out decimal parsedRate))
+        {
+            commissionRate = parsedRate;
+        }
+
+        var store = new Store
+        {
+            Id = Guid.NewGuid(),
+            OwnerUserId = userId,
+            StoreName = dto.StoreName,
+            Slug = dto.StoreName.ToLower().Replace(" ", "-"),
+            BusinessType = dto.BusinessType,
+            Phone = dto.Phone,
+            Email = dto.Email,
+            AddressLine = dto.AddressLine,
+            Province = dto.Province,
+            Status = StoreStatus.Draft,
+            RegistrationStep = 2,
+            CommissionRate = commissionRate,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _storeRepository.AddAsync(store);
+        await _unitOfWork.SaveChangesAsync();
+        return store.Id;
+    }
+
+    public async Task SaveStep2Async(Guid storeId, string userId, Step2Dto dto)
+    {
+        var store = await _storeRepository.Query()
+            .Include(s => s.OwnerUser)
+            .FirstOrDefaultAsync(s => s.Id == storeId && s.Status == StoreStatus.Draft);
+
+        if (store == null) throw new InvalidOperationException("Store not found or not in draft status.");
+
+        store.TaxCode = dto.TaxCode;
+        store.RegistrationStep = Math.Max(store.RegistrationStep, 3);
+        store.UpdatedAt = DateTime.UtcNow;
+
+        // Update user identity info
+        if (store.OwnerUser != null)
+        {
+            store.OwnerUser.FullName = dto.FullName;
+            store.OwnerUser.IdentityNumber = dto.IdentityNumber;
+            store.OwnerUser.IdentityIssuedDate = dto.IdentityIssuedDate;
+            store.OwnerUser.IdentityIssuedPlace = dto.IdentityIssuedPlace;
+        }
+
+        _storeRepository.UpdateAsync(store);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task SaveStep3Async(Guid storeId, Step3Dto dto)
+    {
+        var store = await _storeRepository.Query()
+            .FirstOrDefaultAsync(s => s.Id == storeId && s.Status == StoreStatus.Draft);
+
+        if (store == null) throw new InvalidOperationException("Store not found or not in draft status.");
+
+        store.BankName = dto.BankName;
+        store.BankAccountNumber = dto.BankAccountNumber;
+        store.BankAccountName = dto.BankAccountName;
+        store.RegistrationStep = Math.Max(store.RegistrationStep, 4);
+        store.UpdatedAt = DateTime.UtcNow;
+
+        _storeRepository.UpdateAsync(store);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task SubmitRegistrationAsync(Guid storeId, string userId)
+    {
+        var store = await _storeRepository.Query()
+            .FirstOrDefaultAsync(s => s.Id == storeId && s.OwnerUserId == userId && s.Status == StoreStatus.Draft);
+
+        if (store == null) throw new InvalidOperationException("Store not found or not in draft status.");
+
+        store.Status = StoreStatus.Pending;
+        store.UpdatedAt = DateTime.UtcNow;
+
+        _storeRepository.UpdateAsync(store);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task<RegistrationProgressDto?> GetRegistrationProgressAsync(string userId)
+    {
+        var store = await _storeRepository.Query()
+            .Include(s => s.OwnerUser)
+            .FirstOrDefaultAsync(s => s.OwnerUserId == userId && s.Status == StoreStatus.Draft);
+
+        if (store == null) return null;
+
+        return new RegistrationProgressDto
+        {
+            StoreId = store.Id,
+            CurrentStep = store.RegistrationStep,
+            Step1 = new Step1Dto
+            {
+                StoreName = store.StoreName,
+                BusinessType = store.BusinessType,
+                Phone = store.Phone,
+                Email = store.Email,
+                AddressLine = store.AddressLine,
+                Province = store.Province
+            },
+            Step2 = new Step2Dto
+            {
+                FullName = store.OwnerUser?.FullName ?? string.Empty,
+                IdentityNumber = store.OwnerUser?.IdentityNumber ?? string.Empty,
+                IdentityIssuedDate = store.OwnerUser?.IdentityIssuedDate,
+                IdentityIssuedPlace = store.OwnerUser?.IdentityIssuedPlace ?? string.Empty,
+                TaxCode = store.TaxCode
+            },
+            Step3 = new Step3Dto
+            {
+                BankName = store.BankName,
+                BankAccountNumber = store.BankAccountNumber,
+                BankAccountName = store.BankAccountName
+            }
+        };
     }
 }

@@ -26,6 +26,7 @@ namespace GearZone.Application.Features.Seller.Dtos
         public string CategoryName { get; set; } = string.Empty;
         public string BrandName { get; set; } = string.Empty;
         public decimal BasePrice { get; set; }
+        public int SoldCount { get; set; }
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public Dictionary<string, string> Specifications { get; set; } = new();
@@ -46,9 +47,22 @@ namespace GearZone.Application.Features.Seller.Dtos
         public List<ProductSpecDto> Specifications { get; set; } = new();
         public List<ProductVariantDto> Variants { get; set; } = new();
         public List<IFormFile> Images { get; set; } = new();
-        
-        // For dynamic attributes
-        public List<AttributeSelectionDto> Attributes { get; set; } = new();
+    }
+
+    public class UpdateProductDto
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public int CategoryId { get; set; }
+        public int BrandId { get; set; }
+        public decimal BasePrice { get; set; }
+        public bool IsDraft { get; set; }
+
+        public List<ProductVariantDto> Variants { get; set; } = new();
+        public List<IFormFile> NewImages { get; set; } = new();
+        public List<ProductSpecDto> Specifications { get; set; } = new();
+        public List<string> ExistingImageUrls { get; set; } = new();
     }
 
     public class ProductSpecDto
@@ -63,11 +77,30 @@ namespace GearZone.Application.Features.Seller.Dtos
         public string Sku { get; set; } = string.Empty;
         public decimal Price { get; set; }
         public int StockQuantity { get; set; }
+        
+        // For dynamic attributes per variant
+        public List<AttributeSelectionDto> Attributes { get; set; } = new();
     }
 
     public class AttributeSelectionDto
     {
         public int AttributeId { get; set; }
         public int OptionId { get; set; }
+        public string AttributeName { get; set; } = string.Empty;
+        public string OptionValue { get; set; } = string.Empty;
+    }
+
+    public class CategoryAttributeDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string FilterType { get; set; } = string.Empty;
+        public List<CategoryAttributeOptionDto> Options { get; set; } = new();
+    }
+
+    public class CategoryAttributeOptionDto
+    {
+        public int Id { get; set; }
+        public string Value { get; set; } = string.Empty;
     }
 }

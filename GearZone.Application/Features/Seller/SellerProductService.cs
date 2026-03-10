@@ -159,13 +159,13 @@ namespace GearZone.Application.Features.Seller
                 Slug = slug,
                 Description = dto.Description,
                 BasePrice = dto.BasePrice,
-                SpecsJson = dto.Specifications != null && dto.Specifications.Any() 
-                    ? JsonSerializer.Serialize(dto.Specifications.ToDictionary(s => s.Key, s => s.Value)) 
-                    : "{}",
                 Status = dto.IsDraft ? ProductStatus.Draft : ProductStatus.Active,
                 SoldCount = 0,
                 CreatedAt = DateTime.UtcNow,
-            };
+                SpecsJson = JsonSerializer.Serialize(dto.Specifications?
+                    .Where(s => !string.IsNullOrWhiteSpace(s.Key))
+                    .ToDictionary(s => s.Key, s => s.Value) ?? new Dictionary<string, string>())
+            };  
 
             await _productRepository.AddAsync(product);
 
@@ -255,10 +255,6 @@ namespace GearZone.Application.Features.Seller
                 BrandId = product.BrandId,
                 BasePrice = product.BasePrice,
                 IsDraft = product.Status == ProductStatus.Draft,
-                Specifications = string.IsNullOrEmpty(product.SpecsJson) 
-                    ? new List<ProductSpecDto>() 
-                    : JsonSerializer.Deserialize<Dictionary<string, string>>(product.SpecsJson)?
-                        .Select(kvp => new ProductSpecDto { Key = kvp.Key, Value = kvp.Value }).ToList() ?? new List<ProductSpecDto>(),
                 ExistingImageUrls = product.Images.OrderBy(i => i.SortOrder).Select(i => i.ImageUrl).ToList(),
                 Variants = product.Variants.Where(v => !v.IsDeleted).Select(v => new ProductVariantDto
                 {
@@ -301,9 +297,6 @@ namespace GearZone.Application.Features.Seller
             product.CategoryId = dto.CategoryId;
             product.BrandId = dto.BrandId;
             product.BasePrice = dto.BasePrice;
-            product.SpecsJson = dto.Specifications != null && dto.Specifications.Any() 
-                ? JsonSerializer.Serialize(dto.Specifications.ToDictionary(s => s.Key, s => s.Value)) 
-                : "{}";
             product.Status = dto.IsDraft ? ProductStatus.Draft : ProductStatus.Active;
             product.UpdatedAt = DateTime.UtcNow;
 
@@ -363,7 +356,7 @@ namespace GearZone.Application.Features.Seller
                     ev.IsActive = true;
                     ev.IsDeleted = false; // Re-active if it was deleted
                     ev.UpdatedAt = DateTime.UtcNow;
-                    
+
                     // Stock adjustment via transaction if changed
                     if (iv.StockQuantity != ev.StockQuantity)
                     {

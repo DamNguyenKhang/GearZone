@@ -5,6 +5,8 @@ using GearZone.Application.Features.Auth;
 using GearZone.Application.Features.Cart;
 using GearZone.Application.Features.Catalog;
 using GearZone.Application.Features.Payment;
+using GearZone.Application.Features.Payout;
+using GearZone.Application.Features.Payment;
 using GearZone.Application.Features.Seller;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -22,11 +24,16 @@ namespace GearZone.Application
             services.AddScoped<IAdminCategoryService, AdminCategoryService>();
             services.AddScoped<IAdminProductService, AdminProductService>();
             services.AddScoped<IAdminBrandService, AdminBrandService>();
+            services.AddScoped<IAdminPayoutService, AdminPayoutService>();
             services.AddScoped<ICatalogService, CatalogService>();
             services.AddScoped<ISellerStoreService, SellerStoreService>();
             services.AddScoped<ISellerProductService, SellerProductService>();
             services.AddScoped<ICartService, CartService>();
+            services.AddScoped<IPayoutService, PayoutService>();
             services.AddScoped<PaymentStrategyFactory>();
+
+            services.AddHostedService<WeeklyPayoutBatchGeneratorJob>();
+
             return services;
         }
     }

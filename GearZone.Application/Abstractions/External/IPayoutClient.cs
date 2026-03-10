@@ -7,6 +7,7 @@ namespace GearZone.Application.Abstractions.External
 {
     public interface IPayoutClient
     {
-        Task<PayoutResult> CreateBatchPayoutAsync(List<PayoutRequest> payouts);
+        Task<PayoutResult> CreatePayoutAsync(PayoutRequestDto payout);
+        Task<PayoutResult> CreateBatchPayoutAsync(List<PayoutRequestDto> payouts);
     }
 }

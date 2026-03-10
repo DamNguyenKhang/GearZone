@@ -3,6 +3,7 @@ using GearZone.Application.Features.Payout.Dtos;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PayOS;
+using PayOS.Models.V1.Payouts;
 using PayOS.Models.V1.Payouts.Batch;
 
 namespace GearZone.Infrastructure.External
@@ -20,7 +21,36 @@ namespace GearZone.Infrastructure.External
             _logger = logger;
         }
 
-        public async Task<PayoutResult> CreateBatchPayoutAsync(List<PayoutRequest> payouts)
+        public async Task<PayoutResult> CreatePayoutAsync(PayoutRequestDto payout)
+        {
+            var request = new PayoutRequest
+            {
+                ReferenceId = Guid.NewGuid().ToString(),
+                Amount = payout.Amount,
+                Description = payout.Description,
+                ToBin = payout.ToBin,
+                ToAccountNumber = payout.ToAccountNumber
+            };
+
+            try
+            {
+                var response = await _client.Payouts.CreateAsync(request);
+
+                return new PayoutResult(
+                    success: true,
+                    referenceId: response.ReferenceId
+                );
+            }
+            catch (Exception ex)
+            {
+                return new PayoutResult(
+                    success: false,
+                    errorMessage: ex.Message
+                );
+            }
+        }
+
+        public async Task<PayoutResult> CreateBatchPayoutAsync(List<PayoutRequestDto> payouts)
         {
             var request = new PayoutBatchRequest
             {

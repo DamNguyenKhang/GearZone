@@ -4,7 +4,7 @@ using System.Text;
 
 namespace GearZone.Application.Features.Payout.Dtos
 {
-    public class PayoutRequest
+    public class PayoutRequestDto
     {
         public long Amount { get; set; }
         public string Description { get; set; } = "";

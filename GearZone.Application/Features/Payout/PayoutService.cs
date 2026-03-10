@@ -12,175 +12,444 @@ namespace GearZone.Application.Features.Payout
 {
     public class PayoutService : IPayoutService
     {
+        private const int MaxRetryCount = 3;
+
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPayoutClient _payoutClient;
+        private readonly IOrderRepository _orderRepository;
+        private readonly IPayoutBatchRepository _payoutBatchRepository;
+        private readonly IPayoutTransactionRepository _payoutTransactionRepository;
+        private readonly IPayoutItemRepository _payoutItemRepository;
         private readonly ILogger<PayoutService> _logger;
 
-        public PayoutService(IUnitOfWork unitOfWork, IPayoutClient payoutClient, ILogger<PayoutService> logger)
+        public PayoutService(
+            IUnitOfWork unitOfWork,
+            IPayoutClient payoutClient,
+            IOrderRepository orderRepository,
+            IPayoutBatchRepository payoutBatchRepository,
+            IPayoutTransactionRepository payoutTransactionRepository,
+            IPayoutItemRepository payoutItemRepository,
+            ILogger<PayoutService> logger)
         {
             _unitOfWork = unitOfWork;
             _payoutClient = payoutClient;
+            _orderRepository = orderRepository;
+            _payoutBatchRepository = payoutBatchRepository;
+            _payoutTransactionRepository = payoutTransactionRepository;
+            _payoutItemRepository = payoutItemRepository;
             _logger = logger;
         }
 
-        public async Task<Result<Guid>> GenerateWeeklyBatchAsync(DateTime endDate, CancellationToken cancellationToken = default)
+        public async Task<Guid> GenerateWeeklyBatchAsync(
+        DateTime endDate,
+        CancellationToken ct = default)
         {
-            var orders = await _unitOfWork.OrderRepository.GetQueryable()
-                .Include(o => o.Store)
-                .Where(o => o.Status == OrderStatus.Delivered &&
-                            o.PayoutStatus == PayoutStatus.Unpaid &&
-                            (o.UpdatedAt ?? o.CreatedAt) <= endDate)
-                .ToListAsync(cancellationToken);
+            // 1. Tính period
+            var periodEnd = endDate.Date;
+            var periodStart = periodEnd.AddDays(-7);
 
-            if (!orders.Any())
-            {
-                return Result<Guid>.Failure(new Error("PayoutService.NoOrders", "No eligible orders found for payout."));
-            }
+            _logger.LogInformation(
+                "[Payout] Generating batch {Start:dd/MM} - {End:dd/MM}",
+                periodStart, periodEnd);
 
+            // 2. Kiểm tra trùng
+            var exists = await _payoutBatchRepository.ExistsByPeriodAsync(
+                periodStart, periodEnd, ct);
+
+            if (exists)
+                throw new InvalidOperationException($"Batch for {periodStart:dd/MM} - {periodEnd:dd/MM} already exists.");
+
+            // 3. Lấy orders đủ điều kiện
+            var eligibleOrders = await _orderRepository
+                .GetEligibleForPayoutAsync(periodStart, periodEnd, ct);
+
+            _logger.LogInformation(
+                "[Payout] Found {Count} eligible orders", eligibleOrders.Count);
+
+            // 4. Group by store
+            var storeGroups = eligibleOrders
+                .GroupBy(o => o.StoreId)
+                .ToList();
+
+            // 5. Build batch
+            var weekNum = GetWeekNumber(periodStart);
             var batch = new PayoutBatch
             {
-                BatchCode = "PAY-" + DateTime.UtcNow.ToString("yyyyMMdd") + "-" + Guid.NewGuid().ToString("N").Substring(0, 4).ToUpper(),
-                PeriodStart = orders.Min(o => o.UpdatedAt ?? o.CreatedAt),
-                PeriodEnd = endDate,
+                Id = Guid.NewGuid(),
+                BatchCode = $"BATCH-{periodStart:yyyy}-W{weekNum:D2}",
+                PeriodStart = periodStart,
+                PeriodEnd = periodEnd,
                 Status = PayoutBatchStatus.PendingApproval,
+                TotalStores = storeGroups.Count,
                 CreatedAt = DateTime.UtcNow,
-                Transactions = new List<PayoutTransaction>()
             };
 
-            var ordersByStore = orders.GroupBy(o => o.StoreId);
+            // 6. Build transactions + items
+            var transactions = new List<PayoutTransaction>();
 
-            foreach (var storeGroup in ordersByStore)
+            foreach (var group in storeGroups)
             {
-                var store = storeGroup.First().Store;
+                var store = group.First().Store;
+                var orders = group.ToList();
+
+                var items = orders.Select(o => new PayoutItem
+                {
+                    Id = Guid.NewGuid(),
+                    OrderId = o.Id,
+                    GrandTotal = o.GrandTotal,
+                    CommissionAmount = o.CommissionAmount,
+                    NetAmount = o.GrandTotal - o.CommissionAmount,
+                    IsExcluded = false,
+                }).ToList();
+
                 var transaction = new PayoutTransaction
                 {
-                    StoreId = store.Id,
-                    BankName = string.IsNullOrEmpty(store.BankName) ? "Unknown" : store.BankName,
-                    BankAccountNumber = string.IsNullOrEmpty(store.BankAccountNumber) ? "Unknown" : store.BankAccountNumber,
-                    BankAccountName = string.IsNullOrEmpty(store.BankAccountName) ? "Unknown" : store.BankAccountName,
-                    Status = PayoutTransactionStatus.Pending,
+                    Id = Guid.NewGuid(),
+                    PayoutBatchId = batch.Id,
+                    StoreId = group.Key,
+                    BankName = store.BankName,
+                    BankAccountNumber = store.BankAccountNumber,
+                    BankAccountName = store.BankAccountName,
+                    BankBin = store.BankBin,
+                    OrderCount = orders.Count,
+                    GrossAmount = orders.Sum(o => o.GrandTotal),
+                    CommissionAmount = orders.Sum(o => o.CommissionAmount),
+                    NetAmount = orders.Sum(o => o.GrandTotal - o.CommissionAmount),
+                    Status = PayoutTransactionStatus.Queued,
+                    RetryCount = 0,
                     CreatedAt = DateTime.UtcNow,
-                    Items = new List<PayoutItem>()
+                    Items = items,
                 };
 
-                foreach (var order in storeGroup)
-                {
-                    var item = new PayoutItem
-                    {
-                        OrderId = order.Id,
-                        GrandTotal = order.GrandTotal,
-                        CommissionAmount = order.CommissionAmount,
-                        NetAmount = order.GrandTotal - order.CommissionAmount
-                    };
-
-                    transaction.Items.Add(item);
-                    
-                    // Mark order as pending payout so it won't be picked up again
-                    order.PayoutStatus = PayoutStatus.Pending;
-                }
-
-                transaction.OrderCount = transaction.Items.Count;
-                transaction.GrossAmount = transaction.Items.Sum(i => i.GrandTotal);
-                transaction.CommissionAmount = transaction.Items.Sum(i => i.CommissionAmount);
-                transaction.NetAmount = transaction.Items.Sum(i => i.NetAmount);
-
-                batch.Transactions.Add(transaction);
+                transactions.Add(transaction);
             }
 
-            batch.TotalGrossAmount = batch.Transactions.Sum(t => t.GrossAmount);
-            batch.TotalCommissionAmount = batch.Transactions.Sum(t => t.CommissionAmount);
-            batch.TotalNetAmount = batch.Transactions.Sum(t => t.NetAmount);
-            batch.TotalStores = batch.Transactions.Count;
+            // 7. Gán tổng vào batch
+            batch.TotalGrossAmount = transactions.Sum(t => t.GrossAmount);
+            batch.TotalCommissionAmount = transactions.Sum(t => t.CommissionAmount);
+            batch.TotalNetAmount = transactions.Sum(t => t.NetAmount);
+            batch.Transactions = transactions;
 
-            await _unitOfWork.PayoutBatchRepository.AddAsync(batch, cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            // 8. Lock orders
+            var orderIds = eligibleOrders.Select(o => o.Id).ToList();
+            await _orderRepository.BulkUpdatePayoutStatusAsync(
+                orderIds, PayoutStatus.Locked, ct);
 
-            return Result<Guid>.Success(batch.Id);
+            // 9. Save batch (cascade save transactions + items)
+            await _payoutBatchRepository.AddAsync(batch, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            _logger.LogInformation(
+                "[Payout] Batch {Code} created. Stores: {S}, Net: {N}",
+                batch.BatchCode, batch.TotalStores, batch.TotalNetAmount);
+
+            return batch.Id;
         }
 
-        public async Task<Result<bool>> ProcessPayoutTransactionAsync(string transactionCode, CancellationToken cancellationToken = default)
+        // ────────────────────────────────────────────────────────────
+        public async Task ApproveBatchAsync(
+            Guid batchId,
+            string adminId,
+            CancellationToken ct = default)
         {
-            // Wait, PayoutTransaction doesn't have a TransactionCode property, but batch has BatchCode.
-            // Let's assume we pass the string representation of Guid.
-            if (!Guid.TryParse(transactionCode, out var transactionId))
+            var batch = await _payoutBatchRepository.GetByIdAsync(batchId, ct)
+                ?? throw new KeyNotFoundException($"PayoutBatch with id {batchId} not found");
+
+            if (batch.Status != PayoutBatchStatus.PendingApproval)
+                throw new InvalidOperationException(
+                    $"Cannot approve batch in status: {batch.Status}");
+
+            batch.Status = PayoutBatchStatus.Approved;
+            batch.ApprovedByAdminId = adminId;
+            batch.ApprovedAt = DateTime.UtcNow;
+
+            await _payoutBatchRepository.UpdateAsync(batch);
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            _logger.LogInformation(
+                "[Payout] Batch {Code} approved by {Admin}",
+                batch.BatchCode, adminId);
+        }
+
+        // ────────────────────────────────────────────────────────────
+        public async Task ProcessPayoutBatchAsync(
+            string batchCode,
+            CancellationToken ct = default)
+        {
+            // 1. Load batch kèm transactions
+            var batch = await _payoutBatchRepository.Query()
+                .Include(x => x.Transactions)
+                .FirstOrDefaultAsync(x => x.BatchCode == batchCode, ct)
+                ?? throw new KeyNotFoundException($"PayoutBatch with code {batchCode} not found");
+
+            if (batch.Status != PayoutBatchStatus.Approved)
+                throw new InvalidOperationException($"Batch {batch.BatchCode} is not Approved. Current: {batch.Status}");
+
+            // 2. Chuyển sang Processing
+            batch.Status = PayoutBatchStatus.Processing;
+            await _payoutBatchRepository.UpdateAsync(batch);
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            // 3. Lấy transactions cần xử lý
+            var queued = batch.Transactions
+                .Where(t => t.Status == PayoutTransactionStatus.Queued)
+                .ToList();
+
+            _logger.LogInformation(
+                "[Payout] Processing batch {Code}: {Count} transactions",
+                batch.BatchCode, queued.Count);
+
+            // 4. Map → PayoutRequestDto
+            var requests = queued.Select(t => new PayoutRequestDto
             {
-                 return Result<bool>.Failure(new Error("PayoutService.InvalidId", "Invalid transaction ID format."));
-            }
+                Description = $"GearZone {batch.BatchCode} - {t.BankAccountName}",
+                Amount = (long)t.NetAmount,
+                ToAccountNumber = t.BankAccountNumber,
+                ToBin = t.BankBin,
+            }).ToList();
 
-            var transaction = await _unitOfWork.PayoutTransactionRepository.GetQueryable()
-                .Include(t => t.Store)
-                .Include(t => t.Items)
-                .ThenInclude(i => i.Order)
-                .FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
+            // 5. Gọi PayOS batch API
+            var result = await _payoutClient.CreateBatchPayoutAsync(requests);
 
-            if (transaction == null)
+            // 6. Xử lý kết quả
+            if (result.IsSuccess)
             {
-                return Result<bool>.Failure(new Error("PayoutService.NotFound", "Transaction not found."));
-            }
+                foreach (var t in queued)
+                {
+                    t.Status = PayoutTransactionStatus.Success;
+                    t.PayOSTransactionId = result.ReferenceId;
+                    t.ProcessedAt = DateTime.UtcNow;
+                }
 
-            if (transaction.Status != PayoutTransactionStatus.Pending)
-            {
-                return Result<bool>.Failure(new Error("PayoutService.InvalidState", "Transaction is not in Pending state."));
-            }
+                // Đánh dấu orders đã paid
+                var txIds = queued.Select(t => t.Id).ToList();
+                var orderIds = await _payoutItemRepository
+                    .GetOrderIdsByTransactionIdsAsync(txIds, ct);
 
-            var requestDto = new PayoutRequestDto
-            {
-                Amount = (long)transaction.NetAmount,
-                Description = $"PY {transaction.Id.ToString().Substring(0, 8).ToUpper()}",
-                ToAccountNumber = transaction.BankAccountNumber,
-                ToBin = "970436" // Default mock BIN
-            };
-
-            transaction.Status = PayoutTransactionStatus.Processing;
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            var payoutResult = await _payoutClient.CreatePayoutAsync(requestDto);
-
-            if (payoutResult.Success)
-            {
-                transaction.Status = PayoutTransactionStatus.Processing; 
-                transaction.PayOSTransactionId = payoutResult.ReferenceId;
-                // Next we wait for webhook to mark as Completed
+                await _orderRepository.BulkUpdatePayoutStatusAsync(
+                    orderIds, PayoutStatus.Paid, ct);
             }
             else
             {
-                transaction.Status = PayoutTransactionStatus.Failed;
-                transaction.FailureReason = payoutResult.ErrorMessage;
-                // Revert orders payout status? Wait, usually we just update transaction status so it can be retried or handled manually.
+                // Batch API fail toàn bộ → đánh dấu từng cái Failed
+                foreach (var t in queued)
+                {
+                    t.Status = PayoutTransactionStatus.Failed;
+                    t.FailureReason = result.ErrorMessage;
+                }
+
+                _logger.LogWarning(
+                    "[Payout] Batch {Code} PayOS call failed: {Err}",
+                    batch.BatchCode, result.ErrorMessage);
             }
 
-            transaction.ProcessedAt = DateTime.UtcNow;
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            // 7. Update transactions
+            await _payoutTransactionRepository.UpdateRangeAsync(queued, ct);
 
-            return Result<bool>.Success(true);
+            // 8. Tính lại batch status
+            RecalculateBatchStatus(batch);
+            await _payoutBatchRepository.UpdateAsync(batch);
+
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            _logger.LogInformation(
+                "[Payout] Batch {Code} done → {Status}. S:{S} F:{F}",
+                batch.BatchCode, batch.Status,
+                batch.SuccessCount, batch.FailedCount);
         }
 
-        public async Task<Result<bool>> ProcessPayoutBatchAsync(string batchCode, CancellationToken cancellationToken = default)
+        // ────────────────────────────────────────────────────────────
+        public async Task ProcessPayoutTransactionAsync(
+            string transactionCode,
+            CancellationToken ct = default)
         {
-            var batch = await _unitOfWork.PayoutBatchRepository.GetQueryable()
-                .Include(b => b.Transactions)
-                .FirstOrDefaultAsync(b => b.BatchCode == batchCode, cancellationToken);
+            throw new NotImplementedException("Not Implemented by batch context only yet.");
+        }
+        public async Task RetryTransactionAsync(
+            Guid transactionId,
+            CancellationToken ct = default)
+        {
+            var transaction = await _payoutTransactionRepository
+                .GetByIdWithDetailsAsync(transactionId, ct)
+                ?? throw new KeyNotFoundException($"PayoutTransaction with id {transactionId} not found");
 
-            if (batch == null)
+            if (transaction.Status != PayoutTransactionStatus.Failed &&
+                transaction.Status != PayoutTransactionStatus.ManualRequired)
+                throw new InvalidOperationException(
+                    $"Transaction {transactionId} is not in a retryable state.");
+
+            if (transaction.RetryCount >= MaxRetryCount)
             {
-                return Result<bool>.Failure(new Error("PayoutService.NotFound", "Batch not found."));
+                transaction.Status = PayoutTransactionStatus.ManualRequired;
+                await _payoutTransactionRepository.UpdateAsync(transaction);
+                await _unitOfWork.SaveChangesAsync(ct);
+                _logger.LogWarning(
+                    "[Payout] Tx {Id} exceeded max retries → ManualRequired",
+                    transactionId);
+                return;
             }
+
+            // Thử lại
+            transaction.Status = PayoutTransactionStatus.Processing;
+            transaction.RetryCount += 1;
+            await _payoutTransactionRepository.UpdateAsync(transaction);
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            try
+            {
+                var request = new PayoutRequestDto
+                {
+                    Description = $"GearZone RETRY {transaction.Batch.BatchCode}",
+                    Amount = (long)transaction.NetAmount,
+                    ToAccountNumber = transaction.BankAccountNumber,
+                    ToBin = transaction.BankBin,
+                };
+
+                var result = await _payoutClient.CreatePayoutAsync(request);
+
+                if (result.IsSuccess)
+                {
+                    transaction.Status = PayoutTransactionStatus.Success;
+                    transaction.PayOSTransactionId = result.ReferenceId;
+                    transaction.ProcessedAt = DateTime.UtcNow;
+                    transaction.FailureReason = null;
+
+                    var orderIds = await _payoutItemRepository
+                        .GetOrderIdsByTransactionIdAsync(transactionId, ct);
+                    await _orderRepository.BulkUpdatePayoutStatusAsync(
+                        orderIds, PayoutStatus.Paid, ct);
+
+                    // Recalculate parent batch
+                    await RecalculateParentBatchAsync(
+                        transaction.PayoutBatchId, ct);
+                }
+                else
+                {
+                    transaction.Status = transaction.RetryCount >= MaxRetryCount
+                        ? PayoutTransactionStatus.ManualRequired
+                        : PayoutTransactionStatus.Failed;
+                    transaction.FailureReason =
+                        $"[Retry {transaction.RetryCount}] {result.ErrorMessage}";
+                }
+            }
+            catch (Exception ex)
+            {
+                transaction.Status = PayoutTransactionStatus.Failed;
+                transaction.FailureReason = ex.Message;
+                _logger.LogError(ex,
+                    "[Payout] Exception retrying transaction {Id}", transactionId);
+            }
+
+            await _payoutTransactionRepository.UpdateAsync(transaction);
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+
+        // ────────────────────────────────────────────────────────────
+        public async Task RetryAllFailedTransactionsAsync(
+            CancellationToken ct = default)
+        {
+            var failedTransactions = await _payoutTransactionRepository
+                .GetFailedWithRetryRemainingAsync(MaxRetryCount, ct);
+
+            _logger.LogInformation(
+                "[Payout] Retrying {Count} failed transactions",
+                failedTransactions.Count);
+
+            foreach (var transaction in failedTransactions)
+            {
+                await RetryTransactionAsync(transaction.Id, ct);
+            }
+        }
+
+        // ────────────────────────────────────────────────────────────
+        public async Task HoldBatchAsync(
+            Guid batchId,
+            string reason,
+            CancellationToken ct = default)
+        {
+            var batch = await _payoutBatchRepository.GetByIdAsync(batchId, ct)
+                ?? throw new KeyNotFoundException($"PayoutBatch with id {batchId} not found");
 
             if (batch.Status != PayoutBatchStatus.PendingApproval)
-            {
-                return Result<bool>.Failure(new Error("PayoutService.InvalidState", "Batch is not in Pending Approval state."));
-            }
+                throw new InvalidOperationException(
+                    $"Can only hold batches in PendingApproval state.");
 
-            batch.Status = PayoutBatchStatus.Processing;
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            batch.Status = PayoutBatchStatus.OnHold;
+            batch.HoldReason = reason;
 
-            foreach (var transaction in batch.Transactions.Where(t => t.Status == PayoutTransactionStatus.Pending))
-            {
-                await ProcessPayoutTransactionAsync(transaction.Id.ToString(), cancellationToken);
-            }
+            await _payoutBatchRepository.UpdateAsync(batch);
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
 
-            // Webhook will figure out when all transactions are done and complete the batch.
-            return Result<bool>.Success(true);
+        // ────────────────────────────────────────────────────────────
+        public async Task ExcludeTransactionAsync(
+            Guid transactionId,
+            string reason,
+            CancellationToken ct = default)
+        {
+            var transaction = await _payoutTransactionRepository
+                .GetByIdAsync(transactionId, ct)
+                ?? throw new KeyNotFoundException($"PayoutTransaction with id {transactionId} not found");
+
+            if (transaction.Status != PayoutTransactionStatus.Queued)
+                throw new InvalidOperationException(
+                    "Can only exclude Queued transactions.");
+
+            transaction.Status = PayoutTransactionStatus.Excluded;
+            transaction.ExcludeReason = reason;
+            await _payoutTransactionRepository.UpdateAsync(transaction);
+
+            // Unlock orders thuộc transaction này → trả về Unpaid
+            var orderIds = await _payoutItemRepository
+                .GetOrderIdsByTransactionIdAsync(transactionId, ct);
+            await _orderRepository.BulkUpdatePayoutStatusAsync(
+                orderIds, PayoutStatus.Unpaid, ct);
+
+            await _unitOfWork.SaveChangesAsync(ct);
+        }
+
+        // ── Helpers ──────────────────────────────────────────────────
+
+        private static void RecalculateBatchStatus(PayoutBatch batch)
+        {
+            var total = batch.Transactions.Count;
+            var success = batch.Transactions.Count(t =>
+                t.Status == PayoutTransactionStatus.Success);
+            var excluded = batch.Transactions.Count(t =>
+                t.Status == PayoutTransactionStatus.Excluded);
+            var failed = batch.Transactions.Count(t =>
+                t.Status == PayoutTransactionStatus.Failed ||
+                t.Status == PayoutTransactionStatus.ManualRequired);
+
+            batch.SuccessCount = success;
+            batch.FailedCount = failed;
+            batch.CompletedAt = DateTime.UtcNow;
+
+            batch.Status = (success + excluded == total)
+                ? PayoutBatchStatus.Completed
+                : PayoutBatchStatus.PartialFailed;
+        }
+
+        private async Task RecalculateParentBatchAsync(
+            Guid batchId,
+            CancellationToken ct)
+        {
+            var batch = await _payoutBatchRepository
+                .GetByIdWithTransactionsAsync(batchId, ct);
+            if (batch is null) return;
+
+            RecalculateBatchStatus(batch);
+            await _payoutBatchRepository.UpdateAsync(batch);
+        }
+
+        private static int GetWeekNumber(DateTime date)
+        {
+            var cal = System.Globalization.CultureInfo
+                .InvariantCulture.Calendar;
+            return cal.GetWeekOfYear(
+                date,
+                System.Globalization.CalendarWeekRule.FirstFourDayWeek,
+                DayOfWeek.Monday);
         }
     }
 }

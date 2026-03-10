@@ -6,6 +6,7 @@ namespace GearZone.Domain.Enums
         Pending,    // Included in a PayoutBatch, waiting for processing
         Processing, // Payment to store is being processed by the bank
         Paid,       // Store has been successfully paid
-        Failed      // Payment to store failed
+        Failed,      // Payment to store failed
+        Locked
     }
 }

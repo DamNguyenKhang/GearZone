@@ -24,16 +24,13 @@ namespace GearZone.Application
             services.AddScoped<IAdminCategoryService, AdminCategoryService>();
             services.AddScoped<IAdminProductService, AdminProductService>();
             services.AddScoped<IAdminBrandService, AdminBrandService>();
-            services.AddScoped<IAdminPayoutService, AdminPayoutService>();
+            //services.AddScoped<IAdminPayoutService, AdminPayoutService>();
             services.AddScoped<ICatalogService, CatalogService>();
             services.AddScoped<ISellerStoreService, SellerStoreService>();
             services.AddScoped<ISellerProductService, SellerProductService>();
             services.AddScoped<ICartService, CartService>();
             services.AddScoped<IPayoutService, PayoutService>();
             services.AddScoped<PaymentStrategyFactory>();
-
-            services.AddHostedService<WeeklyPayoutBatchGeneratorJob>();
-
             return services;
         }
     }

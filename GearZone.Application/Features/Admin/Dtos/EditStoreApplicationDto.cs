@@ -22,6 +22,7 @@ namespace GearZone.Application.Features.Admin.Dtos
         public string BankAccountName { get; set; } = string.Empty;
         public string BankAccountNumber { get; set; } = string.Empty;
         public string BankName { get; set; } = string.Empty;
+        public string BankBin { get; set; } = string.Empty;
         public string LogoUrl { get; set; } = string.Empty;
         public string Slug { get; set; } = string.Empty;
     }

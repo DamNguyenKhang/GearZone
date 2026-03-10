@@ -29,10 +29,7 @@ namespace GearZone.Infrastructure.Configurations
                 .HasForeignKey(x => x.PayoutTransactionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(x => x.Order)
-                .WithMany()
-                .HasForeignKey(x => x.OrderId)
-                .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }

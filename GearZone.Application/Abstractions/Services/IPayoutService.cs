@@ -9,16 +9,26 @@ public interface IPayoutService
     /// Generates a new Payout Batch aggregating orders up to the specified end date.
     /// Returns the generated PayoutBatch ID or an error result.
     /// </summary>
-    Task<Result<Guid>> GenerateWeeklyBatchAsync(DateTime endDate, CancellationToken cancellationToken = default);
+    Task<Guid> GenerateWeeklyBatchAsync(DateTime endDate, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Approves and processes a specific Payout Transaction within a Batch.
     /// Initiates the transfer via PayOS.
     /// </summary>
-    Task<Result<bool>> ProcessPayoutTransactionAsync(string transactionCode, CancellationToken cancellationToken = default);
+    Task ProcessPayoutTransactionAsync(string transactionCode, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Approves all eligible transactions in a batch.
     /// </summary>
-    Task<Result<bool>> ProcessPayoutBatchAsync(string batchCode, CancellationToken cancellationToken = default);
+    Task ProcessPayoutBatchAsync(string batchCode, CancellationToken cancellationToken = default);
+
+    Task ApproveBatchAsync(Guid batchId, string adminId, CancellationToken cancellationToken = default);
+
+    Task RetryTransactionAsync(Guid transactionId, CancellationToken cancellationToken = default);
+
+    Task RetryAllFailedTransactionsAsync(CancellationToken cancellationToken = default);
+
+    Task HoldBatchAsync(Guid batchId, string reason, CancellationToken cancellationToken = default);
+
+    Task ExcludeTransactionAsync(Guid transactionId, string reason, CancellationToken cancellationToken = default);
 }

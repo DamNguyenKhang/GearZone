@@ -24,6 +24,10 @@ namespace GearZone.Infrastructure.Configurations
                 .IsRequired()
                 .HasMaxLength(100);
 
+            builder.Property(x => x.BankBin)
+                .IsRequired()
+                .HasMaxLength(20);
+
             builder.Property(x => x.GrossAmount)
                 .HasColumnType("decimal(18,2)");
 

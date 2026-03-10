@@ -20,6 +20,11 @@ namespace GearZone.Infrastructure.Configurations
             builder.Property(x => x.Description).HasMaxLength(2000);
             builder.Property(x => x.LogoUrl).HasMaxLength(1000);
             
+            builder.Property(x => x.BankName).HasMaxLength(50);
+            builder.Property(x => x.BankAccountName).HasMaxLength(100);
+            builder.Property(x => x.BankAccountNumber).HasMaxLength(50);
+            builder.Property(x => x.BankBin).HasMaxLength(20);
+            
             // Replaced Business Info
             builder.Property(x => x.TaxCode).HasMaxLength(50);
             builder.Property(x => x.Phone).HasMaxLength(50);

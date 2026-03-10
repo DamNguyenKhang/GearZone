@@ -3,11 +3,13 @@ using GearZone.Application.Abstractions.Persistence;
 using GearZone.Infrastructure.External;
 using GearZone.Infrastructure.Repositories;
 using GearZone.Infrastructure.Settings;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PayOS;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace GearZone.Infrastructure
 {
@@ -88,6 +90,8 @@ namespace GearZone.Infrastructure
                 });
             });
 
+            services.AddHangfireServer(opt => opt.WorkerCount = 2);
+
             return services;
         }
 
@@ -95,6 +99,12 @@ namespace GearZone.Infrastructure
         {
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString));
+
+            services.AddHangfire(cfg => cfg
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UseSqlServerStorage(connectionString));
 
             return services;
         }

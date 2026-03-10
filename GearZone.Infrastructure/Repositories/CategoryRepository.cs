@@ -23,8 +23,8 @@ namespace GearZone.Infrastructure.Repositories
             if (!string.IsNullOrWhiteSpace(query.SearchTerm))
             {
                 var search = query.SearchTerm.ToLower();
-                dbQuery = dbQuery.Where(c => 
-                    c.Name.ToLower().Contains(search) || 
+                dbQuery = dbQuery.Where(c =>
+                    c.Name.ToLower().Contains(search) ||
                     c.Slug.ToLower().Contains(search));
             }
 
@@ -59,5 +59,67 @@ namespace GearZone.Infrastructure.Repositories
         {
             return await _dbSet.OrderBy(c => c.Name).ToListAsync();
         }
+
+        public async Task<List<CategoryDto>> GetHierarchicalCategoriesAsync(CategoryQueryDto query)
+        {
+            // Load root categories with their children and product counts
+            var rootQuery = _dbSet
+                .Include(c => c.Children)
+                    .ThenInclude(child => child.Products)
+                .Include(c => c.Products)
+                .Where(c => c.ParentId == null);
+
+            // Apply search filter (to roots or children matching)
+            if (!string.IsNullOrWhiteSpace(query.SearchTerm))
+            {
+                var search = query.SearchTerm.ToLower();
+                rootQuery = rootQuery.Where(c =>
+                    c.Name.ToLower().Contains(search) ||
+                    c.Slug.ToLower().Contains(search) ||
+                    c.Children.Any(ch => ch.Name.ToLower().Contains(search) || ch.Slug.ToLower().Contains(search)));
+            }
+
+            // Apply status filter
+            if (query.IsActive.HasValue)
+            {
+                rootQuery = rootQuery.Where(c => c.IsActive == query.IsActive.Value ||
+                    c.Children.Any(ch => ch.IsActive == query.IsActive.Value));
+            }
+
+            var roots = await rootQuery
+                .OrderBy(c => c.Name)
+                .ToListAsync();
+
+            var result = roots.Select(root =>
+            {
+                var rootDto = MapToCategoryDto(root, null, null);
+
+                rootDto.Children = root.Children
+                    .OrderBy(ch => ch.Name)
+                    .Select(child => MapToCategoryDto(child, root.Id, root.Name))
+                    .ToList();
+
+                return rootDto;
+            }).ToList();
+
+            return result;
+        }
+
+        private static CategoryDto MapToCategoryDto(Category c, int? parentId, string? parentName)
+        {
+            return new CategoryDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Slug = c.Slug,
+                IsActive = c.IsActive,
+                IsDeleted = c.IsDeleted,
+                ParentId = parentId ?? c.ParentId,
+                ParentName = parentName,
+                ProductCount = c.Products.Count,
+                Revenue = 0 // Revenue can be extended separately via OrderItem queries if needed
+            };
+        }
     }
 }
+

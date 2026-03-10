@@ -5,7 +5,8 @@ namespace GearZone.Application.Features.Catalog.DTOs
 {
     public class ProductFilterDto
     {
-
+        public Guid? StoreId { get; set; }
+        public string? Search { get; set; }
         public string? CategorySlug { get; set; }
         public List<string>? BrandSlugs { get; set; }
         public decimal? MinPrice { get; set; }

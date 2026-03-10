@@ -10,4 +10,5 @@ public class StoreApplicationQueryDto : PaginationRequest
     public StoreStatus? Status { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
+    public List<StoreStatus>? ExcludeStatuses { get; set; }
 }

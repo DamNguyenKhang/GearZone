@@ -63,4 +63,9 @@ nunit-*.xml
 
 *.md.resolved
 code.html
+
 build_errors.txt
+build_log*.txt
+
+# Agent workflows
+.agents/

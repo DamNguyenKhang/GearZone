@@ -5,12 +5,12 @@ using GearZone.Application.Features.Seller.Dtos;
 using GearZone.Domain.Entities;
 using GearZone.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System;
 
 namespace GearZone.Application.Features.Seller
 {
@@ -87,15 +87,6 @@ namespace GearZone.Application.Features.Seller
 
             if (product == null) return null;
 
-            var specs = new Dictionary<string, string>();
-            if (!string.IsNullOrEmpty(product.SpecsJson))
-            {
-                try
-                {
-                    specs = JsonSerializer.Deserialize<Dictionary<string, string>>(product.SpecsJson) ?? new();
-                }
-                catch { /* Ignore invalid JSON */ }
-            }
 
             return new SellerProductDetailDto
             {
@@ -109,7 +100,9 @@ namespace GearZone.Application.Features.Seller
                 SoldCount = product.SoldCount,
                 Status = product.Status.ToString(),
                 CreatedAt = product.CreatedAt,
-                Specifications = specs,
+                Specifications = string.IsNullOrEmpty(product.SpecsJson) 
+                    ? new Dictionary<string, string>() 
+                    : JsonSerializer.Deserialize<Dictionary<string, string>>(product.SpecsJson) ?? new Dictionary<string, string>(),
                 ImageUrls = product.Images.OrderBy(i => i.SortOrder).Select(i => i.ImageUrl).ToList(),
                 Variants = product.Variants.Select(v => new ProductVariantDto
                 {
@@ -172,7 +165,7 @@ namespace GearZone.Application.Features.Seller
                 SpecsJson = JsonSerializer.Serialize(dto.Specifications?
                     .Where(s => !string.IsNullOrWhiteSpace(s.Key))
                     .ToDictionary(s => s.Key, s => s.Value) ?? new Dictionary<string, string>())
-            };
+            };  
 
             await _productRepository.AddAsync(product);
 
@@ -363,7 +356,7 @@ namespace GearZone.Application.Features.Seller
                     ev.IsActive = true;
                     ev.IsDeleted = false; // Re-active if it was deleted
                     ev.UpdatedAt = DateTime.UtcNow;
-                    
+
                     // Stock adjustment via transaction if changed
                     if (iv.StockQuantity != ev.StockQuantity)
                     {
@@ -481,6 +474,53 @@ namespace GearZone.Application.Features.Seller
                     Value = o.Value
                 }).ToList()
             }).ToList();
+        }
+
+        public async Task ToggleProductStatusAsync(Guid productId, Guid storeId)
+        {
+            var product = await _productRepository.Query()
+                .FirstOrDefaultAsync(p => p.Id == productId && p.StoreId == storeId && !p.IsDeleted);
+
+            if (product == null) throw new InvalidOperationException("Product not found.");
+
+            product.Status = product.Status == ProductStatus.Active ? ProductStatus.Inactive : ProductStatus.Active;
+            product.UpdatedAt = DateTime.UtcNow;
+
+            await _productRepository.UpdateAsync(product);
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        public async Task<int> CreateBrandByNameAsync(string name)
+        {
+            var slug = name.ToLower().Replace(" ", "-");
+            var brand = new Brand
+            {
+                Name = name,
+                Slug = slug,
+                IsApproved = true, // Auto-approve for now, or keep as false if admin review is required
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _brandRepository.AddAsync(brand);
+            await _unitOfWork.SaveChangesAsync();
+
+            return brand.Id;
+        }
+
+        public async Task<int> CreateCategoryByNameAsync(string name)
+        {
+            var slug = name.ToLower().Replace(" ", "-");
+            var category = new Category
+            {
+                Name = name,
+                Slug = slug,
+                IsActive = true
+            };
+
+            await _categoryRepository.AddAsync(category);
+            await _unitOfWork.SaveChangesAsync();
+
+            return category.Id;
         }
     }
 }

@@ -1,0 +1,522 @@
+@page "/product/{slug}"
+@model GearZone.Web.Pages.Public.Catalog.ProductDetailModel
+@{
+    ViewData["Title"] = $"{Model.Product.Name} - GearZone";
+}
+
+<div class="flex-grow w-full max-w-[1280px] mx-auto px-4 lg:px-8 py-6">
+    <!-- Breadcrumbs -->
+    <nav class="flex flex-wrap gap-2 pb-6 text-sm">
+        <a class="text-slate-500 hover:text-primary dark:text-slate-400" href="/">Home</a>
+        <span class="text-slate-400">/</span>
+        <a class="text-slate-500 hover:text-primary dark:text-slate-400" href="/products/@Model.Product.CategorySlug">@Model.Product.CategoryName</a>
+        <span class="text-slate-400">/</span>
+        <span class="text-slate-900 font-medium dark:text-white">@Model.Product.Name</span>
+    </nav>
+
+    <!-- Product Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12" id="product-root" data-variants='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Product.Variants))'>
+        
+        <!-- Left Column: Gallery (45%) -->
+        <div class="lg:col-span-5 flex flex-col gap-4">
+            <div class="relative w-full aspect-[4/3] bg-white rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm group">
+                <img id="main-product-image" alt="@Model.Product.Name main view"
+                     class="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                     src="@(Model.Product.ImageUrls.FirstOrDefault() ?? "/images/placeholder.png")" />
+                <div class="absolute top-4 left-4 bg-secondary text-white text-xs font-bold px-2 py-1 rounded">-15% OFF</div>
+            </div>
+            
+            @if (Model.Product.ImageUrls.Count > 1)
+            {
+                <div class="grid grid-cols-4 gap-3">
+                    @foreach (var img in Model.Product.ImageUrls.Take(4))
+                    {
+                        <button class="gallery-thumb aspect-square rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden p-1 bg-white hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                                onclick="document.getElementById('main-product-image').src='@img'">
+                            <img alt="Thumbnail view" class="w-full h-full object-contain" src="@img" />
+                        </button>
+                    }
+                </div>
+            }
+            
+            <button class="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors text-sm font-medium mt-2">
+                <span class="material-symbols-outlined text-lg">compare_arrows</span>
+                Compare this product
+            </button>
+        </div>
+
+        <!-- Right Column: Product Info (55%) -->
+        <div class="lg:col-span-7 flex flex-col gap-6">
+            <!-- Title & Header -->
+            <div>
+                <div class="flex items-center gap-2 mb-3">
+                    <a href="/store/@Model.Product.StoreSlug" class="bg-primary/10 text-primary text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-primary/20 hover:bg-primary hover:text-white transition-colors">
+                        <span class="material-symbols-outlined text-[14px]">storefront</span>
+                        @Model.Product.StoreName
+                    </a>
+                    <div class="flex items-center gap-1 text-secondary">
+                        <span class="material-symbols-outlined text-[16px] fill-current">star</span>
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300">4.8 (126)</span>
+                    </div>
+                </div>
+                <h1 class="text-3xl font-bold text-slate-900 dark:text-white leading-tight mb-2">@Model.Product.Name</h1>
+                <div class="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+                    <span>Brand: <a class="text-primary hover:underline" href="/catalog?brand=@Model.Product.BrandSlug">@Model.Product.BrandName</a></span>
+                    <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                    <span>SKU: <span id="display-sku">@Model.Product.Variants.FirstOrDefault()?.Sku</span></span>
+                    <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                    <span>@Model.Product.SoldCount Sold</span>
+                </div>
+            </div>
+
+            <!-- Price Section -->
+            <div class="bg-slate-50 dark:bg-surface-dark/50 p-5 rounded-xl">
+                <div class="flex items-end gap-3 flex-wrap">
+                    <span id="display-price" class="text-4xl font-extrabold text-secondary tracking-tight">
+                        @(Model.Product.Variants.FirstOrDefault()?.Price.ToString("N0") ?? Model.Product.BasePrice.ToString("N0"))₫
+                    </span>
+                    <span id="display-original-price" class="text-lg text-slate-400 line-through mb-1">
+                        @(( (Model.Product.Variants.FirstOrDefault()?.Price ?? Model.Product.BasePrice) * 1.15m ).ToString("N0"))₫
+                    </span>
+                    <span class="text-sm font-bold text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400 px-2 py-1 rounded mb-1">Save 15%</span>
+                </div>
+            </div>
+
+            <!-- Shopee-style Variant Selection -->
+            @if (Model.Product.AttributeSelections.Any())
+            {
+                <div class="space-y-4">
+                    @foreach (var attr in Model.Product.AttributeSelections)
+                    {
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-slate-900 dark:text-white">@attr.Name</label>
+                            <div class="flex flex-wrap gap-2 attribute-group" data-attribute-id="@attr.AttributeId">
+                                @foreach (var opt in attr.Options)
+                                {
+                                    <button type="button" 
+                                            class="variant-option px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500 font-medium text-sm bg-white dark:bg-surface-dark transition-all focus:outline-none"
+                                            data-option-id="@opt.OptionId">
+                                        @opt.Value
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- Stock & Actions -->
+            <div class="flex flex-col gap-5 pt-2">
+                <div class="flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400" id="stock-container">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <span id="display-stock">In Stock (@(Model.Product.Variants.FirstOrDefault()?.StockQuantity ?? 0) units available)</span>
+                </div>
+                <div class="flex items-center gap-2 text-sm font-medium text-red-600 dark:text-red-400 hidden" id="out-of-stock-container">
+                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                    <span>Out of Stock</span>
+                </div>
+                
+                <div class="flex flex-wrap gap-4 items-stretch">
+                    <!-- Quantity -->
+                    <div class="flex items-center border border-slate-300 dark:border-slate-600 rounded-lg h-12 bg-white dark:bg-surface-dark">
+                        <button type="button" class="w-10 h-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white" onclick="updateQty(-1)">
+                            <span class="material-symbols-outlined text-lg">remove</span>
+                        </button>
+                        <input id="qty-input" class="w-12 h-full text-center border-none focus:ring-0 text-slate-900 dark:text-white bg-transparent font-medium p-0"
+                               readonly type="text" value="1" />
+                        <button type="button" class="w-10 h-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white" onclick="updateQty(1)">
+                            <span class="material-symbols-outlined text-lg">add</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Add to Cart -->
+                    <button id="add-to-cart-btn" class="flex-1 min-w-[160px] h-12 rounded-lg border-2 border-primary text-primary font-bold hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined">add_shopping_cart</span>
+                        Add to Cart
+                    </button>
+                    <!-- Buy Now -->
+                    <button class="flex-[1.5] min-w-[200px] h-12 rounded-lg bg-secondary text-white font-bold hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2">
+                        Buy Now
+                    </button>
+                </div>
+                <div id="selection-warning" class="text-sm text-red-500 hidden">Please select a valid combination of options.</div>
+            </div>
+
+            <!-- Highlight Box -->
+            <div class="bg-blue-50 dark:bg-slate-800/50 rounded-xl p-5 border border-blue-100 dark:border-slate-700 mt-2">
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-3">
+                        <div class="min-w-6 h-6 rounded-full bg-white dark:bg-slate-700 flex items-center justify-center shadow-sm text-primary">
+                            <span class="material-symbols-outlined text-sm">verified_user</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-slate-900 dark:text-white">36 Months Genuine Warranty</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Directly from GearZone service centers.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <div class="min-w-6 h-6 rounded-full bg-white dark:bg-slate-700 flex items-center justify-center shadow-sm text-primary">
+                            <span class="material-symbols-outlined text-sm">local_shipping</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-slate-900 dark:text-white">Free Nationwide Shipping</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Estimated delivery: 2-4 business days.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <div class="min-w-6 h-6 rounded-full bg-white dark:bg-slate-700 flex items-center justify-center shadow-sm text-primary">
+                            <span class="material-symbols-outlined text-sm">replay</span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-slate-900 dark:text-white">7-Day Return Policy</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">If there is a manufacturer defect.</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Below Fold: Tabs & Specs -->
+    <div class="mt-16">
+        <div class="mb-8 sticky top-0 bg-slate-50 dark:bg-background-dark z-10 pt-4">
+            <nav aria-label="Tabs" class="flex gap-8 overflow-x-auto no-scrollbar">
+                <button class="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap">
+                    Description
+                </button>
+                <button aria-current="page" class="border-b-2 border-primary py-4 px-1 text-sm font-bold text-primary whitespace-nowrap">
+                    Specifications
+                </button>
+                <button class="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap">
+                    Reviews (126)
+                </button>
+            </nav>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <!-- Main Content (Specs + Desc) -->
+            <div class="lg:col-span-2 space-y-10">
+                @if (Model.Product.Specifications.Any())
+                {
+                    <section>
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-6">Technical Specifications</h3>
+                        <div class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
+                            <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                                <tbody class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-surface-dark">
+                                    @foreach (var spec in Model.Product.Specifications)
+                                    {
+                                        <tr>
+                                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-slate-500 dark:text-slate-400 w-1/3 sm:pl-6 bg-slate-50/50 dark:bg-slate-800/30">
+                                                @spec.Name
+                                            </td>
+                                            <td class="whitespace-nowrap px-3 py-4 text-sm text-slate-900 dark:text-white font-mono break-words whitespace-normal">
+                                                @spec.Value
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Model.Product.Description))
+                {
+                    <section>
+                         <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-6">Description</h3>
+                         <div class="prose dark:prose-invert max-w-none text-slate-600 dark:text-slate-300">
+                             @Html.Raw(Model.Product.Description)
+                         </div>
+                    </section>
+                }
+            </div>
+
+            <!-- Reviews Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-white dark:bg-surface-dark rounded-xl p-6 border border-slate-200 dark:border-slate-700 sticky top-24">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Reviews Summary</h3>
+                        <a href="#" class="text-sm text-primary font-medium hover:underline">View all</a>
+                    </div>
+                    <div class="flex flex-col items-center mb-6 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4">
+                        <span class="text-5xl font-black text-slate-900 dark:text-white mb-1">4.8</span>
+                        <div class="flex gap-0.5 text-secondary mb-1">
+                            <span class="material-symbols-outlined fill-current text-xl">star</span>
+                            <span class="material-symbols-outlined fill-current text-xl">star</span>
+                            <span class="material-symbols-outlined fill-current text-xl">star</span>
+                            <span class="material-symbols-outlined fill-current text-xl">star</span>
+                            <span class="material-symbols-outlined fill-current text-xl">star_half</span>
+                        </div>
+                        <span class="text-sm text-slate-500">Based on 126 reviews</span>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- Review Card 1 -->
+                        <div class="border-b border-slate-100 dark:border-slate-700 pb-4 last:border-0">
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-200">MH</div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-bold text-slate-900 dark:text-white">Minh Hoang</span>
+                                    <span class="text-xs text-slate-500">2 days ago</span>
+                                </div>
+                            </div>
+                            <div class="flex text-secondary text-xs mb-1">
+                                <span class="material-symbols-outlined text-[14px] fill-current">star</span>
+                                <span class="material-symbols-outlined text-[14px] fill-current">star</span>
+                                <span class="material-symbols-outlined text-[14px] fill-current">star</span>
+                                <span class="material-symbols-outlined text-[14px] fill-current">star</span>
+                                <span class="material-symbols-outlined text-[14px] fill-current">star</span>
+                            </div>
+                            <p class="text-sm text-slate-600 dark:text-slate-300">Fantastic performance at 1440p. Runs cool and quiet even under load. The RGB looks amazing in my build.</p>
+                        </div>
+                        
+                        <!-- Review Card 2 -->
+                        <div class="border-b border-slate-100 dark:border-slate-700 pb-4 last:border-0">
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">TN</div>
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-bold text-slate-900 dark:text-white">Tran Nam</span>
+                                    <span class="text-xs text-slate-500">1 week ago</span>
+                                </div>
+                            </div>
+                            <div class="flex text-secondary text-xs mb-1">
+                                <span class="material-symbols-outlined text-[14px] fill-current">star</span>
+                                <span class="material-symbols-outlined text-[14px] fill-current">star</span>
+                                <span class="material-symbols-outlined text-[14px] fill-current">star</span>
+                                <span class="material-symbols-outlined text-[14px] fill-current">star</span>
+                                <span class="material-symbols-outlined text-[14px] text-slate-300">star</span>
+                            </div>
+                            <p class="text-sm text-slate-600 dark:text-slate-300">Great card but the price is a bit steep. Delivery was super fast though, thanks GearZone!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Related Products -->
+    @if (Model.RelatedProducts.Any())
+    {
+        <div class="mt-20">
+            <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-8">Related Products</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                @foreach (var p in Model.RelatedProducts)
+                {
+                    <a href="/product/@p.Slug" class="bg-white dark:bg-surface-dark rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow p-4 flex flex-col">
+                        <div class="aspect-square w-full mb-4 rounded-md overflow-hidden bg-slate-50 dark:bg-slate-800 relative">
+                            <img src="@(string.IsNullOrEmpty(p.ImageUrl) ? "/images/placeholder.png" : p.ImageUrl)"
+                                 alt="@p.Name"
+                                 class="w-full h-full object-contain p-2" />
+                            @if (!p.IsInStock)
+                            {
+                                <div class="absolute inset-0 bg-white/60 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center">
+                                    <span class="bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">Out of Stock</span>
+                                </div>
+                            }
+                        </div>
+                        <h4 class="text-sm font-semibold text-slate-900 dark:text-white mb-2 line-clamp-2 h-10">@p.Name</h4>
+                        <div class="flex items-center gap-1 text-secondary mb-3">
+                            <span class="material-symbols-outlined text-sm fill-current">star</span>
+                            <span class="material-symbols-outlined text-sm fill-current">star</span>
+                            <span class="material-symbols-outlined text-sm fill-current">star</span>
+                            <span class="material-symbols-outlined text-sm fill-current">star</span>
+                            <span class="material-symbols-outlined text-sm fill-current">star</span>
+                            <span class="text-xs font-bold text-slate-500 ml-1">(@p.ReviewCount)</span>
+                        </div>
+                        <div class="mt-auto">
+                            <div class="flex flex-wrap items-baseline gap-2 mb-4">
+                                <span class="text-lg font-bold text-secondary">@p.BasePrice.ToString("N0")₫</span>
+                                <span class="text-xs text-slate-400 line-through">@((p.BasePrice * 1.15m).ToString("N0"))₫</span>
+                            </div>
+                            <button class="w-full py-2 rounded-lg border border-primary text-primary text-xs font-bold hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
+                                <span class="material-symbols-outlined text-sm">add_shopping_cart</span>
+                                Add to Cart
+                            </button>
+                        </div>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const root = document.getElementById('product-root');
+            if(!root) return;
+            
+            const variants = JSON.parse(root.getAttribute('data-variants') || '[]');
+            const groups = Array.from(document.querySelectorAll('.attribute-group'));
+            
+            let selectedOptions = {};
+
+            // Helper to get matching variant
+            function findMatchingVariant() {
+                if(Object.keys(selectedOptions).length !== groups.length) return null;
+                
+                const selectedIds = Object.values(selectedOptions).map(Number);
+                return variants.find(v => 
+                    selectedIds.every(id => v.SelectedOptionIds.includes(id)) && 
+                    v.SelectedOptionIds.length === selectedIds.length
+                );
+            }
+
+            function updateUI() {
+                const variant = findMatchingVariant();
+                const warningEl = document.getElementById('selection-warning');
+                const btn = document.getElementById('add-to-cart-btn');
+                const stockContainer = document.getElementById('stock-container');
+                const oosContainer = document.getElementById('out-of-stock-container');
+                
+                if (Object.keys(selectedOptions).length === groups.length && !variant) {
+                    warningEl.classList.remove('hidden');
+                    btn.disabled = true;
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    warningEl.classList.add('hidden');
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+
+                if (variant) {
+                    // Update URL silently
+                    const url = new URL(window.location);
+                    url.searchParams.set('variantId', variant.Id);
+                    window.history.replaceState({}, '', url);
+
+                    // Update Price
+                    const newPrice = variant.Price;
+                    document.getElementById('display-price').textContent = newPrice.toLocaleString('vi-VN') + '₫';
+                    const originalPrice = newPrice * 1.15;
+                    const displayOriginalElement = document.getElementById('display-original-price');
+                    if(displayOriginalElement) displayOriginalElement.textContent = originalPrice.toLocaleString('vi-VN') + '₫';
+                    
+                    // Update SKU
+                    document.getElementById('display-sku').textContent = variant.Sku;
+
+                    // Update Stock
+                    const qtyInput = document.getElementById('qty-input');
+                    if (variant.StockQuantity > 0) {
+                        stockContainer.classList.remove('hidden');
+                        oosContainer.classList.add('hidden');
+                        document.getElementById('display-stock').textContent = `In Stock (${variant.StockQuantity} units available)`;
+                        btn.disabled = false;
+                        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        qtyInput.setAttribute('data-max-stock', variant.StockQuantity);
+                        
+                        // If current value exceeds new max, reset it
+                        if (parseInt(qtyInput.value) > variant.StockQuantity) {
+                            qtyInput.value = variant.StockQuantity;
+                        }
+                    } else {
+                        stockContainer.classList.add('hidden');
+                        oosContainer.classList.remove('hidden');
+                        btn.disabled = true;
+                        btn.classList.add('opacity-50', 'cursor-not-allowed');
+                        qtyInput.setAttribute('data-max-stock', 0);
+                        qtyInput.value = 1;
+                    }
+                }
+            }
+
+            // Click handlers
+            document.querySelectorAll('.variant-option').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const group = e.target.closest('.attribute-group');
+                    const attrId = group.getAttribute('data-attribute-id');
+                    const optId = e.target.getAttribute('data-option-id');
+
+                    // UI Toggle: Remove active state from all buttons IN THIS GROUP
+                    group.querySelectorAll('.variant-option').forEach(b => {
+                        b.classList.remove('border-2', 'border-primary', 'bg-primary/5', 'text-primary');
+                        b.classList.add('border', 'border-slate-200');
+                        // Remove checkmark
+                        const check = b.querySelector('.material-symbols-outlined');
+                        if (check) check.remove();
+                    });
+
+                    // Add active state to clicked button
+                    e.target.classList.remove('border', 'border-slate-200');
+                    e.target.classList.add('border-2', 'border-primary', 'bg-primary/5', 'text-primary', 'relative');
+                    e.target.insertAdjacentHTML('beforeend', '<span class="absolute -top-2 -right-2 bg-primary text-white text-[10px] px-1.5 py-0.5 rounded-full shadow-sm material-symbols-outlined text-xs p-1 checkmark-icon">check</span>');
+
+                    selectedOptions[attrId] = optId;
+                    
+                    updateUI();
+                });
+            });
+
+            // Initialize from URL if present
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialVariantId = urlParams.get('variantId');
+            if (initialVariantId) {
+                const initialVariant = variants.find(v => v.Id === initialVariantId);
+                if (initialVariant) {
+                    initialVariant.SelectedOptionIds.forEach(optId => {
+                        const btn = document.querySelector(`.variant-option[data-option-id="${optId}"]`);
+                        if (btn) btn.click();
+                    });
+                }
+            } else if (groups.length > 0 && variants.length > 0) {
+                // Pre-select first valid variant
+                variants[0].SelectedOptionIds.forEach(optId => {
+                     const btn = document.querySelector(`.variant-option[data-option-id="${optId}"]`);
+                     if (btn) btn.click();
+                });
+            } else {
+                updateUI(); // In case there are no variants
+            }
+
+            // Add to Cart
+            const addToCartBtn = document.getElementById('add-to-cart-btn');
+            if (addToCartBtn) {
+                addToCartBtn.addEventListener('click', async () => {
+                   const variant = findMatchingVariant();
+                   let variantId = null;
+
+                   if (variant) {
+                       variantId = variant.Id;
+                   } else if(variants.length === 1) { // Handle products with no explicit variants selection
+                       variantId = variants[0].Id;
+                   } else {
+                       document.getElementById('selection-warning').classList.remove('hidden');
+                       return;
+                   }
+                   
+                   const qtyInput = document.getElementById('qty-input');
+                   const quantity = parseInt(qtyInput.value);
+                   const maxStock = parseInt(qtyInput.getAttribute('data-max-stock') || '9999');
+
+                   if (quantity > maxStock) {
+                       window.showToast?.('warning', `Only ${maxStock} items available in stock.`);
+                       return;
+                   }
+
+                   const success = await addToCart(variantId, quantity, addToCartBtn);
+                   
+                   if (success) {
+                       qtyInput.value = 1;
+                   }
+                });
+            }
+        });
+
+        function updateQty(change) {
+            const input = document.getElementById('qty-input');
+            const maxStock = parseInt(input.getAttribute('data-max-stock') || '1');
+            let val = parseInt(input.value) + change;
+            
+            if (val < 1) val = 1;
+            if (val > maxStock) {
+                if (maxStock > 0) {
+                    window.showToast?.('warning', `Maximum available stock: ${maxStock}`);
+                }
+                val = Math.max(1, maxStock);
+            }
+            
+            input.value = val;
+        }
+    </script>
+}

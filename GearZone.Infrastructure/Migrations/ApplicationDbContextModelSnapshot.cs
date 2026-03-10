@@ -45,6 +45,9 @@ namespace GearZone.Infrastructure.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("AvatarUrl")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -150,7 +153,13 @@ namespace GearZone.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("LogoUrl")
@@ -166,6 +175,9 @@ namespace GearZone.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -183,9 +195,6 @@ namespace GearZone.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("StoreId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -194,8 +203,6 @@ namespace GearZone.Infrastructure.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("StoreId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -572,7 +579,73 @@ namespace GearZone.Infrastructure.Migrations
 
                     b.HasIndex("CategoryAttributeId");
 
-                    b.ToTable("CategoryAttributeOptions");
+                    b.ToTable("CategoryAttributeOptions", (string)null);
+                });
+
+            modelBuilder.Entity("GearZone.Domain.Entities.ChatMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SenderUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId");
+
+                    b.HasIndex("SenderUserId");
+
+                    b.HasIndex("SentAt");
+
+                    b.ToTable("ChatMessages", (string)null);
+                });
+
+            modelBuilder.Entity("GearZone.Domain.Entities.Conversation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BuyerUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("LastMessageAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LastMessageAt");
+
+                    b.HasIndex("StoreId");
+
+                    b.HasIndex("BuyerUserId", "StoreId")
+                        .IsUnique();
+
+                    b.ToTable("Conversations", (string)null);
                 });
 
             modelBuilder.Entity("GearZone.Domain.Entities.InventoryTransaction", b =>
@@ -633,10 +706,9 @@ namespace GearZone.Infrastructure.Migrations
                     b.Property<decimal>("GrandTotal")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<string>("OrderCode")
-                        .IsRequired()
+                    b.Property<long>("OrderCode")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("bigint");
 
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("datetime2");
@@ -759,7 +831,8 @@ namespace GearZone.Infrastructure.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("OldStatus")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uniqueidentifier");
@@ -782,30 +855,40 @@ namespace GearZone.Infrastructure.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("CheckoutUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Method")
-                        .IsRequired()
+                    b.Property<int>("Method")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("int");
 
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PaymentLinkId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Provider")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
+                    b.Property<int>("Status")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("int");
 
                     b.Property<string>("TransactionRef")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -1033,6 +1116,9 @@ namespace GearZone.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int>("RegistrationStep")
+                        .HasColumnType("int");
+
                     b.Property<string>("RejectReason")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -1072,6 +1158,32 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("Stores", (string)null);
                 });
 
+            modelBuilder.Entity("GearZone.Domain.Entities.StoreFollow", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("FollowedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId");
+
+                    b.HasIndex("UserId", "StoreId")
+                        .IsUnique();
+
+                    b.ToTable("StoreFollows", (string)null);
+                });
+
             modelBuilder.Entity("GearZone.Domain.Entities.SystemSetting", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1105,7 +1217,7 @@ namespace GearZone.Infrastructure.Migrations
                     b.HasIndex("Key")
                         .IsUnique();
 
-                    b.ToTable("SystemSettings");
+                    b.ToTable("SystemSettings", (string)null);
 
                     b.HasData(
                         new
@@ -1431,17 +1543,11 @@ namespace GearZone.Infrastructure.Migrations
 
             modelBuilder.Entity("GearZone.Domain.Entities.Cart", b =>
                 {
-                    b.HasOne("GearZone.Domain.Entities.Store", "Store")
-                        .WithMany()
-                        .HasForeignKey("StoreId");
-
                     b.HasOne("GearZone.Domain.Entities.ApplicationUser", "User")
                         .WithMany("Carts")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Store");
 
                     b.Navigation("User");
                 });
@@ -1495,6 +1601,44 @@ namespace GearZone.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("CategoryAttribute");
+                });
+
+            modelBuilder.Entity("GearZone.Domain.Entities.ChatMessage", b =>
+                {
+                    b.HasOne("GearZone.Domain.Entities.Conversation", "Conversation")
+                        .WithMany("Messages")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GearZone.Domain.Entities.ApplicationUser", "SenderUser")
+                        .WithMany()
+                        .HasForeignKey("SenderUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
+
+                    b.Navigation("SenderUser");
+                });
+
+            modelBuilder.Entity("GearZone.Domain.Entities.Conversation", b =>
+                {
+                    b.HasOne("GearZone.Domain.Entities.ApplicationUser", "BuyerUser")
+                        .WithMany("Conversations")
+                        .HasForeignKey("BuyerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GearZone.Domain.Entities.Store", "Store")
+                        .WithMany("Conversations")
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BuyerUser");
+
+                    b.Navigation("Store");
                 });
 
             modelBuilder.Entity("GearZone.Domain.Entities.InventoryTransaction", b =>
@@ -1644,6 +1788,25 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("OwnerUser");
                 });
 
+            modelBuilder.Entity("GearZone.Domain.Entities.StoreFollow", b =>
+                {
+                    b.HasOne("GearZone.Domain.Entities.Store", "Store")
+                        .WithMany("StoreFollows")
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("GearZone.Domain.Entities.ApplicationUser", "User")
+                        .WithMany("StoreFollows")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Store");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("GearZone.Domain.Entities.VariantAttributeValue", b =>
                 {
                     b.HasOne("GearZone.Domain.Entities.CategoryAttribute", "CategoryAttribute")
@@ -1726,9 +1889,13 @@ namespace GearZone.Infrastructure.Migrations
                 {
                     b.Navigation("Carts");
 
+                    b.Navigation("Conversations");
+
                     b.Navigation("Orders");
 
                     b.Navigation("OwnedStores");
+
+                    b.Navigation("StoreFollows");
                 });
 
             modelBuilder.Entity("GearZone.Domain.Entities.Brand", b =>
@@ -1760,6 +1927,11 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("VariantSelections");
                 });
 
+            modelBuilder.Entity("GearZone.Domain.Entities.Conversation", b =>
+                {
+                    b.Navigation("Messages");
+                });
+
             modelBuilder.Entity("GearZone.Domain.Entities.Order", b =>
                 {
                     b.Navigation("Items");
@@ -1785,7 +1957,11 @@ namespace GearZone.Infrastructure.Migrations
 
             modelBuilder.Entity("GearZone.Domain.Entities.Store", b =>
                 {
+                    b.Navigation("Conversations");
+
                     b.Navigation("Products");
+
+                    b.Navigation("StoreFollows");
                 });
 #pragma warning restore 612, 618
         }

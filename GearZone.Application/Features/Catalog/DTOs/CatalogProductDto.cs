@@ -19,5 +19,6 @@ namespace GearZone.Application.Features.Catalog.DTOs
         public List<string> SaleBadges { get; set; } = new List<string>();
         public List<string> HighlightTags { get; set; } = new List<string>(); // e.g. "12GB VRAM"
         public bool IsInStock { get; set; }
+        public Guid DefaultVariantId { get; set; }
     }
 }

@@ -36,5 +36,25 @@ namespace GearZone.Web.Pages.StoreOwner.Products
 
             return Page();
         }
+
+        public async Task<IActionResult> OnPostToggleStatusAsync(Guid id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var store = await _storeService.GetStoreByOwnerIdAsync(userId!);
+            
+            if (store == null) return RedirectToPage("/StoreOwner/Dashboard");
+
+            try
+            {
+                await _productService.ToggleProductStatusAsync(id, store.Id);
+                TempData["SuccessMessage"] = "Product status updated!";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
+            return RedirectToPage();
+        }
     }
 }

@@ -318,11 +318,32 @@
                 $('#variantsContainer').append(html);
             });
 
+            // Add Specification
+            $('#btnAddSpec').click(function() {
+                let index = $('#specsContainer .spec-row').length;
+                let html = `
+                    <div class="spec-row grid grid-cols-1 md:grid-cols-2 gap-4 items-end bg-gray-50/50 p-4 rounded-lg border border-gray-100 relative group animate-fadeIn">
+                        <button type="button" class="btnRemoveRow absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1 shadow-sm hover:bg-red-200 transition-colors hidden group-hover:block">
+                            <span class="material-symbols-outlined text-[16px]">close</span>
+                        </button>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Key (e.g., Color, Material)</label>
+                            <input name="Input.Specifications[${index}].Key" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white" placeholder="Key">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Value (e.g., Phantom Black, Aluminum)</label>
+                            <input name="Input.Specifications[${index}].Value" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white" placeholder="Value">
+                        </div>
+                    </div>`;
+                $('#specsContainer').append(html);
+            });
+
             // Remove Row
             $(document).on('click', '.btnRemoveRow', function() {
                 let container = $(this).closest('.space-y-3, tbody');
-                let rowClass = $(this).closest('.spec-row, .variant-row').attr('class').split(' ')[0];
-                $(this).closest('.spec-row, .variant-row').remove();
+                let row = $(this).closest('.spec-row, .variant-row');
+                let isSpec = row.hasClass('spec-row');
+                row.remove();
                 
                 if (rowClass === 'spec-row') {
                     // updateIndices('specsContainer', 'spec-row', 'Input.Specifications');

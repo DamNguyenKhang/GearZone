@@ -37,14 +37,14 @@ namespace GearZone.Infrastructure.External
                 var response = await _client.Payouts.CreateAsync(request);
 
                 return new PayoutResult(
-                    success: true,
+                    isSuccess: true,
                     referenceId: response.ReferenceId
                 );
             }
             catch (Exception ex)
             {
                 return new PayoutResult(
-                    success: false,
+                    isSuccess: false,
                     errorMessage: ex.Message
                 );
             }
@@ -70,14 +70,14 @@ namespace GearZone.Infrastructure.External
                 var response = await _client.Payouts.Batch.CreateAsync(request);
 
                 return new PayoutResult(
-                    success: true,
+                    isSuccess: true,
                     referenceId: response.ReferenceId
                 );
             }
             catch (Exception ex)
             {
                 return new PayoutResult(
-                    success: false,
+                    isSuccess: false,
                     errorMessage: ex.Message
                 );
             }

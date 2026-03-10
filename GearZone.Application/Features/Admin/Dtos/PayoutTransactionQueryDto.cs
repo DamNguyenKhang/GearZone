@@ -4,7 +4,7 @@ using System;
 
 namespace GearZone.Application.Features.Admin.Dtos
 {
-    public class PayoutTransactionQueryDto : QueryStringParameters
+    public class PayoutTransactionQueryDto : PaginationRequest
     {
         public string? SearchTerm { get; set; }
         public PayoutTransactionStatus? Status { get; set; }

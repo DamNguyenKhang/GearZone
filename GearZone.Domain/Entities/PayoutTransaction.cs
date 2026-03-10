@@ -13,7 +13,7 @@ namespace GearZone.Domain.Entities
         public string BankName { get; set; }
         public string BankAccountNumber { get; set; }
         public string BankAccountName { get; set; }
-        // Tổng hợp từ PayoutItems
+        public string BankBin { get; set; }
         public int OrderCount { get; set; }
         public decimal GrossAmount { get; set; }
         public decimal CommissionAmount { get; set; }

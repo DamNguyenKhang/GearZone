@@ -26,6 +26,7 @@ namespace GearZone.Application.Features.Seller.Dtos
         public string BankName { get; set; } = string.Empty;
         public string BankAccountNumber { get; set; } = string.Empty;
         public string BankAccountName { get; set; } = string.Empty;
+        public string BankBin { get; set; } = string.Empty;
     }
 
     // DTOs for individual steps
@@ -53,6 +54,7 @@ namespace GearZone.Application.Features.Seller.Dtos
         public string BankName { get; set; } = string.Empty;
         public string BankAccountNumber { get; set; } = string.Empty;
         public string BankAccountName { get; set; } = string.Empty;
+        public string BankBin { get; set; } = string.Empty;
     }
 
     public class RegistrationProgressDto

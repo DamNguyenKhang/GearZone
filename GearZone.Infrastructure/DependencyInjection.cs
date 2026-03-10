@@ -1,4 +1,4 @@
-﻿using GearZone.Application.Abstractions.External;
+using GearZone.Application.Abstractions.External;
 using GearZone.Application.Abstractions.Persistence;
 using GearZone.Infrastructure.External;
 using GearZone.Infrastructure.Repositories;
@@ -47,6 +47,7 @@ namespace GearZone.Infrastructure
             services.AddScoped<IOrderStatusHistoryRepository, OrderStatusHistoryRepository>();
             services.AddScoped<IPaymentRepository, PaymentRepository>();
             services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<IProductAttributeValueRepository, ProductAttributeValueRepository>();
             services.AddScoped<IProductImageRepository, ProductImageRepository>();
             services.AddScoped<IProductVariantRepository, ProductVariantRepository>();
             services.AddScoped<IVariantAttributeValueRepository, VariantAttributeValueRepository>();
@@ -97,3 +98,4 @@ namespace GearZone.Infrastructure
         }
     }
 }
+

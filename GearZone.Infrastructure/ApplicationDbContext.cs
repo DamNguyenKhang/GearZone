@@ -18,6 +18,7 @@ namespace GearZone.Infrastructure
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<ProductVariant> ProductVariants { get; set; }
         public DbSet<VariantAttributeValue> VariantAttributeValues { get; set; }
+        public DbSet<ProductAttributeValue> ProductAttributeValues { get; set; }
 
         public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
 

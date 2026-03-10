@@ -103,6 +103,7 @@ namespace GearZone.Infrastructure.Repositories
                     Id = p.Id,
                     Name = p.Name,
                     Slug = p.Slug,
+                    CategoryId = p.CategoryId,
                     BrandName = p.Brand.Name,
                     BasePrice = p.BasePrice,
                     ImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault() 

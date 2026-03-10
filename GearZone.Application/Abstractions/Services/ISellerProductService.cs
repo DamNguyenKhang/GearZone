@@ -1,4 +1,4 @@
-using GearZone.Application.Features.Seller.Dtos;
+﻿using GearZone.Application.Features.Seller.Dtos;
 using GearZone.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -16,8 +16,13 @@ namespace GearZone.Application.Abstractions.Services
         Task<List<Category>> GetCategoriesAsync();
         Task<List<Brand>> GetBrandsAsync();
         Task<List<CategoryAttributeDto>> GetCategoryAttributesAsync(int categoryId);
+        Task<List<ProductSpecDto>> GetCategoryProductSpecsAsync(int categoryId);
+        Task<int> CreateCategoryProductSpecificationAsync(int categoryId, string name, string? unit = null, string? valueType = null);
         Task ToggleProductStatusAsync(Guid productId, Guid storeId);
         Task<int> CreateBrandByNameAsync(string name);
         Task<int> CreateCategoryByNameAsync(string name);
     }
 }
+
+
+

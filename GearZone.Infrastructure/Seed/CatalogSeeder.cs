@@ -16,6 +16,9 @@ namespace GearZone.Infrastructure.Seed
 
             var owner = await context.Users.FirstOrDefaultAsync();
             if (owner == null) return;
+            
+            // Log for verification
+            Console.WriteLine("Seed: Database is empty, initializing catalog...");
 
             // ── Store ────────────────────────────────────────────────────────
             var store = new Store
@@ -79,100 +82,121 @@ namespace GearZone.Infrastructure.Seed
             await context.SaveChangesAsync();
 
             // ── Attribute helpers ────────────────────────────────────────────
-            CategoryAttribute Attr(Category cat, string name, int order) =>
-                new CategoryAttribute { CategoryId = cat.Id, Name = name, FilterType = "Checkbox", IsFilterable = true, DisplayOrder = order };
+            CategoryAttribute Attr(Category cat, string name, int order, AttributeScope scope = AttributeScope.Variant, bool isComparable = false, string? valueType = null, string? unit = null) =>
+                new CategoryAttribute { 
+                    CategoryId = cat.Id, 
+                    Name = name, 
+                    FilterType = "Checkbox", 
+                    IsFilterable = true, 
+                    DisplayOrder = order,
+                    Scope = scope,
+                    IsComparable = isComparable,
+                    ValueType = valueType,
+                    Unit = unit
+                };
             CategoryAttributeOption Opt(CategoryAttribute a, string val) =>
                 new CategoryAttributeOption { CategoryAttributeId = a.Id, Value = val };
 
             // ── GPU Attributes ───────────────────────────────────────────────
-            var gpuVram   = Attr(catGpu, "VRAM", 1);
-            var gpuSeries = Attr(catGpu, "Series", 2);
+            var gpuVram   = Attr(catGpu, "VRAM", 1, AttributeScope.Both, true, "String", "GB");
+            var gpuSeries = Attr(catGpu, "Series", 2, AttributeScope.Both, true);
+            var gpuCuda   = Attr(catGpu, "CUDA Cores", 3, AttributeScope.Product, true, "Number");
+            var gpuClock  = Attr(catGpu, "Boost Clock", 4, AttributeScope.Product, true, "Number", "MHz");
+            var gpuTdp    = Attr(catGpu, "TDP", 5, AttributeScope.Product, true, "Number", "W");
+            var gpuNode   = Attr(catGpu, "Process Node", 6, AttributeScope.Product, true);
 
             // ── CPU Attributes ───────────────────────────────────────────────
-            var cpuSocket = Attr(catCpu, "Socket", 1);
-            var cpuCores  = Attr(catCpu, "Cores", 2);
+            var cpuSocket = Attr(catCpu, "Socket", 1, AttributeScope.Both, true);
+            var cpuCores  = Attr(catCpu, "Cores", 2, AttributeScope.Both, true, "Number");
+            var cpuThreads = Attr(catCpu, "Threads", 3, AttributeScope.Product, true, "Number");
+            var cpuBaseClock = Attr(catCpu, "Base Clock", 4, AttributeScope.Product, true, "Number", "GHz");
+            var cpuBoostClock  = Attr(catCpu, "Boost Clock", 5, AttributeScope.Product, true, "Number", "GHz");
+            var cpuCache  = Attr(catCpu, "L3 Cache", 6, AttributeScope.Product, true, "Number", "MB");
+            var cpuTdp    = Attr(catCpu, "TDP", 7, AttributeScope.Product, true, "Number", "W");
 
             // ── RAM Attributes ───────────────────────────────────────────────
-            var ramType = Attr(catRam, "Type", 1);
-            var ramCap  = Attr(catRam, "Capacity", 2);
+            var ramType = Attr(catRam, "Type", 1, AttributeScope.Both, true);
+            var ramCap  = Attr(catRam, "Capacity", 2, AttributeScope.Both, true, "Number", "GB");
 
             // ── Motherboard Attributes ───────────────────────────────────────
-            var moboChipset = Attr(catMobo, "Chipset", 1);
-            var moboFF      = Attr(catMobo, "Form Factor", 2);
+            var moboChipset = Attr(catMobo, "Chipset", 1, AttributeScope.Both, true);
+            var moboFF      = Attr(catMobo, "Form Factor", 2, AttributeScope.Both, true);
 
             // ── Storage Attributes ───────────────────────────────────────────
-            var storType = Attr(catStorage, "Type", 1);
-            var storCap  = Attr(catStorage, "Capacity", 2);
+            var storType = Attr(catStorage, "Type", 1, AttributeScope.Both, true);
+            var storCap  = Attr(catStorage, "Capacity", 2, AttributeScope.Both, true, "Number", "GB");
 
             // ── PSU Attributes ───────────────────────────────────────────────
-            var psuWatt    = Attr(catPsu, "Wattage", 1);
-            var psuRating  = Attr(catPsu, "Efficiency Rating", 2);
-            var psuModular = Attr(catPsu, "Modular", 3);
+            var psuWatt    = Attr(catPsu, "Wattage", 1, AttributeScope.Both, true, "Number", "W");
+            var psuRating  = Attr(catPsu, "Efficiency Rating", 2, AttributeScope.Both, true);
+            var psuModular = Attr(catPsu, "Modular", 3, AttributeScope.Both, true);
 
             // ── Case Attributes ──────────────────────────────────────────────
-            var caseFF    = Attr(catCase, "Form Factor", 1);
-            var casePanel = Attr(catCase, "Side Panel", 2);
+            var caseFF    = Attr(catCase, "Form Factor", 1, AttributeScope.Both, true);
+            var casePanel = Attr(catCase, "Side Panel", 2, AttributeScope.Both, true);
 
             // ── Gaming Monitor Attributes ────────────────────────────────────
-            var gamMonRes   = Attr(catGamMon, "Resolution", 1);
-            var gamMonHz    = Attr(catGamMon, "Refresh Rate", 2);
-            var gamMonPanel = Attr(catGamMon, "Panel Type", 3);
+            var gamMonRes   = Attr(catGamMon, "Resolution", 1, AttributeScope.Both, true);
+            var gamMonHz    = Attr(catGamMon, "Refresh Rate", 2, AttributeScope.Both, true, "Number", "Hz");
+            var gamMonPanel = Attr(catGamMon, "Panel Type", 3, AttributeScope.Both, true);
 
             // ── Office Monitor Attributes ────────────────────────────────────
-            var offMonRes   = catOffMon != null ? Attr(catOffMon, "Resolution", 1) : null;
-            var offMonPanel = catOffMon != null ? Attr(catOffMon, "Panel Type", 2) : null;
-            var offMonSize  = catOffMon != null ? Attr(catOffMon, "Screen Size", 3) : null;
+            var offMonRes   = catOffMon != null ? Attr(catOffMon, "Resolution", 1, AttributeScope.Both, true) : null;
+            var offMonPanel = catOffMon != null ? Attr(catOffMon, "Panel Type", 2, AttributeScope.Both, true) : null;
+            var offMonSize  = catOffMon != null ? Attr(catOffMon, "Screen Size", 3, AttributeScope.Both, true, "Number", "inch") : null;
 
             // ── Curved Monitor Attributes ────────────────────────────────────
-            var crvMonRes   = catCrvMon != null ? Attr(catCrvMon, "Resolution", 1) : null;
-            var crvMonHz    = catCrvMon != null ? Attr(catCrvMon, "Refresh Rate", 2) : null;
-            var crvMonPanel = catCrvMon != null ? Attr(catCrvMon, "Panel Type", 3) : null;
+            var crvMonRes   = catCrvMon != null ? Attr(catCrvMon, "Resolution", 1, AttributeScope.Both, true) : null;
+            var crvMonHz    = catCrvMon != null ? Attr(catCrvMon, "Refresh Rate", 2, AttributeScope.Both, true, "Number", "Hz") : null;
+            var crvMonPanel = catCrvMon != null ? Attr(catCrvMon, "Panel Type", 3, AttributeScope.Both, true) : null;
 
             // ── Mechanical Keyboard Attributes ───────────────────────────────
-            var mechSwitch = Attr(catMechKb, "Switch Type", 1);
-            var mechLayout = Attr(catMechKb, "Layout", 2);
+            var mechSwitch = Attr(catMechKb, "Switch Type", 1, AttributeScope.Both, true);
+            var mechLayout = Attr(catMechKb, "Layout", 2, AttributeScope.Both, true);
 
             // ── Membrane Keyboard Attributes ─────────────────────────────────
-            var membLayout = catMembKb != null ? Attr(catMembKb, "Layout", 1) : null;
-            var membConn   = catMembKb != null ? Attr(catMembKb, "Connectivity", 2) : null;
+            var membLayout = catMembKb != null ? Attr(catMembKb, "Layout", 1, AttributeScope.Both, true) : null;
+            var membConn   = catMembKb != null ? Attr(catMembKb, "Connectivity", 2, AttributeScope.Both, true) : null;
 
             // ── Keycap Attributes ────────────────────────────────────────────
-            var keycapMat  = catKeycaps != null ? Attr(catKeycaps, "Material", 1) : null;
-            var keycapProf = catKeycaps != null ? Attr(catKeycaps, "Profile", 2) : null;
+            var keycapMat  = catKeycaps != null ? Attr(catKeycaps, "Material", 1, AttributeScope.Both, true) : null;
+            var keycapProf = catKeycaps != null ? Attr(catKeycaps, "Profile", 2, AttributeScope.Both, true) : null;
 
             // ── Keyboard Switch Attributes ───────────────────────────────────
-            var kbswType   = catKbSwitch != null ? Attr(catKbSwitch, "Switch Type", 1) : null;
-            var kbswActu   = catKbSwitch != null ? Attr(catKbSwitch, "Actuation Force", 2) : null;
+            var kbswType   = catKbSwitch != null ? Attr(catKbSwitch, "Switch Type", 1, AttributeScope.Both, true) : null;
+            var kbswActu   = catKbSwitch != null ? Attr(catKbSwitch, "Actuation Force", 2, AttributeScope.Both, true) : null;
 
             // ── Gaming Mouse Attributes ──────────────────────────────────────
-            var gamMouseDpi  = Attr(catGamMice, "Max DPI", 1);
-            var gamMouseConn = Attr(catGamMice, "Connectivity", 2);
-            var gamMouseColor = Attr(catGamMice, "Color", 3);
+            var gamMouseDpi  = Attr(catGamMice, "Max DPI", 1, AttributeScope.Both, true, "Number", "DPI");
+            var gamMouseConn = Attr(catGamMice, "Connectivity", 2, AttributeScope.Both, true);
+            var gamMouseColor = Attr(catGamMice, "Color", 3, AttributeScope.Both, true);
 
             // ── Office Mouse Attributes ──────────────────────────────────────
-            var offMouseConn   = catOffMice != null ? Attr(catOffMice, "Connectivity", 1) : null;
-            var offMouseSensor = catOffMice != null ? Attr(catOffMice, "Sensor Type", 2) : null;
+            var offMouseConn   = catOffMice != null ? Attr(catOffMice, "Connectivity", 1, AttributeScope.Both, true) : null;
+            var offMouseSensor = catOffMice != null ? Attr(catOffMice, "Sensor Type", 2, AttributeScope.Both, true) : null;
 
             // ── Mouse Pad Attributes ─────────────────────────────────────────
-            var padSize = catMousePad != null ? Attr(catMousePad, "Size", 1) : null;
-            var padMat  = catMousePad != null ? Attr(catMousePad, "Material", 2) : null;
+            var padSize = catMousePad != null ? Attr(catMousePad, "Size", 1, AttributeScope.Both, true) : null;
+            var padMat  = catMousePad != null ? Attr(catMousePad, "Material", 2, AttributeScope.Both, true) : null;
 
             // ── Gaming Headset Attributes ────────────────────────────────────
-            var gamHsConn  = Attr(catGamHS, "Connectivity", 1);
-            var gamHsSurr  = Attr(catGamHS, "Surround Sound", 2);
+            var gamHsConn  = Attr(catGamHS, "Connectivity", 1, AttributeScope.Both, true);
+            var gamHsSurr  = Attr(catGamHS, "Surround Sound", 2, AttributeScope.Both, true);
 
             // ── Wireless Headphone Attributes ────────────────────────────────
-            var wirHpAnc    = catWirelessHP != null ? Attr(catWirelessHP, "ANC", 1) : null;
-            var wirHpDriver = catWirelessHP != null ? Attr(catWirelessHP, "Driver Size", 2) : null;
+            var wirHpAnc    = catWirelessHP != null ? Attr(catWirelessHP, "ANC", 1, AttributeScope.Both, true) : null;
+            var wirHpDriver = catWirelessHP != null ? Attr(catWirelessHP, "Driver Size", 2, AttributeScope.Both, true, "Number", "mm") : null;
 
             // ── Microphone Attributes ────────────────────────────────────────
-            var micType    = catMic != null ? Attr(catMic, "Connection Type", 1) : null;
-            var micPattern = catMic != null ? Attr(catMic, "Polar Pattern", 2) : null;
+            var micType    = catMic != null ? Attr(catMic, "Connection Type", 1, AttributeScope.Both, true) : null;
+            var micPattern = catMic != null ? Attr(catMic, "Polar Pattern", 2, AttributeScope.Both, true) : null;
 
             // ── Save all attributes ──────────────────────────────────────────
             var allAttrs = new List<CategoryAttribute>
             {
-                gpuVram, gpuSeries, cpuSocket, cpuCores, ramType, ramCap,
+                gpuVram, gpuSeries, gpuCuda, gpuClock, gpuTdp, gpuNode,
+                cpuSocket, cpuCores, cpuThreads, cpuBaseClock, cpuBoostClock, cpuCache, cpuTdp,
+                ramType, ramCap,
                 moboChipset, moboFF, storType, storCap, psuWatt, psuRating, psuModular,
                 caseFF, casePanel, gamMonRes, gamMonHz, gamMonPanel,
                 mechSwitch, mechLayout, gamMouseDpi, gamMouseConn, gamMouseColor, gamHsConn, gamHsSurr
@@ -525,10 +549,38 @@ namespace GearZone.Infrastructure.Seed
                 Add(P(catMic,razer,"Razer Seiren V2 Pro","razer-seiren-v2-pro",2900000,95), null, Av(micType!,micUsb!),Av(micPattern!,micCardioid!));
                 Add(P(catMic,blueMic,"Blue Yeti X USB Professional","blue-yeti-x",4200000,110), null, Av(micType!,micUsb!),Av(micPattern!,micOmni!));
             }
+            
+            // ── Spec Mapping for Migration ──────────────────────────────────
+            var specMapping = new Dictionary<(int catId, string key), CategoryAttribute>();
+            void Map(CategoryAttribute a, string key) => specMapping[(a.CategoryId, key)] = a;
+
+            Map(gpuCuda, "CUDA Cores"); Map(gpuClock, "Boost Clock"); Map(gpuTdp, "TDP"); Map(gpuNode, "Process Node");
+            Map(cpuThreads, "Threads"); Map(cpuBaseClock, "Base Clock"); Map(cpuBoostClock, "Max Boost Clock");
+            Map(cpuCache, "L3 Cache"); Map(cpuTdp, "TDP");
 
             // ── Save Products & Variants ─────────────────────────────────────
             foreach (var (product, variants) in products)
             {
+                // Parse SpecsJson and create ProductAttributeValues
+                if (!string.IsNullOrEmpty(product.SpecsJson) && product.SpecsJson != "{}")
+                {
+                    try {
+                        var specs = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(product.SpecsJson);
+                        if (specs != null) {
+                            foreach (var spec in specs) {
+                                if (specMapping.TryGetValue((product.CategoryId, spec.Key), out var attr)) {
+                                    product.AttributeValues.Add(new ProductAttributeValue {
+                                        Id = Guid.NewGuid(),
+                                        ProductId = product.Id,
+                                        CategoryAttributeId = attr.Id,
+                                        Value = spec.Value
+                                    });
+                                }
+                            }
+                        }
+                    } catch { /* skip malformed */ }
+                }
+
                 int vIdx = 1;
                 foreach (var (priceOffset, avList) in variants)
                 {

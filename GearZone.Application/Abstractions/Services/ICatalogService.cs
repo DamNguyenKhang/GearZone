@@ -24,6 +24,7 @@ namespace GearZone.Application.Abstractions.Services
         Task<ProductDetailDto?> GetProductDetailBySlugAsync(string slug);
         Task<List<CatalogProductDto>> GetRelatedProductsAsync(int categoryId, Guid currentProductId, int limit = 5);
         Task<List<ProductSuggestionDto>> GetProductSuggestionsAsync(string query, int limit = 5);
+        Task<ProductComparisonDto?> GetProductComparisonAsync(int categoryId, List<Guid> productIds);
     }
 
     public class StoreProfileDto

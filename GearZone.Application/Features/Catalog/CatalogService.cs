@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using GearZone.Application.Abstractions.Persistence;
+using GearZone.Application.Common.ProductSpecifications;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Catalog.DTOs;
@@ -228,7 +229,7 @@ namespace GearZone.Application.Features.Catalog
 
             if (isParent)
             {
-                // ── PARENT CATEGORY: aggregate brands from all active children ──
+                // -- PARENT CATEGORY: aggregate brands from all active children --
                 var childIds = category.Children!
                     .Where(c => c.IsActive && !c.IsDeleted)
                     .Select(c => c.Id)
@@ -258,7 +259,7 @@ namespace GearZone.Application.Features.Catalog
             }
             else
             {
-                // ── LEAF CATEGORY: original behavior — brands + dynamic attributes ──
+                // -- LEAF CATEGORY: original behavior — brands + dynamic attributes --
                 result.Brands = await _productRepository.Query()
                     .Where(p => p.CategoryId == category.Id
                               && p.Brand.IsApproved
@@ -274,7 +275,7 @@ namespace GearZone.Application.Features.Catalog
                     .ToListAsync();
 
                 var attributes = await _categoryAttributeRepository.Query()
-                    .Where(a => a.CategoryId == category.Id && a.IsFilterable)
+                    .Where(a => a.CategoryId == category.Id && a.IsFilterable && a.Scope != GearZone.Domain.Enums.AttributeScope.Product && a.Options.Any())
                     .OrderBy(a => a.DisplayOrder)
                     .ToListAsync();
 
@@ -323,7 +324,23 @@ namespace GearZone.Application.Features.Catalog
                         .ThenInclude(av => av.CategoryAttribute)
                 .Include(p => p.Variants.Where(v => v.IsActive && !v.IsDeleted))
                     .ThenInclude(v => v.AttributeValues)
+                        .ThenInclude(av => av.CategoryAttribute)
+                .Include(p => p.Variants.Where(v => v.IsActive && !v.IsDeleted))
+                    .ThenInclude(v => v.AttributeValues)
+                        .ThenInclude(av => av.CategoryAttribute)
+                .Include(p => p.Variants.Where(v => v.IsActive && !v.IsDeleted))
+                    .ThenInclude(v => v.AttributeValues)
+                        .ThenInclude(av => av.CategoryAttribute)
+                .Include(p => p.Variants.Where(v => v.IsActive && !v.IsDeleted))
+                    .ThenInclude(v => v.AttributeValues)
+                        .ThenInclude(av => av.CategoryAttribute)
+                .Include(p => p.Variants.Where(v => v.IsActive && !v.IsDeleted))
+                    .ThenInclude(v => v.AttributeValues)
                         .ThenInclude(av => av.CategoryAttributeOption)
+                .Include(p => p.AttributeValues)
+                    .ThenInclude(av => av.CategoryAttribute)
+                .Include(p => p.AttributeValues)
+                    .ThenInclude(av => av.CategoryAttributeOption)
                 .FirstOrDefaultAsync(p => p.Slug == slug && p.Status == GearZone.Domain.Enums.ProductStatus.Active && !p.IsDeleted);
 
             if (product == null) return null;
@@ -347,12 +364,10 @@ namespace GearZone.Application.Features.Catalog
                 ImageUrls = product.Images.OrderByDescending(i => i.IsPrimary).Select(i => i.ImageUrl).ToList(),
             };
 
-            // Process Variants & Generate Attribute Selections
+            var allAttributeValues = product.Variants.SelectMany(v => v.AttributeValues).ToList();
+
             if (product.Variants.Any())
             {
-                var allAttributeValues = product.Variants.SelectMany(v => v.AttributeValues).ToList();
-
-                // 1. Group by Attribute to build the Shopee-style selection UI
                 dto.AttributeSelections = allAttributeValues
                     .GroupBy(av => av.CategoryAttributeId)
                     .Select(g => new AttributeSelectionDto
@@ -368,7 +383,6 @@ namespace GearZone.Application.Features.Catalog
                                    }).ToList()
                     }).ToList();
 
-                // 2. Map Variants for JS matching
                 dto.Variants = product.Variants.Select(v => new VariantDetailDto
                 {
                     Id = v.Id,
@@ -378,44 +392,71 @@ namespace GearZone.Application.Features.Catalog
                     StockQuantity = v.StockQuantity,
                     SelectedOptionIds = v.AttributeValues.Select(av => av.CategoryAttributeOptionId).ToList()
                 }).ToList();
+            }
 
-                // 3. Build Specifications = SpecsJson first, then variant attribute aggregations
-                var specs = new List<SpecificationDto>();
+            var legacySpecs = ParseSpecificationsJson(product.SpecsJson);
+            var specs = new List<SpecificationDto>();
 
-                // 3a. Parse SpecsJson (static technical specs from product)
-                var rawJson = product.SpecsJson;
-                if (!string.IsNullOrWhiteSpace(rawJson) && rawJson != "{}")
+            var structuredSpecs = product.AttributeValues
+                .Where(av => av.CategoryAttribute != null)
+                .OrderBy(av => av.CategoryAttribute.DisplayOrder)
+                .ThenBy(av => av.CategoryAttribute.Name)
+                .Select(av => new SpecificationDto
                 {
-                    try
-                    {
-                        var parsed = JsonSerializer.Deserialize<Dictionary<string, string>>(rawJson);
-                        if (parsed != null)
-                        {
-                            specs.AddRange(parsed.Select(kv => new SpecificationDto
-                            {
-                                Name = kv.Key,
-                                Value = kv.Value
-                            }));
-                        }
-                    }
-                    catch { /* ignore malformed JSON */ }
+                    Name = av.CategoryAttribute.Name,
+                    Value = FormatSpecificationValue(av.CategoryAttributeOption?.Value ?? av.Value ?? string.Empty, av.CategoryAttribute.Unit)
+                })
+                .Where(spec => !string.IsNullOrWhiteSpace(spec.Value))
+                .ToList();
+
+            specs.AddRange(structuredSpecs);
+
+            foreach (var definition in SeededProductSpecificationCatalog.GetTemplate(product.Category.Slug))
+            {
+                if (specs.Any(spec => spec.Name.Equals(definition.DisplayName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
                 }
 
-                // 3b. Aggregate variant attribute values (e.g. "Memory Type: DDR4, DDR5")
-                //     Only add if that attribute name is not already in SpecsJson
-                var existingNames = new HashSet<string>(specs.Select(s => s.Name), StringComparer.OrdinalIgnoreCase);
-                var variantAttributeSpecs = allAttributeValues
-                    .GroupBy(av => av.CategoryAttribute.Name)
-                    .Where(g => !existingNames.Contains(g.Key))
-                    .Select(g => new SpecificationDto
+                var legacyValue = SeededProductSpecificationCatalog.FindLegacyValue(product.Category.Slug, legacySpecs, definition.DisplayName);
+                if (!string.IsNullOrWhiteSpace(legacyValue))
+                {
+                    specs.Add(new SpecificationDto
                     {
-                        Name = g.Key,
-                        Value = string.Join(", ", g.Select(av => av.CategoryAttributeOption.Value).Distinct())
+                        Name = definition.DisplayName,
+                        Value = legacyValue
                     });
-
-                specs.AddRange(variantAttributeSpecs);
-                dto.Specifications = specs;
+                }
             }
+
+            foreach (var legacySpec in legacySpecs)
+            {
+                if (specs.Any(spec => spec.Name.Equals(legacySpec.Key, StringComparison.OrdinalIgnoreCase))
+                    || SeededProductSpecificationCatalog.GetDefinition(product.Category.Slug, legacySpec.Key) != null)
+                {
+                    continue;
+                }
+
+                specs.Add(new SpecificationDto
+                {
+                    Name = legacySpec.Key,
+                    Value = legacySpec.Value
+                });
+            }
+
+            var existingNames = new HashSet<string>(specs.Select(s => s.Name), StringComparer.OrdinalIgnoreCase);
+            var variantAttributeSpecs = allAttributeValues
+                .GroupBy(av => av.CategoryAttribute.Name)
+                .Where(g => !existingNames.Contains(g.Key))
+                .Select(g => new SpecificationDto
+                {
+                    Name = g.Key,
+                    Value = string.Join(", ", g.Select(av => av.CategoryAttributeOption.Value).Distinct())
+                })
+                .ToList();
+
+            specs.AddRange(variantAttributeSpecs);
+            dto.Specifications = specs;
 
             return dto;
         }
@@ -442,7 +483,7 @@ namespace GearZone.Application.Features.Catalog
                     Rating = 0, // Placeholder
                     ReviewCount = 0,
                     StoreName = p.Store.StoreName,
-                    StoreLogoUrl = p.Store.LogoUrl,
+                    StoreLogoUrl = p.Store.LogoUrl ?? string.Empty,
                     IsInStock = p.Variants.Where(v => v.IsActive && !v.IsDeleted).Any(v => v.StockQuantity > 0),
                     DefaultVariantId = p.Variants
                         .Where(v => v.IsActive && !v.IsDeleted)
@@ -465,5 +506,278 @@ namespace GearZone.Application.Features.Catalog
         {
             return await _productRepository.GetProductSuggestionsAsync(query, limit);
         }
+
+        public async Task<ProductComparisonDto?> GetProductComparisonAsync(int categoryId, List<Guid> productIds)
+        {
+            if (productIds == null || !productIds.Any()) return null;
+
+            // If categoryId is missing, try to infer it from the first product
+            if (categoryId <= 0)
+            {
+                var firstProduct = await _productRepository.Query()
+                    .AsNoTracking()
+                    .Where(p => productIds.Contains(p.Id))
+                    .FirstOrDefaultAsync();
+                
+                if (firstProduct == null) return null;
+                categoryId = firstProduct.CategoryId;
+            }
+
+            var products = await _productRepository.Query()
+                .AsNoTracking()
+                .Include(p => p.Brand)
+                .Include(p => p.Images)
+                .Include(p => p.AttributeValues)
+                    .ThenInclude(av => av.CategoryAttribute)
+                .Include(p => p.AttributeValues)
+                    .ThenInclude(av => av.CategoryAttributeOption)
+                .Include(p => p.Variants.Where(v => v.IsActive && !v.IsDeleted))
+                    .ThenInclude(v => v.AttributeValues)
+                        .ThenInclude(av => av.CategoryAttribute)
+                .Include(p => p.Variants.Where(v => v.IsActive && !v.IsDeleted))
+                    .ThenInclude(v => v.AttributeValues)
+                        .ThenInclude(av => av.CategoryAttributeOption)
+                .Where(p => productIds.Contains(p.Id) && p.CategoryId == categoryId)
+                .ToListAsync();
+
+            if (!products.Any()) return null;
+
+            // Sort products to match the request order
+            var sortedProducts = productIds
+                .Select(id => products.FirstOrDefault(p => p.Id == id))
+                .Where(p => p != null)
+                .Cast<Product>()
+                .ToList();
+
+            var result = new ProductComparisonDto();
+            result.Products = sortedProducts.Select(p => new ComparisonHeaderDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Slug = p.Slug,
+                Brand = p.Brand.Name,
+                Price = p.BasePrice,
+                ImageUrl = p.Images.FirstOrDefault(i => i.IsPrimary)?.ImageUrl ?? p.Images.FirstOrDefault()?.ImageUrl ?? ""
+            }).ToList();
+            var categorySlug = await _categoryRepository.Query()
+                .Where(c => c.Id == categoryId)
+                .Select(c => c.Slug)
+                .FirstOrDefaultAsync();
+
+            var comparableAttributes = await _categoryAttributeRepository.Query()
+                .Where(a => a.CategoryId == categoryId && a.IsComparable)
+                .OrderBy(a => a.DisplayOrder)
+                .ToListAsync();
+
+            if (!comparableAttributes.Any())
+            {
+                comparableAttributes = await _categoryAttributeRepository.Query()
+                    .Where(a => a.CategoryId == categoryId)
+                    .OrderBy(a => a.DisplayOrder)
+                    .ToListAsync();
+            }
+
+            var comparisonDefinitions = comparableAttributes
+                .Select(attr => new ComparisonDefinition
+                {
+                    AttributeId = attr.Id,
+                    AttributeName = attr.Name,
+                    Unit = attr.Unit
+                })
+                .ToList();
+
+            var legacySpecsByProductId = sortedProducts.ToDictionary(p => p.Id, p => ParseSpecificationsJson(p.SpecsJson));
+
+            foreach (var definition in SeededProductSpecificationCatalog.GetTemplate(categorySlug))
+            {
+                if (comparisonDefinitions.Any(item => item.AttributeName.Equals(definition.DisplayName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+
+                comparisonDefinitions.Add(new ComparisonDefinition
+                {
+                    AttributeId = 0,
+                    AttributeName = definition.DisplayName,
+                    Unit = definition.Unit
+                });
+            }
+
+            foreach (var product in sortedProducts)
+            {
+                foreach (var attributeValue in product.AttributeValues.Where(av => av.CategoryAttribute != null))
+                {
+                    if (comparisonDefinitions.Any(item =>
+                        item.AttributeId == attributeValue.CategoryAttributeId
+                        || item.AttributeName.Equals(attributeValue.CategoryAttribute.Name, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        continue;
+                    }
+
+                    comparisonDefinitions.Add(new ComparisonDefinition
+                    {
+                        AttributeId = attributeValue.CategoryAttributeId,
+                        AttributeName = attributeValue.CategoryAttribute.Name,
+                        Unit = attributeValue.CategoryAttribute.Unit
+                    });
+                }
+
+                foreach (var attributeValue in product.Variants
+                    .SelectMany(v => v.AttributeValues)
+                    .Where(av => av.CategoryAttribute != null))
+                {
+                    if (comparisonDefinitions.Any(item =>
+                        item.AttributeId == attributeValue.CategoryAttributeId
+                        || item.AttributeName.Equals(attributeValue.CategoryAttribute.Name, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        continue;
+                    }
+
+                    comparisonDefinitions.Add(new ComparisonDefinition
+                    {
+                        AttributeId = attributeValue.CategoryAttributeId,
+                        AttributeName = attributeValue.CategoryAttribute.Name,
+                        Unit = attributeValue.CategoryAttribute.Unit
+                    });
+                }
+            }
+
+            foreach (var legacySpecs in legacySpecsByProductId.Values)
+            {
+                foreach (var legacySpec in legacySpecs)
+                {
+                    if (comparisonDefinitions.Any(item => item.AttributeName.Equals(legacySpec.Key, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        continue;
+                    }
+
+                    comparisonDefinitions.Add(new ComparisonDefinition
+                    {
+                        AttributeId = 0,
+                        AttributeName = legacySpec.Key
+                    });
+                }
+            }
+
+            foreach (var definition in comparisonDefinitions)
+            {
+                var row = new ComparisonRowDto
+                {
+                    AttributeId = definition.AttributeId,
+                    AttributeName = definition.AttributeName,
+                    Unit = definition.Unit,
+                    Values = new List<string?>()
+                };
+
+                foreach (var product in sortedProducts)
+                {
+                    var pieces = new List<string>();
+
+                    if (definition.AttributeId > 0)
+                    {
+                        var productVal = product.AttributeValues.FirstOrDefault(av => av.CategoryAttributeId == definition.AttributeId);
+                        if (productVal != null)
+                        {
+                            var productDisplay = FormatSpecificationValue(productVal.CategoryAttributeOption?.Value ?? productVal.Value ?? string.Empty, definition.Unit);
+                            if (!string.IsNullOrWhiteSpace(productDisplay))
+                            {
+                                pieces.Add(productDisplay);
+                            }
+                        }
+
+                        var variantVals = product.Variants
+                            .SelectMany(v => v.AttributeValues)
+                            .Where(av => av.CategoryAttributeId == definition.AttributeId)
+                            .Select(av => av.CategoryAttributeOption?.Value)
+                            .Where(value => !string.IsNullOrWhiteSpace(value))
+                            .Distinct(StringComparer.OrdinalIgnoreCase)
+                            .Cast<string>()
+                            .ToList();
+
+                        if (variantVals.Any())
+                        {
+                            pieces.AddRange(variantVals);
+                        }
+                    }
+
+                    var displayValue = pieces
+                        .Where(value => !string.IsNullOrWhiteSpace(value))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToList();
+
+                    var merged = displayValue.Any() ? string.Join(", ", displayValue) : null;
+
+                    if (string.IsNullOrWhiteSpace(merged))
+                    {
+                        merged = SeededProductSpecificationCatalog.FindLegacyValue(categorySlug, legacySpecsByProductId[product.Id], definition.AttributeName);
+                    }
+
+                    row.Values.Add(string.IsNullOrWhiteSpace(merged) ? null : merged);
+                }
+
+
+
+                var distinctValues = row.Values
+                    .Where(value => !string.IsNullOrWhiteSpace(value))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                row.IsDifferent = distinctValues.Count > 1;
+
+                result.Rows.Add(row);
+            }
+
+            return result;
+        }
+
+        private static Dictionary<string, string> ParseSpecificationsJson(string rawJson)
+        {
+            if (string.IsNullOrWhiteSpace(rawJson) || rawJson == "{}")
+            {
+                return new Dictionary<string, string>();
+            }
+
+            try
+            {
+                return JsonSerializer.Deserialize<Dictionary<string, string>>(rawJson) ?? new Dictionary<string, string>();
+            }
+            catch
+            {
+                return new Dictionary<string, string>();
+            }
+        }
+
+        private static string FormatSpecificationValue(string rawValue, string? unit)
+        {
+            if (string.IsNullOrWhiteSpace(rawValue))
+            {
+                return string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(unit) || rawValue.Trim().EndsWith(unit, StringComparison.OrdinalIgnoreCase))
+            {
+                return rawValue.Trim();
+            }
+
+            return $"{rawValue.Trim()} {unit}";
+        }
+
+        private sealed class ComparisonDefinition
+        {
+            public int AttributeId { get; set; }
+            public string AttributeName { get; set; } = string.Empty;
+            public string? Unit { get; set; }
+        }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+

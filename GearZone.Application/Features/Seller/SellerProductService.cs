@@ -1,16 +1,16 @@
-﻿using GearZone.Application.Abstractions.Persistence;
+﻿using GearZone.Application.Abstractions.External;
+using GearZone.Application.Common.ProductSpecifications;
+using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Abstractions.Services;
-using GearZone.Application.Abstractions.External;
 using GearZone.Application.Features.Seller.Dtos;
 using GearZone.Domain.Entities;
 using GearZone.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System;
 
 namespace GearZone.Application.Features.Seller
 {
@@ -23,6 +23,7 @@ namespace GearZone.Application.Features.Seller
         private readonly IProductVariantRepository _productVariantRepository;
         private readonly IInventoryTransactionRepository _inventoryRepository;
         private readonly IVariantAttributeValueRepository _attributeValueRepository;
+        private readonly IProductAttributeValueRepository _productAttributeValueRepository;
         private readonly ICategoryAttributeRepository _categoryAttributeRepository;
         private readonly IFileStorageService _fileStorageService;
         private readonly IUnitOfWork _unitOfWork;
@@ -35,6 +36,7 @@ namespace GearZone.Application.Features.Seller
             IProductVariantRepository productVariantRepository,
             IInventoryTransactionRepository inventoryRepository,
             IVariantAttributeValueRepository attributeValueRepository,
+            IProductAttributeValueRepository productAttributeValueRepository,
             ICategoryAttributeRepository categoryAttributeRepository,
             IFileStorageService fileStorageService,
             IUnitOfWork unitOfWork)
@@ -46,6 +48,7 @@ namespace GearZone.Application.Features.Seller
             _productVariantRepository = productVariantRepository;
             _inventoryRepository = inventoryRepository;
             _attributeValueRepository = attributeValueRepository;
+            _productAttributeValueRepository = productAttributeValueRepository;
             _categoryAttributeRepository = categoryAttributeRepository;
             _fileStorageService = fileStorageService;
             _unitOfWork = unitOfWork;
@@ -77,6 +80,10 @@ namespace GearZone.Application.Features.Seller
                 .Include(p => p.Category)
                 .Include(p => p.Brand)
                 .Include(p => p.Images)
+                .Include(p => p.AttributeValues)
+                    .ThenInclude(av => av.CategoryAttribute)
+                .Include(p => p.AttributeValues)
+                    .ThenInclude(av => av.CategoryAttributeOption)
                 .Include(p => p.Variants)
                     .ThenInclude(v => v.AttributeValues)
                         .ThenInclude(av => av.CategoryAttribute)
@@ -87,6 +94,8 @@ namespace GearZone.Application.Features.Seller
 
             if (product == null) return null;
 
+            var legacySpecs = ParseSpecsJson(product.SpecsJson);
+            var specs = BuildProductSpecificationDictionary(product.Category?.Slug, product.AttributeValues, legacySpecs);
 
             return new SellerProductDetailDto
             {
@@ -94,15 +103,13 @@ namespace GearZone.Application.Features.Seller
                 Name = product.Name,
                 Slug = product.Slug,
                 Description = product.Description,
-                CategoryName = product.Category.Name,
-                BrandName = product.Brand.Name,
+                CategoryName = product.Category?.Name ?? string.Empty,
+                BrandName = product.Brand?.Name ?? string.Empty,
                 BasePrice = product.BasePrice,
                 SoldCount = product.SoldCount,
                 Status = product.Status.ToString(),
                 CreatedAt = product.CreatedAt,
-                Specifications = string.IsNullOrEmpty(product.SpecsJson) 
-                    ? new Dictionary<string, string>() 
-                    : JsonSerializer.Deserialize<Dictionary<string, string>>(product.SpecsJson) ?? new Dictionary<string, string>(),
+                Specifications = specs,
                 ImageUrls = product.Images.OrderBy(i => i.SortOrder).Select(i => i.ImageUrl).ToList(),
                 Variants = product.Variants.Select(v => new ProductVariantDto
                 {
@@ -123,12 +130,11 @@ namespace GearZone.Application.Features.Seller
 
         public async Task<Guid> CreateProductAsync(CreateProductDto dto, Guid storeId, string userId)
         {
-            // 0. Validation
             var slug = string.IsNullOrEmpty(dto.Slug) ? dto.Name.ToLower().Replace(" ", "-") : dto.Slug;
-            
+
             var existingProduct = await _productRepository.Query()
                 .AnyAsync(p => p.StoreId == storeId && p.Slug == slug && !p.IsDeleted);
-            
+
             if (existingProduct)
             {
                 throw new InvalidOperationException($"A product with the slug '{slug}' already exists in your store.");
@@ -141,14 +147,13 @@ namespace GearZone.Application.Features.Seller
                     .Where(v => skus.Contains(v.Sku))
                     .Select(v => v.Sku)
                     .ToListAsync();
-                
+
                 if (existingSkus.Any())
                 {
                     throw new InvalidOperationException($"The following SKUs already exist in the system: {string.Join(", ", existingSkus)}");
                 }
             }
 
-            // 1. Create Product
             var product = new Product
             {
                 Id = Guid.NewGuid(),
@@ -159,9 +164,7 @@ namespace GearZone.Application.Features.Seller
                 Slug = slug,
                 Description = dto.Description,
                 BasePrice = dto.BasePrice,
-                SpecsJson = dto.Specifications != null && dto.Specifications.Any() 
-                    ? JsonSerializer.Serialize(dto.Specifications.ToDictionary(s => s.Key, s => s.Value)) 
-                    : "{}",
+                SpecsJson = BuildSpecsJson(dto.Specifications),
                 Status = dto.IsDraft ? ProductStatus.Draft : ProductStatus.Active,
                 SoldCount = 0,
                 CreatedAt = DateTime.UtcNow,
@@ -169,7 +172,6 @@ namespace GearZone.Application.Features.Seller
 
             await _productRepository.AddAsync(product);
 
-            // 2. Handle Images (Cloudinary)
             if (dto.Images != null && dto.Images.Any())
             {
                 var imageUrls = await _fileStorageService.UploadAsync(dto.Images);
@@ -187,8 +189,18 @@ namespace GearZone.Application.Features.Seller
                 }
             }
 
-            // 3. Handle Variants
-            foreach (var vDto in dto.Variants)
+            foreach (var spec in dto.Specifications.Where(IsValidProductSpecification))
+            {
+                await _productAttributeValueRepository.AddAsync(new ProductAttributeValue
+                {
+                    Id = Guid.NewGuid(),
+                    ProductId = product.Id,
+                    CategoryAttributeId = spec.AttributeId,
+                    Value = spec.Value.Trim()
+                });
+            }
+
+            foreach (var vDto in dto.Variants ?? Enumerable.Empty<ProductVariantDto>())
             {
                 var variant = new ProductVariant
                 {
@@ -204,7 +216,6 @@ namespace GearZone.Application.Features.Seller
 
                 await _productVariantRepository.AddAsync(variant);
 
-                // 4. Initial Inventory Task
                 if (variant.StockQuantity > 0)
                 {
                     await _inventoryRepository.AddAsync(new InventoryTransaction
@@ -219,7 +230,6 @@ namespace GearZone.Application.Features.Seller
                     });
                 }
 
-                // 5. Dynamic Attributes for Variant (if any)
                 foreach (var attr in vDto.Attributes)
                 {
                     await _attributeValueRepository.AddAsync(new VariantAttributeValue
@@ -239,12 +249,30 @@ namespace GearZone.Application.Features.Seller
         public async Task<UpdateProductDto?> GetProductForEditAsync(Guid productId, Guid storeId)
         {
             var product = await _productRepository.Query()
+                .Include(p => p.Category)
                 .Include(p => p.Images)
+                .Include(p => p.AttributeValues)
+                    .ThenInclude(av => av.CategoryAttribute)
                 .Include(p => p.Variants)
                     .ThenInclude(v => v.AttributeValues)
+                        .ThenInclude(av => av.CategoryAttribute)
+                .Include(p => p.Variants)
+                    .ThenInclude(v => v.AttributeValues)
+                        .ThenInclude(av => av.CategoryAttributeOption)
                 .FirstOrDefaultAsync(p => p.Id == productId && p.StoreId == storeId && !p.IsDeleted);
 
             if (product == null) return null;
+
+            var categorySpecs = await _categoryAttributeRepository.Query()
+                .Where(a => a.CategoryId == product.CategoryId && a.Scope == AttributeScope.Product)
+                .OrderBy(a => a.DisplayOrder)
+                .ToListAsync();
+
+            var productValuesByAttributeId = product.AttributeValues
+                .Where(av => av.CategoryAttribute != null)
+                .ToDictionary(av => av.CategoryAttributeId, av => av.Value ?? string.Empty);
+            var legacySpecs = ParseSpecsJson(product.SpecsJson);
+            var editableSpecifications = BuildEditableProductSpecifications(product.Category?.Slug, categorySpecs, productValuesByAttributeId, legacySpecs);
 
             return new UpdateProductDto
             {
@@ -255,10 +283,7 @@ namespace GearZone.Application.Features.Seller
                 BrandId = product.BrandId,
                 BasePrice = product.BasePrice,
                 IsDraft = product.Status == ProductStatus.Draft,
-                Specifications = string.IsNullOrEmpty(product.SpecsJson) 
-                    ? new List<ProductSpecDto>() 
-                    : JsonSerializer.Deserialize<Dictionary<string, string>>(product.SpecsJson)?
-                        .Select(kvp => new ProductSpecDto { Key = kvp.Key, Value = kvp.Value }).ToList() ?? new List<ProductSpecDto>(),
+                Specifications = editableSpecifications,
                 ExistingImageUrls = product.Images.OrderBy(i => i.SortOrder).Select(i => i.ImageUrl).ToList(),
                 Variants = product.Variants.Where(v => !v.IsDeleted).Select(v => new ProductVariantDto
                 {
@@ -269,7 +294,9 @@ namespace GearZone.Application.Features.Seller
                     Attributes = v.AttributeValues.Select(av => new AttributeSelectionDto
                     {
                         AttributeId = av.CategoryAttributeId,
-                        OptionId = av.CategoryAttributeOptionId
+                        OptionId = av.CategoryAttributeOptionId,
+                        AttributeName = av.CategoryAttribute?.Name ?? string.Empty,
+                        OptionValue = av.CategoryAttributeOption?.Value ?? string.Empty
                     }).ToList()
                 }).ToList()
             };
@@ -279,13 +306,13 @@ namespace GearZone.Application.Features.Seller
         {
             var product = await _productRepository.Query()
                 .Include(p => p.Images)
+                .Include(p => p.AttributeValues)
                 .Include(p => p.Variants)
                     .ThenInclude(v => v.AttributeValues)
                 .FirstOrDefaultAsync(p => p.Id == productId && p.StoreId == storeId && !p.IsDeleted);
 
             if (product == null) throw new InvalidOperationException("Product not found.");
 
-            // 1. Validation for Slug (if changed)
             var slug = string.IsNullOrEmpty(dto.Slug) ? dto.Name.ToLower().Replace(" ", "-") : dto.Slug;
             if (slug != product.Slug)
             {
@@ -294,22 +321,34 @@ namespace GearZone.Application.Features.Seller
                 if (existingSlug) throw new InvalidOperationException($"Slug '{slug}' is already in use.");
             }
 
-            // 2. Update Basic Info
             product.Name = dto.Name;
             product.Slug = slug;
             product.Description = dto.Description;
             product.CategoryId = dto.CategoryId;
             product.BrandId = dto.BrandId;
             product.BasePrice = dto.BasePrice;
-            product.SpecsJson = dto.Specifications != null && dto.Specifications.Any() 
-                ? JsonSerializer.Serialize(dto.Specifications.ToDictionary(s => s.Key, s => s.Value)) 
-                : "{}";
+            product.SpecsJson = BuildSpecsJson(dto.Specifications);
             product.Status = dto.IsDraft ? ProductStatus.Draft : ProductStatus.Active;
             product.UpdatedAt = DateTime.UtcNow;
 
             await _productRepository.UpdateAsync(product);
 
-            // 3. Handle Images (Cloudinary)
+            foreach (var existingProductAttribute in product.AttributeValues.ToList())
+            {
+                await _productAttributeValueRepository.DeleteAsync(existingProductAttribute);
+            }
+
+            foreach (var spec in dto.Specifications.Where(IsValidProductSpecification))
+            {
+                await _productAttributeValueRepository.AddAsync(new ProductAttributeValue
+                {
+                    Id = Guid.NewGuid(),
+                    ProductId = product.Id,
+                    CategoryAttributeId = spec.AttributeId,
+                    Value = spec.Value.Trim()
+                });
+            }
+
             if (dto.NewImages != null && dto.NewImages.Any())
             {
                 var currentImageCount = product.Images.Count;
@@ -331,16 +370,9 @@ namespace GearZone.Application.Features.Seller
                 }
             }
 
-            // 4. Handle Variants
-            // Logic: 
-            // - If SKU exists in Input, update it.
-            // - If SKU doesn't exist in DB, add it.
-            // - If SKU exists in DB but NOT in Input, delete it (soft delete).
-
             var existingVariants = product.Variants.ToList();
             var inputVariants = dto.Variants ?? new List<ProductVariantDto>();
 
-            // Soft delete removed variants
             foreach (var ev in existingVariants.Where(v => !v.IsDeleted))
             {
                 if (!inputVariants.Any(iv => iv.Sku == ev.Sku))
@@ -351,20 +383,17 @@ namespace GearZone.Application.Features.Seller
                 }
             }
 
-            // Update or Add
             foreach (var iv in inputVariants)
             {
                 var ev = existingVariants.FirstOrDefault(v => v.Sku == iv.Sku);
                 if (ev != null)
                 {
-                    // Update existing
                     ev.VariantName = iv.VariantName;
                     ev.Price = iv.Price;
                     ev.IsActive = true;
-                    ev.IsDeleted = false; // Re-active if it was deleted
+                    ev.IsDeleted = false;
                     ev.UpdatedAt = DateTime.UtcNow;
-                    
-                    // Stock adjustment via transaction if changed
+
                     if (iv.StockQuantity != ev.StockQuantity)
                     {
                         var diff = iv.StockQuantity - ev.StockQuantity;
@@ -383,8 +412,6 @@ namespace GearZone.Application.Features.Seller
 
                     await _productVariantRepository.UpdateAsync(ev);
 
-                    // Attributes (Sync: remove existing and re-add for simplicity in this case)
-                    // Note: In a large scale app, we'd do a more surgical update.
                     foreach (var attr in ev.AttributeValues.ToList())
                     {
                         await _attributeValueRepository.DeleteAsync(attr);
@@ -403,7 +430,6 @@ namespace GearZone.Application.Features.Seller
                 }
                 else
                 {
-                    // Add new variant
                     var newVariant = new ProductVariant
                     {
                         Id = Guid.NewGuid(),
@@ -466,7 +492,9 @@ namespace GearZone.Application.Features.Seller
         {
             var attributes = await _categoryAttributeRepository.Query()
                 .Include(a => a.Options)
-                .Where(a => a.CategoryId == categoryId)
+                .Where(a => a.CategoryId == categoryId
+                    && a.Scope != AttributeScope.Product
+                    && a.Options.Any())
                 .OrderBy(a => a.DisplayOrder)
                 .ToListAsync();
 
@@ -481,6 +509,67 @@ namespace GearZone.Application.Features.Seller
                     Value = o.Value
                 }).ToList()
             }).ToList();
+        }
+
+        public async Task<List<ProductSpecDto>> GetCategoryProductSpecsAsync(int categoryId)
+        {
+            var category = await _categoryRepository.Query()
+                .Where(c => c.Id == categoryId)
+                .Select(c => new { c.Slug })
+                .FirstOrDefaultAsync();
+
+            var categorySpecs = await _categoryAttributeRepository.Query()
+                .Where(a => a.CategoryId == categoryId && a.Scope == AttributeScope.Product)
+                .OrderBy(a => a.DisplayOrder)
+                .ToListAsync();
+
+            return BuildProductSpecificationTemplates(category?.Slug, categorySpecs);
+        }
+        public async Task<int> CreateCategoryProductSpecificationAsync(int categoryId, string name, string? unit = null, string? valueType = null)
+        {
+            var normalizedName = (name ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(normalizedName))
+            {
+                throw new InvalidOperationException("Specification name is required.");
+            }
+
+            var categoryExists = await _categoryRepository.Query().AnyAsync(c => c.Id == categoryId && !c.IsDeleted);
+            if (!categoryExists)
+            {
+                throw new InvalidOperationException("Category not found.");
+            }
+
+            var existing = await _categoryAttributeRepository.Query()
+                .AnyAsync(a => a.CategoryId == categoryId
+                    && a.Scope == AttributeScope.Product
+                    && a.Name.ToLower() == normalizedName.ToLower());
+
+            if (existing)
+            {
+                throw new InvalidOperationException("This specification already exists in the selected category.");
+            }
+
+            var nextDisplayOrder = (await _categoryAttributeRepository.Query()
+                .Where(a => a.CategoryId == categoryId && a.Scope == AttributeScope.Product)
+                .MaxAsync(a => (int?)a.DisplayOrder) ?? 0) + 1;
+
+            var attribute = new CategoryAttribute
+            {
+                CategoryId = categoryId,
+                Name = normalizedName,
+                Scope = AttributeScope.Product,
+                FilterType = "Checkbox",
+                IsFilterable = false,
+                IsComparable = true,
+                DisplayOrder = nextDisplayOrder,
+                Unit = string.IsNullOrWhiteSpace(unit) ? null : unit.Trim(),
+                ValueType = string.IsNullOrWhiteSpace(valueType) ? null : valueType.Trim()
+            };
+
+            await _categoryAttributeRepository.AddAsync(attribute);
+            await _unitOfWork.SaveChangesAsync();
+
+            return attribute.Id;
         }
 
         public async Task ToggleProductStatusAsync(Guid productId, Guid storeId)
@@ -504,7 +593,7 @@ namespace GearZone.Application.Features.Seller
             {
                 Name = name,
                 Slug = slug,
-                IsApproved = true, // Auto-approve for now, or keep as false if admin review is required
+                IsApproved = true,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -529,5 +618,216 @@ namespace GearZone.Application.Features.Seller
 
             return category.Id;
         }
+
+        private static Dictionary<string, string> BuildProductSpecificationDictionary(
+            string? categorySlug,
+            IEnumerable<ProductAttributeValue> structuredAttributes,
+            IReadOnlyDictionary<string, string> legacySpecs)
+        {
+            var specs = structuredAttributes
+                .Where(av => av.CategoryAttribute != null)
+                .OrderBy(av => av.CategoryAttribute.DisplayOrder)
+                .ThenBy(av => av.CategoryAttribute.Name)
+                .ToDictionary(av => av.CategoryAttribute.Name, FormatProductAttributeValue, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var definition in SeededProductSpecificationCatalog.GetTemplate(categorySlug))
+            {
+                if (specs.ContainsKey(definition.DisplayName))
+                {
+                    continue;
+                }
+
+                var legacyValue = SeededProductSpecificationCatalog.FindLegacyValue(categorySlug, legacySpecs, definition.DisplayName);
+                if (!string.IsNullOrWhiteSpace(legacyValue))
+                {
+                    specs[definition.DisplayName] = legacyValue;
+                }
+            }
+
+            foreach (var legacySpec in legacySpecs)
+            {
+                if (specs.ContainsKey(legacySpec.Key)
+                    || SeededProductSpecificationCatalog.GetDefinition(categorySlug, legacySpec.Key) != null)
+                {
+                    continue;
+                }
+
+                specs[legacySpec.Key] = legacySpec.Value;
+            }
+
+            return specs;
+        }
+
+        private static List<ProductSpecDto> BuildEditableProductSpecifications(
+            string? categorySlug,
+            IReadOnlyCollection<CategoryAttribute> categorySpecs,
+            IReadOnlyDictionary<int, string> productValuesByAttributeId,
+            IReadOnlyDictionary<string, string> legacySpecs)
+        {
+            var specs = BuildProductSpecificationTemplates(categorySlug, categorySpecs);
+
+            foreach (var spec in specs)
+            {
+                string value = string.Empty;
+                if (spec.AttributeId > 0 && productValuesByAttributeId.TryGetValue(spec.AttributeId, out var structuredValue))
+                {
+                    value = structuredValue;
+                }
+                else
+                {
+                    value = SeededProductSpecificationCatalog.FindLegacyValue(categorySlug, legacySpecs, spec.Key) ?? string.Empty;
+                }
+
+                spec.Value = NormalizeSpecValue(value, spec.Unit);
+            }
+
+            foreach (var legacySpec in legacySpecs)
+            {
+                if (specs.Any(spec => spec.Key.Equals(legacySpec.Key, StringComparison.OrdinalIgnoreCase))
+                    || SeededProductSpecificationCatalog.GetDefinition(categorySlug, legacySpec.Key) != null)
+                {
+                    continue;
+                }
+
+                specs.Add(new ProductSpecDto
+                {
+                    AttributeId = 0,
+                    Key = legacySpec.Key,
+                    Value = legacySpec.Value
+                });
+            }
+
+            return specs;
+        }
+
+        private static List<ProductSpecDto> BuildProductSpecificationTemplates(string? categorySlug, IReadOnlyCollection<CategoryAttribute> categorySpecs)
+        {
+            var specs = new List<ProductSpecDto>();
+            var categorySpecsByName = categorySpecs
+                .ToDictionary(attr => attr.Name, attr => attr, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var definition in SeededProductSpecificationCatalog.GetTemplate(categorySlug))
+            {
+                if (categorySpecsByName.TryGetValue(definition.DisplayName, out var attr))
+                {
+                    specs.Add(new ProductSpecDto
+                    {
+                        AttributeId = attr.Id,
+                        Key = attr.Name,
+                        Unit = attr.Unit,
+                        ValueType = attr.ValueType,
+                        Value = string.Empty
+                    });
+                }
+                else
+                {
+                    specs.Add(new ProductSpecDto
+                    {
+                        AttributeId = 0,
+                        Key = definition.DisplayName,
+                        Unit = definition.Unit,
+                        ValueType = definition.ValueType,
+                        Value = string.Empty
+                    });
+                }
+            }
+
+            foreach (var attr in categorySpecs.OrderBy(a => a.DisplayOrder).ThenBy(a => a.Name))
+            {
+                if (specs.Any(spec => spec.Key.Equals(attr.Name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
+
+                specs.Add(new ProductSpecDto
+                {
+                    AttributeId = attr.Id,
+                    Key = attr.Name,
+                    Unit = attr.Unit,
+                    ValueType = attr.ValueType,
+                    Value = string.Empty
+                });
+            }
+
+            return specs;
+        }
+
+        private static bool IsValidProductSpecification(ProductSpecDto spec)
+        {
+            return spec.AttributeId > 0 && !string.IsNullOrWhiteSpace(spec.Value);
+        }
+
+        private static Dictionary<string, string> ParseSpecsJson(string rawJson)
+        {
+            if (string.IsNullOrWhiteSpace(rawJson) || rawJson == "{}")
+            {
+                return new Dictionary<string, string>();
+            }
+
+            try
+            {
+                return JsonSerializer.Deserialize<Dictionary<string, string>>(rawJson) ?? new Dictionary<string, string>();
+            }
+            catch
+            {
+                return new Dictionary<string, string>();
+            }
+        }
+
+        private static string BuildSpecsJson(IEnumerable<ProductSpecDto>? specs)
+        {
+            if (specs == null)
+            {
+                return "{}";
+            }
+
+            var payload = specs
+                .Where(s => !string.IsNullOrWhiteSpace(s.Key) && !string.IsNullOrWhiteSpace(s.Value))
+                .GroupBy(s => s.Key)
+                .ToDictionary(g => g.Key, g => g.Last().Value.Trim());
+
+            return payload.Count == 0 ? "{}" : JsonSerializer.Serialize(payload);
+        }
+
+        private static string NormalizeSpecValue(string value, string? unit)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(unit))
+            {
+                return value.Trim();
+            }
+
+            var normalized = value.Trim();
+            if (normalized.EndsWith(unit, StringComparison.OrdinalIgnoreCase))
+            {
+                normalized = normalized.Substring(0, normalized.Length - unit.Length).Trim();
+            }
+
+            return normalized;
+        }
+
+        private static string FormatProductAttributeValue(ProductAttributeValue attributeValue)
+        {
+            var rawValue = (attributeValue.CategoryAttributeOption?.Value ?? attributeValue.Value ?? string.Empty).Trim();
+            var unit = attributeValue.CategoryAttribute?.Unit;
+
+            if (string.IsNullOrWhiteSpace(unit) || rawValue.EndsWith(unit, StringComparison.OrdinalIgnoreCase))
+            {
+                return rawValue;
+            }
+
+            return $"{rawValue} {unit}";
+        }
     }
 }
+
+
+
+
+
+
+

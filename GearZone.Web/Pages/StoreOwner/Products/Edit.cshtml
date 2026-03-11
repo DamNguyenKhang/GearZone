@@ -1,4 +1,4 @@
-@page "{id:Guid}"
+﻿@page "{id:Guid}"
 @model GearZone.Web.Pages.StoreOwner.Products.EditModel
 @{
     ViewData["Title"] = "Edit Product";
@@ -96,34 +96,72 @@
                     </div>
                     <div id="imagePreview" class="grid grid-cols-5 gap-4 mt-4"></div>
                 </div>
-
                 <!-- Product Specifications -->
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                    <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center justify-between mb-3 gap-3">
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-primary">list_alt</span>
-                            <h2 class="text-lg font-bold text-gray-900">Product Specifications</h2>
+                            <h2 class="text-lg font-bold text-gray-900">Category Specifications</h2>
                         </div>
-                        <button type="button" id="btnAddSpec" class="text-primary text-sm font-bold flex items-center gap-1 hover:underline">
-                            <span class="material-symbols-outlined text-[18px]">add</span> Add Specification
+                        <button type="button" id="btnAddSpecAttribute" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors">
+                            <span class="material-symbols-outlined text-[16px]">add</span>
+                            Add Spec
                         </button>
+                    </div>
+                    <p class="text-sm text-gray-500 mb-6">Specifications are generated from the selected category template. Update the values you want to compare on the storefront.</p>
+
+                    <!-- Inline Add Spec Form -->
+                    <div id="inlineAddSpecForm" class="hidden bg-primary/5 p-4 rounded-xl border border-primary/20 mb-6 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-primary uppercase mb-1">Spec Name *</label>
+                                <input type="text" id="newSpecName" class="w-full px-3 py-2 border border-primary/20 rounded-lg text-sm bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" placeholder="e.g. GPU Architecture">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-primary uppercase mb-1">Unit (Optional)</label>
+                                <input type="text" id="newSpecUnit" class="w-full px-3 py-2 border border-primary/20 rounded-lg text-sm bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" placeholder="e.g. MHz, GB">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-primary uppercase mb-1">Value Type (Optional)</label>
+                                <input type="text" id="newSpecValueType" class="w-full px-3 py-2 border border-primary/20 rounded-lg text-sm bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all" placeholder="e.g. Number, String">
+                            </div>
+                        </div>
+                        <div class="flex justify-end gap-2">
+                            <button type="button" id="btnCancelAddSpec" class="px-4 py-1.5 text-xs font-bold text-gray-500 hover:text-gray-700 transition-colors uppercase tracking-wider">Cancel</button>
+                            <button type="button" id="btnSaveNewSpec" class="px-5 py-2 text-xs font-bold text-white bg-primary rounded-lg hover:bg-primary-dark transition-all shadow-md shadow-primary/20 uppercase tracking-wider">Save Specification</button>
+                        </div>
                     </div>
 
                     <div id="specsContainer" class="space-y-3">
-                        @for (int i = 0; i < Model.Input.Specifications.Count; i++)
+                        @if (Model.Input.Specifications.Any())
                         {
-                            <div class="spec-row grid grid-cols-1 md:grid-cols-2 gap-4 items-end bg-gray-50/50 p-4 rounded-lg border border-gray-100 relative group">
-                                <button type="button" class="btnRemoveRow absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1 shadow-sm hover:bg-red-200 transition-colors hidden group-hover:block">
-                                    <span class="material-symbols-outlined text-[16px]">close</span>
-                                </button>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Key (e.g., Color, Material)</label>
-                                    <input name="Input.Specifications[@i].Key" value="@Model.Input.Specifications[i].Key" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white" placeholder="Key">
+                            @for (int i = 0; i < Model.Input.Specifications.Count; i++)
+                            {
+                                <div class="spec-row grid grid-cols-1 md:grid-cols-2 gap-4 items-end bg-gray-50/50 p-4 rounded-lg border border-gray-100">
+                                    <input type="hidden" name="Input.Specifications[@i].AttributeId" value="@Model.Input.Specifications[i].AttributeId" />
+                                    <input type="hidden" name="Input.Specifications[@i].Unit" value="@Model.Input.Specifications[i].Unit" />
+                                    <input type="hidden" name="Input.Specifications[@i].ValueType" value="@Model.Input.Specifications[i].ValueType" />
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Specification</label>
+                                        <input name="Input.Specifications[@i].Key" value="@Model.Input.Specifications[i].Key" readonly class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 font-medium" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Value</label>
+                                        <div class="relative">
+                                            <input name="Input.Specifications[@i].Value" value="@Model.Input.Specifications[i].Value" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white @(string.IsNullOrWhiteSpace(Model.Input.Specifications[i].Unit) ? string.Empty : "pr-16")" placeholder="Enter @Model.Input.Specifications[i].Key" />
+                                            @if (!string.IsNullOrWhiteSpace(Model.Input.Specifications[i].Unit))
+                                            {
+                                                <span class="absolute inset-y-0 right-3 flex items-center text-xs font-bold text-gray-400 uppercase">@Model.Input.Specifications[i].Unit</span>
+                                            }
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Value (e.g., Phantom Black, Aluminum)</label>
-                                    <input name="Input.Specifications[@i].Value" value="@Model.Input.Specifications[i].Value" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white" placeholder="Value">
-                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div id="emptySpecState" class="rounded-xl border border-dashed border-gray-200 bg-gray-50/60 px-4 py-5 text-sm text-gray-400">
+                                Select a category to load the specification template.
                             </div>
                         }
                     </div>
@@ -151,31 +189,27 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <div>
                                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Variant Name</label>
-                                        <input asp-for="Input.Variants[i].VariantName" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white" placeholder="Standard / 16GB RAM">
+                                        <input asp-for="Input.Variants[i].VariantName" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white" placeholder="Standard / 16GB RAM" required>
                                     </div>
                                     <div>
                                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">SKU</label>
-                                        <input asp-for="Input.Variants[i].Sku" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white" placeholder="Unique SKU" readonly="@(Model.Input.Variants[i].Sku != "")">
+                                        <input asp-for="Input.Variants[i].Sku" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white" placeholder="Unique SKU" readonly="@(Model.Input.Variants[i].Sku != "")" required>
                                     </div>
                                     <div>
-                                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Price (₫)</label>
-                                        <input asp-for="Input.Variants[i].Price" type="number" step="0.01" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white">
+                                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Price (VND)</label>
+                                        <input asp-for="Input.Variants[i].Price" type="number" step="0.01" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white" required>
                                     </div>
                                     <div>
                                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Stock</label>
-                                        <input asp-for="Input.Variants[i].StockQuantity" type="number" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white">
+                                        <input asp-for="Input.Variants[i].StockQuantity" type="number" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white" required>
                                     </div>
                                 </div>
-                                <div class="mt-4 attributes-list grid grid-cols-2 md:grid-cols-3 gap-3">
+                                <div class="mt-4 attributes-wrapper grid grid-cols-2 md:grid-cols-3 gap-3">
                                     @for (int j = 0; j < Model.Input.Variants[i].Attributes.Count; j++)
                                     {
-                                        <div class="flex items-center gap-2 p-2 bg-white border border-gray-100 rounded text-xs">
-                                            <span class="font-bold text-gray-700">@Model.Input.Variants[i].Attributes[j].AttributeName:</span>
-                                            <span class="text-gray-500">@Model.Input.Variants[i].Attributes[j].OptionValue</span>
-                                            <input type="hidden" asp-for="Input.Variants[i].Attributes[j].AttributeId" />
-                                            <input type="hidden" asp-for="Input.Variants[i].Attributes[j].OptionId" />
-                                            <input type="hidden" asp-for="Input.Variants[i].Attributes[j].AttributeName" />
-                                            <input type="hidden" asp-for="Input.Variants[i].Attributes[j].OptionValue" />
+                                        <div class="pre-selected-attribute">
+                                            <input type="hidden" class="pre-selected-attr-id" value="@Model.Input.Variants[i].Attributes[j].AttributeId" />
+                                            <input type="hidden" class="pre-selected-opt-id" value="@Model.Input.Variants[i].Attributes[j].OptionId" />
                                         </div>
                                     }
                                 </div>
@@ -222,7 +256,7 @@
 
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Base Price (₫)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Base Price (VND)</label>
                             <input asp-for="Input.BasePrice" type="number" step="0.01" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/50 font-bold text-primary" placeholder="0">
                             <p class="text-[10px] text-gray-400 mt-1 italic">* Lowest price among variants will be shown as starting price.</p>
                         </div>
@@ -249,20 +283,23 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
                 <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Variant Name</label>
-                <input name="Input.Variants[{index}].VariantName" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30" placeholder="e.g., White / 128GB">
+                <input name="Input.Variants[{index}].VariantName" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30" placeholder="e.g., White / 128GB" required>
             </div>
             <div>
                 <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">SKU</label>
-                <input name="Input.Variants[{index}].Sku" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30" placeholder="SKU-AUTO-123">
+                <input name="Input.Variants[{index}].Sku" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30" placeholder="SKU-AUTO-123" required>
             </div>
             <div>
-                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Price (₫)</label>
-                <input name="Input.Variants[{index}].Price" type="number" step="0.01" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30">
+                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Price (VND)</label>
+                <input name="Input.Variants[{index}].Price" type="number" step="0.01" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30" required>
             </div>
             <div>
                 <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Stock</label>
-                <input name="Input.Variants[{index}].StockQuantity" type="number" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30">
+                <input name="Input.Variants[{index}].StockQuantity" type="number" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30" required>
             </div>
+        </div>
+        <div class="mt-4 attributes-wrapper grid grid-cols-2 md:grid-cols-3 gap-3">
+            <!-- Attributes injected here -->
         </div>
     </div>
 </template>
@@ -271,10 +308,212 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         $(document).ready(function () {
-            // Fix for Tom Select rendering (remove original select classes)
+            // Show validation errors as toasts
+            @if (!ModelState.IsValid)
+            {
+                foreach (var modelState in ModelState.Values)
+                {
+                    foreach (var error in modelState.Errors)
+                    {
+                        <text>window.showToast?.('error', "@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(error.ErrorMessage))");</text>
+                    }
+                }
+            }
+
+            // Client-side validation toast for main form
+            $('#editProductForm').on('invalid-form.validate', function(event, validator) {
+                window.showToast?.('warning', 'Please check the form for missing or incorrect information.');
+            });
+
+            // Fix the Add Spec button not working
+            $('#btnAddSpecAttribute').click(function() {
+                $('#inlineAddSpecForm').removeClass('hidden').addClass('flex flex-col');
+                $('#newSpecName').focus();
+            });
+
+            $('#btnCancelAddSpec').click(function() {
+                $('#inlineAddSpecForm').addClass('hidden').removeClass('flex flex-col');
+                $('#newSpecName, #newSpecUnit, #newSpecValueType').val('');
+            });
+
+            $('#btnSaveNewSpec').click(function() {
+                createSpecificationAttribute();
+            });
+
+            function renderSpecifications(specs) {
+                const container = $('#specsContainer');
+                
+                // Collect current values to preserve them if they exist in the new list
+                let currentValues = {};
+                container.find('.spec-row').each(function() {
+                    const key = $(this).find('input[name*=".Key"]').val();
+                    const val = $(this).find('input[name*=".Value"]').val();
+                    if (key) currentValues[key] = val;
+                });
+
+                container.empty();
+
+                if (!specs || specs.length === 0) {
+                    container.append(`
+                        <div id="emptySpecState" class="rounded-xl border border-dashed border-gray-200 bg-gray-50/60 px-4 py-5 text-sm text-gray-400">
+                            This category does not have product-level specifications yet.
+                        </div>
+                    `);
+                    return;
+                }
+
+                specs.forEach(function(spec, index) {
+                    const unit = spec.unit || '';
+                    const value = currentValues[spec.key] || spec.value || ''; // Prefer current typed value
+                    const inputPadding = unit ? 'pr-16' : '';
+                    container.append(`
+                        <div class="spec-row grid grid-cols-1 md:grid-cols-2 gap-4 items-end bg-gray-50/50 p-4 rounded-lg border border-gray-100">
+                            <input type="hidden" name="Input.Specifications[${index}].AttributeId" value="${spec.attributeId || 0}" />
+                            <input type="hidden" name="Input.Specifications[${index}].Unit" value="${unit}" />
+                            <input type="hidden" name="Input.Specifications[${index}].ValueType" value="${spec.valueType || ''}" />
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Specification</label>
+                                <input name="Input.Specifications[${index}].Key" value="${spec.key || ''}" readonly class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 font-medium" />
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Value</label>
+                                <div class="relative">
+                                    <input name="Input.Specifications[${index}].Value" value="${value}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white ${inputPadding}" placeholder="Enter ${spec.key || 'value'}" />
+                                    ${unit ? `<span class="absolute inset-y-0 right-3 flex items-center text-xs font-bold text-gray-400 uppercase">${unit}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `);
+                });
+            }
+
+            async function createSpecificationAttribute() {
+                const categoryId = $('#Input_CategoryId').val();
+                if (!categoryId) {
+                    window.showToast?.('warning', 'Please select a category first.');
+                    return;
+                }
+
+                const name = $('#newSpecName').val();
+                if (!name || !name.trim()) {
+                    window.showToast?.('warning', 'Specification name is required.');
+                    $('#newSpecName').focus();
+                    return;
+                }
+
+                const unit = $('#newSpecUnit').val() || '';
+                const valueType = $('#newSpecValueType').val() || '';
+                const token = $('input[name="__RequestVerificationToken"]').val();
+
+                const saveBtn = $('#btnSaveNewSpec');
+                const originalText = saveBtn.text();
+                saveBtn.prop('disabled', true).text('Saving...');
+
+                try {
+                    const response = await $.ajax({
+                        url: '?handler=CreateSpecificationAttribute',
+                        type: 'POST',
+                        data: {
+                            categoryId: categoryId,
+                            name: name.trim(),
+                            unit: unit.trim(),
+                            valueType: valueType.trim()
+                        },
+                        headers: { 'RequestVerificationToken': token }
+                    });
+
+                    if (!response || !response.success) {
+                        window.showToast?.('warning', response?.message || 'Could not create specification.');
+                        return;
+                    }
+
+                    window.showToast?.('success', 'Specification added to this category.');
+                    $('#btnCancelAddSpec').click(); // Hide and clear form
+                    loadCategorySpecifications(categoryId);
+                } catch (err) {
+                    window.showToast?.('error', 'Could not create specification.');
+                } finally {
+                    saveBtn.prop('disabled', false).text(originalText);
+                }
+            }
+            function loadCategorySpecifications(categoryId) {
+                if (!categoryId) {
+                    renderSpecifications([]);
+                    return;
+                }
+
+                $.get('?handler=Specifications&categoryId=' + categoryId, function(data) {
+                    renderSpecifications(data || []);
+                });
+            }
+
+            let currentCategoryAttributes = [];
+
+            function generateAttributesHtml(variantIndex, selectedOptions = {}) {
+                if (!currentCategoryAttributes || currentCategoryAttributes.length === 0) return '';
+                let html = '';
+                currentCategoryAttributes.forEach(function(attr, attrIndex) {
+                    const selectedValue = selectedOptions[attr.id] || "";
+                    html += `
+                        <div class="flex flex-col">
+                            <input type="hidden" name="Input.Variants[${variantIndex}].Attributes[${attrIndex}].AttributeId" value="${attr.id}" />
+                            <input type="hidden" name="Input.Variants[${variantIndex}].Attributes[${attrIndex}].AttributeName" value="${attr.name}" />
+                            <select name="Input.Variants[${variantIndex}].Attributes[${attrIndex}].OptionId" class="w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs bg-gray-50 focus:ring-primary focus:border-primary" required>
+                                <option value="">Select ${attr.name}</option>`;
+
+                    attr.options.forEach(function(opt) {
+                        const isSelected = opt.id == selectedValue ? 'selected' : '';
+                        html += `<option value="${opt.id}" ${isSelected}>${opt.value}</option>`;
+                    });
+
+                    html += `
+                            </select>
+                        </div>
+                    `;
+                });
+                return html;
+            }
+
+            function refreshAllVariantAttributes() {
+                if (currentCategoryAttributes.length > 0) {
+                    $('.variant-row').each(function(index) {
+                        const wrapper = $(this).find('.attributes-wrapper');
+                        
+                        // Extract current/pre-selected values
+                        let selected = {};
+                        wrapper.find('select').each(function() {
+                            const attrId = $(this).closest('div').find('input[name*="AttributeId"]').val();
+                            selected[attrId] = $(this).val();
+                        });
+                        
+                        // Check for pre-selected hidden fields (on reload)
+                        wrapper.find('.pre-selected-attribute').each(function() {
+                            const attrId = $(this).find('.pre-selected-attr-id').val();
+                            const optId = $(this).find('.pre-selected-opt-id').val();
+                            if (attrId && optId) selected[attrId] = optId;
+                        });
+
+                        let attrsHtml = generateAttributesHtml(index, selected);
+                        wrapper.html(attrsHtml);
+                    });
+                } else {
+                    $('.attributes-wrapper').empty();
+                }
+            }
+
             $('#Input_CategoryId, #Input_BrandId').removeClass('w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50/50');
 
-            // Initialize Tom Select for Category
+            function updateIndices(containerId, rowClass) {
+                $(`#${containerId} .${rowClass}`).each(function (index) {
+                    $(this).find('input, select').each(function () {
+                        const name = $(this).attr('name');
+                        if (name) {
+                            $(this).attr('name', name.replace(/\[\d+\]/, '[' + index + ']'));
+                        }
+                    });
+                });
+            }
+
             new TomSelect('#Input_CategoryId', {
                 create: true,
                 placeholder: 'Search/Type new Category...',
@@ -287,11 +526,25 @@
                         return '<div class="no-results px-4 py-2 text-slate-400 text-sm">No results found for "' + escape(data.input) + '"</div>';
                     }
                 },
-                onOptionAdd: function(value, data) {
+                onChange: function(value) {
+                    $('#Input_CategoryId').val(value);
+                    loadCategorySpecifications(value);
+                    
+                    if (value) {
+                        $.get('?handler=Attributes&categoryId=' + value, function(data) {
+                            currentCategoryAttributes = data || [];
+                            refreshAllVariantAttributes();
+                        });
+                    } else {
+                        currentCategoryAttributes = [];
+                        refreshAllVariantAttributes();
+                    }
+                },
+                onOptionAdd: function(value) {
                     if (isNaN(value)) {
                         const self = this;
                         const token = $('input[name="__RequestVerificationToken"]').val();
-                        
+
                         $.ajax({
                             url: '?handler=CreateCategory',
                             type: 'POST',
@@ -303,12 +556,12 @@
                                     self.addItem(response.id);
                                     self.removeItem(value);
                                 } else {
-                                    alert(response.message || 'Failed to create category');
+                                    window.showToast?.('error', response.message || 'Failed to create category');
                                     self.removeOption(value);
                                 }
                             },
                             error: function() {
-                                alert('An error occurred while creating the category');
+                                window.showToast?.('error', 'An error occurred while creating the category');
                                 self.removeOption(value);
                             }
                         });
@@ -316,7 +569,6 @@
                 }
             });
 
-            // Initialize Tom Select for Brand
             new TomSelect('#Input_BrandId', {
                 create: true,
                 placeholder: 'Search/Type new Brand...',
@@ -329,11 +581,11 @@
                         return '<div class="no-results px-4 py-2 text-slate-400 text-sm">No results found for "' + escape(data.input) + '"</div>';
                     }
                 },
-                onOptionAdd: function(value, data) {
+                onOptionAdd: function(value) {
                     if (isNaN(value)) {
                         const self = this;
                         const token = $('input[name="__RequestVerificationToken"]').val();
-                        
+
                         $.ajax({
                             url: '?handler=CreateBrand',
                             type: 'POST',
@@ -345,12 +597,12 @@
                                     self.addItem(response.id);
                                     self.removeItem(value);
                                 } else {
-                                    alert(response.message || 'Failed to create brand');
+                                    window.showToast?.('error', response.message || 'Failed to create brand');
                                     self.removeOption(value);
                                 }
                             },
                             error: function() {
-                                alert('An error occurred while creating the brand');
+                                window.showToast?.('error', 'An error occurred while creating the brand');
                                 self.removeOption(value);
                             }
                         });
@@ -358,58 +610,36 @@
                 }
             });
 
-            // Variant logic
-            function updateIndices(containerId, rowClass, prefix) {
-                $(`#${containerId} .${rowClass}`).each(function (index) {
-                    $(this).find('input').each(function () {
-                        if ($(this).attr('name')) {
-                            var name = $(this).attr('name').replace(/\[\d+\]/, '[' + index + ']');
-                            $(this).attr('name', name);
-                        }
-                    });
+            if ($('#Input_CategoryId').val()) {
+                const initialCatId = $('#Input_CategoryId').val();
+                
+                // Only load SPEC template if the container is empty (prevents overwriting actual product data)
+                if ($('#specsContainer .spec-row').length === 0) {
+                    loadCategorySpecifications(initialCatId);
+                }
+                
+                $.get('?handler=Attributes&categoryId=' + initialCatId, function(data) {
+                    currentCategoryAttributes = data || [];
+                    refreshAllVariantAttributes();
                 });
             }
 
             $('#btnAddVariant').click(function () {
-                var index = $('#variantsContainer .variant-row').length;
-                var html = $('#variantTemplate').html().replace(/{index}/g, index);
+                const index = $('#variantsContainer .variant-row').length;
+                const html = $('#variantTemplate').html().replace(/{index}/g, index);
                 $('#variantsContainer').append(html);
-                updateIndices('variantsContainer', 'variant-row', 'Input.Variants');
-            });
-
-            // Add Specification
-            $('#btnAddSpec').click(function() {
-                let index = $('#specsContainer .spec-row').length;
-                let html = `
-                    <div class="spec-row grid grid-cols-1 md:grid-cols-2 gap-4 items-end bg-gray-50/50 p-4 rounded-lg border border-gray-100 relative group animate-fadeIn">
-                        <button type="button" class="btnRemoveRow absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1 shadow-sm hover:bg-red-200 transition-colors hidden group-hover:block">
-                            <span class="material-symbols-outlined text-[16px]">close</span>
-                        </button>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Key (e.g., Color, Material)</label>
-                            <input name="Input.Specifications[${index}].Key" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white" placeholder="Key">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Value (e.g., Phantom Black, Aluminum)</label>
-                            <input name="Input.Specifications[${index}].Value" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white" placeholder="Value">
-                        </div>
-                    </div>`;
-                $('#specsContainer').append(html);
+                
+                // Re-render attributes for the new variant
+                refreshAllVariantAttributes();
+                
+                updateIndices('variantsContainer', 'variant-row');
             });
 
             $(document).on('click', '.btnRemoveRow', function () {
-                let row = $(this).closest('.spec-row, .variant-row');
-                let isSpec = row.hasClass('spec-row');
-                row.remove();
-                
-                if (isSpec) {
-                    updateIndices('specsContainer', 'spec-row', 'Input.Specifications');
-                } else {
-                    updateIndices('variantsContainer', 'variant-row', 'Input.Variants');
-                }
+                $(this).closest('.variant-row').remove();
+                updateIndices('variantsContainer', 'variant-row');
             });
 
-            // Image Preview
             $('#imageUpload').change(function () {
                 const preview = $('#imagePreview');
                 preview.empty();
@@ -422,7 +652,7 @@
                                     <img src="${e.target.result}" class="w-full h-full object-cover" />
                                 </div>
                             `);
-                        }
+                        };
                         reader.readAsDataURL(file);
                     });
                 }
@@ -430,3 +660,7 @@
         });
     </script>
 }
+
+
+
+

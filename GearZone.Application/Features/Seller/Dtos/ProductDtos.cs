@@ -67,8 +67,11 @@ namespace GearZone.Application.Features.Seller.Dtos
 
     public class ProductSpecDto
     {
+        public int AttributeId { get; set; }
         public string Key { get; set; } = string.Empty;
         public string Value { get; set; } = string.Empty;
+        public string? Unit { get; set; }
+        public string? ValueType { get; set; }
     }
 
     public class ProductVariantDto
@@ -104,3 +107,4 @@ namespace GearZone.Application.Features.Seller.Dtos
         public string Value { get; set; } = string.Empty;
     }
 }
+

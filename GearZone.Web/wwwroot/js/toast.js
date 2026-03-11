@@ -128,3 +128,12 @@ class ToastManager {
 
 const toast = new ToastManager();
 window.toast = toast;
+
+// Alias for global usage in existing scripts
+window.showToast = function(type, message) {
+    if (window.toast && typeof window.toast[type] === 'function') {
+        window.toast[type](message);
+    } else {
+        console.warn('Toast system not initialized or type not found:', type, message);
+    }
+};

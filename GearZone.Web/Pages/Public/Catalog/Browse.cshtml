@@ -226,6 +226,44 @@
             </div>
         </div>
     </div>
+
+    <!-- Floating Compare Bar (Premium Upgrade) -->
+    <div id="compare-bar" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[60] transition-all duration-700 cubic-bezier(0.4, 0, 0.2, 1) transform translate-y-40 opacity-0 pointer-events-none scale-95">
+        <div class="relative group">
+            <div class="absolute inset-0 bg-primary/20 rounded-3xl blur-2xl group-hover:bg-primary/30 transition-all duration-500"></div>
+            
+            <div class="relative bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border border-white/20 dark:border-slate-800/50 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex items-center p-3 sm:p-4 gap-4 sm:gap-8 min-w-[300px] sm:min-w-[450px]">
+                <div class="flex items-center gap-4 pl-2">
+                    <div class="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/30 rotate-3">
+                        <span class="material-symbols-outlined text-[24px]">compare_arrows</span>
+                    </div>
+                    <div class="hidden sm:flex flex-col">
+                        <span class="text-[10px] font-black text-primary uppercase tracking-[0.2em] leading-none mb-1">Vault</span>
+                        <span id="compare-count" class="text-sm font-bold text-slate-900 dark:text-white whitespace-nowrap">0/4 Selected</span>
+                    </div>
+                </div>
+
+                <div id="compare-items-container" class="flex items-center gap-3 overflow-x-auto no-scrollbar scroll-smooth px-2 border-x border-slate-200/50 dark:border-slate-700/50 max-w-[120px] sm:max-w-[280px]">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-300">
+                         <span class="material-symbols-outlined text-[18px]">add</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 sm:gap-4 pr-1">
+                    <button id="clear-compare-btn" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-full transition-all" title="Clear All">
+                        <span class="material-symbols-outlined text-[20px]">delete_sweep</span>
+                    </button>
+                    <button id="compare-now-btn" class="relative group/btn overflow-hidden bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 sm:px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:shadow-primary/20 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-30 disabled:pointer-events-none disabled:shadow-none" disabled>
+                        <span class="relative z-10 flex items-center gap-2">
+                            Compare
+                            <span class="material-symbols-outlined text-[18px]">bolt</span>
+                        </span>
+                        <div class="absolute inset-0 bg-gradient-to-r from-primary to-indigo-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </main>
 
 @section Scripts {
@@ -378,8 +416,8 @@
                     thumbMin.style.left = minPercent + '%';
                     thumbMax.style.left = maxPercent + '%';
 
-                    minDisplay.innerText = minVal.toLocaleString('vi-VN') + '₫';
-                    maxDisplay.innerText = maxVal === maxTotal ? '100M+ ₫' : maxVal.toLocaleString('vi-VN') + '₫';
+                    minDisplay.innerText = minVal.toLocaleString('vi-VN') + ' VND';
+                    maxDisplay.innerText = maxVal === maxTotal ? '100M+ VND' : maxVal.toLocaleString('vi-VN') + ' VND';
                     
                     minHidden.value = minVal;
                     maxHidden.value = maxVal === maxTotal ? "" : maxVal;
@@ -442,7 +480,7 @@
 
             initPriceSlider();
 
-            // ── Filter expand / collapse ─────────────────────────────────────
+            // -- Filter expand / collapse -------------------------------------
             function initFilterToggles() {
                 document.querySelectorAll('[data-filter-toggle]').forEach(btn => {
                     const newBtn = btn.cloneNode(true);
@@ -531,6 +569,7 @@
                         const newGrid = doc.getElementById('product-grid');
                         if (newGrid) {
                             grid.innerHTML = newGrid.innerHTML;
+                            updateCompareBar();
                         }
 
                         // Extract TotalPages from doc via data attribute
@@ -614,6 +653,7 @@
                             noMoreProducts.classList.remove('hidden');
                         } else {
                             grid.insertAdjacentHTML('beforeend', html);
+                            updateCompareBar();
                         }
                         isLoading = false;
                     })
@@ -651,6 +691,158 @@
             }
             
             setupObserver();
+            // Product comparison logic
+            let selectedProducts = normalizeCompareList(JSON.parse(localStorage.getItem('gearzone_compare_list') || '[]'));
+            const compareBar = document.getElementById('compare-bar');
+            const compareContainer = document.getElementById('compare-items-container');
+            const compareCount = document.getElementById('compare-count');
+            const compareNowBtn = document.getElementById('compare-now-btn');
+            const clearCompareBtn = document.getElementById('clear-compare-btn');
+
+            function normalizeCompareList(items) {
+                if (!Array.isArray(items) || items.length === 0) {
+                    return [];
+                }
+
+                const uniqueItems = [];
+                const seenIds = new Set();
+                const lockedCategoryId = String(items[0].categoryId || '');
+
+                items.forEach(item => {
+                    if (!item || !item.id || seenIds.has(item.id) || String(item.categoryId || '') !== lockedCategoryId) {
+                        return;
+                    }
+
+                    seenIds.add(item.id);
+                    uniqueItems.push({
+                        id: item.id,
+                        name: item.name,
+                        image: item.image,
+                        categoryId: String(item.categoryId || '')
+                    });
+                });
+
+                return uniqueItems.slice(0, 4);
+            }
+
+            function canUseCategory(categoryId) {
+                if (selectedProducts.length === 0) {
+                    return true;
+                }
+
+                const currentCategoryId = String(categoryId || '');
+                const compareCategoryId = String(selectedProducts[0].categoryId || '');
+                if (currentCategoryId === compareCategoryId) {
+                    return true;
+                }
+
+                if (confirm('Comparison only works for products in the same category. Clear the current comparison list and start a new one?')) {
+                    selectedProducts = [];
+                    return true;
+                }
+
+                return false;
+            }
+
+            function updateCompareBar() {
+                selectedProducts = normalizeCompareList(selectedProducts);
+
+                document.querySelectorAll('.compare-checkbox').forEach(cb => {
+                    cb.checked = selectedProducts.some(p => p.id === cb.dataset.productId);
+                });
+
+                if (selectedProducts.length > 0) {
+                    compareBar.classList.remove('translate-y-40', 'opacity-0', 'pointer-events-none', 'scale-95');
+                    compareBar.classList.add('translate-y-0', 'opacity-100', 'scale-100');
+                } else {
+                    compareBar.classList.add('translate-y-40', 'opacity-0', 'pointer-events-none', 'scale-95');
+                    compareBar.classList.remove('translate-y-0', 'opacity-100', 'scale-100');
+                }
+
+                compareCount.innerText = `${selectedProducts.length}/4 selected`;
+                compareNowBtn.disabled = selectedProducts.length < 2;
+
+                compareContainer.innerHTML = selectedProducts.map(p => `
+                    <div class="relative group/item flex-shrink-0 animate-in zoom-in-75 duration-300">
+                        <div class="w-14 h-14 bg-white dark:bg-slate-800 rounded-2xl p-1.5 border border-slate-200 dark:border-slate-700 shadow-sm group-hover/item:shadow-md transition-all">
+                            <img src="${p.image}" class="w-full h-full rounded-xl object-contain" title="${p.name}">
+                        </div>
+                        <button class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] shadow-lg shadow-red-500/30 opacity-100 sm:opacity-0 group-hover/item:opacity-100 group-hover/item:scale-110 transition-all remove-compare-item" data-id="${p.id}">
+                            <span class="material-symbols-outlined text-[14px] font-bold">close</span>
+                        </button>
+                    </div>
+                `).join('');
+
+                for (let i = selectedProducts.length; i < 4; i++) {
+                    compareContainer.innerHTML += `
+                        <div class="flex-shrink-0 w-14 h-14 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800/50 flex items-center justify-center text-slate-200 dark:text-slate-800 transition-colors">
+                             <span class="material-symbols-outlined text-[18px]">add</span>
+                        </div>
+                    `;
+                }
+
+                localStorage.setItem('gearzone_compare_list', JSON.stringify(selectedProducts));
+
+                document.querySelectorAll('.remove-compare-item').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        selectedProducts = selectedProducts.filter(p => p.id !== this.dataset.id);
+                        updateCompareBar();
+                    });
+                });
+            }
+
+            updateCompareBar();
+
+            document.addEventListener('change', function(e) {
+                if (e.target.classList.contains('compare-checkbox')) {
+                    const cb = e.target;
+                    const categoryId = cb.dataset.categoryId;
+
+                    if (cb.checked) {
+                        if (!canUseCategory(categoryId)) {
+                            cb.checked = false;
+                            updateCompareBar();
+                            return;
+                        }
+
+                        if (selectedProducts.length >= 4) {
+                            cb.checked = false;
+                            window.showToast?.('warning', 'You can compare up to 4 products at a time.');
+                            return;
+                        }
+
+                        if (!selectedProducts.some(p => p.id === cb.dataset.productId)) {
+                            selectedProducts.push({
+                                id: cb.dataset.productId,
+                                name: cb.dataset.productName,
+                                image: cb.dataset.productImage,
+                                categoryId: String(categoryId || '')
+                            });
+                        }
+                    } else {
+                        selectedProducts = selectedProducts.filter(p => p.id !== cb.dataset.productId);
+                    }
+
+                    updateCompareBar();
+                }
+            });
+
+            clearCompareBtn.addEventListener('click', () => {
+                selectedProducts = [];
+                updateCompareBar();
+            });
+
+            compareNowBtn.addEventListener('click', () => {
+                if (selectedProducts.length < 2) {
+                    return;
+                }
+
+                const ids = selectedProducts.map(p => p.id).join(',');
+                const categoryId = selectedProducts[0].categoryId;
+                window.location.href = `/compare?categoryId=${categoryId}&ids=${ids}`;
+            });
         });
     </script>
 }
+
+

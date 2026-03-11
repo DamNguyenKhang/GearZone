@@ -334,6 +334,20 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+        $(document).ready(function() {
+            // Show validation errors as toasts
+            @if (!ModelState.IsValid)
+            {
+                foreach (var modelState in ModelState.Values)
+                {
+                    foreach (var error in modelState.Errors)
+                    {
+                        <text>window.showToast?.('error', "@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(error.ErrorMessage))");</text>
+                    }
+                }
+            }
+        });
+
         // ── Slug ──────────────────────────────────────────────────────────────────
         function toSlug(t) {
             return t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')

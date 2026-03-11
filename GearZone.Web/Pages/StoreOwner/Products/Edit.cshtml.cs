@@ -1,4 +1,4 @@
-using GearZone.Application.Abstractions.Services;
+﻿using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Seller.Dtos;
 using GearZone.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Claims;
+using System.Linq;
 using System.Threading.Tasks;
 using System;
 
@@ -79,6 +80,33 @@ namespace GearZone.Web.Pages.StoreOwner.Products
             }
         }
 
+        public async Task<JsonResult> OnGetSpecificationsAsync(int categoryId)
+        {
+            var specs = await _productService.GetCategoryProductSpecsAsync(categoryId);
+            return new JsonResult(specs);
+        }
+
+        public async Task<JsonResult> OnGetAttributesAsync(int categoryId)
+        {
+            var attributes = await _productService.GetCategoryAttributesAsync(categoryId);
+            return new JsonResult(attributes);
+        }
+        public async Task<JsonResult> OnPostCreateSpecificationAttributeAsync(int categoryId, string name, string? unit, string? valueType)
+        {
+            if (categoryId <= 0) return new JsonResult(new { success = false, message = "Category is required" });
+            if (string.IsNullOrWhiteSpace(name)) return new JsonResult(new { success = false, message = "Specification name is required" });
+
+            try
+            {
+                var id = await _productService.CreateCategoryProductSpecificationAsync(categoryId, name, unit, valueType);
+                return new JsonResult(new { success = true, id = id, name = name.Trim() });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
+        }
+
         public async Task<JsonResult> OnPostCreateBrandAsync(string name)
         {
             if (string.IsNullOrWhiteSpace(name)) return new JsonResult(new { success = false, message = "Name is required" });
@@ -131,3 +159,5 @@ namespace GearZone.Web.Pages.StoreOwner.Products
         }
     }
 }
+
+

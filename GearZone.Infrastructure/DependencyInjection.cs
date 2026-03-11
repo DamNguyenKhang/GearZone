@@ -1,13 +1,15 @@
-﻿using GearZone.Application.Abstractions.External;
+using GearZone.Application.Abstractions.External;
 using GearZone.Application.Abstractions.Persistence;
 using GearZone.Infrastructure.External;
 using GearZone.Infrastructure.Repositories;
 using GearZone.Infrastructure.Settings;
+using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PayOS;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace GearZone.Infrastructure
 {
@@ -47,6 +49,7 @@ namespace GearZone.Infrastructure
             services.AddScoped<IOrderStatusHistoryRepository, OrderStatusHistoryRepository>();
             services.AddScoped<IPaymentRepository, PaymentRepository>();
             services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<IProductAttributeValueRepository, ProductAttributeValueRepository>();
             services.AddScoped<IProductImageRepository, ProductImageRepository>();
             services.AddScoped<IProductVariantRepository, ProductVariantRepository>();
             services.AddScoped<IVariantAttributeValueRepository, VariantAttributeValueRepository>();
@@ -56,6 +59,9 @@ namespace GearZone.Infrastructure
             services.AddScoped<IStoreFollowRepository, StoreFollowRepository>();
             services.AddScoped<IConversationRepository, ConversationRepository>();
             services.AddScoped<IChatMessageRepository, ChatMessageRepository>();
+            services.AddScoped<IPayoutBatchRepository, PayoutBatchRepository>();
+            services.AddScoped<IPayoutTransactionRepository, PayoutTransactionRepository>();
+            services.AddScoped<IPayoutItemRepository, PayoutItemRepository>();
 
             services.AddScoped<IPaymentStrategy, PayOSPaymentStrategy>();
             services.AddScoped<IPaymentStrategy, CodPaymentStrategy>();
@@ -85,6 +91,8 @@ namespace GearZone.Infrastructure
                 });
             });
 
+            services.AddHangfireServer(opt => opt.WorkerCount = 2);
+
             return services;
         }
 
@@ -93,7 +101,14 @@ namespace GearZone.Infrastructure
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString));
 
+            services.AddHangfire(cfg => cfg
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UseSqlServerStorage(connectionString));
+
             return services;
         }
     }
 }
+

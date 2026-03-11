@@ -11,6 +11,7 @@ namespace GearZone.Domain.Entities
         public string UserId { get; set; } = string.Empty;
         public Guid StoreId { get; set; }
         public OrderStatus Status { get; set; }
+        public PayoutStatus PayoutStatus { get; set; } = PayoutStatus.Unpaid;
 
         public decimal Subtotal { get; set; }
         public decimal ShippingFee { get; set; }
@@ -34,6 +35,7 @@ namespace GearZone.Domain.Entities
         public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
         public ICollection<OrderStatusHistory> StatusHistories { get; set; } = new List<OrderStatusHistory>();
         public ICollection<Payment> Payments { get; set; } = new List<Payment>();
+        public PayoutItem? PayoutItem { get; set; }
     }
 
 }

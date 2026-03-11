@@ -1,4 +1,4 @@
-using GearZone.Application.Abstractions.Services;
+﻿using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Seller.Dtos;
 using GearZone.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Security.Claims;
+using System.Linq;
 using System.Threading.Tasks;
 using System;
 
@@ -32,11 +33,9 @@ namespace GearZone.Web.Pages.StoreOwner.Products
         public async Task<IActionResult> OnGetAsync()
         {
             await LoadMetadataAsync();
-            
-            // Initialize with one default variant and one spec row
-            Input.Variants.Add(new ProductVariantDto { VariantName = "Default", StockQuantity = 0 });
-            Input.Specifications.Add(new ProductSpecDto());
 
+            // Initialize with one default variant.
+            Input.Variants.Add(new ProductVariantDto { VariantName = "Default", StockQuantity = 0 });
 
             return Page();
         }
@@ -51,7 +50,7 @@ namespace GearZone.Web.Pages.StoreOwner.Products
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var store = await _storeService.GetStoreByOwnerIdAsync(userId!);
-            
+
             if (store == null) return RedirectToPage("/StoreOwner/Dashboard");
 
             try
@@ -80,10 +79,31 @@ namespace GearZone.Web.Pages.StoreOwner.Products
             return new JsonResult(attributes);
         }
 
+        public async Task<JsonResult> OnGetSpecificationsAsync(int categoryId)
+        {
+            var specs = await _productService.GetCategoryProductSpecsAsync(categoryId);
+            return new JsonResult(specs);
+        }
+        public async Task<JsonResult> OnPostCreateSpecificationAttributeAsync(int categoryId, string name, string? unit, string? valueType)
+        {
+            if (categoryId <= 0) return new JsonResult(new { success = false, message = "Category is required" });
+            if (string.IsNullOrWhiteSpace(name)) return new JsonResult(new { success = false, message = "Specification name is required" });
+
+            try
+            {
+                var id = await _productService.CreateCategoryProductSpecificationAsync(categoryId, name, unit, valueType);
+                return new JsonResult(new { success = true, id = id, name = name.Trim() });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message });
+            }
+        }
+
         public async Task<JsonResult> OnPostCreateBrandAsync(string name)
         {
             if (string.IsNullOrWhiteSpace(name)) return new JsonResult(new { success = false, message = "Name is required" });
-            
+
             try 
             {
                 var id = await _productService.CreateBrandByNameAsync(name);
@@ -113,10 +133,9 @@ namespace GearZone.Web.Pages.StoreOwner.Products
         private async Task LoadMetadataAsync()
         {
             var allCategories = await _productService.GetCategoriesAsync();
-            
-            // Build hierarchy for display
+
             CategoryOptions = allCategories
-                .Where(c => c.ParentId != null || !allCategories.Any(child => child.ParentId == c.Id)) // Only leaves or parents if they have no children (though we usually want leaves)
+                .Where(c => c.ParentId != null || !allCategories.Any(child => child.ParentId == c.Id))
                 .Select(c => {
                     var parent = c.ParentId.HasValue ? allCategories.FirstOrDefault(pc => pc.Id == c.ParentId.Value) : null;
                     var text = parent != null ? $"{parent.Name} > {c.Name}" : c.Name;
@@ -134,3 +153,5 @@ namespace GearZone.Web.Pages.StoreOwner.Products
         }
     }
 }
+
+

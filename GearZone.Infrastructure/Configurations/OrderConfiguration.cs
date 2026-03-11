@@ -21,10 +21,16 @@ namespace GearZone.Infrastructure.Configurations
                    .HasMaxLength(30)
                    .IsRequired();
 
+            builder.Property(x => x.PayoutStatus)
+                   .HasConversion<string>()
+                   .HasMaxLength(30)
+                   .IsRequired();
+
             builder.HasIndex(x => x.OrderCode).IsUnique();
             builder.HasIndex(x => new { x.UserId, x.CreatedAt });
             builder.HasIndex(x => new { x.StoreId, x.CreatedAt });
             builder.HasIndex(x => x.Status);
+            builder.HasIndex(x => x.PayoutStatus);
 
             builder.HasOne(x => x.User)
                    .WithMany(x => x.Orders)
@@ -34,6 +40,11 @@ namespace GearZone.Infrastructure.Configurations
             builder.HasOne(x => x.Store)
                    .WithMany()
                    .HasForeignKey(x => x.StoreId)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.PayoutItem)
+                   .WithOne(x => x.Order)
+                   .HasForeignKey<PayoutItem>(x => x.OrderId)
                    .OnDelete(DeleteBehavior.Restrict);
         }
     }

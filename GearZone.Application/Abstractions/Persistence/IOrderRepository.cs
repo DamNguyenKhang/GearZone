@@ -7,15 +7,15 @@ namespace GearZone.Application.Abstractions.Persistence
 {
     public interface IOrderRepository : IRepository<Order, Guid>
     {
-        Task<List<Order>> GetOrdersNotTransfer();
+        Task<List<SubOrder>> GetOrdersNotTransfer();
 
-        Task<List<Order>> GetEligibleForPayoutAsync(
+        Task<List<SubOrder>> GetEligibleForPayoutAsync(
             DateTime periodStart,
             DateTime periodEnd,
             CancellationToken ct = default);
 
         Task BulkUpdatePayoutStatusAsync(
-            List<Guid> orderIds,
+            List<Guid> subOrderIds,
             PayoutStatus status,
             CancellationToken ct = default);
     }

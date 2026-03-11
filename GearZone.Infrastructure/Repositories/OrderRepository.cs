@@ -12,9 +12,9 @@ namespace GearZone.Infrastructure.Repositories
         {
         }
 
-        public async Task<List<Order>> GetOrdersNotTransfer()
+        public async Task<List<SubOrder>> GetOrdersNotTransfer()
         {
-            var orders = await _dbSet
+            var orders = await _context.Set<SubOrder>()
             .Where(o =>
                 o.Status == OrderStatus.Delivered &&
                 o.PayoutStatus == PayoutStatus.Unpaid &&
@@ -24,12 +24,12 @@ namespace GearZone.Infrastructure.Repositories
             return orders;
         }
 
-        public async Task<List<Order>> GetEligibleForPayoutAsync(
+        public async Task<List<SubOrder>> GetEligibleForPayoutAsync(
             DateTime periodStart,
             DateTime periodEnd,
             CancellationToken ct = default)
         {
-            return await _dbSet
+            return await _context.Set<SubOrder>()
                 .Include(o => o.Items)
                 .Include(o => o.Store)
                 .Where(o => o.Status == OrderStatus.Delivered &&
@@ -40,14 +40,14 @@ namespace GearZone.Infrastructure.Repositories
         }
 
         public async Task BulkUpdatePayoutStatusAsync(
-            List<Guid> orderIds,
+            List<Guid> subOrderIds,
             PayoutStatus status,
             CancellationToken ct = default)
         {
-            var orders = await _dbSet.Where(o => orderIds.Contains(o.Id)).ToListAsync(ct);
-            foreach (var order in orders)
+            var subOrders = await _context.Set<SubOrder>().Where(o => subOrderIds.Contains(o.Id)).ToListAsync(ct);
+            foreach (var subOrder in subOrders)
             {
-                order.PayoutStatus = status;
+                subOrder.PayoutStatus = status;
             }
         }
     }

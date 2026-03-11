@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,7 +6,7 @@ namespace GearZone.Domain.Entities
 {
     public class OrderItem : Entity<Guid>
     {
-        public Guid OrderId { get; set; }
+        public Guid SubOrderId { get; set; }
         public Guid VariantId { get; set; }
 
         public string ProductNameSnapshot { get; set; } = string.Empty;
@@ -17,7 +17,7 @@ namespace GearZone.Domain.Entities
         public decimal LineTotal { get; set; }
 
         // Navigation
-        public Order Order { get; set; } = null!;
+        public SubOrder SubOrder { get; set; } = null!;
         public ProductVariant Variant { get; set; } = null!;
     }
 

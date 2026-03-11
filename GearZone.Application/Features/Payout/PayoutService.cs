@@ -265,6 +265,7 @@ namespace GearZone.Application.Features.Payout
         {
             throw new NotImplementedException("Not Implemented by batch context only yet.");
         }
+
         public async Task RetryTransactionAsync(
             Guid transactionId,
             CancellationToken ct = default)

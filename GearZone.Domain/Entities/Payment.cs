@@ -8,6 +8,7 @@ namespace GearZone.Domain.Entities
     public class Payment : Entity<Guid>
     {
         public Guid OrderId { get; set; }
+        public long PaymentCode { get; set; }
         public PaymentMethod Method { get; set; }
 
         public string Provider { get; set; } = string.Empty;

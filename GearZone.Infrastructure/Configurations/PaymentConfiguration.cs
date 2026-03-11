@@ -16,8 +16,7 @@ namespace GearZone.Infrastructure.Configurations
             builder.HasKey(x => x.Id);
 
             builder.Property(x => x.PaymentCode)
-                   .ValueGeneratedOnAdd()
-                   .UseIdentityColumn();
+                   .HasMaxLength(50);
 
             builder.Property(x => x.Method).HasMaxLength(20).IsRequired();
             builder.Property(x => x.Status).HasMaxLength(20).IsRequired();

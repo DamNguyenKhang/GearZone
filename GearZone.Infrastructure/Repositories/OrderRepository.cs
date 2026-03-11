@@ -1,4 +1,6 @@
 using GearZone.Application.Abstractions.Persistence;
+using GearZone.Application.Common.Models;
+using GearZone.Application.Features.Admin.Dtos;
 using GearZone.Domain.Entities;
 using GearZone.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
@@ -12,49 +14,9 @@ namespace GearZone.Infrastructure.Repositories
         {
         }
 
-        public async Task<List<SubOrder>> GetOrdersNotTransfer()
-        {
-            var orders = await _context.Set<SubOrder>()
-            .Where(o =>
-                o.Status == OrderStatus.Delivered &&
-                o.PayoutStatus == PayoutStatus.Unpaid &&
-                o.UpdatedAt <= DateTime.UtcNow.AddDays(-7)
-            )
-            .ToListAsync();
-            return orders;
-        }
-
-        public async Task<List<SubOrder>> GetEligibleForPayoutAsync(
-            DateTime periodStart,
-            DateTime periodEnd,
-            CancellationToken ct = default)
-        {
-            return await _context.Set<SubOrder>()
-                .Include(o => o.Items)
-                .Include(o => o.Store)
-                .Where(o => o.Status == OrderStatus.Delivered &&
-                            o.PayoutStatus == PayoutStatus.Unpaid &&
-                            o.CreatedAt >= periodStart &&
-                            o.CreatedAt <= periodEnd)
-                .ToListAsync(ct);
-        }
-
-        public async Task BulkUpdatePayoutStatusAsync(
-            List<Guid> subOrderIds,
-            PayoutStatus status,
-            CancellationToken ct = default)
-        {
-            var subOrders = await _context.Set<SubOrder>().Where(o => subOrderIds.Contains(o.Id)).ToListAsync(ct);
-            foreach (var subOrder in subOrders)
-            {
-                subOrder.PayoutStatus = status;
-            }
-        }
-
-        public async Task<GearZone.Application.Common.Models.PagedResult<Order>> GetAdminOrdersAsync(GearZone.Application.Features.Admin.Dtos.AdminOrderQueryDto queryDto)
+        public async Task<PagedResult<Order>> GetAdminOrdersAsync(AdminOrderQueryDto queryDto)
         {
             var query = _dbSet
-                .Include(o => o.Store)
                 .Include(o => o.User)
                 .AsQueryable();
 
@@ -67,19 +29,21 @@ namespace GearZone.Infrastructure.Repositories
                     o.User.UserName.ToLower().Contains(search));
             }
 
-            if (!string.IsNullOrWhiteSpace(queryDto.Status) && Enum.TryParse<OrderStatus>(queryDto.Status, out var status))
+            if (queryDto.IsPaid.HasValue)
             {
-                query = query.Where(o => o.Status == status);
-            }
-
-            if (!string.IsNullOrWhiteSpace(queryDto.PayoutStatus) && Enum.TryParse<PayoutStatus>(queryDto.PayoutStatus, out var payoutStatus))
-            {
-                query = query.Where(o => o.PayoutStatus == payoutStatus);
+                if (queryDto.IsPaid.Value)
+                {
+                    query = query.Where(o => o.PaidAt != null);
+                }
+                else
+                {
+                    query = query.Where(o => o.PaidAt == null);
+                }
             }
 
             if (queryDto.StoreId.HasValue && queryDto.StoreId.Value != Guid.Empty)
             {
-                query = query.Where(o => o.StoreId == queryDto.StoreId.Value);
+                query = query.Where(o => o.SubOrders.Any(s => s.StoreId == queryDto.StoreId.Value));
             }
 
             if (queryDto.StartDate.HasValue)
@@ -119,9 +83,6 @@ namespace GearZone.Infrastructure.Repositories
                     case "grandtotal":
                         query = isDesc ? query.OrderByDescending(o => o.GrandTotal) : query.OrderBy(o => o.GrandTotal);
                         break;
-                    case "commission":
-                        query = isDesc ? query.OrderByDescending(o => o.CommissionAmount) : query.OrderBy(o => o.CommissionAmount);
-                        break;
                     case "createdat":
                         query = isDesc ? query.OrderByDescending(o => o.CreatedAt) : query.OrderBy(o => o.CreatedAt);
                         break;
@@ -137,17 +98,17 @@ namespace GearZone.Infrastructure.Repositories
                 .Take(queryDto.PageSize)
                 .ToListAsync();
 
-            return new GearZone.Application.Common.Models.PagedResult<Order>(items, totalCount, queryDto.PageNumber, queryDto.PageSize);
+            return new PagedResult<Order>(items, totalCount, queryDto.PageNumber, queryDto.PageSize);
         }
 
-        public async Task<GearZone.Application.Features.Admin.Dtos.AdminOrderStatsDto> GetAdminOrderStatsAsync()
+        public async Task<AdminOrderStatsDto> GetAdminOrderStatsAsync()
         {
-            var stats = new GearZone.Application.Features.Admin.Dtos.AdminOrderStatsDto();
+            var stats = new AdminOrderStatsDto();
 
             stats.TotalOrders = await _dbSet.CountAsync();
-            stats.PendingOrders = await _dbSet.CountAsync(o => o.Status == OrderStatus.Pending);
-            stats.CompletedOrders = await _dbSet.CountAsync(o => o.Status == OrderStatus.Delivered || o.Status == OrderStatus.Paid);
-            stats.CancelledOrders = await _dbSet.CountAsync(o => o.Status == OrderStatus.Cancelled || o.Status == OrderStatus.Rejected);
+            stats.PaidOrders = await _dbSet.CountAsync(o => o.PaidAt != null);
+            stats.UnpaidOrders = await _dbSet.CountAsync(o => o.PaidAt == null);
+            stats.TotalRevenue = await _dbSet.Where(o => o.PaidAt != null).SumAsync(o => o.GrandTotal);
 
             return stats;
         }

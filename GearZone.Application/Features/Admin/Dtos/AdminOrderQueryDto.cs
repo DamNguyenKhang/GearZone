@@ -6,8 +6,8 @@ namespace GearZone.Application.Features.Admin.Dtos
     public class AdminOrderQueryDto : PaginationRequest
     {
         public string? SearchTerm { get; set; }
-        public string? Status { get; set; }
-        public string? PayoutStatus { get; set; }
+        public bool? IsPaid { get; set; }
+        public string? PaymentMethod { get; set; }
         public Guid? StoreId { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

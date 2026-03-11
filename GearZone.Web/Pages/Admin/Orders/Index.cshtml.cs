@@ -13,12 +13,10 @@ namespace GearZone.Web.Pages.Admin.Orders
     public class IndexModel : PageModel
     {
         private readonly IAdminOrderService _orderService;
-        private readonly IAdminStoreService _storeService;
 
-        public IndexModel(IAdminOrderService orderService, IAdminStoreService storeService)
+        public IndexModel(IAdminOrderService orderService)
         {
             _orderService = orderService;
-            _storeService = storeService;
         }
 
         [BindProperty(SupportsGet = true)]
@@ -26,8 +24,6 @@ namespace GearZone.Web.Pages.Admin.Orders
 
         public PagedResult<AdminOrderDto> Orders { get; set; } = new PagedResult<AdminOrderDto>();
         public AdminOrderStatsDto Stats { get; set; } = new AdminOrderStatsDto();
-
-        public List<SelectListItem> Stores { get; set; } = new List<SelectListItem>();
 
         public async Task OnGetAsync()
         {
@@ -57,9 +53,6 @@ namespace GearZone.Web.Pages.Admin.Orders
 
             Stats = await _orderService.GetOrderStatsAsync();
             Orders = await _orderService.GetOrdersAsync(Query);
-
-            var stores = await _storeService.GetAllStoresAsync();
-            Stores = stores.Select(s => new SelectListItem(s.StoreName, s.Id.ToString())).ToList();
         }
     }
 }

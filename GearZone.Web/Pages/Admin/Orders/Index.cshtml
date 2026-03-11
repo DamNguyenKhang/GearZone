@@ -11,6 +11,7 @@
 <div class="flex flex-col gap-6">
     <!-- Stats Overview -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Total Orders -->
         <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
             <div class="size-12 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100/50">
                 <span class="material-symbols-outlined">receipt_long</span>
@@ -20,31 +21,37 @@
                 <h3 class="text-2xl font-bold text-slate-900">@Model.Stats.TotalOrders.ToString("N0")</h3>
             </div>
         </div>
-        <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
-            <div class="size-12 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100/50">
-                <span class="material-symbols-outlined">pending_actions</span>
-            </div>
-            <div>
-                <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Pending Orders</p>
-                <h3 class="text-2xl font-bold text-slate-900">@Model.Stats.PendingOrders.ToString("N0")</h3>
-            </div>
-        </div>
+
+        <!-- Paid Orders -->
         <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
             <div class="size-12 rounded-lg bg-green-50 text-green-600 flex items-center justify-center border border-green-100/50">
                 <span class="material-symbols-outlined">check_circle</span>
             </div>
             <div>
-                <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Completed Orders</p>
-                <h3 class="text-2xl font-bold text-slate-900">@Model.Stats.CompletedOrders.ToString("N0")</h3>
+                <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Paid Orders</p>
+                <h3 class="text-2xl font-bold text-slate-900">@Model.Stats.PaidOrders.ToString("N0")</h3>
             </div>
         </div>
+
+        <!-- Unpaid Orders -->
         <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
             <div class="size-12 rounded-lg bg-red-50 text-red-600 flex items-center justify-center border border-red-100/50">
-                <span class="material-symbols-outlined">cancel</span>
+                <span class="material-symbols-outlined">pending_actions</span>
             </div>
             <div>
-                <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Cancelled Orders</p>
-                <h3 class="text-2xl font-bold text-slate-900">@Model.Stats.CancelledOrders.ToString("N0")</h3>
+                <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Unpaid Orders</p>
+                <h3 class="text-2xl font-bold text-slate-900">@Model.Stats.UnpaidOrders.ToString("N0")</h3>
+            </div>
+        </div>
+
+        <!-- Revenue -->
+        <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
+            <div class="size-12 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100/50">
+                <span class="material-symbols-outlined">payments</span>
+            </div>
+            <div>
+                <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Total Revenue</p>
+                <h3 class="text-2xl font-bold text-slate-900">@Model.Stats.TotalRevenue.ToString("N0") ₫</h3>
             </div>
         </div>
     </div>
@@ -71,31 +78,14 @@
                            autocomplete="off" />
                 </div>
 
-                <!-- Status quick-filter -->
-                <div class="shrink-0 w-full lg:w-40">
-                    <select asp-for="Query.Status"
-                            class="form-select w-full rounded-lg border-slate-200 bg-slate-50 py-2.5 text-sm text-slate-900 focus:border-primary focus:ring-primary shadow-sm"
-                            onchange="this.form.submit()">
-                        <option value="">All Statuses</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Rejected">Rejected</option>
-                        <option value="Paid">Paid</option>
-                        <option value="Processing">Processing</option>
-                        <option value="Delivered">Delivered</option>
-                        <option value="Cancelled">Cancelled</option>
-                    </select>
-                </div>
-
-                <!-- Payout Status quick-filter -->
+                <!-- Payment Status quick-filter -->
                 <div class="shrink-0 w-full lg:w-44">
-                    <select asp-for="Query.PayoutStatus"
+                    <select asp-for="Query.IsPaid"
                             class="form-select w-full rounded-lg border-slate-200 bg-slate-50 py-2.5 text-sm text-slate-900 focus:border-primary focus:ring-primary shadow-sm"
                             onchange="this.form.submit()">
-                        <option value="">All Payouts</option>
-                        <option value="Unpaid">Unpaid</option>
-                        <option value="Transferring">Transferring</option>
-                        <option value="Paid">Paid</option>
+                        <option value="">All Payment Statuses</option>
+                        <option value="true">Paid</option>
+                        <option value="false">Unpaid</option>
                     </select>
                 </div>
 
@@ -113,7 +103,6 @@
                         <span class="hidden sm:inline font-medium">Filters</span>
                         @{
                             var advancedActiveCount = 0;
-                            if (Model.Query.StoreId.HasValue && Model.Query.StoreId.Value != Guid.Empty) advancedActiveCount++;
                             if (!string.IsNullOrEmpty(Model.Query.DateRange) || Model.Query.StartDate.HasValue || Model.Query.EndDate.HasValue) advancedActiveCount++;
                             if (Model.Query.MinPrice.HasValue || Model.Query.MaxPrice.HasValue) advancedActiveCount++;
                         }
@@ -144,21 +133,10 @@
             <div id="advanced-filters"
                  class="@(hasAdvanced ? "" : "hidden") border-t border-slate-100 bg-slate-50/40 px-4 pt-4 pb-5 flex flex-col gap-5">
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-
-                    <!-- Store -->
-                    <div class="space-y-1">
-                        <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[14px]">storefront</span> Store
-                        </label>
-                        <select asp-for="Query.StoreId" asp-items="Model.Stores"
-                                class="form-select w-full rounded-lg border-slate-200 bg-white py-2 text-sm text-slate-900 focus:border-primary focus:ring-primary shadow-sm">
-                            <option value="">All Stores</option>
-                        </select>
-                    </div>
+                <div class="flex flex-wrap items-end gap-x-6 gap-y-4">
 
                     <!-- Date Range Selection -->
-                    <div class="space-y-1">
+                    <div class="w-full sm:w-auto sm:min-w-[260px] space-y-1">
                         <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                             <span class="material-symbols-outlined text-[14px]">calendar_today</span> Date Range
                         </label>
@@ -173,7 +151,7 @@
                     </div>
 
                     <!-- Custom Date Inputs (Hidden by default) -->
-                    <div id="custom-date-inputs" class="@(Model.Query.DateRange == "custom" ? "" : "hidden") space-y-1 md:col-span-2 xl:col-span-1 border-slate-200 transition-all">
+                    <div id="custom-date-inputs" class="@(Model.Query.DateRange == "custom" ? "" : "hidden") w-full sm:w-auto sm:min-w-[280px] space-y-1 border-slate-200 transition-all">
                         <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                             <span class="material-symbols-outlined text-[14px]">edit_calendar</span> Custom Range
                         </label>
@@ -185,7 +163,7 @@
                     </div>
 
                     <!-- Amount Range -->
-                    <div class="space-y-1">
+                    <div class="w-full sm:w-48 space-y-1">
                         <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                             <span class="material-symbols-outlined text-[14px]">payments</span> Total Range (₫)
                         </label>
@@ -197,9 +175,9 @@
                     </div>
 
                     <!-- Apply button -->
-                    <div class="flex items-end">
+                    <div class="ms-auto flex items-end">
                         <button type="submit"
-                                class="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white px-6 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                                class="w-full sm:w-auto h-[38px] flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white px-6 rounded-lg text-sm font-semibold transition-colors shadow-sm">
                             <span class="material-symbols-outlined text-[17px]">check</span>
                             Apply Filters
                         </button>
@@ -224,7 +202,7 @@
                             </button>
                         </th>
                         <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 hidden md:table-cell">Customer</th>
-                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Store</th>
+                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 hidden md:table-cell">Receiver</th>
                         <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 text-right">
                             <button type="button" class="sort-header inline-flex items-center justify-end gap-1 w-full hover:text-primary transition-colors group" data-col="grandTotal">
                                 Total
@@ -233,16 +211,7 @@
                                 </span>
                             </button>
                         </th>
-                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 text-right">
-                            <button type="button" class="sort-header inline-flex items-center justify-end gap-1 w-full hover:text-primary transition-colors group" data-col="commission">
-                                Commission
-                                <span class="sort-icon material-symbols-outlined text-[16px] transition-all @(Model.Query.SortBy == "commission" ? "text-primary" : "text-slate-300 group-hover:text-slate-400")">
-                                    @(Model.Query.SortBy == "commission" && Model.Query.SortDirection == "asc" ? "arrow_upward" : Model.Query.SortBy == "commission" && Model.Query.SortDirection == "desc" ? "arrow_downward" : "unfold_more")
-                                </span>
-                            </button>
-                        </th>
-                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 text-center">Status</th>
-                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 text-center">Payout</th>
+                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 text-center">Payment Status</th>
                         <th class="py-4 pr-6 pl-3 text-xs font-semibold uppercase tracking-wider text-slate-500 text-right">
                             <button type="button" class="sort-header inline-flex items-center justify-end gap-1 w-full hover:text-primary transition-colors group" data-col="createdAt">
                                 Created
@@ -265,58 +234,25 @@
                                 <td class="py-4 px-3 hidden md:table-cell align-middle whitespace-nowrap">
                                     <span class="text-sm text-slate-600">@order.CustomerName</span>
                                 </td>
-                                <td class="py-4 px-3 align-middle whitespace-nowrap">
-                                    <span class="text-sm font-medium text-slate-700">@order.StoreName</span>
+                                <td class="py-4 px-3 hidden md:table-cell align-middle whitespace-nowrap">
+                                    <span class="text-sm font-medium text-slate-700">@order.ReceiverName</span>
+                                    <div class="text-xs text-slate-500 mt-0.5">@order.ReceiverPhone</div>
                                 </td>
                                 <td class="py-4 px-3 text-right text-sm font-semibold text-slate-900 align-middle whitespace-nowrap">
                                     @order.GrandTotal.ToString("N0") ₫
                                 </td>
-                                <td class="py-4 px-3 text-right text-sm font-semibold text-blue-600 align-middle whitespace-nowrap">
-                                    @order.CommissionAmount.ToString("N0") ₫
-                                </td>
                                 <td class="py-4 px-3 text-center align-middle whitespace-nowrap">
-                                    @if (order.Status == "Pending")
-                                    {
-                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 ring-1 ring-inset ring-slate-500/20">
-                                            <span class="size-1.5 rounded-full bg-slate-500"></span> Pending
-                                        </span>
-                                    }
-                                    else if (order.Status == "Approved" || order.Status == "Processing")
-                                    {
-                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 ring-1 ring-inset ring-blue-600/20">
-                                            <span class="size-1.5 rounded-full bg-blue-600"></span> @order.Status
-                                        </span>
-                                    }
-                                    else if (order.Status == "Delivered" || order.Status == "Paid")
+                                    @if (order.PaidAt.HasValue)
                                     {
                                         <span class="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1.5 text-xs font-semibold text-green-700 ring-1 ring-inset ring-green-600/20">
-                                            <span class="size-1.5 rounded-full bg-green-600"></span> @order.Status
+                                            <span class="size-1.5 rounded-full bg-green-600"></span> Paid
                                         </span>
-                                    }
-                                    else if (order.Status == "Rejected" || order.Status == "Cancelled")
-                                    {
-                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-700 ring-1 ring-inset ring-red-600/20">
-                                            <span class="size-1.5 rounded-full bg-red-600"></span> @order.Status
-                                        </span>
-                                    }
-                                </td>
-                                <td class="py-4 px-3 text-center align-middle whitespace-nowrap">
-                                    @if (order.PayoutStatus == "Paid")
-                                    {
-                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-1.5 text-xs font-semibold text-green-700 ring-1 ring-inset ring-green-600/20">
-                                            Paid
-                                        </span>
-                                    }
-                                    else if (order.PayoutStatus == "Transferring")
-                                    {
-                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/20">
-                                            Transferring
-                                        </span>
+                                        <div class="text-[10px] text-slate-500 mt-1">@order.PaidAt.Value.ToString("dd/MM/yyyy HH:mm")</div>
                                     }
                                     else
                                     {
-                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-700 ring-1 ring-inset ring-slate-500/20">
-                                            Unpaid
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700 ring-1 ring-inset ring-amber-600/20">
+                                            <span class="size-1.5 rounded-full bg-amber-500"></span> Unpaid
                                         </span>
                                     }
                                 </td>
@@ -329,7 +265,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="8" class="py-12 text-center text-slate-500">
+                            <td colspan="6" class="py-12 text-center text-slate-500">
                                 <div class="flex flex-col items-center justify-center space-y-3">
                                     <div class="size-16 rounded-full bg-slate-50 flex items-center justify-center">
                                         <span class="material-symbols-outlined text-4xl text-slate-300">receipt_long</span>

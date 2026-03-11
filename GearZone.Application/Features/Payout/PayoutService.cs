@@ -16,7 +16,7 @@ namespace GearZone.Application.Features.Payout
 
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPayoutClient _payoutClient;
-        private readonly IOrderRepository _orderRepository;
+        private readonly ISubOrderRepository _subOrderRepository;
         private readonly IPayoutBatchRepository _payoutBatchRepository;
         private readonly IPayoutTransactionRepository _payoutTransactionRepository;
         private readonly IPayoutItemRepository _payoutItemRepository;
@@ -25,7 +25,7 @@ namespace GearZone.Application.Features.Payout
         public PayoutService(
             IUnitOfWork unitOfWork,
             IPayoutClient payoutClient,
-            IOrderRepository orderRepository,
+            ISubOrderRepository subOrderRepository,
             IPayoutBatchRepository payoutBatchRepository,
             IPayoutTransactionRepository payoutTransactionRepository,
             IPayoutItemRepository payoutItemRepository,
@@ -33,7 +33,7 @@ namespace GearZone.Application.Features.Payout
         {
             _unitOfWork = unitOfWork;
             _payoutClient = payoutClient;
-            _orderRepository = orderRepository;
+            _subOrderRepository = subOrderRepository;
             _payoutBatchRepository = payoutBatchRepository;
             _payoutTransactionRepository = payoutTransactionRepository;
             _payoutItemRepository = payoutItemRepository;
@@ -60,7 +60,7 @@ namespace GearZone.Application.Features.Payout
                 throw new InvalidOperationException($"Batch for {periodStart:dd/MM} - {periodEnd:dd/MM} already exists.");
 
             // 3. Lấy orders đủ điều kiện (SubOrders)
-            var eligibleSubOrders = await _orderRepository
+            var eligibleSubOrders = await _subOrderRepository
                 .GetEligibleForPayoutAsync(periodStart, periodEnd, ct);
 
             _logger.LogInformation(
@@ -132,7 +132,7 @@ namespace GearZone.Application.Features.Payout
 
             // 8. Lock orders
             var subOrderIds = eligibleSubOrders.Select(o => o.Id).ToList();
-            await _orderRepository.BulkUpdatePayoutStatusAsync(
+            await _subOrderRepository.BulkUpdatePayoutStatusAsync(
                 subOrderIds, PayoutStatus.Locked, ct);
 
             // 9. Save batch (cascade save transactions + items)
@@ -226,7 +226,7 @@ namespace GearZone.Application.Features.Payout
                 var subOrderIds = await _payoutItemRepository
                     .GetSubOrderIdsByTransactionIdsAsync(txIds, ct);
 
-                await _orderRepository.BulkUpdatePayoutStatusAsync(
+                await _subOrderRepository.BulkUpdatePayoutStatusAsync(
                     subOrderIds, PayoutStatus.Paid, ct);
             }
             else
@@ -317,7 +317,7 @@ namespace GearZone.Application.Features.Payout
 
                     var subOrderIds = await _payoutItemRepository
                         .GetSubOrderIdsByTransactionIdAsync(transactionId, ct);
-                    await _orderRepository.BulkUpdatePayoutStatusAsync(
+                    await _subOrderRepository.BulkUpdatePayoutStatusAsync(
                         subOrderIds, PayoutStatus.Paid, ct);
 
                     // Recalculate parent batch
@@ -403,7 +403,7 @@ namespace GearZone.Application.Features.Payout
             // Unlock orders thuộc transaction này → trả về Unpaid
             var subOrderIds = await _payoutItemRepository
                 .GetSubOrderIdsByTransactionIdAsync(transactionId, ct);
-            await _orderRepository.BulkUpdatePayoutStatusAsync(
+            await _subOrderRepository.BulkUpdatePayoutStatusAsync(
                 subOrderIds, PayoutStatus.Unpaid, ct);
 
             await _unitOfWork.SaveChangesAsync(ct);

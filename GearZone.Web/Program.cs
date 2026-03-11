@@ -1,7 +1,9 @@
 using GearZone.Application;
 using GearZone.Domain.Entities;
 using GearZone.Infrastructure;
+using GearZone.Infrastructure.Jobs;
 using GearZone.Infrastructure.Seed;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
@@ -100,6 +102,24 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseHangfireDashboard("/hangfire");
+
+using (var scope = app.Services.CreateScope())
+{
+    // Recurring jobs
+    RecurringJob.AddOrUpdate<PayoutBatchJob>(
+        "generate-weekly-payout",
+        job => job.GenerateWeeklyBatchAsync(),
+        "1 17 * * 0", // Chủ nhật 17:01 UTC = Thứ 2 00:01 VN
+        TimeZoneInfo.Utc);
+
+    RecurringJob.AddOrUpdate<PayoutBatchJob>(
+        "retry-failed-payouts",
+        job => job.RetryFailedTransactionsAsync(),
+        "0 */6 * * *",
+        TimeZoneInfo.Utc);
+}
 
 app.UseStaticFiles();
 app.MapStaticAssets();

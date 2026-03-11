@@ -36,6 +36,10 @@ namespace GearZone.Infrastructure
         public DbSet<Conversation> Conversations { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
         
+        public DbSet<PayoutBatch> PayoutBatches { get; set; }
+        public DbSet<PayoutTransaction> PayoutTransactions { get; set; }
+        public DbSet<PayoutItem> PayoutItems { get; set; }
+        
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder builder)

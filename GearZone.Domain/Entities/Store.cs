@@ -20,6 +20,7 @@ namespace GearZone.Domain.Entities
         public string BankAccountNumber { get; set; } = string.Empty;
         public string BankAccountName { get; set; } = string.Empty;
         public string BankName { get; set; } = string.Empty;
+        public string BankBin { get; set; } = string.Empty;
 
         public int RegistrationStep { get; set; } = 1;
         public StoreStatus Status { get; set; }

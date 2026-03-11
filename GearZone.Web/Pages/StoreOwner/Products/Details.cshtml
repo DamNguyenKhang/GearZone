@@ -157,26 +157,7 @@
                 </div>
             </div>
 
-            <!-- Specifications Card -->
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                <h2 class="text-sm font-bold text-gray-900 mb-6 uppercase tracking-wider">Specifications</h2>
-                <div class="space-y-4">
-                    @if (Model.Product.Specifications != null && Model.Product.Specifications.Any())
-                    {
-                        @foreach (var spec in Model.Product.Specifications)
-                        {
-                            <div class="flex flex-col py-2 border-b border-gray-50 last:border-0">
-                                <span class="text-[10px] font-bold text-gray-400 uppercase">@spec.Key</span>
-                                <span class="text-sm font-medium text-gray-900">@spec.Value</span>
-                            </div>
-                        }
-                    }
-                    else
-                    {
-                        <p class="text-sm text-gray-400 italic">No specifications added.</p>
-                    }
-                </div>
-            </div>
+
 
             <!-- Quick Tips -->
             <div class="bg-primary/5 rounded-xl p-6 border border-primary/10">

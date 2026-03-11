@@ -12,8 +12,7 @@ namespace GearZone.Infrastructure.Seed
     {
         public static async Task SeedAsync(ApplicationDbContext context)
         {
-            if (await context.Products.AnyAsync()) return;
-
+            // 1. Get a user for store owner (Super Admin from identity seeder)
             var owner = await context.Users.FirstOrDefaultAsync();
             if (owner == null) return;
             
@@ -23,63 +22,23 @@ namespace GearZone.Infrastructure.Seed
             // ── Store ────────────────────────────────────────────────────────
             var store = new Store
             {
-                Id = Guid.NewGuid(), OwnerUserId = owner.Id,
-                StoreName = "GearZone Official Store", Slug = "gearzone-official",
-                BusinessType = BusinessType.Individual, Phone = "0123456789",
-                Email = "official@gearzone.com", AddressLine = "123 Tech Street",
-                Province = "Ho Chi Minh City", Status = StoreStatus.Approved,
-                CreatedAt = DateTime.UtcNow
-            };
-            context.Stores.Add(store);
-
-            // ── Fetch Categories ─────────────────────────────────────────────
-            var cats = await context.Categories.ToDictionaryAsync(c => c.Slug, c => c);
-            Category Cat(string slug) => cats.TryGetValue(slug, out var c) ? c : null!;
-
-            var catGpu       = Cat("gpus");
-            var catCpu       = Cat("cpus");
-            var catRam       = Cat("ram");
-            var catMobo      = Cat("motherboards");
-            var catStorage   = Cat("storage");
-            var catPsu       = Cat("power-supplies");
-            var catCase      = Cat("pc-cases");
-            var catGamMon    = Cat("gaming-monitors");
-            var catOffMon    = Cat("office-monitors");
-            var catCrvMon    = Cat("curved-monitors");
-            var catMechKb    = Cat("mechanical-keyboards");
-            var catMembKb    = Cat("membrane-keyboards");
-            var catKeycaps   = Cat("keycaps");
-            var catKbSwitch  = Cat("keyboard-switches");
-            var catGamMice   = Cat("gaming-mice");
-            var catOffMice   = Cat("office-mice");
-            var catMousePad  = Cat("mouse-pads");
-            var catGamHS     = Cat("gaming-headsets");
-            var catWirelessHP = Cat("wireless-headphones");
-            var catMic       = Cat("microphones");
-
-            if (catGpu == null || catCpu == null || catGamMon == null) return;
-
-            // ── Brands ───────────────────────────────────────────────────────
-            Brand B(string name, string slug) => new Brand { Name = name, Slug = slug, IsApproved = true };
-            var nvidia = B("NVIDIA","nvidia"); var asus = B("ASUS","asus"); var msi = B("MSI","msi");
-            var gigabyte = B("Gigabyte","gigabyte"); var intel = B("Intel","intel"); var amd = B("AMD","amd");
-            var samsung = B("Samsung","samsung"); var lg = B("LG","lg"); var corsair = B("Corsair","corsair");
-            var logitech = B("Logitech","logitech"); var razer = B("Razer","razer");
-            var steelseries = B("SteelSeries","steelseries"); var kingston = B("Kingston","kingston");
-            var crucial = B("Crucial","crucial"); var seagate = B("Seagate","seagate");
-            var wd = B("Western Digital","western-digital"); var seasonic = B("Seasonic","seasonic");
-            var evga = B("EVGA","evga"); var nzxt = B("NZXT","nzxt");
-            var fractal = B("Fractal Design","fractal-design"); var hyperx = B("HyperX","hyperx");
-            var keychron = B("Keychron","keychron"); var ducky = B("Ducky","ducky");
-            var sennheiser = B("Sennheiser","sennheiser"); var sony = B("Sony","sony");
-            var blueMic = B("Blue Microphones","blue-microphones"); var elgato = B("Elgato","elgato");
-            var gateron = B("Gateron","gateron"); var akko = B("Akko","akko");
-            var lianli = B("Lian Li","lian-li"); var benq = B("BenQ","benq");
-
-            context.Brands.AddRange(nvidia, asus, msi, gigabyte, intel, amd, samsung, lg, corsair, logitech,
-                razer, steelseries, kingston, crucial, seagate, wd, seasonic, evga, nzxt, fractal,
-                hyperx, keychron, ducky, sennheiser, sony, blueMic, elgato, gateron, akko, lianli, benq);
-            await context.SaveChangesAsync();
+                store = new Store
+                {
+                    Id = Guid.NewGuid(),
+                    OwnerUserId = owner.Id,
+                    StoreName = "GearZone Official Store",
+                    Slug = "gearzone-official",
+                    BusinessType = BusinessType.Individual,
+                    Phone = "0123456789",
+                    Email = "official@gearzone.com",
+                    AddressLine = "123 Tech Street",
+                    Province = "Ho Chi Minh City",
+                    Status = StoreStatus.Approved,
+                    CreatedAt = DateTime.UtcNow
+                };
+                context.Stores.Add(store);
+                await context.SaveChangesAsync();
+            }
 
             // ── Attribute helpers ────────────────────────────────────────────
             CategoryAttribute Attr(Category cat, string name, int order, AttributeScope scope = AttributeScope.Variant, bool isComparable = false, string? valueType = null, string? unit = null) =>
@@ -263,114 +222,191 @@ namespace GearZone.Infrastructure.Seed
                 om24   = O(offMonSize!,"24\""); om27 = O(offMonSize!,"27\""); om32 = O(offMonSize!,"32\"");
             }
 
-            // Curved Monitors
-            CategoryAttributeOption? cmRes2k = null, cmRes4k = null, cmResUw = null, cmHz144 = null, cmHz165 = null, cmHz240 = null, cmVa = null, cmIps = null, cmOled = null;
-            if (crvMonRes != null)
+            // 4. Create Brands (Idempotent)
+            async Task<Brand> GetOrCreateBrandAsync(string name, string slug)
             {
-                cmRes2k = O(crvMonRes,"1440p (2K)"); cmRes4k = O(crvMonRes,"4K (UHD)"); cmResUw = O(crvMonRes,"Ultra-wide (3440x1440)");
-                cmHz144 = O(crvMonHz!,"144Hz"); cmHz165 = O(crvMonHz!,"165Hz"); cmHz240 = O(crvMonHz!,"240Hz");
-                cmVa = O(crvMonPanel!,"VA"); cmIps = O(crvMonPanel!,"IPS"); cmOled = O(crvMonPanel!,"OLED");
+                var existing = await context.Brands.FirstOrDefaultAsync(b => b.Slug == slug);
+                if (existing != null) return existing;
+                var brand = new Brand { Name = name, Slug = slug, IsApproved = true };
+                context.Brands.Add(brand);
+                await context.SaveChangesAsync();
+                return brand;
             }
 
-            // Mechanical Keyboards
-            var swLinear  = O(mechSwitch,"Linear (Red/Yellow)");
-            var swTactile = O(mechSwitch,"Tactile (Brown/Clear)");
-            var swClicky  = O(mechSwitch,"Clicky (Blue/Green)");
-            var lay100 = O(mechLayout,"Full Size (100%)"); var lay80 = O(mechLayout,"TKL (80%)"); var lay65 = O(mechLayout,"65%");
+            var nvidia = await GetOrCreateBrandAsync("NVIDIA", "nvidia");
+            var asus = await GetOrCreateBrandAsync("ASUS", "asus");
+            var msi = await GetOrCreateBrandAsync("MSI", "msi");
+            var gigabyte = await GetOrCreateBrandAsync("Gigabyte", "gigabyte");
+            var intel = await GetOrCreateBrandAsync("Intel", "intel");
+            var amd = await GetOrCreateBrandAsync("AMD", "amd");
+            var samsung = await GetOrCreateBrandAsync("Samsung", "samsung");
+            var lg = await GetOrCreateBrandAsync("LG", "lg");
 
-            // Membrane Keyboards
-            CategoryAttributeOption? membLay100 = null, membLay80 = null, membWired = null, membWireless = null;
-            if (membLayout != null)
+            // 5. Create Category Attributes (Idempotent)
+            async Task<CategoryAttribute> GetOrCreateAttrAsync(int categoryId, string name, string filterType, bool isFilterable, int displayOrder)
             {
-                membLay100 = O(membLayout,"Full Size (100%)"); membLay80 = O(membLayout,"TKL (80%)");
-                membWired = O(membConn!,"Wired"); membWireless = O(membConn!,"Wireless");
+                var existing = await context.CategoryAttributes.FirstOrDefaultAsync(a => a.CategoryId == categoryId && a.Name == name);
+                if (existing != null) return existing;
+                var attr = new CategoryAttribute { CategoryId = categoryId, Name = name, FilterType = filterType, IsFilterable = isFilterable, DisplayOrder = displayOrder };
+                context.CategoryAttributes.Add(attr);
+                await context.SaveChangesAsync();
+                return attr;
             }
 
-            // Keycaps
-            CategoryAttributeOption? capPbt = null, capAbs = null, capOem = null, capCherry = null, capSa = null;
-            if (keycapMat != null)
+            // GPU Attributes
+            var vramAttr = await GetOrCreateAttrAsync(gpuCategory.Id, "VRAM", "Checkbox", true, 1);
+            var gpuSeriesAttr = await GetOrCreateAttrAsync(gpuCategory.Id, "Series", "Checkbox", true, 2);
+            // CPU Attributes
+            var socketAttr = await GetOrCreateAttrAsync(cpuCategory.Id, "Socket", "Checkbox", true, 1);
+            var coresAttr = await GetOrCreateAttrAsync(cpuCategory.Id, "Cores", "Checkbox", true, 2);
+            // Monitor Attributes
+            var resolutionAttr = await GetOrCreateAttrAsync(monitorCategory.Id, "Resolution", "Checkbox", true, 1);
+            var refreshRateAttr = await GetOrCreateAttrAsync(monitorCategory.Id, "Refresh Rate", "Checkbox", true, 2);
+            var panelAttr = await GetOrCreateAttrAsync(monitorCategory.Id, "Panel Type", "Checkbox", true, 3);
+
+            // 5b. Create Options for Attributes (Idempotent)
+            async Task<CategoryAttributeOption> GetOrCreateOptionAsync(int attrId, string value)
             {
-                capPbt = O(keycapMat,"PBT"); capAbs = O(keycapMat,"ABS");
-                capOem = O(keycapProf!,"OEM"); capCherry = O(keycapProf!,"Cherry"); capSa = O(keycapProf!,"SA");
+                var existing = await context.CategoryAttributeOptions.FirstOrDefaultAsync(o => o.CategoryAttributeId == attrId && o.Value == value);
+                if (existing != null) return existing;
+                var option = new CategoryAttributeOption { CategoryAttributeId = attrId, Value = value };
+                context.CategoryAttributeOptions.Add(option);
+                await context.SaveChangesAsync();
+                return option;
             }
 
-            // Keyboard Switches
-            CategoryAttributeOption? kswLinear = null, kswTactile = null, kswClicky = null, kswLight = null, kswMed = null, kswHeavy = null;
-            if (kbswType != null)
+            // GPU VRAM
+            var vram8 = await GetOrCreateOptionAsync(vramAttr.Id, "8GB");
+            var vram12 = await GetOrCreateOptionAsync(vramAttr.Id, "12GB");
+            var vram16 = await GetOrCreateOptionAsync(vramAttr.Id, "16GB");
+            var vram24 = await GetOrCreateOptionAsync(vramAttr.Id, "24GB");
+            // GPU Series
+            var rtx40 = await GetOrCreateOptionAsync(gpuSeriesAttr.Id, "RTX 40 Series");
+            var rx7000 = await GetOrCreateOptionAsync(gpuSeriesAttr.Id, "Radeon RX 7000");
+            // CPU Sockets
+            var lga1700 = await GetOrCreateOptionAsync(socketAttr.Id, "LGA 1700");
+            var am5 = await GetOrCreateOptionAsync(socketAttr.Id, "AM5");
+            // CPU Cores
+            var cores6 = await GetOrCreateOptionAsync(coresAttr.Id, "6 Cores");
+            var cores8 = await GetOrCreateOptionAsync(coresAttr.Id, "8 Cores");
+            var cores14 = await GetOrCreateOptionAsync(coresAttr.Id, "14 Cores");
+            var cores24 = await GetOrCreateOptionAsync(coresAttr.Id, "24 Cores");
+            // Monitor Res
+            var res2k = await GetOrCreateOptionAsync(resolutionAttr.Id, "1440p (2K)");
+            // Monitor Refresh
+            var hz165 = await GetOrCreateOptionAsync(refreshRateAttr.Id, "165Hz");
+            var hz240 = await GetOrCreateOptionAsync(refreshRateAttr.Id, "240Hz");
+            // Monitor Panel
+            var ips = await GetOrCreateOptionAsync(panelAttr.Id, "IPS");
+            var va = await GetOrCreateOptionAsync(panelAttr.Id, "VA");
+            var oled = await GetOrCreateOptionAsync(panelAttr.Id, "OLED");
+
+            var options = new List<CategoryAttributeOption> { vram8, vram12, vram16, vram24, rtx40, rx7000, lga1700, am5, cores6, cores8, cores14, cores24, res2k, hz165, hz240, ips, va, oled };
+
+            // Helper to find option id
+            int GetOptionId(int attrId, string val) => options.First(o => o.CategoryAttributeId == attrId && o.Value == val).Id;
+
+            // 6. Create Products if they don't exist
+            var productsToAdd = new List<Product>();
+            var sampleProducts = new List<Product>
             {
-                kswLinear = O(kbswType,"Linear"); kswTactile = O(kbswType,"Tactile"); kswClicky = O(kbswType,"Clicky");
-                kswLight = O(kbswActu!,"Light (35-45g)"); kswMed = O(kbswActu!,"Medium (45-65g)"); kswHeavy = O(kbswActu!,"Heavy (65g+)");
+                // GPUs
+                new Product {
+                    Id = Guid.NewGuid(), StoreId = store.Id, CategoryId = gpuCategory.Id, BrandId = asus.Id,
+                    Name = "ASUS ROG Strix GeForce RTX 4090", Slug = "asus-rog-strix-rtx-4090",
+                    BasePrice = 55000000, Status = ProductStatus.Active, CreatedAt = DateTime.UtcNow, SoldCount = 120,
+                    Description = "The ultimate gaming graphics card."
+                },
+                new Product {
+                    Id = Guid.NewGuid(), StoreId = store.Id, CategoryId = gpuCategory.Id, BrandId = msi.Id,
+                    Name = "MSI GeForce RTX 4080 SUPRIM X", Slug = "msi-rtx-4080-suprim-x",
+                    BasePrice = 38000000, Status = ProductStatus.Active, CreatedAt = DateTime.UtcNow, SoldCount = 85,
+                    Description = "High performance graphics for enthusiasts."
+                },
+                new Product {
+                    Id = Guid.NewGuid(), StoreId = store.Id, CategoryId = gpuCategory.Id, BrandId = gigabyte.Id,
+                    Name = "Gigabyte RTX 4070 Ti Gaming OC", Slug = "gigabyte-rtx-4070-ti-gaming-oc",
+                    BasePrice = 24500000, Status = ProductStatus.Active, CreatedAt = DateTime.UtcNow, SoldCount = 200,
+                    Description = "Sweet spot for 1440p high-refresh gaming."
+                },
+                new Product {
+                    Id = Guid.NewGuid(), StoreId = store.Id, CategoryId = gpuCategory.Id, BrandId = asus.Id,
+                    Name = "ASUS Dual GeForce RTX 4060 Ti", Slug = "asus-dual-rtx-4060-ti",
+                    BasePrice = 12500000, Status = ProductStatus.Active, CreatedAt = DateTime.UtcNow, SoldCount = 350,
+                    Description = "Compact and powerful."
+                },
+                new Product {
+                    Id = Guid.NewGuid(), StoreId = store.Id, CategoryId = gpuCategory.Id, BrandId = gigabyte.Id,
+                    Name = "Gigabyte Radeon RX 7900 XTX", Slug = "gigabyte-rx-7900-xtx",
+                    BasePrice = 31000000, Status = ProductStatus.Active, CreatedAt = DateTime.UtcNow, SoldCount = 45,
+                    Description = "Flagship AMD RDNA 3 architecture."
+                },
+
+                // CPUs
+                new Product {
+                    Id = Guid.NewGuid(), StoreId = store.Id, CategoryId = cpuCategory.Id, BrandId = intel.Id,
+                    Name = "Intel Core i9-14900K", Slug = "intel-core-i9-14900k",
+                    BasePrice = 15500000, Status = ProductStatus.Active, CreatedAt = DateTime.UtcNow, SoldCount = 90,
+                    Description = "24 cores, 32 threads, blazing fast."
+                },
+                new Product {
+                    Id = Guid.NewGuid(), StoreId = store.Id, CategoryId = cpuCategory.Id, BrandId = intel.Id,
+                    Name = "Intel Core i5-13600K", Slug = "intel-core-i5-13600k",
+                    BasePrice = 7800000, Status = ProductStatus.Active, CreatedAt = DateTime.UtcNow, SoldCount = 410,
+                    Description = "The best value gaming CPU."
+                },
+                new Product {
+                    Id = Guid.NewGuid(), StoreId = store.Id, CategoryId = cpuCategory.Id, BrandId = amd.Id,
+                    Name = "AMD Ryzen 7 7800X3D", Slug = "amd-ryzen-7-7800x3d",
+                    BasePrice = 10500000, Status = ProductStatus.Active, CreatedAt = DateTime.UtcNow, SoldCount = 310,
+                    Description = "The current king of gaming CPUs with 3D V-Cache."
+                },
+                new Product {
+                    Id = Guid.NewGuid(), StoreId = store.Id, CategoryId = cpuCategory.Id, BrandId = amd.Id,
+                    Name = "AMD Ryzen 5 7600X", Slug = "amd-ryzen-5-7600x",
+                    BasePrice = 6200000, Status = ProductStatus.Active, CreatedAt = DateTime.UtcNow, SoldCount = 180,
+                    Description = "Entry level AM5 performance."
+                },
+
+                // Monitors
+                new Product {
+                    Id = Guid.NewGuid(), StoreId = store.Id, CategoryId = monitorCategory.Id, BrandId = asus.Id,
+                    Name = "ASUS ROG Swift OLED PG27AQDM", Slug = "asus-rog-swift-oled-pg27aqdm",
+                    BasePrice = 28000000, Status = ProductStatus.Active, CreatedAt = DateTime.UtcNow, SoldCount = 30,
+                    Description = "27-inch 1440p OLED 240Hz monitor."
+                },
+                new Product {
+                    Id = Guid.NewGuid(), StoreId = store.Id, CategoryId = monitorCategory.Id, BrandId = samsung.Id,
+                    Name = "Samsung Odyssey G7 27\"", Slug = "samsung-odyssey-g7-27",
+                    BasePrice = 14500000, Status = ProductStatus.Active, CreatedAt = DateTime.UtcNow, SoldCount = 150,
+                    Description = "240Hz 1440p curved gaming monitor."
+                },
+                new Product {
+                    Id = Guid.NewGuid(), StoreId = store.Id, CategoryId = monitorCategory.Id, BrandId = lg.Id,
+                    Name = "LG 27GP850-B UltraGear", Slug = "lg-27gp850-b",
+                    BasePrice = 9500000, Status = ProductStatus.Active, CreatedAt = DateTime.UtcNow, SoldCount = 280,
+                    Description = "165Hz Nano IPS classic."
+                }
+            };
+
+            foreach (var p in sampleProducts)
+            {
+                if (await context.Products.AnyAsync(existing => existing.Slug == p.Slug)) continue;
+
+                productsToAdd.Add(p);
             }
 
-            // Gaming Mice
-            var dpi16k = O(gamMouseDpi,"16,000 DPI"); var dpi25k = O(gamMouseDpi,"25,600 DPI"); var dpi36k = O(gamMouseDpi,"36,000 DPI");
-            var gmWired = O(gamMouseConn,"Wired"); var gmWireless = O(gamMouseConn,"Wireless");
-            var gmColorBlack = O(gamMouseColor,"Black"); var gmColorWhite = O(gamMouseColor,"White"); var gmColorPink = O(gamMouseColor,"Pink");
-
-            // Office Mice
-            CategoryAttributeOption? omWired = null, omWireless = null, omOptical = null, omLaser = null;
-            if (offMouseConn != null)
+            foreach (var p in productsToAdd)
             {
-                omWired = O(offMouseConn,"Wired"); omWireless = O(offMouseConn,"Wireless");
-                omOptical = O(offMouseSensor!,"Optical"); omLaser = O(offMouseSensor!,"Laser");
-            }
-
-            // Mouse Pads
-            CategoryAttributeOption? padMed = null, padLarge = null, padXl = null, padCloth = null, padHard = null;
-            if (padSize != null)
-            {
-                padMed   = O(padSize,"Medium (M)"); padLarge = O(padSize,"Large (L)"); padXl = O(padSize,"XL / XXL");
-                padCloth = O(padMat!,"Cloth"); padHard = O(padMat!,"Hard Surface");
-            }
-
-            // Gaming Headsets
-            var ghsWired    = O(gamHsConn,"Wired");    var ghsWireless = O(gamHsConn,"Wireless");
-            var ghsStereo   = O(gamHsSurr,"Stereo");   var ghs71       = O(gamHsSurr,"7.1 Virtual Surround");
-
-            // Wireless Headphones
-            CategoryAttributeOption? wpAncYes = null, wpAncNo = null, wpD30 = null, wpD40 = null;
-            if (wirHpAnc != null)
-            {
-                wpAncYes = O(wirHpAnc,"Active ANC"); wpAncNo = O(wirHpAnc,"No ANC");
-                wpD30 = O(wirHpDriver!,"30mm"); wpD40 = O(wirHpDriver!,"40mm");
-            }
-
-            // Microphones
-            CategoryAttributeOption? micUsb = null, micXlr = null, micCardioid = null, micOmni = null;
-            if (micType != null)
-            {
-                micUsb = O(micType,"USB"); micXlr = O(micType,"XLR");
-                micCardioid = O(micPattern!,"Cardioid"); micOmni = O(micPattern!,"Omnidirectional");
-            }
-
-            context.CategoryAttributeOptions.AddRange(opts);
-            await context.SaveChangesAsync();
-
-            // ── Products ─────────────────────────────────────────────────────
-            var rng = new Random(42);
-            var products = new List<(Product product, List<(decimal priceOffset, List<(CategoryAttribute, CategoryAttributeOption)> avs)> variants)>();
-
-            (CategoryAttribute, CategoryAttributeOption) Av(CategoryAttribute a, CategoryAttributeOption o) => (a, o);
-
-            void Add(Product p, string? specsJson = null, params (CategoryAttribute, CategoryAttributeOption)[] avs)
-            {
-                p.SpecsJson = specsJson ?? "{}";
-                products.Add((p, new List<(decimal, List<(CategoryAttribute, CategoryAttributeOption)>)> { (0m, avs.ToList()) }));
-            }
-
-            void AddMulti(Product p, string? specsJson = null, params (decimal priceOffset, (CategoryAttribute, CategoryAttributeOption)[] avs)[] variants)
-            {
-                p.SpecsJson = specsJson ?? "{}";
-                products.Add((p, variants.Select(v => (v.priceOffset, v.avs.ToList())).ToList()));
-            }
-
-            Product P(Category cat, Brand brand, string name, string slug, decimal price, int sold, string desc = "") =>
-                new Product
+                // Add a variant for each product
+                var variant = new ProductVariant
                 {
-                    Id = Guid.NewGuid(), StoreId = store.Id, CategoryId = cat.Id, BrandId = brand.Id,
-                    Name = name, Slug = slug, BasePrice = price, SoldCount = sold,
-                    Status = ProductStatus.Active, CreatedAt = DateTime.UtcNow,
-                    Description = string.IsNullOrEmpty(desc) ? $"{name} - premium quality from GearZone." : desc
+                    Id = Guid.NewGuid(),
+                    ProductId = p.Id,
+                    Sku = p.Slug.ToUpper() + "-V1",
+                    Price = p.BasePrice,
+                    StockQuantity = new Random().Next(5, 50),
+                    IsActive = true
                 };
 
             // ── GPUs ─────────────────────────────────────────────────────────
@@ -586,18 +622,14 @@ namespace GearZone.Infrastructure.Seed
                 {
                     var variant = new ProductVariant
                     {
-                        Id = Guid.NewGuid(), ProductId = product.Id,
-                        Sku = product.Slug.ToUpper() + "-V" + vIdx++,
-                        Price = product.BasePrice + priceOffset,
-                        StockQuantity = rng.Next(5, 80),
-                        IsActive = true
-                    };
-                    foreach (var (attr, opt) in avList)
-                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = attr.Id, CategoryAttributeOptionId = opt.Id });
-
-                    product.Variants.Add(variant);
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = resolutionAttr.Id, CategoryAttributeOptionId = GetOptionId(resolutionAttr.Id, "1440p (2K)") });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = refreshRateAttr.Id, CategoryAttributeOptionId = GetOptionId(refreshRateAttr.Id, "165Hz") });
+                        variant.AttributeValues.Add(new VariantAttributeValue { CategoryAttributeId = panelAttr.Id, CategoryAttributeOptionId = GetOptionId(panelAttr.Id, "IPS") });
+                    }
                 }
-                context.Products.Add(product);
+
+                p.Variants.Add(variant);
+                context.Products.Add(p);
             }
 
             await context.SaveChangesAsync();

@@ -6,13 +6,13 @@ namespace GearZone.Application.Features.Payout.Dtos
 {
     public class PayoutResult
     {
-        public bool Success { get; set; }
+        public bool IsSuccess { get; set; }
         public string? ReferenceId { get; set; }
         public string? ErrorMessage { get; set; }
 
-        public PayoutResult(bool success, string? referenceId = null, string? errorMessage = null)
+        public PayoutResult(bool isSuccess, string? referenceId = null, string? errorMessage = null)
         {
-            Success = success;
+            IsSuccess = isSuccess;
             ReferenceId = referenceId;
             ErrorMessage = errorMessage;
         }

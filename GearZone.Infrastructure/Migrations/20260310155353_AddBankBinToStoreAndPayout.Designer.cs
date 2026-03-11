@@ -4,6 +4,7 @@ using GearZone.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GearZone.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260310155353_AddBankBinToStoreAndPayout")]
+    partial class AddBankBinToStoreAndPayout
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -541,9 +544,6 @@ namespace GearZone.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<bool>("IsComparable")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsFilterable")
                         .HasColumnType("bit");
 
@@ -551,15 +551,6 @@ namespace GearZone.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<int>("Scope")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Unit")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ValueType")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -1164,36 +1155,6 @@ namespace GearZone.Infrastructure.Migrations
                     b.HasIndex("StoreId", "Status");
 
                     b.ToTable("Products", (string)null);
-                });
-
-            modelBuilder.Entity("GearZone.Domain.Entities.ProductAttributeValue", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("CategoryAttributeId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("CategoryAttributeOptionId")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Value")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CategoryAttributeId");
-
-                    b.HasIndex("CategoryAttributeOptionId");
-
-                    b.HasIndex("ProductId", "CategoryAttributeId")
-                        .IsUnique();
-
-                    b.ToTable("ProductAttributeValues", (string)null);
                 });
 
             modelBuilder.Entity("GearZone.Domain.Entities.ProductImage", b =>
@@ -2025,32 +1986,6 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Store");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.ProductAttributeValue", b =>
-                {
-                    b.HasOne("GearZone.Domain.Entities.CategoryAttribute", "CategoryAttribute")
-                        .WithMany()
-                        .HasForeignKey("CategoryAttributeId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("GearZone.Domain.Entities.CategoryAttributeOption", "CategoryAttributeOption")
-                        .WithMany()
-                        .HasForeignKey("CategoryAttributeOptionId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("GearZone.Domain.Entities.Product", "Product")
-                        .WithMany("AttributeValues")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CategoryAttribute");
-
-                    b.Navigation("CategoryAttributeOption");
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("GearZone.Domain.Entities.ProductImage", b =>
                 {
                     b.HasOne("GearZone.Domain.Entities.Product", "Product")
@@ -2251,8 +2186,6 @@ namespace GearZone.Infrastructure.Migrations
 
             modelBuilder.Entity("GearZone.Domain.Entities.Product", b =>
                 {
-                    b.Navigation("AttributeValues");
-
                     b.Navigation("Images");
 
                     b.Navigation("Variants");

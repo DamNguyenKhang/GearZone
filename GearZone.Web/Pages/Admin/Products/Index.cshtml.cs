@@ -10,6 +10,7 @@ using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Admin.Dtos;
+using GearZone.Domain.Enums;
 
 namespace GearZone.Web.Pages.Admin.Products
 {
@@ -93,6 +94,41 @@ namespace GearZone.Web.Pages.Admin.Products
                     Options = a.Options.Select(o => new { o.Id, o.Value })
                 });
             return new JsonResult(result);
+        }
+
+        public async Task<IActionResult> OnPostBulkUpdateStatusAsync(List<Guid> productIds, string actionType)
+        {
+            if (productIds == null || !productIds.Any())
+                return RedirectToPage();
+
+            ProductStatus status;
+            switch (actionType.ToLower())
+            {
+                case "approve":
+                    status = ProductStatus.Active;
+                    break;
+                case "reject":
+                    status = ProductStatus.Rejected;
+                    break;
+                case "inactive":
+                    status = ProductStatus.Inactive;
+                    break;
+                default:
+                    return RedirectToPage();
+            }
+
+            var success = await _productService.BulkUpdateStatusAsync(productIds, status);
+            
+            if (success)
+            {
+                TempData["SuccessMessage"] = $"Successfully updated {productIds.Count} product(s) to {status}.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to update product statuses.";
+            }
+
+            return RedirectToPage(new { Query.SearchTerm, Query.Status, Query.CategoryId, Query.BrandId, Query.StoreId, Query.PageNumber });
         }
     }
 }

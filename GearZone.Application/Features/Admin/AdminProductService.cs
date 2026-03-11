@@ -6,6 +6,7 @@ using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Admin.Dtos;
+using GearZone.Domain.Enums;
 
 namespace GearZone.Application.Features.Admin
 {
@@ -13,11 +14,13 @@ namespace GearZone.Application.Features.Admin
     {
         private readonly IProductRepository _productRepository;
         private readonly IMapper _mapper;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public AdminProductService(IProductRepository productRepository, IMapper mapper)
+        public AdminProductService(IProductRepository productRepository, IMapper mapper, IUnitOfWork unitOfWork)
         {
             _productRepository = productRepository;
             _mapper = mapper;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<PagedResult<AdminProductDto>> GetProductsAsync(AdminProductQueryDto queryDto)
@@ -41,6 +44,31 @@ namespace GearZone.Application.Features.Admin
                 return null;
 
             return _mapper.Map<AdminProductDetailDto>(product);
+        }
+
+        public async Task<bool> BulkUpdateStatusAsync(List<Guid> productIds, ProductStatus status)
+        {
+            if (productIds == null || !productIds.Any())
+                return false;
+
+            var success = false;
+            foreach (var id in productIds)
+            {
+                var product = await _productRepository.GetByIdAsync(id);
+                if (product != null)
+                {
+                    product.Status = status;
+                    await _productRepository.UpdateAsync(product);
+                    success = true;
+                }
+            }
+
+            if (success)
+            {
+                await _unitOfWork.SaveChangesAsync();
+            }
+
+            return success;
         }
     }
 }

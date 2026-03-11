@@ -13,15 +13,18 @@ namespace GearZone.Web.Pages.Admin.StoreManagement
     {
         private readonly IAdminStoreService _adminStoreService;
         private readonly IAdminProductService _adminProductService;
+        private readonly IAdminOrderService _adminOrderService;
 
-        public DetailModel(IAdminStoreService adminStoreService, IAdminProductService adminProductService)
+        public DetailModel(IAdminStoreService adminStoreService, IAdminProductService adminProductService, IAdminOrderService adminOrderService)
         {
             _adminStoreService = adminStoreService;
             _adminProductService = adminProductService;
+            _adminOrderService = adminOrderService;
         }
 
         public StoreApplicationDto? StoreApplication { get; set; }
         public PagedResult<AdminProductDto> Products { get; set; } = new(new List<AdminProductDto>(), 0, 1, 5);
+        public PagedResult<AdminOrderDto> Orders { get; set; } = new(new List<AdminOrderDto>(), 0, 1, 5);
 
         public async Task<IActionResult> OnGetAsync(Guid id)
         {
@@ -39,6 +42,16 @@ namespace GearZone.Web.Pages.Admin.StoreManagement
                 SortDirection = "desc"
             };
             Products = await _adminProductService.GetProductsAsync(query);
+
+            var orderQuery = new AdminOrderQueryDto
+            {
+                StoreId = id,
+                PageNumber = 1,
+                PageSize = 5,
+                SortBy = "createdAt",
+                SortDirection = "desc"
+            };
+            Orders = await _adminOrderService.GetOrdersAsync(orderQuery);
 
             return Page();
         }

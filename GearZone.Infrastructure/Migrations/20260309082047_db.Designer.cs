@@ -4,6 +4,7 @@ using GearZone.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GearZone.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260309082047_db")]
+    partial class db
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -541,9 +544,6 @@ namespace GearZone.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<bool>("IsComparable")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsFilterable")
                         .HasColumnType("bit");
 
@@ -551,15 +551,6 @@ namespace GearZone.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<int>("Scope")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Unit")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ValueType")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -725,11 +716,6 @@ namespace GearZone.Infrastructure.Migrations
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("PayoutStatus")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
                     b.Property<string>("ReceiverName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -773,8 +759,6 @@ namespace GearZone.Infrastructure.Migrations
 
                     b.HasIndex("OrderCode")
                         .IsUnique();
-
-                    b.HasIndex("PayoutStatus");
 
                     b.HasIndex("Status");
 
@@ -920,181 +904,6 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("Payments", (string)null);
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.PayoutBatch", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("ApprovedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ApprovedByAdminId")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("BatchCode")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("FailedCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("HoldReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime>("PeriodEnd")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("PeriodStart")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SuccessCount")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("TotalCommissionAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("TotalGrossAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("TotalNetAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("TotalStores")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PayoutBatches", (string)null);
-                });
-
-            modelBuilder.Entity("GearZone.Domain.Entities.PayoutItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("CommissionAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("ExcludeReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<decimal>("GrandTotal")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<bool>("IsExcluded")
-                        .HasColumnType("bit");
-
-                    b.Property<decimal>("NetAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<Guid>("OrderId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("PayoutTransactionId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrderId")
-                        .IsUnique();
-
-                    b.HasIndex("PayoutTransactionId");
-
-                    b.ToTable("PayoutItems", (string)null);
-                });
-
-            modelBuilder.Entity("GearZone.Domain.Entities.PayoutTransaction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("BankAccountName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("BankAccountNumber")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("BankBin")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("BankName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<decimal>("CommissionAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ExcludeReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("FailureReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<decimal>("GrossAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("NetAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("OrderCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("PayOSTransactionId")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<Guid>("PayoutBatchId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("ProcessedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("RetryCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("StoreId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PayoutBatchId");
-
-                    b.HasIndex("StoreId");
-
-                    b.ToTable("PayoutTransactions", (string)null);
-                });
-
             modelBuilder.Entity("GearZone.Domain.Entities.Product", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1164,36 +973,6 @@ namespace GearZone.Infrastructure.Migrations
                     b.HasIndex("StoreId", "Status");
 
                     b.ToTable("Products", (string)null);
-                });
-
-            modelBuilder.Entity("GearZone.Domain.Entities.ProductAttributeValue", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("CategoryAttributeId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("CategoryAttributeOptionId")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Value")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CategoryAttributeId");
-
-                    b.HasIndex("CategoryAttributeOptionId");
-
-                    b.HasIndex("ProductId", "CategoryAttributeId")
-                        .IsUnique();
-
-                    b.ToTable("ProductAttributeValues", (string)null);
                 });
 
             modelBuilder.Entity("GearZone.Domain.Entities.ProductImage", b =>
@@ -1288,23 +1067,15 @@ namespace GearZone.Infrastructure.Migrations
 
                     b.Property<string>("BankAccountName")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("BankAccountNumber")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("BankBin")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("BankName")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("BusinessType")
                         .IsRequired()
@@ -1960,44 +1731,6 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Order");
                 });
 
-            modelBuilder.Entity("GearZone.Domain.Entities.PayoutItem", b =>
-                {
-                    b.HasOne("GearZone.Domain.Entities.Order", "Order")
-                        .WithOne("PayoutItem")
-                        .HasForeignKey("GearZone.Domain.Entities.PayoutItem", "OrderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("GearZone.Domain.Entities.PayoutTransaction", "Transaction")
-                        .WithMany("Items")
-                        .HasForeignKey("PayoutTransactionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Order");
-
-                    b.Navigation("Transaction");
-                });
-
-            modelBuilder.Entity("GearZone.Domain.Entities.PayoutTransaction", b =>
-                {
-                    b.HasOne("GearZone.Domain.Entities.PayoutBatch", "Batch")
-                        .WithMany("Transactions")
-                        .HasForeignKey("PayoutBatchId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("GearZone.Domain.Entities.Store", "Store")
-                        .WithMany()
-                        .HasForeignKey("StoreId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Batch");
-
-                    b.Navigation("Store");
-                });
-
             modelBuilder.Entity("GearZone.Domain.Entities.Product", b =>
                 {
                     b.HasOne("GearZone.Domain.Entities.Brand", "Brand")
@@ -2023,32 +1756,6 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Category");
 
                     b.Navigation("Store");
-                });
-
-            modelBuilder.Entity("GearZone.Domain.Entities.ProductAttributeValue", b =>
-                {
-                    b.HasOne("GearZone.Domain.Entities.CategoryAttribute", "CategoryAttribute")
-                        .WithMany()
-                        .HasForeignKey("CategoryAttributeId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("GearZone.Domain.Entities.CategoryAttributeOption", "CategoryAttributeOption")
-                        .WithMany()
-                        .HasForeignKey("CategoryAttributeOptionId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("GearZone.Domain.Entities.Product", "Product")
-                        .WithMany("AttributeValues")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CategoryAttribute");
-
-                    b.Navigation("CategoryAttributeOption");
-
-                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("GearZone.Domain.Entities.ProductImage", b =>
@@ -2234,25 +1941,11 @@ namespace GearZone.Infrastructure.Migrations
 
                     b.Navigation("Payments");
 
-                    b.Navigation("PayoutItem");
-
                     b.Navigation("StatusHistories");
-                });
-
-            modelBuilder.Entity("GearZone.Domain.Entities.PayoutBatch", b =>
-                {
-                    b.Navigation("Transactions");
-                });
-
-            modelBuilder.Entity("GearZone.Domain.Entities.PayoutTransaction", b =>
-                {
-                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("GearZone.Domain.Entities.Product", b =>
                 {
-                    b.Navigation("AttributeValues");
-
                     b.Navigation("Images");
 
                     b.Navigation("Variants");

@@ -8,6 +8,7 @@ namespace GearZone.Application.Features.Catalog.DTOs
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Slug { get; set; } = string.Empty;
+        public int CategoryId { get; set; }
         public string BrandName { get; set; } = string.Empty;
         public decimal BasePrice { get; set; }
         public decimal? OriginalPrice { get; set; } // Assuming BasePrice is sale price and Original is higher, or we just map it.

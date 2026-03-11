@@ -39,6 +39,7 @@ namespace GearZone.Web.Pages.Public.Catalog
         public string? Search { get; set; }
 
         public string? CategorySlug { get; set; }
+        public int CategoryId { get; set; }
         
         public ProductFilterDto Filter { get; set; } = new ProductFilterDto();
 
@@ -53,6 +54,11 @@ namespace GearZone.Web.Pages.Public.Catalog
 
             Sidebar = await _catalogService.GetFiltersForCategoryAsync(Filter.CategorySlug);
             Products = await _catalogService.GetProductsAsync(Filter);
+            
+            if (Products.Items.Any())
+            {
+                CategoryId = Products.Items.First().CategoryId;
+            }
 
             return Page();
         }

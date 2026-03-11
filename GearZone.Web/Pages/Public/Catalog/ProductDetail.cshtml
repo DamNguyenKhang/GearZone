@@ -38,10 +38,16 @@
                     }
                 </div>
             }
-            
-            <button class="flex items-center gap-2 text-slate-500 hover:text-primary transition-colors text-sm font-medium mt-2">
-                <span class="material-symbols-outlined text-lg">compare_arrows</span>
-                Compare this product
+            <!-- Premium Compare Toggle (Detail View) -->
+            <button class="flex items-center gap-3 px-6 py-2.5 bg-white dark:bg-slate-800/50 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-600 dark:text-slate-300 hover:border-primary/50 hover:bg-primary/5 transition-all shadow-sm hover:shadow-md mt-4 compare-detail-btn group/detail"
+                    data-product-id="@Model.Product.Id"
+                    data-product-name="@Model.Product.Name"
+                    data-product-image="@(Model.Product.ImageUrls.FirstOrDefault() ?? "/images/placeholder.png")"
+                    data-category-id="@Model.Product.CategoryId">
+                <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center group-hover/detail:bg-primary group-hover/detail:text-white transition-all duration-300">
+                    <span class="material-symbols-outlined text-lg">compare_arrows</span>
+                </div>
+                <span id="compare-text" class="text-sm font-black uppercase tracking-widest group-hover/detail:text-primary transition-colors">Compare this product</span>
             </button>
         </div>
 
@@ -73,10 +79,10 @@
             <div class="bg-slate-50 dark:bg-surface-dark/50 p-5 rounded-xl">
                 <div class="flex items-end gap-3 flex-wrap">
                     <span id="display-price" class="text-4xl font-extrabold text-secondary tracking-tight">
-                        @(Model.Product.Variants.FirstOrDefault()?.Price.ToString("N0") ?? Model.Product.BasePrice.ToString("N0"))₫
+                        @(Model.Product.Variants.FirstOrDefault()?.Price.ToString("N0") ?? Model.Product.BasePrice.ToString("N0")) VND
                     </span>
                     <span id="display-original-price" class="text-lg text-slate-400 line-through mb-1">
-                        @(( (Model.Product.Variants.FirstOrDefault()?.Price ?? Model.Product.BasePrice) * 1.15m ).ToString("N0"))₫
+                        @(( (Model.Product.Variants.FirstOrDefault()?.Price ?? Model.Product.BasePrice) * 1.15m ).ToString("N0")) VND
                     </span>
                     <span class="text-sm font-bold text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400 px-2 py-1 rounded mb-1">Save 15%</span>
                 </div>
@@ -326,8 +332,8 @@
                         </div>
                         <div class="mt-auto">
                             <div class="flex flex-wrap items-baseline gap-2 mb-4">
-                                <span class="text-lg font-bold text-secondary">@p.BasePrice.ToString("N0")₫</span>
-                                <span class="text-xs text-slate-400 line-through">@((p.BasePrice * 1.15m).ToString("N0"))₫</span>
+                                <span class="text-lg font-bold text-secondary">@p.BasePrice.ToString("N0") VND</span>
+                                <span class="text-xs text-slate-400 line-through">@((p.BasePrice * 1.15m).ToString("N0")) VND</span>
                             </div>
                             <button class="w-full py-2 rounded-lg border border-primary text-primary text-xs font-bold hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
                                 <span class="material-symbols-outlined text-sm">add_shopping_cart</span>
@@ -388,10 +394,10 @@
 
                     // Update Price
                     const newPrice = variant.Price;
-                    document.getElementById('display-price').textContent = newPrice.toLocaleString('vi-VN') + '₫';
+                    document.getElementById('display-price').textContent = newPrice.toLocaleString('vi-VN') + ' VND';
                     const originalPrice = newPrice * 1.15;
                     const displayOriginalElement = document.getElementById('display-original-price');
-                    if(displayOriginalElement) displayOriginalElement.textContent = originalPrice.toLocaleString('vi-VN') + '₫';
+                    if(displayOriginalElement) displayOriginalElement.textContent = originalPrice.toLocaleString('vi-VN') + ' VND';
                     
                     // Update SKU
                     document.getElementById('display-sku').textContent = variant.Sku;
@@ -503,6 +509,106 @@
             }
         });
 
+
+        // Product comparison logic (Product Detail)
+        (function() {
+            const compareBtn = document.querySelector('.compare-detail-btn');
+            const compareText = document.getElementById('compare-text');
+
+            if (!compareBtn) {
+                return;
+            }
+
+            const productId = compareBtn.dataset.productId;
+            const categoryId = String(compareBtn.dataset.categoryId || '');
+
+            function normalizeCompareList(items) {
+                if (!Array.isArray(items) || items.length === 0) {
+                    return [];
+                }
+
+                const uniqueItems = [];
+                const seenIds = new Set();
+                const lockedCategoryId = String(items[0].categoryId || '');
+
+                items.forEach(item => {
+                    if (!item || !item.id || seenIds.has(item.id) || String(item.categoryId || '') !== lockedCategoryId) {
+                        return;
+                    }
+
+                    seenIds.add(item.id);
+                    uniqueItems.push({
+                        id: item.id,
+                        name: item.name,
+                        image: item.image,
+                        categoryId: String(item.categoryId || '')
+                    });
+                });
+
+                return uniqueItems.slice(0, 4);
+            }
+
+            function updateBtnState() {
+                const compareList = normalizeCompareList(JSON.parse(localStorage.getItem('gearzone_compare_list') || '[]'));
+                localStorage.setItem('gearzone_compare_list', JSON.stringify(compareList));
+
+                if (compareList.some(p => p.id === productId)) {
+                    compareText.innerText = 'Added to comparison';
+                    compareBtn.classList.add('text-primary');
+                } else {
+                    compareText.innerText = 'Compare this product';
+                    compareBtn.classList.remove('text-primary');
+                }
+            }
+
+            updateBtnState();
+
+            compareBtn.addEventListener('click', () => {
+                let compareList = normalizeCompareList(JSON.parse(localStorage.getItem('gearzone_compare_list') || '[]'));
+                const exists = compareList.some(p => p.id === productId);
+
+                if (exists) {
+                    compareList = compareList.filter(p => p.id !== productId);
+                    window.showToast?.('info', 'Product removed from comparison list.');
+                } else {
+                    if (compareList.length > 0 && String(compareList[0].categoryId || '') !== categoryId) {
+                        const shouldClear = confirm('Comparison only works for products in the same category. Clear the current list and start a new comparison?');
+                        if (!shouldClear) {
+                            updateBtnState();
+                            return;
+                        }
+
+                        compareList = [];
+                    }
+
+                    if (compareList.length >= 4) {
+                        window.showToast?.('warning', 'You can only compare up to 4 products.');
+                        return;
+                    }
+
+                    compareList.push({
+                        id: productId,
+                        name: compareBtn.dataset.productName,
+                        image: compareBtn.dataset.productImage,
+                        categoryId: categoryId
+                    });
+
+                    window.showToast?.('success', 'Product added to comparison list!');
+
+                    if (compareList.length >= 2) {
+                        setTimeout(() => {
+                            const ids = compareList.map(p => p.id).join(',');
+                            if (confirm('You have 2 or more products in your list. View comparison now?')) {
+                                window.location.href = `/compare?categoryId=${categoryId}&ids=${ids}`;
+                            }
+                        }, 500);
+                    }
+                }
+
+                localStorage.setItem('gearzone_compare_list', JSON.stringify(compareList));
+                updateBtnState();
+            });
+        })();
         function updateQty(change) {
             const input = document.getElementById('qty-input');
             const maxStock = parseInt(input.getAttribute('data-max-stock') || '1');
@@ -520,3 +626,8 @@
         }
     </script>
 }
+
+
+
+
+

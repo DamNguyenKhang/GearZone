@@ -143,5 +143,12 @@ namespace GearZone.Infrastructure.Repositories
 
             return stats;
         }
+
+        public async Task<decimal> GetTotalEligiblePayoutAmountAsync(CancellationToken ct = default)
+        {
+            return await _dbSet
+                .Where(x => x.Status == OrderStatus.Delivered && x.PayoutStatus == PayoutStatus.Unpaid)
+                .SumAsync(x => x.NetAmount, ct);
+        }
     }
 }

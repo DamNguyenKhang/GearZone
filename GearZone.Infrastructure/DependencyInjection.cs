@@ -5,32 +5,32 @@ using GearZone.Infrastructure.Repositories;
 using GearZone.Infrastructure.Settings;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PayOS;
-using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace GearZone.Infrastructure
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddInfrastructure(this IServiceCollection services)
+        public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
             services.Configure<PayOSSettings>(options =>
             {
-                options.ClientId = Environment.GetEnvironmentVariable("PAYOS_CLIENT_ID")!;
-                options.ApiKey = Environment.GetEnvironmentVariable("PAYOS_API_KEY")!;
-                options.ChecksumKey = Environment.GetEnvironmentVariable("PAYOS_CHECKSUM_KEY")!;
-                options.ReturnUrl = Environment.GetEnvironmentVariable("PAYOS_RETURN_URL")!;
-                options.CancelUrl = Environment.GetEnvironmentVariable("PAYOS_CANCEL_URL")!;
+                options.ClientId = configuration["PAYOS_CLIENT_ID"]!;
+                options.ApiKey = configuration["PAYOS_API_KEY"]!;
+                options.ChecksumKey = configuration["PAYOS_CHECKSUM_KEY"]!;
+                options.ReturnUrl = configuration["PAYOS_RETURN_URL"]!;
+                options.CancelUrl = configuration["PAYOS_CANCEL_URL"]!;
             });
 
             services.Configure<PayOSPayoutSettings>(options =>
             {
-                options.ClientId = Environment.GetEnvironmentVariable("PAYOS_PAYOUT_CLIENT_ID")!;
-                options.ApiKey = Environment.GetEnvironmentVariable("PAYOS_PAYOUT_API_KEY")!;
-                options.ChecksumKey = Environment.GetEnvironmentVariable("PAYOS_PAYOUT_CHECKSUM_KEY")!;
+                options.ClientId = configuration["PAYOS_PAYOUT_CLIENT_ID"]!;
+                options.ApiKey = configuration["PAYOS_PAYOUT_API_KEY"]!;
+                options.ChecksumKey = configuration["PAYOS_PAYOUT_CHECKSUM_KEY"]!;
             });
 
             services.AddMemoryCache();
@@ -63,6 +63,7 @@ namespace GearZone.Infrastructure
             services.AddScoped<IPayoutBatchRepository, PayoutBatchRepository>();
             services.AddScoped<IPayoutTransactionRepository, PayoutTransactionRepository>();
             services.AddScoped<IPayoutItemRepository, PayoutItemRepository>();
+            services.AddScoped<IWalletTransactionRepository, WalletTransactionRepository>();
 
             services.AddScoped<IPaymentStrategy, PayOSPaymentStrategy>();
             services.AddScoped<IPaymentStrategy, CodPaymentStrategy>();

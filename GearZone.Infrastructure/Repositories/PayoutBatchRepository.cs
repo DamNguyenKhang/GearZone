@@ -44,4 +44,11 @@ public class PayoutBatchRepository : Repository<PayoutBatch, Guid>, IPayoutBatch
 
         return new PagedResult<PayoutBatch>(items, totalCount, page, pageSize);
     }
+
+    public async Task<decimal> GetTotalNetAmountByStatusesAsync(PayoutBatchStatus[] statuses, CancellationToken ct = default)
+    {
+        return await _dbSet
+            .Where(x => statuses.Contains(x.Status))
+            .SumAsync(x => x.TotalNetAmount, ct);
+    }
 }

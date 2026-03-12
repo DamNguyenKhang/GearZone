@@ -1,10 +1,13 @@
-﻿using GearZone.Application.Abstractions.External;
+using GearZone.Application.Abstractions.External;
 using GearZone.Application.Features.Payout.Dtos;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using PayOS;
 using PayOS.Models.V1.Payouts;
 using PayOS.Models.V1.Payouts.Batch;
+using PayOS.Models.V1.PayoutsAccount;
 
 namespace GearZone.Infrastructure.External
 {
@@ -14,7 +17,7 @@ namespace GearZone.Infrastructure.External
         private readonly ILogger<PayOSPayoutClient> _logger;
 
         public PayOSPayoutClient(
-            [FromKeyedServices("OrderClient")] PayOSClient client,
+            [FromKeyedServices("TransferClient")] PayOSClient client,
             ILogger<PayOSPayoutClient> logger)
         {
             _client = client;
@@ -80,6 +83,33 @@ namespace GearZone.Infrastructure.External
                     isSuccess: false,
                     errorMessage: ex.Message
                 );
+            }
+        }
+
+        public async Task<PayoutAccountInfoDto> GetAccountBalance()
+        {
+            try
+            {
+                var payoutAccount = await _client.PayoutsAccount.GetBalanceAsync();
+                
+                if (payoutAccount == null)
+                {
+                    _logger.LogWarning("PayOS GetBalanceAsync returned null.");
+                    return null!;
+                }
+
+                return new PayoutAccountInfoDto
+                {
+                    AccountName = payoutAccount.AccountName ?? string.Empty,
+                    AccountNumber = payoutAccount.AccountNumber ?? string.Empty,
+                    Balance = payoutAccount.Balance.ToString(),
+                    Currency = payoutAccount.Currency ?? string.Empty,
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting PayOS account balance");
+                return null!;
             }
         }
     }

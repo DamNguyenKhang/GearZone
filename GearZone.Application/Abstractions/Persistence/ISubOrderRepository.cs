@@ -25,5 +25,6 @@ namespace GearZone.Application.Abstractions.Persistence
 
         Task<PagedResult<SubOrder>> GetAdminOrdersAsync(AdminOrderQueryDto queryDto);
         Task<AdminOrderStatsDto> GetAdminOrderStatsAsync();
+        Task<decimal> GetTotalEligiblePayoutAmountAsync(CancellationToken ct = default);
     }
 }

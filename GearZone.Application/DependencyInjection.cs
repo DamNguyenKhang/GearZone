@@ -33,6 +33,8 @@ namespace GearZone.Application
             services.AddScoped<ICartService, CartService>();
             services.AddScoped<IPayoutService, PayoutService>();
             services.AddScoped<PaymentStrategyFactory>();
+            services.AddScoped<IAdminWalletService, AdminWalletService>();
+
             return services;
         }
     }

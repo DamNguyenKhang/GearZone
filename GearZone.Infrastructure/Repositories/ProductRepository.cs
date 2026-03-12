@@ -291,6 +291,10 @@ namespace GearZone.Infrastructure.Repositories
                 .Include(p => p.Variants)
                     .ThenInclude(v => v.AttributeValues)
                         .ThenInclude(av => av.CategoryAttributeOption)
+                .Include(p => p.AttributeValues)
+                    .ThenInclude(av => av.CategoryAttribute)
+                .Include(p => p.AttributeValues)
+                    .ThenInclude(av => av.CategoryAttributeOption)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
     }

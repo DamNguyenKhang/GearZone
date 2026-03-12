@@ -29,15 +29,15 @@
                 <h3 class="text-2xl font-bold text-slate-900">@Model.Stats.ActiveProducts.ToString("N0")</h3>
             </div>
         </div>
-        <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
-            <div class="size-12 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100/50">
+        <a asp-page="/Admin/Products/Index" asp-route-Query.Status="Pending" class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4 hover:border-amber-300 transition-colors group cursor-pointer">
+            <div class="size-12 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100/50 group-hover:bg-amber-100 transition-colors">
                 <span class="material-symbols-outlined">pending_actions</span>
             </div>
             <div>
                 <p class="text-slate-500 text-xs font-medium uppercase tracking-wider">Pending Approval</p>
                 <h3 class="text-2xl font-bold text-slate-900">@Model.Stats.PendingApproval.ToString("N0")</h3>
             </div>
-        </div>
+        </a>
         <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
             <div class="size-12 rounded-lg bg-red-50 text-red-600 flex items-center justify-center border border-red-100/50">
                 <span class="material-symbols-outlined">production_quantity_limits</span>
@@ -385,12 +385,16 @@
                                         
                                         @if (product.Status == "Pending")
                                         {
-                                            <button class="text-slate-400 hover:text-green-600 transition-colors p-1.5 rounded-lg hover:bg-green-50" title="Approve Product">
-                                                <span class="material-symbols-outlined text-[20px]">check_circle</span>
-                                            </button>
-                                            <button class="text-slate-400 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50" title="Reject Product">
-                                                <span class="material-symbols-outlined text-[20px]">cancel</span>
-                                            </button>
+                                            <form method="post" asp-page-handler="Approve" asp-route-id="@product.Id" class="inline">
+                                                <button type="submit" class="text-slate-400 hover:text-green-600 transition-colors p-1.5 rounded-lg hover:bg-green-50" title="Approve Product">
+                                                    <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                                                </button>
+                                            </form>
+                                            <form method="post" asp-page-handler="Reject" asp-route-id="@product.Id" class="inline" onsubmit="return confirm('Reject this product?')">
+                                                <button type="submit" class="text-slate-400 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50" title="Reject Product">
+                                                    <span class="material-symbols-outlined text-[20px]">cancel</span>
+                                                </button>
+                                            </form>
                                         }
                                         else if (product.Status == "Active")
                                         {

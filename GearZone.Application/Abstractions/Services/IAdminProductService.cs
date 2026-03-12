@@ -9,5 +9,7 @@ namespace GearZone.Application.Abstractions.Services
         Task<PagedResult<AdminProductDto>> GetProductsAsync(AdminProductQueryDto queryDto);
         Task<AdminProductStatsDto> GetProductStatsAsync();
         Task<AdminProductDetailDto?> GetProductDetailAsync(Guid id);
+        Task ApproveProductAsync(Guid id);
+        Task RejectProductAsync(Guid id, string reason);
     }
 }

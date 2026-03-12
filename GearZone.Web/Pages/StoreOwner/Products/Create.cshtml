@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model GearZone.Web.Pages.StoreOwner.Products.CreateModel
 @{
     ViewData["Title"] = "Add New Product";
@@ -289,8 +289,29 @@
 </div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script>
         $(document).ready(function() {
+            const $form = $('#createProductForm');
+
+            // Custom validation settings for immediate feedback
+            const validator = $form.validate();
+            if (validator) {
+                validator.settings.onfocusout = function(element) {
+                    $(element).valid();
+                };
+            }
+
+            function reparseValidation() {
+                $form.removeData("validator").removeData("unobtrusiveValidation");
+                $.validator.unobtrusive.parse($form);
+                
+                // Re-apply immediate feedback settings
+                const newValidator = $form.validate();
+                newValidator.settings.onfocusout = function(element) {
+                    $(element).valid();
+                };
+            }
             // Show validation errors as toasts
             @if (!ModelState.IsValid)
             {
@@ -304,8 +325,12 @@
             }
 
             // Client-side validation toast for main form
-            $('#createProductForm').on('invalid-form.validate', function(event, validator) {
-                window.showToast?.('warning', 'Please check the form for missing or incorrect information.');
+            $form.on('invalid-form.validate', function(event, validator) {
+                const firstError = validator.errorList[0];
+                if (firstError) {
+                    window.showToast?.('warning', `Form is missing info: ${firstError.message}`);
+                    $(firstError.element).focus();
+                }
             });
 
             // Fix the Add Spec button not working
@@ -324,6 +349,15 @@
 
             function renderSpecifications(specs) {
                 const container = $('#specsContainer');
+                
+                // Collect current values to preserve them if they exist in the new list
+                let currentValues = {};
+                container.find('.spec-row').each(function() {
+                    const key = $(this).find('input[name*=".Key"]').val();
+                    const val = $(this).find('input[name*=".Value"]').val();
+                    if (key) currentValues[key] = val;
+                });
+
                 container.empty();
 
                 if (!specs || specs.length === 0) {
@@ -337,7 +371,7 @@
 
                 specs.forEach(function(spec, index) {
                     const unit = spec.unit || '';
-                    const value = spec.value || '';
+                    const value = currentValues[spec.key] || spec.value || ''; // PRESERVE TYPED VALUE
                     const inputPadding = unit ? 'pr-16' : '';
                     container.append(`
                         <div class="spec-row grid grid-cols-1 md:grid-cols-2 gap-4 items-end bg-gray-50/50 p-4 rounded-lg border border-gray-100">
@@ -351,13 +385,15 @@
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Value</label>
                                 <div class="relative">
-                                    <input name="Input.Specifications[${index}].Value" value="${value}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white ${inputPadding}" placeholder="Enter ${spec.key || 'value'}" />
+                                    <input name="Input.Specifications[${index}].Value" value="${value}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white ${inputPadding}" placeholder="Enter ${spec.key || 'value'}" data-val="true" data-val-required="${spec.key} is required" required />
                                     ${unit ? `<span class="absolute inset-y-0 right-3 flex items-center text-xs font-bold text-gray-400 uppercase">${unit}</span>` : ''}
                                 </div>
+                                <span class="field-validation-valid text-[10px] text-red-500 font-medium" data-valmsg-for="Input.Specifications[${index}].Value" data-valmsg-replace="true"></span>
                             </div>
                         </div>
                     `);
                 });
+                reparseValidation();
             }
 
             async function createSpecificationAttribute() {
@@ -514,16 +550,24 @@
                 let html = `
                     <tr class="variant-row animate-fadeIn">
                         <td class="py-3 px-1">
-                            <input name="Input.Variants[${index}].VariantName" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Variant Name" required>
+                            <input name="Input.Variants[${index}].VariantName" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Variant Name" 
+                                data-val="true" data-val-required="Variant name is required" required>
+                            <span class="field-validation-valid text-xs text-red-500" data-valmsg-for="Input.Variants[${index}].VariantName" data-valmsg-replace="true"></span>
                         </td>
                         <td class="py-3 px-1">
-                            <input name="Input.Variants[${index}].Sku" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="SKU" required>
+                            <input name="Input.Variants[${index}].Sku" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="SKU" 
+                                data-val="true" data-val-required="SKU is required" required>
+                            <span class="field-validation-valid text-xs text-red-500" data-valmsg-for="Input.Variants[${index}].Sku" data-valmsg-replace="true"></span>
                         </td>
                         <td class="py-3 px-1">
-                            <input name="Input.Variants[${index}].Price" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="0" required>
+                            <input name="Input.Variants[${index}].Price" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="0" 
+                                data-val="true" data-val-required="Price is required" data-val-range="Price must be > 0" data-val-range-min="0" required>
+                            <span class="field-validation-valid text-xs text-red-500" data-valmsg-for="Input.Variants[${index}].Price" data-valmsg-replace="true"></span>
                         </td>
                         <td class="py-3 px-1">
-                            <input name="Input.Variants[${index}].StockQuantity" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="0" required>
+                            <input name="Input.Variants[${index}].StockQuantity" type="number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="0" 
+                                data-val="true" data-val-required="Stock is required" data-val-range="Stock must be >= 0" data-val-range-min="0" required>
+                            <span class="field-validation-valid text-xs text-red-500" data-valmsg-for="Input.Variants[${index}].StockQuantity" data-valmsg-replace="true"></span>
                         </td>
                         <td class="py-3 px-1 variant-attributes-cell ${hideClass}">
                             <div class="flex flex-col gap-2 attributes-wrapper">
@@ -537,6 +581,7 @@
                         </td>
                     </tr>`;
                 $('#variantsContainer').append(html);
+                reparseValidation();
             });
 
             $(document).on('click', '.btnRemoveVariantRow, #variantsContainer .btnRemoveRow', function() {
@@ -550,6 +595,7 @@
                     });
                 });
                 refreshAllVariantAttributes();
+                reparseValidation();
             });
 
             $('#Input_CategoryId, #Input_BrandId').removeClass('w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50/50');
@@ -658,6 +704,8 @@
                     reader.readAsDataURL(files[i]);
                 }
             });
+
+            reparseValidation();
         });
     </script>
     <style>
@@ -667,6 +715,31 @@
         }
         .animate-fadeIn {
             animation: fadeIn 0.3s ease forwards;
+        }
+
+        /* Highlight invalid fields */
+        input.input-validation-error, select.input-validation-error, textarea.input-validation-error {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+        }
+        
+        input.input-validation-error:focus, select.input-validation-error:focus, textarea.input-validation-error:focus {
+            ring-color: #ef4444 !important;
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+        }
+
+        .field-validation-error {
+            display: block;
+            margin-top: 0.25rem;
+            font-weight: 500;
+        }
+
+        /* TomSelect validation styling */
+        .ts-wrapper.input-validation-error .ts-control,
+        select.input-validation-error + .ts-wrapper .ts-control {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+            box-shadow: 0 0 0 1px #ef4444 !important;
         }
     </style>
 }

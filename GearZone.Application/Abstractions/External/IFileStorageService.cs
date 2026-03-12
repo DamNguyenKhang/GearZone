@@ -6,7 +6,7 @@ namespace GearZone.Application.Abstractions.External
 {
     public interface IFileStorageService
     {
-        Task<List<string>> UploadAsync(List<IFormFile> files);
+        Task<List<string>> UploadAsync(List<IFormFile> files, string folder = "GearZone/images");
         Task DeleteAsync(string fileUrl);
     }
 }

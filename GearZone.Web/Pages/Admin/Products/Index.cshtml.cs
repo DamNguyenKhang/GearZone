@@ -94,6 +94,20 @@ namespace GearZone.Web.Pages.Admin.Products
                 });
             return new JsonResult(result);
         }
+
+        public async Task<IActionResult> OnPostApproveAsync(Guid id)
+        {
+            await _productService.ApproveProductAsync(id);
+            TempData["SuccessMessage"] = "Product has been approved.";
+            return RedirectToPage();
+        }
+
+        public async Task<IActionResult> OnPostRejectAsync(Guid id, string reason = "")
+        {
+            await _productService.RejectProductAsync(id, reason);
+            TempData["SuccessMessage"] = "Product has been rejected.";
+            return RedirectToPage();
+        }
     }
 }
 

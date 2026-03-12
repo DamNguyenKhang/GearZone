@@ -143,7 +143,8 @@
                 </div>
             </div>
 
-            <form method="post" asp-page-handler="Step2" class="p-6 md:p-8 space-y-5">
+            <form method="post" asp-page-handler="Step2" enctype="multipart/form-data" class="p-6 md:p-8 space-y-5">
+                <div asp-validation-summary="All" class="text-sm text-red-700"></div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">Họ và tên (theo CCCD) <span class="text-red-500">*</span></label>
                     <input asp-for="Step2Input.FullName" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all" required placeholder="Nguyễn Văn A" />
@@ -168,6 +169,25 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nơi cấp <span class="text-red-500">*</span></label>
                         <input asp-for="Step2Input.IdentityIssuedPlace" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all" required placeholder="Cục CS ĐKQL cư trú và DLQG về dân cư" />
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Identity card - Front image <span class="text-red-500">*</span></label>
+                        <input asp-for="Step2Input.IdentityCardFrontImage" type="file" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white file:mr-4 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+                        @if (!string.IsNullOrWhiteSpace(Model.Step2Input.IdentityCardFrontImageUrl))
+                        {
+                            <p class="mt-1 text-xs font-medium text-emerald-600">Front image already uploaded. Upload a new one to replace it.</p>
+                        }
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Identity card - Back image <span class="text-red-500">*</span></label>
+                        <input asp-for="Step2Input.IdentityCardBackImage" type="file" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white file:mr-4 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-primary hover:file:bg-primary/20" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+                        @if (!string.IsNullOrWhiteSpace(Model.Step2Input.IdentityCardBackImageUrl))
+                        {
+                            <p class="mt-1 text-xs font-medium text-emerald-600">Back image already uploaded. Upload a new one to replace it.</p>
+                        }
                     </div>
                 </div>
 
@@ -200,24 +220,25 @@
             <form method="post" asp-page-handler="Step3" class="p-6 md:p-8 space-y-5">
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">Tên ngân hàng <span class="text-red-500">*</span></label>
-                    <select asp-for="Step3Input.BankName" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white" required>
+                    <select id="bankSelect" asp-for="Step3Input.BankName" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all bg-white" required>
                         <option value="">— Chọn ngân hàng —</option>
-                        <option value="Vietcombank">Vietcombank (VCB)</option>
-                        <option value="BIDV">BIDV</option>
-                        <option value="VietinBank">VietinBank (CTG)</option>
-                        <option value="Agribank">Agribank</option>
-                        <option value="Techcombank">Techcombank (TCB)</option>
-                        <option value="VPBank">VPBank</option>
-                        <option value="MBBank">MBBank (MB)</option>
-                        <option value="ACB">ACB</option>
-                        <option value="TPBank">TPBank</option>
-                        <option value="Sacombank">Sacombank (STB)</option>
-                        <option value="HDBank">HDBank</option>
-                        <option value="SHB">SHB</option>
-                        <option value="MSB">MSB</option>
-                        <option value="OCB">OCB</option>
-                        <option value="LienVietPostBank">LienVietPostBank</option>
+                        <option value="Vietcombank" data-bin="970436">Vietcombank (VCB)</option>
+                        <option value="BIDV" data-bin="970418">BIDV</option>
+                        <option value="VietinBank" data-bin="970415">VietinBank (CTG)</option>
+                        <option value="Agribank" data-bin="970405">Agribank</option>
+                        <option value="Techcombank" data-bin="970407">Techcombank (TCB)</option>
+                        <option value="VPBank" data-bin="970432">VPBank</option>
+                        <option value="MBBank" data-bin="970422">MBBank (MB)</option>
+                        <option value="ACB" data-bin="970416">ACB</option>
+                        <option value="TPBank" data-bin="970423">TPBank</option>
+                        <option value="Sacombank" data-bin="970403">Sacombank (STB)</option>
+                        <option value="HDBank" data-bin="970437">HDBank</option>
+                        <option value="SHB" data-bin="970443">SHB</option>
+                        <option value="MSB" data-bin="970426">MSB</option>
+                        <option value="OCB" data-bin="970448">OCB</option>
+                        <option value="LienVietPostBank" data-bin="970449">LienVietPostBank</option>
                     </select>
+                    <input asp-for="Step3Input.BankBin" type="hidden" id="bankBinInput" />
                 </div>
 
                 <div>
@@ -309,6 +330,10 @@
                         <div class="font-medium text-gray-800">@Model.Step2Input.IdentityIssuedPlace</div>
                         <div><span class="text-gray-500">Mã số thuế:</span></div>
                         <div class="font-medium text-gray-800">@Model.Step2Input.TaxCode</div>
+                        <div><span class="text-gray-500">ID Card Front:</span></div>
+                        <div class="font-medium text-gray-800">@(string.IsNullOrWhiteSpace(Model.Step2Input.IdentityCardFrontImageUrl) ? "Not uploaded" : "Uploaded")</div>
+                        <div><span class="text-gray-500">ID Card Back:</span></div>
+                        <div class="font-medium text-gray-800">@(string.IsNullOrWhiteSpace(Model.Step2Input.IdentityCardBackImageUrl) ? "Not uploaded" : "Uploaded")</div>
                     </div>
                 </div>
 
@@ -366,6 +391,79 @@
 
 @section Scripts {
     <script>
+        const bankSelect = document.getElementById('bankSelect');
+        const bankBinInput = document.getElementById('bankBinInput');
+
+        const syncBankBin = () => {
+            if (!bankSelect || !bankBinInput) {
+                return;
+            }
+
+            const selectedOption = bankSelect.options[bankSelect.selectedIndex];
+            bankBinInput.value = selectedOption?.dataset?.bin ?? '';
+        };
+
+        const loadBanks = async () => {
+            if (!bankSelect) {
+                return;
+            }
+
+            const selectedBank = bankSelect.value;
+
+            try {
+                const response = await fetch('/api/banks', {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Unable to load banks');
+                }
+
+                const banks = await response.json();
+                if (!Array.isArray(banks)) {
+                    throw new Error('Invalid bank payload');
+                }
+
+                bankSelect.innerHTML = '';
+
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = '— Chọn ngân hàng —';
+                bankSelect.appendChild(placeholder);
+
+                for (const bank of banks) {
+                    if (!bank?.name) {
+                        continue;
+                    }
+
+                    const option = document.createElement('option');
+                    option.value = bank.name;
+
+                    const shortName = typeof bank.shortName === 'string' ? bank.shortName.trim() : '';
+                    option.textContent = shortName && shortName !== bank.name
+                        ? `${bank.name} (${shortName})`
+                        : bank.name;
+
+                    option.dataset.bin = bank.bin ?? '';
+                    bankSelect.appendChild(option);
+                }
+
+                if (selectedBank) {
+                    bankSelect.value = selectedBank;
+                }
+            } catch {
+                // Keep fallback options if API call fails.
+            }
+
+            syncBankBin();
+        };
+
+        if (bankSelect && bankBinInput) {
+            bankSelect.addEventListener('change', syncBankBin);
+            loadBanks();
+        }
+
         // Enable/disable submit button based on checkbox
         const checkbox = document.getElementById('agreeTerms');
         const submitBtn = document.getElementById('submitBtn');

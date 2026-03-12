@@ -16,6 +16,8 @@ namespace GearZone.Domain.Entities
         public string Email { get; set; } = string.Empty;
         public string AddressLine { get; set; } = string.Empty;
         public string Province { get; set; } = string.Empty;
+        public string? IdentityCardFrontImageUrl { get; set; }
+        public string? IdentityCardBackImageUrl { get; set; }
 
         public string BankAccountNumber { get; set; } = string.Empty;
         public string BankAccountName { get; set; } = string.Empty;

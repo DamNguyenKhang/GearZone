@@ -27,6 +27,7 @@ namespace GearZone.Application
             //services.AddScoped<IAdminPayoutService, AdminPayoutService>();
             services.AddScoped<ICatalogService, CatalogService>();
             services.AddScoped<ISellerStoreService, SellerStoreService>();
+            services.AddScoped<IBankCatalogService, BankCatalogService>();
             services.AddScoped<ISellerProductService, SellerProductService>();
             services.AddScoped<ICartService, CartService>();
             services.AddScoped<IPayoutService, PayoutService>();

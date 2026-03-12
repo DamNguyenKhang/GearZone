@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
 
 namespace GearZone.Application.Features.Seller.Dtos
@@ -36,12 +37,28 @@ namespace GearZone.Application.Features.Seller.Dtos
 
     public class CreateProductDto
     {
+        [Required(ErrorMessage = "Product name is required")]
+        [StringLength(200, MinimumLength = 3, ErrorMessage = "Name must be between 3 and 200 characters")]
         public string Name { get; set; } = string.Empty;
+
         public string Slug { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Description is required")]
+        [StringLength(5000, ErrorMessage = "Description is too long")]
         public string Description { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Category is required")]
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a valid category")]
         public int CategoryId { get; set; }
+
+        [Required(ErrorMessage = "Brand is required")]
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a valid brand")]
         public int BrandId { get; set; }
+
+        [Required(ErrorMessage = "Base price is required")]
+        [Range(0, 1000000000, ErrorMessage = "Price must be between 0 and 1,000,000,000")]
         public decimal BasePrice { get; set; }
+
         public bool IsDraft { get; set; }
 
         public List<ProductSpecDto> Specifications { get; set; } = new();
@@ -51,12 +68,28 @@ namespace GearZone.Application.Features.Seller.Dtos
 
     public class UpdateProductDto
     {
+        [Required(ErrorMessage = "Product name is required")]
+        [StringLength(200, MinimumLength = 3, ErrorMessage = "Name must be between 3 and 200 characters")]
         public string Name { get; set; } = string.Empty;
+
         public string Slug { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Description is required")]
+        [StringLength(5000, ErrorMessage = "Description is too long")]
         public string Description { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Category is required")]
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a valid category")]
         public int CategoryId { get; set; }
+
+        [Required(ErrorMessage = "Brand is required")]
+        [Range(1, int.MaxValue, ErrorMessage = "Please select a valid brand")]
         public int BrandId { get; set; }
+
+        [Required(ErrorMessage = "Base price is required")]
+        [Range(0, 1000000000, ErrorMessage = "Price must be between 0 and 1,000,000,000")]
         public decimal BasePrice { get; set; }
+
         public bool IsDraft { get; set; }
 
         public List<ProductVariantDto> Variants { get; set; } = new();
@@ -76,9 +109,18 @@ namespace GearZone.Application.Features.Seller.Dtos
 
     public class ProductVariantDto
     {
+        [Required(ErrorMessage = "Variant name is required")]
         public string VariantName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "SKU is required")]
         public string Sku { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Price is required")]
+        [Range(0, 1000000000, ErrorMessage = "Price must be between 0 and 1,000,000,000")]
         public decimal Price { get; set; }
+
+        [Required(ErrorMessage = "Stock quantity is required")]
+        [Range(0, 1000000, ErrorMessage = "Stock must be between 0 and 1,000,000")]
         public int StockQuantity { get; set; }
         
         // For dynamic attributes per variant

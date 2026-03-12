@@ -9,5 +9,6 @@ namespace GearZone.Application.Abstractions.External
     {
         Task<PayoutResult> CreatePayoutAsync(PayoutRequestDto payout);
         Task<PayoutResult> CreateBatchPayoutAsync(List<PayoutRequestDto> payouts);
+        Task<PayoutAccountInfoDto> GetAccountBalance();
     }
 }

@@ -53,7 +53,7 @@ builder.Services.ConfigureApplicationCookie(opt =>
 builder.Services
     .AddDatabase(connectionString)
     .AddApplication()
-    .AddInfrastructure()
+    .AddInfrastructure(builder.Configuration)
     ;
 
 builder.Services.AddCors(options =>

@@ -1,4 +1,4 @@
-﻿using GearZone.Domain.Entities;
+using GearZone.Domain.Entities;
 using GearZone.Infrastructure.Seed;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +39,7 @@ namespace GearZone.Infrastructure
         public DbSet<PayoutBatch> PayoutBatches { get; set; }
         public DbSet<PayoutTransaction> PayoutTransactions { get; set; }
         public DbSet<PayoutItem> PayoutItems { get; set; }
+        public DbSet<WalletTransaction> WalletTransactions { get; set; }
         
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 

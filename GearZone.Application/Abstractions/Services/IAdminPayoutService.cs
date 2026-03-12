@@ -8,5 +8,7 @@ namespace GearZone.Application.Abstractions.Services
     public interface IAdminPayoutService
     {
         Task<PagedResult<AdminPayoutTransactionDto>> GetPayoutTransactionsAsync(PayoutTransactionQueryDto query);
+        Task<PagedResult<AdminPayoutBatchDto>> GetPayoutBatchesAsync(AdminPayoutBatchQueryDto query);
+        Task<AdminPayoutBatchDto?> GetPayoutBatchDetailAsync(Guid id);
     }
 }

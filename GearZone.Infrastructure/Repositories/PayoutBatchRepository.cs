@@ -16,6 +16,7 @@ public class PayoutBatchRepository : Repository<PayoutBatch, Guid>, IPayoutBatch
     {
         return await _dbSet
             .Include(x => x.Transactions)
+                .ThenInclude(t => t.Store)
             .FirstOrDefaultAsync(x => x.Id == id, ct);
     }
 

@@ -151,6 +151,7 @@
                 <span class="font-medium text-sm sidebar-text">Orders</span>
             </a>
 
+
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Products" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" asp-page="/Admin/Products/Index">
                 <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Products" ? "filled" : "")">inventory_2</span>
                 <span class="font-medium text-sm sidebar-text">Product</span>
@@ -177,6 +178,11 @@
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Payouts" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" asp-page="/Admin/Payouts/Index">
                 <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Payouts" ? "filled" : "")">payments</span>
                 <span class="font-medium text-sm sidebar-text">Payouts</span>
+            </a>
+
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "PayoutBatches" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" asp-page="/Admin/PayoutBatches/Index">
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "PayoutBatches" ? "filled" : "")">account_balance_wallet</span>
+                <span class="font-medium text-sm sidebar-text">Payout Batches</span>
             </a>
 
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Disputes" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" href="#">
@@ -233,7 +239,8 @@
                                 { "Platform Settings", "/admin/settings" },
                                 { "Product Management", "/admin/products" },
                                 { "Category Management", "/admin/categories" },
-                                { "Brand Management", "/admin/brands" }
+                                { "Brand Management", "/admin/brands" },
+                                { "Payout Batches", "/Admin/PayoutBatches/Index" }
                             };
                         }
                         

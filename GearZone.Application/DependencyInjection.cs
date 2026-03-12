@@ -25,7 +25,7 @@ namespace GearZone.Application
             services.AddScoped<IAdminProductService, AdminProductService>();
             services.AddScoped<IAdminOrderService, AdminOrderService>();
             services.AddScoped<IAdminBrandService, AdminBrandService>();
-            //services.AddScoped<IAdminPayoutService, AdminPayoutService>();
+            services.AddScoped<IAdminPayoutService, AdminPayoutService>();
             services.AddScoped<ICatalogService, CatalogService>();
             services.AddScoped<ISellerStoreService, SellerStoreService>();
             services.AddScoped<ISellerProductService, SellerProductService>();

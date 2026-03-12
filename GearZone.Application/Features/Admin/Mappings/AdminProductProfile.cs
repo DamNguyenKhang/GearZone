@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using AutoMapper;
 using GearZone.Application.Features.Admin.Dtos;
 using GearZone.Domain.Entities;
@@ -55,22 +56,87 @@ public class AdminProductProfile : Profile
             .ForMember(dest => dest.Images, opt => opt.MapFrom(src => 
                 src.Images != null ? src.Images.OrderBy(i => i.SortOrder).Select(i => i.ImageUrl).ToList() : new List<string>()))
             .ForMember(dest => dest.Specs, opt => opt.MapFrom(src =>
-                src.Variants != null
-                    ? src.Variants
-                        .SelectMany(v => v.AttributeValues)
-                        .Where(av => av.CategoryAttribute != null && av.CategoryAttributeOption != null)
-                        .GroupBy(av => new { av.CategoryAttributeId, av.CategoryAttribute.Name })
-                        .OrderBy(g => g.Key.CategoryAttributeId)
-                        .Select(g => new AdminProductSpecDto
+                MapSpecs(src)));
+    }
+
+    private static List<AdminProductSpecDto> MapSpecs(Product src)
+    {
+        var specs = new List<(string Name, string Value, int? Order)>();
+
+        // 1. Add Product-level Attributes (Standard structured)
+        if (src.AttributeValues != null)
+        {
+            foreach (var av in src.AttributeValues)
+            {
+                if (av.CategoryAttribute == null) continue;
+
+                var rawValue = (av.CategoryAttributeOption?.Value ?? av.Value ?? string.Empty).Trim();
+                if (string.IsNullOrEmpty(rawValue)) continue;
+
+                var unit = av.CategoryAttribute.Unit;
+                var formattedValue = (string.IsNullOrWhiteSpace(unit) || rawValue.EndsWith(unit, System.StringComparison.OrdinalIgnoreCase))
+                    ? rawValue
+                    : $"{rawValue} {unit}";
+
+                specs.Add((av.CategoryAttribute.Name, formattedValue, av.CategoryAttribute.DisplayOrder));
+            }
+        }
+
+        // 2. Add Variant-level Attributes
+        if (src.Variants != null)
+        {
+            foreach (var variant in src.Variants.Where(v => !v.IsDeleted))
+            {
+                if (variant.AttributeValues == null) continue;
+
+                foreach (var av in variant.AttributeValues)
+                {
+                    if (av.CategoryAttribute == null) continue;
+
+                    var rawValue = (av.CategoryAttributeOption?.Value ?? string.Empty).Trim();
+                    if (string.IsNullOrEmpty(rawValue)) continue;
+
+                    var unit = av.CategoryAttribute.Unit;
+                    var formattedValue = (string.IsNullOrWhiteSpace(unit) || rawValue.EndsWith(unit, System.StringComparison.OrdinalIgnoreCase))
+                        ? rawValue
+                        : $"{rawValue} {unit}";
+
+                    specs.Add((av.CategoryAttribute.Name, formattedValue, av.CategoryAttribute.DisplayOrder));
+                }
+            }
+        }
+
+        // 3. Add Custom Specs from SpecsJson (Fallback for legacy or loose data)
+        if (!string.IsNullOrWhiteSpace(src.SpecsJson) && src.SpecsJson != "{}")
+        {
+            try
+            {
+                var jsonDict = JsonSerializer.Deserialize<Dictionary<string, string>>(src.SpecsJson);
+                if (jsonDict != null)
+                {
+                    foreach (var kvp in jsonDict)
+                    {
+                        if (!string.IsNullOrWhiteSpace(kvp.Value) && !specs.Any(s => s.Name == kvp.Key))
                         {
-                            AttributeName = g.Key.Name,
-                            Values = g.Select(av => av.CategoryAttributeOption.Value)
-                                       .Where(v => !string.IsNullOrEmpty(v))
-                                       .Distinct()
-                                       .OrderBy(v => v)
-                                       .ToList()
-                        })
-                        .ToList()
-                    : new List<AdminProductSpecDto>()));
+                            specs.Add((kvp.Key, kvp.Value.Trim(), 9999));
+                        }
+                    }
+                }
+            }
+            catch { /* Ignore invalid JSON */ }
+        }
+
+        return specs
+            .GroupBy(x => x.Name)
+            .Select(g => new AdminProductSpecDto
+            {
+                AttributeName = g.Key,
+                // We keep multiple values if they are different (e.g. from different variants)
+                Values = g.Select(x => x.Value).Distinct().OrderBy(v => v).ToList()
+            })
+            // Sort by Order (if available) or by Name
+            .OrderBy(x => specs.FirstOrDefault(s => s.Name == x.AttributeName).Order ?? 9999)
+            .ThenBy(x => x.AttributeName)
+            .ToList();
     }
 }

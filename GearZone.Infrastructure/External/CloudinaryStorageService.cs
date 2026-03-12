@@ -27,10 +27,10 @@ namespace GearZone.Infrastructure.External
             _cloudinary = new Cloudinary(account);
         }
 
-        public async Task<List<string>> UploadAsync(List<IFormFile> files)
+        public async Task<List<string>> UploadAsync(List<IFormFile> files, string folder = "GearZone/images")
         {
-
             var imageUrls = new List<string>();
+            var targetFolder = string.IsNullOrWhiteSpace(folder) ? "GearZone/images" : folder;
 
             foreach (var file in files)
             {
@@ -41,7 +41,7 @@ namespace GearZone.Infrastructure.External
                 var uploadParams = new ImageUploadParams
                 {
                     File = new FileDescription(file.FileName, stream),
-                    Folder = "GearZone/images",
+                    Folder = targetFolder,
                     Transformation = new Transformation()
                         .Quality("auto")
                         .FetchFormat("auto")

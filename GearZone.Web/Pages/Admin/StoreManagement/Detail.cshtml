@@ -3,6 +3,8 @@
 @model GearZone.Web.Pages.Admin.StoreManagement.DetailModel
 @{
     var store = Model.StoreApplication!;
+    var hasFrontIdImage = !string.IsNullOrWhiteSpace(store.IdentityCardFrontImageUrl);
+    var hasBackIdImage = !string.IsNullOrWhiteSpace(store.IdentityCardBackImageUrl);
     ViewData["Title"] = "Store Detail - " + store.StoreName;
     ViewData["PageHeader"] = "Store Detail";
     ViewData["ActivePage"] = "Stores_Management";
@@ -336,6 +338,59 @@
                             <p class="text-xs text-slate-500 mt-1.5">Store registration submitted by owner.</p>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Identity Documents -->
+            <div class="rounded-xl border border-slate-100 bg-white shadow-card overflow-hidden">
+                <div class="border-b border-slate-100 px-6 py-4 bg-slate-50/30">
+                    <h3 class="flex items-center gap-2 text-xs font-bold text-slate-900 uppercase tracking-wider">
+                        <span class="material-symbols-outlined text-primary text-[20px]">badge</span>
+                        Identity Documents
+                    </h3>
+                </div>
+                <div class="p-6 space-y-4">
+                    @if (hasFrontIdImage)
+                    {
+                        <a href="@store.IdentityCardFrontImageUrl" target="_blank" rel="noopener noreferrer" class="group relative block overflow-hidden rounded-xl border border-slate-100 bg-slate-200 aspect-[16/9] shadow-sm">
+                            <img alt="ID Front" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" src="@store.IdentityCardFrontImageUrl" />
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+                            <span class="absolute bottom-3 left-4 text-[10px] font-bold text-white uppercase tracking-widest drop-shadow-md">ID Card (Front)</span>
+                            <div class="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-[1px]">
+                                <span class="rounded-full bg-white px-4 py-2 text-slate-900 font-bold text-xs shadow-xl flex items-center gap-2 hover:bg-primary hover:text-white transition-all transform translate-y-2 group-hover:translate-y-0">
+                                    <span class="material-symbols-outlined text-[18px]">zoom_in</span>
+                                    Full Image
+                                </span>
+                            </div>
+                        </a>
+                    }
+                    else
+                    {
+                        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-700">
+                            ID Card (Front): Not uploaded.
+                        </div>
+                    }
+
+                    @if (hasBackIdImage)
+                    {
+                        <a href="@store.IdentityCardBackImageUrl" target="_blank" rel="noopener noreferrer" class="group relative block overflow-hidden rounded-xl border border-slate-100 bg-slate-200 aspect-[16/9] shadow-sm">
+                            <img alt="ID Back" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" src="@store.IdentityCardBackImageUrl" />
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+                            <span class="absolute bottom-3 left-4 text-[10px] font-bold text-white uppercase tracking-widest drop-shadow-md">ID Card (Back)</span>
+                            <div class="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-[1px]">
+                                <span class="rounded-full bg-white px-4 py-2 text-slate-900 font-bold text-xs shadow-xl flex items-center gap-2 hover:bg-primary hover:text-white transition-all transform translate-y-2 group-hover:translate-y-0">
+                                    <span class="material-symbols-outlined text-[18px]">zoom_in</span>
+                                    Full Image
+                                </span>
+                            </div>
+                        </a>
+                    }
+                    else
+                    {
+                        <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-700">
+                            ID Card (Back): Not uploaded.
+                        </div>
+                    }
                 </div>
             </div>
 

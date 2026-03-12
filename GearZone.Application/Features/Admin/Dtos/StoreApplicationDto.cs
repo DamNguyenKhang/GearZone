@@ -28,6 +28,8 @@ public class StoreApplicationDto
     public string? IdentityNumber { get; set; }
     public DateTime? IdentityIssuedDate { get; set; }
     public string? IdentityIssuedPlace { get; set; }
+    public string? IdentityCardFrontImageUrl { get; set; }
+    public string? IdentityCardBackImageUrl { get; set; }
 
     public DateTime CreatedAt { get; set; }
     public DateTime? ApprovedAt { get; set; }

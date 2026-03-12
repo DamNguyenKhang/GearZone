@@ -1,4 +1,4 @@
-﻿using GearZone.Application.Abstractions.External;
+using GearZone.Application.Abstractions.External;
 using GearZone.Application.Common.ProductSpecifications;
 using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Abstractions.Services;
@@ -165,7 +165,7 @@ namespace GearZone.Application.Features.Seller
                 Description = dto.Description,
                 BasePrice = dto.BasePrice,
                 SpecsJson = BuildSpecsJson(dto.Specifications),
-                Status = dto.IsDraft ? ProductStatus.Draft : ProductStatus.Active,
+                Status = dto.IsDraft ? ProductStatus.Draft : ProductStatus.Pending,
                 SoldCount = 0,
                 CreatedAt = DateTime.UtcNow,
             };
@@ -328,7 +328,7 @@ namespace GearZone.Application.Features.Seller
             product.BrandId = dto.BrandId;
             product.BasePrice = dto.BasePrice;
             product.SpecsJson = BuildSpecsJson(dto.Specifications);
-            product.Status = dto.IsDraft ? ProductStatus.Draft : ProductStatus.Active;
+            product.Status = dto.IsDraft ? ProductStatus.Draft : ProductStatus.Pending;
             product.UpdatedAt = DateTime.UtcNow;
 
             await _productRepository.UpdateAsync(product);

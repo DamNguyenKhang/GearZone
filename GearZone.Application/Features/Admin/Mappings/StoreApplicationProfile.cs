@@ -16,6 +16,8 @@ public class StoreApplicationProfile : Profile
             .ForMember(dest => dest.IdentityNumber, opt => opt.MapFrom(src => src.OwnerUser != null ? src.OwnerUser.IdentityNumber : null))
             .ForMember(dest => dest.IdentityIssuedDate, opt => opt.MapFrom(src => src.OwnerUser != null ? src.OwnerUser.IdentityIssuedDate : null))
             .ForMember(dest => dest.IdentityIssuedPlace, opt => opt.MapFrom(src => src.OwnerUser != null ? src.OwnerUser.IdentityIssuedPlace : null))
+            .ForMember(dest => dest.IdentityCardFrontImageUrl, opt => opt.MapFrom(src => src.IdentityCardFrontImageUrl))
+            .ForMember(dest => dest.IdentityCardBackImageUrl, opt => opt.MapFrom(src => src.IdentityCardBackImageUrl))
             .ForMember(dest => dest.ApprovedAt, opt => opt.MapFrom(src => src.ApprovedAt))
             .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt))
             .ForMember(dest => dest.RejectReason, opt => opt.MapFrom(src => src.RejectReason));

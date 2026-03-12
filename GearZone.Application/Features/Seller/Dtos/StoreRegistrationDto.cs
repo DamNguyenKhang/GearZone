@@ -1,4 +1,5 @@
 using GearZone.Domain.Enums;
+using Microsoft.AspNetCore.Http;
 using System;
 
 namespace GearZone.Application.Features.Seller.Dtos
@@ -47,6 +48,10 @@ namespace GearZone.Application.Features.Seller.Dtos
         public DateTime? IdentityIssuedDate { get; set; }
         public string IdentityIssuedPlace { get; set; } = string.Empty;
         public string TaxCode { get; set; } = string.Empty;
+        public IFormFile? IdentityCardFrontImage { get; set; }
+        public IFormFile? IdentityCardBackImage { get; set; }
+        public string? IdentityCardFrontImageUrl { get; set; }
+        public string? IdentityCardBackImageUrl { get; set; }
     }
 
     public class Step3Dto

@@ -118,7 +118,7 @@ namespace GearZone.Web.Pages.Admin.Products
             }
 
             var success = await _productService.BulkUpdateStatusAsync(productIds, status);
-            
+
             if (success)
             {
                 TempData["SuccessMessage"] = $"Successfully updated {productIds.Count} product(s) to {status}.";
@@ -132,4 +132,3 @@ namespace GearZone.Web.Pages.Admin.Products
         }
     }
 }
-

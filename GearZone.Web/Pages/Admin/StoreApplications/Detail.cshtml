@@ -3,6 +3,9 @@
 @model GearZone.Web.Pages.Admin.StoreApplications.DetailModel
 @{
     var store = Model.StoreApplication!;
+    var hasFrontIdImage = !string.IsNullOrWhiteSpace(store.IdentityCardFrontImageUrl);
+    var hasBackIdImage = !string.IsNullOrWhiteSpace(store.IdentityCardBackImageUrl);
+    var documentCount = (hasFrontIdImage ? 1 : 0) + (hasBackIdImage ? 1 : 0);
     ViewData["Title"] = "Application Details - " + store.StoreName;
     ViewData["PageHeader"] = "Application Details";
     ViewData["ActivePage"] = "Stores";
@@ -296,66 +299,69 @@
                         <span class="material-symbols-outlined text-primary text-[20px]">description</span>
                         Documents Preview
                     </h3>
-                    <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-600 uppercase tracking-wider">3 Files</span>
+                    <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-600 uppercase tracking-wider">@documentCount Files</span>
                 </div>
                 <div class="p-6 flex flex-col gap-6">
-                    <!-- Business License -->
-                    <div>
-                        <h4 class="mb-3 text-[11px] font-bold uppercase tracking-widest text-slate-400">Business License</h4>
-                        <div class="group relative flex items-center gap-4 rounded-xl border border-slate-100 bg-slate-50/50 p-4 hover:border-primary/30 transition-all hover:bg-white hover:shadow-md">
-                            <div class="flex size-11 flex-shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-100 group-hover:ring-primary/20 transition-all">
-                                <span class="material-symbols-outlined text-red-500 text-[28px]">picture_as_pdf</span>
-                            </div>
-                            <div class="min-w-0 flex-1">
-                                <p class="truncate text-sm font-bold text-slate-900">techconnect_license_2023.pdf</p>
-                                <p class="text-xs text-slate-500 font-medium">2.4 MB • Uploaded Oct 24</p>
-                            </div>
-                            <div class="flex items-center gap-1">
-                                <button class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-primary transition-all">
-                                    <span class="material-symbols-outlined text-[20px]">visibility</span>
-                                </button>
-                                <button class="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-primary transition-all">
-                                    <span class="material-symbols-outlined text-[20px]">download</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Identity Verification -->
-                    <div>
+                    <div class="space-y-4">
                         <div class="mb-3 flex items-center justify-between">
                             <h4 class="text-[11px] font-bold uppercase tracking-widest text-slate-400">Identity Verification</h4>
-                            <span class="flex items-center gap-1 text-[11px] font-bold text-emerald-600 uppercase tracking-widest">
-                                <span class="material-symbols-outlined text-[16px] text-emerald-500 filled">check_circle</span>
-                                Verified
-                            </span>
+                            @if (hasFrontIdImage && hasBackIdImage)
+                            {
+                                <span class="flex items-center gap-1 text-[11px] font-bold text-emerald-600 uppercase tracking-widest">
+                                    <span class="material-symbols-outlined text-[16px] text-emerald-500 filled">check_circle</span>
+                                    Ready for review
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="flex items-center gap-1 text-[11px] font-bold text-amber-600 uppercase tracking-widest">
+                                    <span class="material-symbols-outlined text-[16px] text-amber-500">warning</span>
+                                    Missing files
+                                </span>
+                            }
                         </div>
-                        <div class="space-y-4">
-                            <!-- Card Front -->
-                            <div class="group relative overflow-hidden rounded-xl border border-slate-100 bg-slate-200 aspect-[16/9] shadow-sm">
-                                <img alt="ID Front" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANGzlYRk7s6lABxhJnmI9ix_lpQa5UO7jaXCTx0Tz0ogccJxTZTlrDwNrMA0I0auwNszSFTHN02VcNO6uyUyduHXNFDCNpRY7NF9fCd-XZmoWvMisPG7ial2dRIxK2KZL5ETjQQctTPF9K3yUJFHq2Peigl1qSye7x0HLcCLkNE8DHcWgDYpDF1lE451G0cginuKEmar07RAYRhxxre8dBzqIJffoOhLnc1pP_NtMRLUn5o1hLltNDxz-m9_OL4ZRiWvk3QjrNvRQG"/>
+
+                        @if (hasFrontIdImage)
+                        {
+                            <a href="@store.IdentityCardFrontImageUrl" target="_blank" rel="noopener noreferrer" class="group relative block overflow-hidden rounded-xl border border-slate-100 bg-slate-200 aspect-[16/9] shadow-sm">
+                                <img alt="ID Front" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" src="@store.IdentityCardFrontImageUrl" />
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
                                 <span class="absolute bottom-3 left-4 text-[10px] font-bold text-white uppercase tracking-widest drop-shadow-md">ID Card (Front)</span>
                                 <div class="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-[1px]">
-                                    <button class="rounded-full bg-white px-4 py-2 text-slate-900 font-bold text-xs shadow-xl flex items-center gap-2 hover:bg-primary hover:text-white transition-all transform translate-y-2 group-hover:translate-y-0">
+                                    <span class="rounded-full bg-white px-4 py-2 text-slate-900 font-bold text-xs shadow-xl flex items-center gap-2 hover:bg-primary hover:text-white transition-all transform translate-y-2 group-hover:translate-y-0">
                                         <span class="material-symbols-outlined text-[18px]">zoom_in</span>
                                         Full Image
-                                    </button>
+                                    </span>
                                 </div>
+                            </a>
+                        }
+                        else
+                        {
+                            <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-700">
+                                ID Card (Front): Not uploaded.
                             </div>
-                            <!-- Card Back -->
-                            <div class="group relative overflow-hidden rounded-xl border border-slate-100 bg-slate-200 aspect-[16/9] shadow-sm">
-                                <img alt="ID Back" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_9PeDMv_rGz5Xk-BiRJyHrcbmsYj-guZYWDCyZu21gFZIwHiEJ_qu5Wm1bQ3MfW1yrLRfpMI3mRmWyz1srm0TUU6yF0pja0l5xQzpbJwMAZzRhBykEVtmxg-oYZ4IfJrNQ5YqA1oUNPXBus5BqGeUJleh5dS70rSn3imXSjLkgnn9ra2Vbk5C82CTbNTk3xcMZwMNwiTH-fmSdq0kkM3qZdBAb7nE_bXzRufW8ytB7LiFwr2znSh8OpPbpkD9mJqLUjUFsQib4JpP"/>
+                        }
+
+                        @if (hasBackIdImage)
+                        {
+                            <a href="@store.IdentityCardBackImageUrl" target="_blank" rel="noopener noreferrer" class="group relative block overflow-hidden rounded-xl border border-slate-100 bg-slate-200 aspect-[16/9] shadow-sm">
+                                <img alt="ID Back" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" src="@store.IdentityCardBackImageUrl" />
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
                                 <span class="absolute bottom-3 left-4 text-[10px] font-bold text-white uppercase tracking-widest drop-shadow-md">ID Card (Back)</span>
                                 <div class="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-[1px]">
-                                    <button class="rounded-full bg-white px-4 py-2 text-slate-900 font-bold text-xs shadow-xl flex items-center gap-2 hover:bg-primary hover:text-white transition-all transform translate-y-2 group-hover:translate-y-0">
+                                    <span class="rounded-full bg-white px-4 py-2 text-slate-900 font-bold text-xs shadow-xl flex items-center gap-2 hover:bg-primary hover:text-white transition-all transform translate-y-2 group-hover:translate-y-0">
                                         <span class="material-symbols-outlined text-[18px]">zoom_in</span>
                                         Full Image
-                                    </button>
+                                    </span>
                                 </div>
+                            </a>
+                        }
+                        else
+                        {
+                            <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-700">
+                                ID Card (Back): Not uploaded.
                             </div>
-                        </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -385,7 +391,7 @@
                     </button>
                     <button type="button" onclick="document.getElementById('approveModal').classList.remove('hidden')" class="flex items-center justify-center gap-2 rounded-xl bg-primary px-8 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/30 hover:bg-primary-dark hover:-translate-y-0.5 transition-all">
                         <span class="material-symbols-outlined text-[20px]">check_circle</span>
-                        APPROVE SELLER
+                        APPROVE APPLICATION
                     </button>
                 </div>
             </div>
@@ -441,7 +447,7 @@
             
             <div class="flex justify-center gap-3 mt-8">
                 <button type="button" onclick="document.getElementById('approveModal').classList.add('hidden')" class="px-5 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-sm flex-1">Cancel</button>
-                <button type="submit" class="px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary-dark transition-colors shadow-lg shadow-primary/30 flex-1">Approve Seller</button>
+                <button type="submit" class="px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-xl hover:bg-primary-dark transition-colors shadow-lg shadow-primary/30 flex-1">Approve Application</button>
             </div>
         </form>
     </div>

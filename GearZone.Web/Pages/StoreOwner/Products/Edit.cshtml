@@ -1,4 +1,4 @@
-﻿@page "{id:Guid}"
+@page "{id:Guid}"
 @model GearZone.Web.Pages.StoreOwner.Products.EditModel
 @{
     ViewData["Title"] = "Edit Product";
@@ -148,12 +148,14 @@
                                     <div>
                                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Value</label>
                                         <div class="relative">
-                                            <input name="Input.Specifications[@i].Value" value="@Model.Input.Specifications[i].Value" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white @(string.IsNullOrWhiteSpace(Model.Input.Specifications[i].Unit) ? string.Empty : "pr-16")" placeholder="Enter @Model.Input.Specifications[i].Key" />
+                                            <input name="Input.Specifications[@i].Value" value="@Model.Input.Specifications[i].Value" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white @(string.IsNullOrWhiteSpace(Model.Input.Specifications[i].Unit) ? string.Empty : "pr-16")" placeholder="Enter @Model.Input.Specifications[i].Key" 
+                                                data-val="true" data-val-required="@(Model.Input.Specifications[i].Key) is required" required />
                                             @if (!string.IsNullOrWhiteSpace(Model.Input.Specifications[i].Unit))
                                             {
                                                 <span class="absolute inset-y-0 right-3 flex items-center text-xs font-bold text-gray-400 uppercase">@Model.Input.Specifications[i].Unit</span>
                                             }
                                         </div>
+                                        <span class="field-validation-valid text-[10px] text-red-500 font-medium" data-valmsg-for="Input.Specifications[@i].Value" data-valmsg-replace="true"></span>
                                     </div>
                                 </div>
                             }
@@ -189,19 +191,27 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <div>
                                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Variant Name</label>
-                                        <input asp-for="Input.Variants[i].VariantName" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white" placeholder="Standard / 16GB RAM" required>
+                                        <input asp-for="Input.Variants[i].VariantName" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white" placeholder="Standard / 16GB RAM" 
+                                            data-val="true" data-val-required="Variant name is required" required>
+                                        <span class="field-validation-valid text-xs text-red-500" data-valmsg-for="Input.Variants[@i].VariantName" data-valmsg-replace="true"></span>
                                     </div>
                                     <div>
                                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">SKU</label>
-                                        <input asp-for="Input.Variants[i].Sku" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white" placeholder="Unique SKU" readonly="@(Model.Input.Variants[i].Sku != "")" required>
+                                        <input asp-for="Input.Variants[i].Sku" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white" placeholder="Unique SKU" readonly="@(Model.Input.Variants[i].Sku != "")" 
+                                            data-val="true" data-val-required="SKU is required" required>
+                                        <span class="field-validation-valid text-xs text-red-500" data-valmsg-for="Input.Variants[@i].Sku" data-valmsg-replace="true"></span>
                                     </div>
                                     <div>
                                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Price (VND)</label>
-                                        <input asp-for="Input.Variants[i].Price" type="number" step="0.01" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white" required>
+                                        <input asp-for="Input.Variants[i].Price" type="number" step="0.01" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white" 
+                                            data-val="true" data-val-required="Price is required" data-val-range="Price must be > 0" data-val-range-min="0" required>
+                                        <span class="field-validation-valid text-xs text-red-500" data-valmsg-for="Input.Variants[@i].Price" data-valmsg-replace="true"></span>
                                     </div>
                                     <div>
                                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Stock</label>
-                                        <input asp-for="Input.Variants[i].StockQuantity" type="number" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white" required>
+                                        <input asp-for="Input.Variants[i].StockQuantity" type="number" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white" 
+                                            data-val="true" data-val-required="Stock is required" data-val-range="Stock must be >= 0" data-val-range-min="0" required>
+                                        <span class="field-validation-valid text-xs text-red-500" data-valmsg-for="Input.Variants[@i].StockQuantity" data-valmsg-replace="true"></span>
                                     </div>
                                 </div>
                                 <div class="mt-4 attributes-wrapper grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -283,19 +293,27 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
                 <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Variant Name</label>
-                <input name="Input.Variants[{index}].VariantName" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30" placeholder="e.g., White / 128GB" required>
+                <input name="Input.Variants[{index}].VariantName" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30" placeholder="e.g., White / 128GB" 
+                    data-val="true" data-val-required="Variant name is required" required>
+                <span class="field-validation-valid text-xs text-red-500" data-valmsg-for="Input.Variants[{index}].VariantName" data-valmsg-replace="true"></span>
             </div>
             <div>
                 <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">SKU</label>
-                <input name="Input.Variants[{index}].Sku" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30" placeholder="SKU-AUTO-123" required>
+                <input name="Input.Variants[{index}].Sku" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30" placeholder="SKU-AUTO-123" 
+                    data-val="true" data-val-required="SKU is required" required>
+                <span class="field-validation-valid text-xs text-red-500" data-valmsg-for="Input.Variants[{index}].Sku" data-valmsg-replace="true"></span>
             </div>
             <div>
                 <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Price (VND)</label>
-                <input name="Input.Variants[{index}].Price" type="number" step="0.01" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30" required>
+                <input name="Input.Variants[{index}].Price" type="number" step="0.01" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30" 
+                    data-val="true" data-val-required="Price is required" data-val-range="Price must be > 0" data-val-range-min="0" required>
+                <span class="field-validation-valid text-xs text-red-500" data-valmsg-for="Input.Variants[{index}].Price" data-valmsg-replace="true"></span>
             </div>
             <div>
                 <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Stock</label>
-                <input name="Input.Variants[{index}].StockQuantity" type="number" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30" required>
+                <input name="Input.Variants[{index}].StockQuantity" type="number" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30" 
+                    data-val="true" data-val-required="Stock is required" data-val-range="Stock must be >= 0" data-val-range-min="0" required>
+                <span class="field-validation-valid text-xs text-red-500" data-valmsg-for="Input.Variants[{index}].StockQuantity" data-valmsg-replace="true"></span>
             </div>
         </div>
         <div class="mt-4 attributes-wrapper grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -308,6 +326,28 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         $(document).ready(function () {
+            const $form = $('#editProductForm');
+
+            // Custom validation settings for immediate feedback
+            const validator = $form.validate();
+            if (validator) {
+                validator.settings.onfocusout = function(element) {
+                    $(element).valid();
+                };
+            }
+
+            function reparseValidation() {
+                $form.removeData("validator").removeData("unobtrusiveValidation");
+                $.validator.unobtrusive.parse($form);
+                
+                // Re-apply immediate feedback settings
+                const newValidator = $form.validate();
+                if (newValidator) {
+                    newValidator.settings.onfocusout = function(element) {
+                        $(element).valid();
+                    };
+                }
+            }
             // Show validation errors as toasts
             @if (!ModelState.IsValid)
             {
@@ -321,8 +361,12 @@
             }
 
             // Client-side validation toast for main form
-            $('#editProductForm').on('invalid-form.validate', function(event, validator) {
-                window.showToast?.('warning', 'Please check the form for missing or incorrect information.');
+            $form.on('invalid-form.validate', function(event, validator) {
+                const firstError = validator.errorList[0];
+                if (firstError) {
+                    window.showToast?.('warning', `Form is missing info: ${firstError.message}`);
+                    $(firstError.element).focus();
+                }
             });
 
             // Fix the Add Spec button not working
@@ -378,13 +422,15 @@
                             <div>
                                 <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Value</label>
                                 <div class="relative">
-                                    <input name="Input.Specifications[${index}].Value" value="${value}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white ${inputPadding}" placeholder="Enter ${spec.key || 'value'}" />
+                                    <input name="Input.Specifications[${index}].Value" value="${value}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white ${inputPadding}" placeholder="Enter ${spec.key || 'value'}" data-val="true" data-val-required="${spec.key} is required" required />
                                     ${unit ? `<span class="absolute inset-y-0 right-3 flex items-center text-xs font-bold text-gray-400 uppercase">${unit}</span>` : ''}
                                 </div>
+                                <span class="field-validation-valid text-[10px] text-red-500 font-medium" data-valmsg-for="Input.Specifications[${index}].Value" data-valmsg-replace="true"></span>
                             </div>
                         </div>
                     `);
                 });
+                reparseValidation();
             }
 
             async function createSpecificationAttribute() {
@@ -512,6 +558,7 @@
                         }
                     });
                 });
+                reparseValidation();
             }
 
             new TomSelect('#Input_CategoryId', {
@@ -633,6 +680,7 @@
                 refreshAllVariantAttributes();
                 
                 updateIndices('variantsContainer', 'variant-row');
+                reparseValidation();
             });
 
             $(document).on('click', '.btnRemoveRow', function () {
@@ -657,8 +705,39 @@
                     });
                 }
             });
+
+            reparseValidation();
         });
     </script>
+    <style>
+        /* Highlight invalid fields */
+        input.input-validation-error, select.input-validation-error, textarea.input-validation-error {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+            border-width: 2px;
+        }
+        
+        input.input-validation-error:focus, select.input-validation-error:focus, textarea.input-validation-error:focus {
+            ring-color: #ef4444 !important;
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+        }
+
+        .field-validation-error {
+            display: block;
+            margin-top: 0.25rem;
+            color: #ef4444;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* TomSelect validation styling */
+        .ts-wrapper.input-validation-error .ts-control,
+        select.input-validation-error + .ts-wrapper .ts-control {
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+            box-shadow: 0 0 0 1px #ef4444 !important;
+        }
+    </style>
 }
 
 

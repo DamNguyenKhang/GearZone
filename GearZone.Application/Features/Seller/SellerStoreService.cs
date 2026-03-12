@@ -1,10 +1,14 @@
 ﻿using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Abstractions.Services;
+using GearZone.Application.Abstractions.External;
 using GearZone.Application.Features.Seller.Dtos;
 using GearZone.Domain.Entities;
 using GearZone.Domain.Enums;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -12,15 +16,40 @@ namespace GearZone.Application.Features.Seller;
 
 public class SellerStoreService : ISellerStoreService
 {
+    private static readonly HashSet<string> AllowedIdentityImageContentTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp"
+    };
+    private static readonly HashSet<string> AllowedIdentityImageExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".webp"
+    };
+    private const long MaxIdentityImageSizeInBytes = 5 * 1024 * 1024; // 5MB
+
     private readonly IStoreRepository _storeRepository;
     private readonly ISystemSettingRepository _systemSettingRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IBankCatalogService _bankCatalogService;
+    private readonly IFileStorageService _fileStorageService;
 
-    public SellerStoreService(IStoreRepository storeRepository, ISystemSettingRepository systemSettingRepository, IUnitOfWork unitOfWork)
+    public SellerStoreService(
+        IStoreRepository storeRepository,
+        ISystemSettingRepository systemSettingRepository,
+        IUnitOfWork unitOfWork,
+        IBankCatalogService bankCatalogService,
+        IFileStorageService fileStorageService)
     {
         _storeRepository = storeRepository;
         _systemSettingRepository = systemSettingRepository;
         _unitOfWork = unitOfWork;
+        _bankCatalogService = bankCatalogService;
+        _fileStorageService = fileStorageService;
     }
 
     public async Task<bool> ApplyForStoreAsync(StoreRegistrationDto storeRegistrationDto)
@@ -118,9 +147,77 @@ public class SellerStoreService : ISellerStoreService
     {
         var store = await _storeRepository.Query()
             .Include(s => s.OwnerUser)
-            .FirstOrDefaultAsync(s => s.Id == storeId && s.Status == StoreStatus.Draft);
+            .FirstOrDefaultAsync(s => s.Id == storeId && s.OwnerUserId == userId && s.Status == StoreStatus.Draft);
 
         if (store == null) throw new InvalidOperationException("Store not found or not in draft status.");
+
+        if (dto.IdentityCardFrontImage != null)
+        {
+            ValidateIdentityImage(dto.IdentityCardFrontImage, "front");
+        }
+
+        if (dto.IdentityCardBackImage != null)
+        {
+            ValidateIdentityImage(dto.IdentityCardBackImage, "back");
+        }
+
+        if (string.IsNullOrWhiteSpace(store.IdentityCardFrontImageUrl) && dto.IdentityCardFrontImage == null)
+        {
+            throw new InvalidOperationException("Please upload the front ID card image.");
+        }
+
+        if (string.IsNullOrWhiteSpace(store.IdentityCardBackImageUrl) && dto.IdentityCardBackImage == null)
+        {
+            throw new InvalidOperationException("Please upload the back ID card image.");
+        }
+
+        string? newFrontImageUrl = null;
+        string? newBackImageUrl = null;
+        var justUploadedUrls = new List<string>();
+
+        try
+        {
+            if (dto.IdentityCardFrontImage != null)
+            {
+                newFrontImageUrl = await UploadIdentityImageAsync(storeId, userId, dto.IdentityCardFrontImage, "front");
+                justUploadedUrls.Add(newFrontImageUrl);
+            }
+
+            if (dto.IdentityCardBackImage != null)
+            {
+                newBackImageUrl = await UploadIdentityImageAsync(storeId, userId, dto.IdentityCardBackImage, "back");
+                justUploadedUrls.Add(newBackImageUrl);
+            }
+        }
+        catch
+        {
+            foreach (var uploadedUrl in justUploadedUrls)
+            {
+                await _fileStorageService.DeleteAsync(uploadedUrl);
+            }
+
+            throw;
+        }
+
+        if (!string.IsNullOrWhiteSpace(newFrontImageUrl))
+        {
+            if (!string.IsNullOrWhiteSpace(store.IdentityCardFrontImageUrl))
+            {
+                await _fileStorageService.DeleteAsync(store.IdentityCardFrontImageUrl);
+            }
+
+            store.IdentityCardFrontImageUrl = newFrontImageUrl;
+        }
+
+        if (!string.IsNullOrWhiteSpace(newBackImageUrl))
+        {
+            if (!string.IsNullOrWhiteSpace(store.IdentityCardBackImageUrl))
+            {
+                await _fileStorageService.DeleteAsync(store.IdentityCardBackImageUrl);
+            }
+
+            store.IdentityCardBackImageUrl = newBackImageUrl;
+        }
 
         store.TaxCode = dto.TaxCode;
         store.RegistrationStep = Math.Max(store.RegistrationStep, 3);
@@ -145,10 +242,13 @@ public class SellerStoreService : ISellerStoreService
             .FirstOrDefaultAsync(s => s.Id == storeId && s.Status == StoreStatus.Draft);
 
         if (store == null) throw new InvalidOperationException("Store not found or not in draft status.");
+        var selectedBank = _bankCatalogService.FindByName(dto.BankName)
+            ?? throw new InvalidOperationException("Selected bank is not supported.");
 
-        store.BankName = dto.BankName;
+        store.BankName = selectedBank.Name;
         store.BankAccountNumber = dto.BankAccountNumber;
         store.BankAccountName = dto.BankAccountName;
+        store.BankBin = selectedBank.Bin;
         store.RegistrationStep = Math.Max(store.RegistrationStep, 4);
         store.UpdatedAt = DateTime.UtcNow;
 
@@ -162,6 +262,10 @@ public class SellerStoreService : ISellerStoreService
             .FirstOrDefaultAsync(s => s.Id == storeId && s.OwnerUserId == userId && s.Status == StoreStatus.Draft);
 
         if (store == null) throw new InvalidOperationException("Store not found or not in draft status.");
+        if (string.IsNullOrWhiteSpace(store.IdentityCardFrontImageUrl) || string.IsNullOrWhiteSpace(store.IdentityCardBackImageUrl))
+        {
+            throw new InvalidOperationException("Please upload both front and back ID card images before submitting.");
+        }
 
         store.Status = StoreStatus.Pending;
         store.UpdatedAt = DateTime.UtcNow;
@@ -197,14 +301,55 @@ public class SellerStoreService : ISellerStoreService
                 IdentityNumber = store.OwnerUser?.IdentityNumber ?? string.Empty,
                 IdentityIssuedDate = store.OwnerUser?.IdentityIssuedDate,
                 IdentityIssuedPlace = store.OwnerUser?.IdentityIssuedPlace ?? string.Empty,
-                TaxCode = store.TaxCode
+                TaxCode = store.TaxCode,
+                IdentityCardFrontImageUrl = store.IdentityCardFrontImageUrl,
+                IdentityCardBackImageUrl = store.IdentityCardBackImageUrl
             },
             Step3 = new Step3Dto
             {
                 BankName = store.BankName,
                 BankAccountNumber = store.BankAccountNumber,
-                BankAccountName = store.BankAccountName
+                BankAccountName = store.BankAccountName,
+                BankBin = store.BankBin
             }
         };
+    }
+
+    private async Task<string> UploadIdentityImageAsync(Guid storeId, string userId, IFormFile file, string side)
+    {
+        var folder = $"GearZone/kyc/{storeId}/{userId}/{side}";
+        var uploadedUrls = await _fileStorageService.UploadAsync(new List<IFormFile> { file }, folder);
+        var imageUrl = uploadedUrls.FirstOrDefault();
+
+        if (string.IsNullOrWhiteSpace(imageUrl))
+        {
+            throw new InvalidOperationException($"Failed to upload {side} ID card image.");
+        }
+
+        return imageUrl;
+    }
+
+    private static void ValidateIdentityImage(IFormFile file, string side)
+    {
+        if (file.Length <= 0)
+        {
+            throw new InvalidOperationException($"The {side} ID card image is empty.");
+        }
+
+        if (file.Length > MaxIdentityImageSizeInBytes)
+        {
+            throw new InvalidOperationException($"The {side} ID card image exceeds the 5MB limit.");
+        }
+
+        var extension = Path.GetExtension(file.FileName);
+        if (string.IsNullOrWhiteSpace(extension) || !AllowedIdentityImageExtensions.Contains(extension))
+        {
+            throw new InvalidOperationException($"The {side} ID card image must be JPG, PNG, or WEBP.");
+        }
+
+        if (string.IsNullOrWhiteSpace(file.ContentType) || !AllowedIdentityImageContentTypes.Contains(file.ContentType))
+        {
+            throw new InvalidOperationException($"The {side} ID card image content type is not supported.");
+        }
     }
 }

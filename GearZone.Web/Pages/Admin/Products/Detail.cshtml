@@ -333,20 +333,25 @@
 
             @if (p.Status == "Pending")
             {
-                <button class="px-4 py-2.5 rounded-lg border border-red-200 text-red-600 font-bold text-sm hover:bg-red-50 transition-colors flex items-center gap-2 shadow-sm">
-                    <span class="material-symbols-outlined text-[18px]">close</span>
-                    Reject
-                </button>
-                <button class="px-6 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold text-sm shadow-md transition-colors flex items-center gap-2">
-                    <span class="material-symbols-outlined text-[18px]">check_circle</span>
-                    Approve Request
-                </button>
+                <form method="post" asp-page-handler="Reject" asp-route-id="@p.Id" onsubmit="return confirm('Note: You are rejecting this product request. Continue?')">
+                    <button type="submit" class="px-4 py-2.5 rounded-lg border border-red-200 text-red-600 font-bold text-sm hover:bg-red-50 transition-colors flex items-center gap-2 shadow-sm">
+                        <span class="material-symbols-outlined text-[18px]">close</span>
+                        Reject
+                    </button>
+                </form>
+                
+                <form method="post" asp-page-handler="Approve" asp-route-id="@p.Id">
+                    <button type="submit" class="px-6 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold text-sm shadow-md transition-colors flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                        Approve Request
+                    </button>
+                </form>
             }
             else
             {
                 <button disabled title="Product is currently @p.Status" class="px-6 py-2.5 rounded-lg bg-slate-100 text-slate-400 font-bold text-sm shadow-inner transition-colors border border-slate-200 cursor-not-allowed flex items-center gap-2">
                     <span class="material-symbols-outlined text-[18px]">gpp_good</span>
-                    Approved
+                    @(p.Status == "Active" ? "Approved" : p.Status)
                 </button>
             }
         </div>

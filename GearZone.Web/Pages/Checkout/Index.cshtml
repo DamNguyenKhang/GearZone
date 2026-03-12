@@ -1,0 +1,270 @@
+@page
+@model GearZone.Web.Pages.Checkout.IndexModel
+@{
+    ViewData["Title"] = "Checkout - GearZone";
+    var storeGroups = Model.SelectedItems.GroupBy(ci => ci.Variant.Product.Store).ToList();
+}
+
+<div class="flex items-center justify-between mb-8">
+    <h1 class="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+        Checkout
+        <span class="text-lg font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full cart-total-count">
+            (@Model.SelectedItems.Count items)
+        </span>
+    </h1>
+</div>
+
+@if (!ModelState.IsValid)
+{
+    <div class="bg-red-50 text-red-600 p-4 rounded-xl shadow-sm border border-red-200 mb-6">
+        <div asp-validation-summary="All" class="text-sm"></div>
+    </div>
+}
+
+<form method="post" id="checkout-form">
+    @foreach (var id in Model.SelectedCartItemIds)
+    {
+        <input type="hidden" name="CheckoutRequest.CartItemIds" value="@id" />
+    }
+    <input type="hidden" asp-for="CheckoutRequest.ShippingInfo.EmailAddress" />
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <!-- Left Column: Shipping Info & Payment -->
+        <div class="lg:col-span-8 space-y-6">
+            <!-- Delivery Address -->
+            <div class="bg-white dark:bg-[#1a202c] rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 relative z-10">
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 flex gap-3 items-center">
+                    <span class="material-symbols-outlined text-primary text-xl">location_on</span>
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Shipping Information</h2>
+                </div>
+                
+                <div class="p-6 space-y-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Full Name</label>
+                            <input asp-for="CheckoutRequest.ShippingInfo.FullName" class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white py-2.5 px-4 focus:ring-primary focus:border-primary transition-colors" placeholder="Enter your full name" required />
+                            <span asp-validation-for="CheckoutRequest.ShippingInfo.FullName" class="text-xs text-red-500"></span>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Phone Number</label>
+                            <input asp-for="CheckoutRequest.ShippingInfo.PhoneNumber" class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white py-2.5 px-4 focus:ring-primary focus:border-primary transition-colors" placeholder="Enter phone number" required />
+                            <span asp-validation-for="CheckoutRequest.ShippingInfo.PhoneNumber" class="text-xs text-red-500"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2 relative" id="street-address-container">
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Địa chỉ giao hàng</label>
+                        <input asp-for="CheckoutRequest.ShippingInfo.StreetAddress" class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white py-2.5 px-4 focus:ring-primary focus:border-primary transition-colors" placeholder="Nhập địa chỉ hoặc chọn từ gợi ý" required autocomplete="off" />
+                        <span asp-validation-for="CheckoutRequest.ShippingInfo.StreetAddress" class="text-xs text-red-500"></span>
+                        
+                        <!-- Goong Autocomplete Results -->
+                        <div id="goong-results" class="hidden absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto"></div>
+                    </div>
+
+                    <div class="hidden">
+                        <input type="hidden" asp-for="CheckoutRequest.ShippingInfo.City" value="N/A" />
+                        <input type="hidden" asp-for="CheckoutRequest.ShippingInfo.District" value="N/A" />
+                        <input type="hidden" asp-for="CheckoutRequest.ShippingInfo.Ward" value="N/A" />
+                    </div>
+
+
+                    <div class="flex items-center gap-2 mt-2 pt-4 border-t border-slate-100 dark:border-slate-700">
+                        <input type="checkbox" asp-for="CheckoutRequest.SaveAddress" class="size-5 rounded border-slate-300 text-primary focus:ring-primary/20 cursor-pointer" />
+                        <label for="CheckoutRequest_SaveAddress" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                            Set as my default address
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="bg-white dark:bg-[#1a202c] rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 flex gap-3 items-center">
+                    <span class="material-symbols-outlined text-primary text-xl">payments</span>
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Payment Method</h2>
+                </div>
+                
+                <div class="p-6 space-y-4">
+                    <label class="flex items-center p-4 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <input type="radio" value="0" asp-for="CheckoutRequest.PaymentMethod" checked class="w-5 h-5 text-primary border-gray-300 bg-white dark:bg-slate-800 dark:border-slate-600 focus:ring-primary focus:ring-2">
+                        <div class="ml-4 flex flex-1 items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-slate-400 text-2xl">local_shipping</span>
+                                <div>
+                                    <span class="block text-sm font-semibold text-slate-900 dark:text-white">Cash on Delivery (COD)</span>
+                                    <span class="block text-xs text-slate-500 mt-0.5">Pay when you receive the order</span>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    
+                    <div class="p-4 border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50/50 dark:bg-slate-800/30 text-center text-slate-500 text-sm">
+                        <span class="material-symbols-outlined block text-3xl mb-2 opacity-50">money_off</span>
+                        Online payments (VNPay, MoMo) are temporarily disabled.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ordered Items List -->
+            <div class="bg-white dark:bg-[#1a202c] rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                 <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 flex gap-3 items-center">
+                    <span class="material-symbols-outlined text-primary text-xl">shopping_bag</span>
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Review Items</h2>
+                </div>
+                
+                <div class="p-0">
+                    @foreach (var group in storeGroups)
+                    {
+                        var store = group.Key;
+                        var items = group.ToList();
+                        
+                        <div class="border-b border-slate-100 dark:border-slate-700 last:border-0 relative">
+                            <!-- Store header -->
+                            <div class="px-6 py-3 bg-slate-50/50 dark:bg-slate-800/30 flex items-center justify-between">
+                                <span class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-sm text-slate-400">storefront</span>
+                                    @(store?.StoreName ?? "Main Store")
+                                </span>
+                            </div>
+
+                            @foreach (var item in items)
+                            {
+                                <div class="px-6 py-4 flex gap-4 items-center">
+                                    <div class="size-16 rounded-md bg-slate-100 border border-slate-200 overflow-hidden shrink-0">
+                                         @{
+                                             var primaryImage = item.Variant.Product.Images.FirstOrDefault(i => i.IsPrimary) 
+                                                               ?? item.Variant.Product.Images.FirstOrDefault();
+                                         }
+                                         @if (primaryImage != null)
+                                         {
+                                             <img src="@primaryImage.ImageUrl" alt="@item.Variant.Product.Name" class="w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal">
+                                         }
+                                         else
+                                         {
+                                            <div class="w-full h-full flex items-center justify-center text-slate-400">
+                                                <span class="material-symbols-outlined">inventory_2</span>
+                                            </div>
+                                         }
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="text-sm font-bold text-slate-900 dark:text-white line-clamp-1">@item.Variant.Product.Name</h3>
+                                        <div class="mt-1 text-xs text-slate-500 flex flex-col gap-1">
+                                            <span>Variant: @string.Join(", ", item.Variant.AttributeValues.Select(v => v.CategoryAttributeOption.Value))</span>
+                                            <span>Qty: @item.Quantity</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-right shrink-0">
+                                        <div class="text-sm font-bold text-slate-900 dark:text-white">@((item.Quantity * item.Variant.Price).ToString("N0"))₫</div>
+                                    </div>
+                                </div>
+                            }
+                            
+                            <!-- Store Shipping & Subtotal -->
+                            <div class="px-6 py-3 bg-slate-50/20 dark:bg-slate-800/10 flex justify-between items-center text-sm">
+                                <span class="text-slate-500">Shipping (Standard)</span>
+                                <span class="font-medium text-slate-900 dark:text-white">Free</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Order Summary (Sticky) -->
+        <div class="lg:col-span-4 relative h-full">
+            <div class="sticky top-24 space-y-4">
+                <div class="bg-white dark:bg-[#1a202c] rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 p-6">
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-6">Payment Summary</h2>
+                    
+                    <div class="space-y-4 text-sm text-slate-600 dark:text-slate-300">
+                        <div class="flex justify-between items-center">
+                            <span>Merchandise Subtotal</h1>
+                            <span class="font-medium text-slate-900 dark:text-white">@Model.GrandTotal.ToString("N0")₫</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span>Shipping Total</span>
+                            <span class="font-medium text-slate-900 dark:text-white">0₫</span>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-dashed border-slate-200 dark:border-slate-700 my-6"></div>
+                    
+                    <div class="flex justify-between items-center mb-6">
+                        <span class="text-lg font-semibold text-slate-900 dark:text-white">Total Payment</span>
+                        <div class="text-right">
+                            <span class="block text-3xl font-bold text-secondary">@Model.GrandTotal.ToString("N0")₫</span>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-secondary hover:bg-orange-600 text-white font-bold py-4 rounded-lg shadow-lg shadow-orange-500/20 transition-all transform hover:scale-[1.01] active:scale-[0.99] flex justify-center items-center gap-2 text-lg uppercase tracking-wider">
+                        PLACE ORDER
+                        <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                    </button>
+
+                    <!-- Trust Badges -->
+                    <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700 text-center">
+                        <p class="text-xs text-slate-400 mb-2 flex items-center justify-center gap-1">
+                            <span class="material-symbols-outlined text-[16px] text-green-600">verified_user</span>
+                            Your privacy and security are guaranteed.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/goong-autocomplete.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const apiKey = '@Model.GoongApiKey';
+            if (!apiKey) {
+                console.warn('Goong API Key is missing. Address autocomplete will not work.');
+                return;
+            }
+
+            const streetInput = document.getElementById('CheckoutRequest_ShippingInfo_StreetAddress');
+            const cityInput = document.getElementById('CheckoutRequest_ShippingInfo_City');
+            const districtInput = document.getElementById('CheckoutRequest_ShippingInfo_District');
+            const wardInput = document.getElementById('CheckoutRequest_ShippingInfo_Ward');
+            const resultsElement = document.getElementById('goong-results');
+
+            new GoongAutocomplete(apiKey, {
+                inputElement: streetInput,
+                resultsElement: resultsElement,
+                onSelect: (place) => {
+                    console.log('Selected Place:', place);
+                    
+                    // Reset fields
+                    cityInput.value = 'N/A';
+                    districtInput.value = 'N/A';
+                    wardInput.value = 'N/A';
+
+                    // Use full formatted address if available from detail
+                    if (place.formatted_address) {
+                        streetInput.value = place.formatted_address;
+                    }
+
+                    // Map address components (even if hidden, we keep them for backend structure)
+                    if (place.address_components) {
+                        place.address_components.forEach(component => {
+                            const types = component.types;
+                            if (types.includes('administrative_area_level_1')) {
+                                cityInput.value = component.long_name;
+                            } else if (types.includes('administrative_area_level_2')) {
+                                districtInput.value = component.long_name;
+                            } else if (types.includes('administrative_area_level_3')) {
+                                wardInput.value = component.long_name;
+                            }
+                        });
+                    }
+
+                    // Fallback: If components are missing, try to parse from plus_code or other fields
+                    // or just use the description from predictions (already set in StreetAddress)
+                }
+            });
+        });
+    </script>
+}

@@ -167,11 +167,11 @@ namespace GearZone.Web.Pages.Public.Auth
                     var role = await _authService.GetUserRoleAsync(userId);
                     if (role == "Super Admin")
                     {
-                        return LocalRedirect("/Admin");
+                        return LocalRedirect("/admin/dashboard");
                     }
                     if (role == "Store Owner")
                     {
-                        return LocalRedirect("/StoreOwner/Dashboard");
+                        return LocalRedirect("/storeowner/dashboard");
                     }
                 }
                 return LocalRedirect(returnUrl);

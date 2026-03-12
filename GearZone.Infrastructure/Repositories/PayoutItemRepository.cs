@@ -18,19 +18,19 @@ public class PayoutItemRepository : Repository<PayoutItem, Guid>, IPayoutItemRep
             .ToListAsync(ct);
     }
 
-    public async Task<List<Guid>> GetOrderIdsByTransactionIdAsync(Guid transactionId, CancellationToken ct = default)
+    public async Task<List<Guid>> GetSubOrderIdsByTransactionIdAsync(Guid transactionId, CancellationToken ct = default)
     {
         return await _context.Set<PayoutItem>()
             .Where(x => x.PayoutTransactionId == transactionId)
-            .Select(x => x.OrderId)
+            .Select(x => x.SubOrderId)
             .ToListAsync(ct);
     }
 
-    public async Task<List<Guid>> GetOrderIdsByTransactionIdsAsync(List<Guid> transactionIds, CancellationToken ct = default)
+    public async Task<List<Guid>> GetSubOrderIdsByTransactionIdsAsync(List<Guid> transactionIds, CancellationToken ct = default)
     {
         return await _context.Set<PayoutItem>()
             .Where(x => transactionIds.Contains(x.PayoutTransactionId))
-            .Select(x => x.OrderId)
+            .Select(x => x.SubOrderId)
             .ToListAsync(ct);
     }
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 
-namespace GearZone.Application.Features.Order.Dtos
+namespace GearZone.Application.Features.Orders.Dtos
 {
     public class OrderCreateRequest
     {

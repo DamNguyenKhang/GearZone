@@ -1,6 +1,6 @@
-using System.Threading.Tasks;
-using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using AutoMapper;
 using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Abstractions.Services;
@@ -13,14 +13,14 @@ namespace GearZone.Application.Features.Admin
     public class AdminProductService : IAdminProductService
     {
         private readonly IProductRepository _productRepository;
-        private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public AdminProductService(IProductRepository productRepository, IUnitOfWork unitOfWork, IMapper mapper)
+        public AdminProductService(IProductRepository productRepository, IMapper mapper, IUnitOfWork unitOfWork)
         {
             _productRepository = productRepository;
-            _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<PagedResult<AdminProductDto>> GetProductsAsync(AdminProductQueryDto queryDto)
@@ -46,29 +46,29 @@ namespace GearZone.Application.Features.Admin
             return _mapper.Map<AdminProductDetailDto>(product);
         }
 
-        public async Task ApproveProductAsync(Guid id)
+        public async Task<bool> BulkUpdateStatusAsync(List<Guid> productIds, ProductStatus status)
         {
-            var product = await _productRepository.GetByIdAsync(id);
-            if (product == null) throw new InvalidOperationException("Product not found");
+            if (productIds == null || !productIds.Any())
+                return false;
 
-            product.Status = ProductStatus.Active;
-            product.UpdatedAt = DateTime.UtcNow;
+            var success = false;
+            foreach (var id in productIds)
+            {
+                var product = await _productRepository.GetByIdAsync(id);
+                if (product != null)
+                {
+                    product.Status = status;
+                    await _productRepository.UpdateAsync(product);
+                    success = true;
+                }
+            }
 
-            await _productRepository.UpdateAsync(product);
-            await _unitOfWork.SaveChangesAsync();
-        }
+            if (success)
+            {
+                await _unitOfWork.SaveChangesAsync();
+            }
 
-        public async Task RejectProductAsync(Guid id, string reason)
-        {
-            var product = await _productRepository.GetByIdAsync(id);
-            if (product == null) throw new InvalidOperationException("Product not found");
-
-            product.Status = ProductStatus.Inactive; // or Draft or Archive? Let's use Inactive for now.
-            product.UpdatedAt = DateTime.UtcNow;
-            
-            // Maybe add a rejection record if there's a place for it, but for now just status change.
-            await _productRepository.UpdateAsync(product);
-            await _unitOfWork.SaveChangesAsync();
+            return success;
         }
     }
 }

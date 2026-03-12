@@ -8,5 +8,6 @@ public enum ProductStatus
     Active,
     Inactive,
     OutOfStock,
-    Archived
+    Archived,
+    Rejected
 }

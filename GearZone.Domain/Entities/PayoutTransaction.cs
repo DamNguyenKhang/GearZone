@@ -9,6 +9,7 @@ namespace GearZone.Domain.Entities
     {
         public Guid PayoutBatchId { get; set; }
         public Guid StoreId { get; set; }
+        public long TransactionCode { get; set; }
         // Bank snapshot
         public string BankName { get; set; }
         public string BankAccountNumber { get; set; }

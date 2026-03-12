@@ -10,6 +10,7 @@ using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Admin.Dtos;
+using GearZone.Domain.Enums;
 
 namespace GearZone.Web.Pages.Admin.Products
 {
@@ -95,19 +96,39 @@ namespace GearZone.Web.Pages.Admin.Products
             return new JsonResult(result);
         }
 
-        public async Task<IActionResult> OnPostApproveAsync(Guid id)
+        public async Task<IActionResult> OnPostBulkUpdateStatusAsync(List<Guid> productIds, string actionType)
         {
-            await _productService.ApproveProductAsync(id);
-            TempData["SuccessMessage"] = "Product has been approved.";
-            return RedirectToPage();
-        }
+            if (productIds == null || !productIds.Any())
+                return RedirectToPage();
 
-        public async Task<IActionResult> OnPostRejectAsync(Guid id, string reason = "")
-        {
-            await _productService.RejectProductAsync(id, reason);
-            TempData["SuccessMessage"] = "Product has been rejected.";
-            return RedirectToPage();
+            ProductStatus status;
+            switch (actionType.ToLower())
+            {
+                case "approve":
+                    status = ProductStatus.Active;
+                    break;
+                case "reject":
+                    status = ProductStatus.Rejected;
+                    break;
+                case "inactive":
+                    status = ProductStatus.Inactive;
+                    break;
+                default:
+                    return RedirectToPage();
+            }
+
+            var success = await _productService.BulkUpdateStatusAsync(productIds, status);
+
+            if (success)
+            {
+                TempData["SuccessMessage"] = $"Successfully updated {productIds.Count} product(s) to {status}.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to update product statuses.";
+            }
+
+            return RedirectToPage(new { Query.SearchTerm, Query.Status, Query.CategoryId, Query.BrandId, Query.StoreId, Query.PageNumber });
         }
     }
 }
-

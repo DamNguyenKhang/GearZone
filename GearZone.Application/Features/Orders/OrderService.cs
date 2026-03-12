@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace GearZone.Application.Features.Order
+namespace GearZone.Application.Features.Orders
 {
     internal class OrderService
     {

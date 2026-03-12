@@ -1,4 +1,4 @@
-﻿using Azure;
+using Azure;
 using GearZone.Application.Abstractions.External;
 using GearZone.Application.Features.Payment.Dtos;
 using GearZone.Domain.Entities;
@@ -37,7 +37,8 @@ namespace GearZone.Infrastructure.External
                 if (order == null)
                     throw new ArgumentNullException(nameof(order));
 
-                if (!order.Items.Any())
+                var allItems = order.SubOrders.SelectMany(s => s.Items).ToList();
+                if (!allItems.Any())
                     throw new Exception("Order must contain items");
 
                 var paymentRequest = new CreatePaymentLinkRequest
@@ -54,7 +55,7 @@ namespace GearZone.Infrastructure.External
                     BuyerPhone = order.User?.PhoneNumber,
                     BuyerAddress = order.User?.Address,
 
-                    Items = order.Items.Select(i => new PaymentLinkItem
+                    Items = allItems.Select(i => new PaymentLinkItem
                     {
                         Name = i.ProductNameSnapshot,
                         Quantity = i.Quantity,

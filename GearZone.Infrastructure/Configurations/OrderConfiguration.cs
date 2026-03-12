@@ -1,4 +1,4 @@
-﻿using GearZone.Domain.Entities;
+using GearZone.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -16,36 +16,16 @@ namespace GearZone.Infrastructure.Configurations
             builder.HasKey(x => x.Id);
 
             builder.Property(x => x.OrderCode).HasMaxLength(50).IsRequired();
-            builder.Property(x => x.Status)
-                   .HasConversion<string>()
-                   .HasMaxLength(30)
-                   .IsRequired();
-
-            builder.Property(x => x.PayoutStatus)
-                   .HasConversion<string>()
-                   .HasMaxLength(30)
-                   .IsRequired();
 
             builder.HasIndex(x => x.OrderCode).IsUnique();
             builder.HasIndex(x => new { x.UserId, x.CreatedAt });
-            builder.HasIndex(x => new { x.StoreId, x.CreatedAt });
-            builder.HasIndex(x => x.Status);
-            builder.HasIndex(x => x.PayoutStatus);
 
             builder.HasOne(x => x.User)
                    .WithMany(x => x.Orders)
                    .HasForeignKey(x => x.UserId)
                    .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(x => x.Store)
-                   .WithMany()
-                   .HasForeignKey(x => x.StoreId)
-                   .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(x => x.PayoutItem)
-                   .WithOne(x => x.Order)
-                   .HasForeignKey<PayoutItem>(x => x.OrderId)
-                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

@@ -4,6 +4,7 @@ using GearZone.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GearZone.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260311133356_AddCodeToPaymentAndPayout")]
+    partial class AddCodeToPaymentAndPayout
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -706,6 +709,12 @@ namespace GearZone.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<decimal>("CommissionAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("CommissionRateSnapshot")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -718,6 +727,11 @@ namespace GearZone.Infrastructure.Migrations
 
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("PayoutStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<string>("ReceiverName")
                         .IsRequired()
@@ -737,6 +751,17 @@ namespace GearZone.Infrastructure.Migrations
                     b.Property<string>("ShippingProvider")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("TrackingNumber")
                         .HasColumnType("nvarchar(max)");
 
@@ -752,6 +777,12 @@ namespace GearZone.Infrastructure.Migrations
                     b.HasIndex("OrderCode")
                         .IsUnique();
 
+                    b.HasIndex("PayoutStatus");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("StoreId", "CreatedAt");
+
                     b.HasIndex("UserId", "CreatedAt");
 
                     b.ToTable("Orders", (string)null);
@@ -766,6 +797,9 @@ namespace GearZone.Infrastructure.Migrations
                     b.Property<decimal>("LineTotal")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("ProductNameSnapshot")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -776,9 +810,6 @@ namespace GearZone.Infrastructure.Migrations
                     b.Property<string>("SkuSnapshot")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("SubOrderId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("UnitPriceSnapshot")
                         .HasColumnType("decimal(18,2)");
@@ -792,7 +823,7 @@ namespace GearZone.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SubOrderId");
+                    b.HasIndex("OrderId");
 
                     b.HasIndex("VariantId");
 
@@ -862,10 +893,11 @@ namespace GearZone.Infrastructure.Migrations
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("PaymentCode")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<long>("PaymentCode")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("PaymentCode"));
 
                     b.Property<string>("PaymentLinkId")
                         .HasColumnType("nvarchar(max)");
@@ -979,18 +1011,18 @@ namespace GearZone.Infrastructure.Migrations
                     b.Property<decimal>("NetAmount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<Guid>("PayoutTransactionId")
+                    b.Property<Guid>("OrderId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("SubOrderId")
+                    b.Property<Guid>("PayoutTransactionId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PayoutTransactionId");
-
-                    b.HasIndex("SubOrderId")
+                    b.HasIndex("OrderId")
                         .IsUnique();
+
+                    b.HasIndex("PayoutTransactionId");
 
                     b.ToTable("PayoutItems", (string)null);
                 });
@@ -1397,59 +1429,6 @@ namespace GearZone.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("StoreFollows", (string)null);
-                });
-
-            modelBuilder.Entity("GearZone.Domain.Entities.SubOrder", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("CommissionAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("CommissionRateSnapshot")
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("NetAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<Guid>("OrderId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("PayoutStatus")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<Guid>("StoreId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("Subtotal")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrderId");
-
-                    b.HasIndex("PayoutStatus");
-
-                    b.HasIndex("Status");
-
-                    b.HasIndex("StoreId", "CreatedAt");
-
-                    b.ToTable("SubOrders", (string)null);
                 });
 
             modelBuilder.Entity("GearZone.Domain.Entities.SystemSetting", b =>
@@ -1930,20 +1909,28 @@ namespace GearZone.Infrastructure.Migrations
 
             modelBuilder.Entity("GearZone.Domain.Entities.Order", b =>
                 {
+                    b.HasOne("GearZone.Domain.Entities.Store", "Store")
+                        .WithMany()
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("GearZone.Domain.Entities.ApplicationUser", "User")
                         .WithMany("Orders")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("Store");
+
                     b.Navigation("User");
                 });
 
             modelBuilder.Entity("GearZone.Domain.Entities.OrderItem", b =>
                 {
-                    b.HasOne("GearZone.Domain.Entities.SubOrder", "SubOrder")
+                    b.HasOne("GearZone.Domain.Entities.Order", "Order")
                         .WithMany("Items")
-                        .HasForeignKey("SubOrderId")
+                        .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1953,7 +1940,7 @@ namespace GearZone.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("SubOrder");
+                    b.Navigation("Order");
 
                     b.Navigation("Variant");
                 });
@@ -1990,19 +1977,19 @@ namespace GearZone.Infrastructure.Migrations
 
             modelBuilder.Entity("GearZone.Domain.Entities.PayoutItem", b =>
                 {
+                    b.HasOne("GearZone.Domain.Entities.Order", "Order")
+                        .WithOne("PayoutItem")
+                        .HasForeignKey("GearZone.Domain.Entities.PayoutItem", "OrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("GearZone.Domain.Entities.PayoutTransaction", "Transaction")
                         .WithMany("Items")
                         .HasForeignKey("PayoutTransactionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GearZone.Domain.Entities.SubOrder", "SubOrder")
-                        .WithOne("PayoutItem")
-                        .HasForeignKey("GearZone.Domain.Entities.PayoutItem", "SubOrderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("SubOrder");
+                    b.Navigation("Order");
 
                     b.Navigation("Transaction");
                 });
@@ -2129,25 +2116,6 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Store");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("GearZone.Domain.Entities.SubOrder", b =>
-                {
-                    b.HasOne("GearZone.Domain.Entities.Order", "Order")
-                        .WithMany("SubOrders")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GearZone.Domain.Entities.Store", "Store")
-                        .WithMany()
-                        .HasForeignKey("StoreId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Order");
-
-                    b.Navigation("Store");
                 });
 
             modelBuilder.Entity("GearZone.Domain.Entities.VariantAttributeValue", b =>
@@ -2277,11 +2245,13 @@ namespace GearZone.Infrastructure.Migrations
 
             modelBuilder.Entity("GearZone.Domain.Entities.Order", b =>
                 {
+                    b.Navigation("Items");
+
                     b.Navigation("Payments");
 
-                    b.Navigation("StatusHistories");
+                    b.Navigation("PayoutItem");
 
-                    b.Navigation("SubOrders");
+                    b.Navigation("StatusHistories");
                 });
 
             modelBuilder.Entity("GearZone.Domain.Entities.PayoutBatch", b =>
@@ -2317,13 +2287,6 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Products");
 
                     b.Navigation("StoreFollows");
-                });
-
-            modelBuilder.Entity("GearZone.Domain.Entities.SubOrder", b =>
-                {
-                    b.Navigation("Items");
-
-                    b.Navigation("PayoutItem");
                 });
 #pragma warning restore 612, 618
         }

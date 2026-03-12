@@ -45,6 +45,7 @@ namespace GearZone.Infrastructure
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IInventoryTransactionRepository, InventoryTransactionRepository>();
             services.AddScoped<IOrderRepository, OrderRepository>();
+            services.AddScoped<ISubOrderRepository, SubOrderRepository>();
             services.AddScoped<IOrderItemRepository, OrderItemRepository>();
             services.AddScoped<IOrderStatusHistoryRepository, OrderStatusHistoryRepository>();
             services.AddScoped<IPaymentRepository, PaymentRepository>();

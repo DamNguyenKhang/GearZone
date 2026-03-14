@@ -1,3 +1,12 @@
+@using GearZone.Application.Abstractions.Services
+@using System.Security.Claims
+@inject IChatService ChatService
+@{
+    var sellerUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var sellerUnreadCount = string.IsNullOrWhiteSpace(sellerUserId)
+        ? 0
+        : await ChatService.GetSellerUnreadCountAsync(sellerUserId);
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -174,6 +183,17 @@
                 <span class="font-medium text-sm sidebar-text">Orders</span>
             </a>
 
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Messages" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" asp-page="/StoreOwner/Messages/Index">
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Messages" ? "filled" : "")">chat</span>
+                <span class="font-medium text-sm sidebar-text">Messages</span>
+                <span class="ml-auto bg-orange-100 text-orange-600 text-xs px-2 py-0.5 rounded-full font-bold badge-count @(sellerUnreadCount > 0 ? "" : "hidden")" data-header-chat-badge>@(sellerUnreadCount > 99 ? "99+" : sellerUnreadCount.ToString())</span>
+            </a>
+
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Reviews" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" asp-page="/StoreOwner/Reviews/Index">
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Reviews" ? "filled" : "")">reviews</span>
+                <span class="font-medium text-sm sidebar-text">Reviews</span>
+            </a>
+
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "Disputes" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-colors group" asp-page="/StoreOwner/Disputes/Index">
                 <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "Disputes" ? "filled" : "")">gavel</span>
                 <span class="font-medium text-sm sidebar-text">Disputes</span>
@@ -233,9 +253,10 @@
                         <span class="material-symbols-outlined text-[22px]">notifications</span>
                         <span class="absolute top-2.5 right-2.5 size-2 bg-red-500 border-2 border-white rounded-full"></span>
                     </button>
-                    <button class="p-2 text-slate-500 hover:bg-white hover:text-primary hover:shadow-sm rounded-lg transition-all">
+                    <a asp-page="/StoreOwner/Messages/Index" class="p-2 text-slate-500 hover:bg-white hover:text-primary hover:shadow-sm rounded-lg transition-all relative">
                         <span class="material-symbols-outlined text-[22px]">mail</span>
-                    </button>
+                        <span class="absolute top-2.5 right-2.5 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-black text-white @(sellerUnreadCount > 0 ? "" : "hidden")" data-header-chat-badge>@(sellerUnreadCount > 99 ? "99+" : sellerUnreadCount.ToString())</span>
+                    </a>
                 </div>
 
                 <div class="flex items-center gap-3 pl-4 border-l border-border-light">

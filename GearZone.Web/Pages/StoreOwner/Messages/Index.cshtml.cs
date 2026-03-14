@@ -1,0 +1,200 @@
+using GearZone.Application.Abstractions.Services;
+using GearZone.Application.Features.Chat.Dtos;
+using GearZone.Domain.Entities;
+using GearZone.Web.Pages.Shared.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+
+namespace GearZone.Web.Pages.StoreOwner.Messages
+{
+    [Authorize(Roles = "Store Owner")]
+    public class IndexModel : PageModel
+    {
+        private readonly IChatService _chatService;
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public IndexModel(IChatService chatService, UserManager<ApplicationUser> userManager)
+        {
+            _chatService = chatService;
+            _userManager = userManager;
+        }
+
+        public ChatInboxPageViewModel Inbox { get; set; } = new();
+
+        [BindProperty(SupportsGet = true)]
+        public Guid? ConversationId { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string Filter { get; set; } = "all";
+
+        [BindProperty(SupportsGet = true)]
+        public string? SearchTerm { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? CounterpartScopeKey { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public Guid? SubOrderId { get; set; }
+
+        public async Task<IActionResult> OnGetAsync()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Redirect("/Public/Auth/Login");
+            }
+
+            ViewData["Title"] = "Tin nhan khach hang";
+            ViewData["PageHeader"] = "Tin nhan khach hang";
+            ViewData["ActivePage"] = "Messages";
+            ViewData["Breadcrumb"] = new[] { "Tin nhan" };
+
+            if (SubOrderId.HasValue && !ConversationId.HasValue)
+            {
+                var conversationId = await _chatService.EnsureSellerConversationFromSubOrderAsync(userId, SubOrderId.Value);
+                if (!conversationId.HasValue)
+                {
+                    TempData["ErrorMessage"] = "This buyer conversation could not be opened from the selected order.";
+                    return RedirectToPage("/StoreOwner/Messages/Index");
+                }
+
+                return RedirectToPage(new { conversationId });
+            }
+
+            Inbox = await BuildInboxAsync(userId, ConversationId, 1);
+            return Page();
+        }
+
+        public async Task<IActionResult> OnGetConversationListAsync(Guid? conversationId)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var inbox = await BuildInboxAsync(userId, conversationId, 1, includeThread: false);
+            return new PartialViewResult
+            {
+                ViewName = "/Pages/Shared/_ChatConversationList.cshtml",
+                ViewData = new ViewDataDictionary<ChatConversationListViewModel>(ViewData, new ChatConversationListViewModel
+                {
+                    IsSellerView = true,
+                    CurrentUserId = userId,
+                    BasePath = "/StoreOwner/Messages",
+                    Filter = inbox.Filter,
+                    SearchTerm = inbox.SearchTerm,
+                    CounterpartScopeKey = inbox.CounterpartScopeKey,
+                    ActiveConversationId = inbox.ActiveConversationId,
+                    TotalUnreadCount = inbox.TotalUnreadCount,
+                    EmptyInboxTitle = inbox.EmptyInboxTitle,
+                    EmptyInboxDescription = inbox.EmptyInboxDescription,
+                    CounterpartScopeOptions = inbox.CounterpartScopeOptions,
+                    Conversations = inbox.Conversations
+                })
+            };
+        }
+
+        public async Task<IActionResult> OnGetThreadAsync(Guid conversationId, int loadedPageCount = 1)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Unauthorized();
+            }
+
+            var thread = await _chatService.GetSellerThreadAsync(userId, conversationId, new ChatThreadQueryDto
+            {
+                LoadedPageCount = loadedPageCount,
+                PageSize = 30
+            });
+
+            if (thread != null)
+            {
+                await _chatService.MarkConversationReadAsync(userId, conversationId);
+            }
+
+            return new PartialViewResult
+            {
+                ViewName = "/Pages/Shared/_ChatThreadPane.cshtml",
+                ViewData = new ViewDataDictionary<ChatThreadPaneViewModel>(ViewData, new ChatThreadPaneViewModel
+                {
+                    IsSellerView = true,
+                    CurrentUserId = userId,
+                    EmptyTitle = "Chon mot nguoi mua",
+                    EmptyDescription = "Chon nguoi mua o cot ben trai de mo hoi thoai realtime.",
+                    Thread = thread
+                })
+            };
+        }
+
+        private async Task<ChatInboxPageViewModel> BuildInboxAsync(
+            string userId,
+            Guid? selectedConversationId,
+            int loadedPageCount,
+            bool includeThread = true)
+        {
+            var query = new ChatInboxQueryDto
+            {
+                Filter = Filter,
+                SearchTerm = SearchTerm,
+                CounterpartScopeKey = CounterpartScopeKey,
+                PageNumber = 1,
+                PageSize = 20
+            };
+
+            var conversations = await _chatService.GetSellerInboxAsync(userId, query);
+            var counterpartScopeOptions = await _chatService.GetSellerCounterpartScopeOptionsAsync(userId);
+            var activeConversationId = selectedConversationId;
+            if (!activeConversationId.HasValue && conversations.Items.Any())
+            {
+                activeConversationId = conversations.Items[0].ConversationId;
+            }
+
+            ChatThreadDto? thread = null;
+            if (includeThread && activeConversationId.HasValue)
+            {
+                thread = await _chatService.GetSellerThreadAsync(userId, activeConversationId.Value, new ChatThreadQueryDto
+                {
+                    LoadedPageCount = loadedPageCount,
+                    PageSize = 30
+                });
+
+                if (thread == null && conversations.Items.Any())
+                {
+                    activeConversationId = conversations.Items[0].ConversationId;
+                    thread = await _chatService.GetSellerThreadAsync(userId, activeConversationId.Value, new ChatThreadQueryDto
+                    {
+                        LoadedPageCount = 1,
+                        PageSize = 30
+                    });
+                }
+
+                if (thread != null)
+                {
+                    await _chatService.MarkConversationReadAsync(userId, thread.ConversationId);
+                }
+            }
+
+            return new ChatInboxPageViewModel
+            {
+                IsSellerView = true,
+                CurrentUserId = userId,
+                BasePath = "/StoreOwner/Messages",
+                Filter = query.Filter,
+                SearchTerm = query.SearchTerm,
+                CounterpartScopeKey = query.CounterpartScopeKey,
+                ActiveConversationId = activeConversationId,
+                TotalUnreadCount = await _chatService.GetSellerUnreadCountAsync(userId),
+                EmptyInboxTitle = "Chua co tin nhan nao",
+                EmptyInboxDescription = "Hoi thoai cua khach hang se hien thi tai day ngay khi co nguoi mua nhan tin.",
+                CounterpartScopeOptions = counterpartScopeOptions,
+                Conversations = conversations,
+                ActiveThread = thread
+            };
+        }
+    }
+}

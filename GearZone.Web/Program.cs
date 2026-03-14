@@ -3,6 +3,7 @@ using GearZone.Domain.Entities;
 using GearZone.Infrastructure;
 using GearZone.Infrastructure.Jobs;
 using GearZone.Infrastructure.Seed;
+using GearZone.Web.Hubs;
 using Hangfire;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
@@ -19,6 +20,7 @@ var connectionString = builder.Configuration["DB_CONNECTION_STRING"] ?? builder.
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -124,6 +126,7 @@ using (var scope = app.Services.CreateScope())
 app.UseStaticFiles();
 app.MapStaticAssets();
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
 app.MapRazorPages()
    .WithStaticAssets();
 

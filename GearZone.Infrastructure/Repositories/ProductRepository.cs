@@ -8,6 +8,7 @@ using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Catalog.DTOs;
 using GearZone.Domain.Enums;
 using GearZone.Application.Features.Admin.Dtos;
+using GearZone.Application.Features.Chat.Dtos;
 
 namespace GearZone.Infrastructure.Repositories
 {
@@ -15,6 +16,36 @@ namespace GearZone.Infrastructure.Repositories
     {
         public ProductRepository(ApplicationDbContext context) : base(context)
         {
+        }
+
+        public async Task<ChatProductContextDto?> GetChatProductContextBySlugAsync(string slug)
+        {
+            if (string.IsNullOrWhiteSpace(slug))
+            {
+                return null;
+            }
+
+            var normalizedSlug = slug.Trim();
+            return await _context.Products
+                .AsNoTracking()
+                .Where(p => !p.IsDeleted && p.Status == ProductStatus.Active && p.Slug == normalizedSlug)
+                .Select(p => new ChatProductContextDto
+                {
+                    ProductId = p.Id,
+                    StoreId = p.StoreId,
+                    StoreName = p.Store.StoreName,
+                    StoreSlug = p.Store.Slug,
+                    ProductName = p.Name,
+                    ProductSlug = p.Slug,
+                    ProductImageUrl = p.Images
+                        .Where(i => i.IsPrimary)
+                        .Select(i => i.ImageUrl)
+                        .FirstOrDefault() ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault(),
+                    StoreLogoUrl = p.Store.LogoUrl,
+                    Price = p.BasePrice,
+                    IsInStock = p.Variants.Any(v => v.StockQuantity > 0)
+                })
+                .FirstOrDefaultAsync();
         }
 
         public async Task<PagedResult<CatalogProductDto>> GetFilteredProductsAsync(ProductFilterDto filter)
@@ -108,8 +139,8 @@ namespace GearZone.Infrastructure.Repositories
                     BasePrice = p.BasePrice,
                     ImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault() 
                                ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? "",
-                    Rating = 0, // Placeholder
-                    ReviewCount = 0,
+                    Rating = p.Reviews.Where(r => !r.IsDeleted).Select(r => (decimal?)r.Rating).Average() ?? 0,
+                    ReviewCount = p.Reviews.Count(r => !r.IsDeleted),
                     StoreName = p.Store.StoreName,
                     StoreLogoUrl = p.Store.LogoUrl,
                     IsInStock = p.Variants.Any(v => v.StockQuantity > 0),

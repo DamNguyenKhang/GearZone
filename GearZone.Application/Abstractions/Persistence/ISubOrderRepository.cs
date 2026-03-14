@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using GearZone.Application.Common.Models;
+using GearZone.Application.Features.Chat.Dtos;
 using GearZone.Application.Features.Admin.Dtos;
+using GearZone.Application.Features.Orders.Dtos;
 using GearZone.Domain.Entities;
 using GearZone.Domain.Enums;
 
@@ -26,5 +28,10 @@ namespace GearZone.Application.Abstractions.Persistence
         Task<PagedResult<SubOrder>> GetAdminOrdersAsync(AdminOrderQueryDto queryDto);
         Task<AdminOrderStatsDto> GetAdminOrderStatsAsync();
         Task<decimal> GetTotalEligiblePayoutAmountAsync(CancellationToken ct = default);
+        Task<PagedResult<UserOrderDto>> GetUserOrdersAsync(string userId, UserOrderQueryDto queryDto, DateTime utcNow, CancellationToken ct = default);
+        Task<UserOrderStatusSummaryDto> GetUserOrderStatusSummaryAsync(string userId, DateTime utcNow, CancellationToken ct = default);
+        Task<PagedResult<SellerChatOrderListItemDto>> GetSellerChatOrdersAsync(string ownerUserId, SellerChatOrderQueryDto queryDto, CancellationToken ct = default);
+        Task<SubOrder?> GetSellerChatSubOrderAsync(string ownerUserId, Guid subOrderId, CancellationToken ct = default);
+        Task<List<ChatContextOrderDto>> GetConversationOrderContextAsync(string buyerUserId, Guid storeId, int take, CancellationToken ct = default);
     }
 }

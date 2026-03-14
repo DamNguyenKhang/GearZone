@@ -56,11 +56,13 @@
                     <span id="followText">@(Model.Store.IsFollowing ? "Following" : "Follow")</span>
                     <span id="followerCount" class="bg-white/10 px-2 py-0.5 rounded-full text-xs">@Model.Store.FollowerCount</span>
                 </button>
-                <button onclick="openChat()"
-                        class="flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-semibold transition-colors border border-white/20">
+                <a href="/messages?storeSlug=@Model.Store.Slug"
+                   class="flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-semibold transition-colors border border-white/20"
+                   data-chat-launch
+                   data-chat-store-slug="@Model.Store.Slug">
                     <span class="material-symbols-outlined text-[18px]">chat</span>
                     Chat
-                </button>
+                </a>
             </div>
         </div>
 
@@ -284,50 +286,11 @@
     </div>
 </section>
 
-<!-- Chat Panel (hidden by default) -->
-<div id="chatPanel" class="fixed bottom-6 right-6 w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 hidden flex-col overflow-hidden" style="height: 500px;">
-    <!-- Chat Header -->
-    <div class="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-primary to-primary/80 text-white rounded-t-2xl">
-        <div class="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
-            <span class="material-symbols-outlined text-[20px]">storefront</span>
-        </div>
-        <div class="flex-1">
-            <p class="font-semibold text-sm">@Model.Store.StoreName</p>
-            <p class="text-xs text-white/70">Chat with this store</p>
-        </div>
-        <button onclick="closeChat()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors">
-            <span class="material-symbols-outlined text-[20px]">close</span>
-        </button>
-    </div>
-
-    <!-- Chat Messages -->
-    <div id="chatMessages" class="flex-1 overflow-y-auto px-4 py-3 space-y-3" style="height: 380px;">
-        <div class="text-center text-sm text-gray-400 py-8">
-            <span class="material-symbols-outlined text-4xl text-gray-300 mb-2 block">forum</span>
-            Start a conversation with @Model.Store.StoreName
-        </div>
-    </div>
-
-    <!-- Chat Input -->
-    <div class="px-4 py-3 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-        <form id="chatForm" onsubmit="sendMessage(event)" class="flex gap-2">
-            <input type="text" id="chatInput" placeholder="Type a message..."
-                   class="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" 
-                   maxlength="2000" autocomplete="off" />
-            <button type="submit" id="chatSendBtn"
-                    class="w-10 h-10 bg-primary hover:bg-primary/90 text-white rounded-xl flex items-center justify-center transition-colors flex-shrink-0">
-                <span class="material-symbols-outlined text-[20px]">send</span>
-            </button>
-        </form>
-    </div>
-</div>
-
 @section Scripts {
 <script>
     const storeSlug = '@Model.Store.Slug';
     const antiforgeryToken = '@requestToken';
     let isFollowing = @(Model.Store.IsFollowing ? "true" : "false");
-    let chatLoaded = false;
 
     // ===== FOLLOW =====
     async function toggleFollow() {
@@ -372,102 +335,6 @@
             text.textContent = 'Follow';
         }
         countEl.textContent = count;
-    }
-
-    // ===== CHAT =====
-    function openChat() {
-        const panel = document.getElementById('chatPanel');
-        panel.classList.remove('hidden');
-        panel.classList.add('flex');
-        if (!chatLoaded) {
-            loadMessages();
-            chatLoaded = true;
-        }
-        document.getElementById('chatInput').focus();
-    }
-
-    function closeChat() {
-        const panel = document.getElementById('chatPanel');
-        panel.classList.add('hidden');
-        panel.classList.remove('flex');
-    }
-
-    async function loadMessages() {
-        try {
-            const res = await fetch(`/store/${storeSlug}?handler=Messages`);
-            const data = await res.json();
-            if (data.success && data.messages.length > 0) {
-                const container = document.getElementById('chatMessages');
-                container.innerHTML = '';
-                data.messages.forEach(msg => appendMessage(msg));
-                container.scrollTop = container.scrollHeight;
-            }
-        } catch (e) { console.error(e); }
-    }
-
-    async function sendMessage(e) {
-        e.preventDefault();
-        const input = document.getElementById('chatInput');
-        const content = input.value.trim();
-        if (!content) return;
-
-        const btn = document.getElementById('chatSendBtn');
-        btn.disabled = true;
-        input.disabled = true;
-
-        try {
-            const res = await fetch(`/store/${storeSlug}?handler=SendMessage`, {
-                method: 'POST',
-                headers: {
-                    'RequestVerificationToken': antiforgeryToken,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ content })
-            });
-            if (res.status === 401) {
-                window.location.href = '/Auth/Login';
-                return;
-            }
-            const data = await res.json();
-            if (data.success) {
-                // Clear welcome message if first message
-                const container = document.getElementById('chatMessages');
-                if (container.querySelector('.text-center')) {
-                    container.innerHTML = '';
-                }
-                appendMessage(data.message);
-                container.scrollTop = container.scrollHeight;
-                input.value = '';
-            }
-        } catch (e) { console.error(e); }
-        finally {
-            btn.disabled = false;
-            input.disabled = false;
-            input.focus();
-        }
-    }
-
-    function appendMessage(msg) {
-        const container = document.getElementById('chatMessages');
-        const isStore = msg.isFromStore;
-        const time = new Date(msg.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        const div = document.createElement('div');
-        div.className = `flex ${isStore ? 'justify-start' : 'justify-end'}`;
-        div.innerHTML = `
-            <div class="max-w-[75%] ${isStore ? 'bg-gray-100 text-gray-800' : 'bg-primary text-white'} rounded-2xl px-4 py-2.5 ${isStore ? 'rounded-bl-md' : 'rounded-br-md'}">
-                ${isStore ? `<p class="text-xs font-semibold text-primary mb-1">${msg.senderName}</p>` : ''}
-                <p class="text-sm leading-relaxed">${escapeHtml(msg.content)}</p>
-                <p class="text-[10px] ${isStore ? 'text-gray-400' : 'text-white/60'} mt-1 text-right">${time}</p>
-            </div>
-        `;
-        container.appendChild(div);
-    }
-
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
     }
 </script>
 }

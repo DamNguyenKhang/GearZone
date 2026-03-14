@@ -70,16 +70,16 @@
         <div class="flex justify-between items-start relative z-10">
             <div>
                 <p class="text-slate-500 text-sm font-medium mb-1">Customer Messages</p>
-                <h3 class="text-2xl font-bold text-text-heading">24</h3>
+                <h3 class="text-2xl font-bold text-text-heading">@Model.CustomerConversationCount</h3>
             </div>
             <div class="p-2 bg-red-100 rounded-lg text-red-600">
                 <span class="material-symbols-outlined">chat</span>
             </div>
         </div>
         <div class="mt-4 flex items-center text-xs relative z-10">
-            <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
-                7 Unread
-            </span>
+            <a asp-page="/StoreOwner/Messages/Index" class="bg-red-100 text-red-700 hover:bg-red-200 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors">
+                @Model.CustomerUnreadCount Unread
+            </a>
         </div>
     </div>
 </div>

@@ -4,7 +4,7 @@
     ViewData["Title"] = "Transaction Detail";
     ViewData["PageHeader"] = "Payout Transaction Detail";
     ViewData["ActivePage"] = "Payouts";
-    ViewData["Breadcrumb"] = new string[] { "Dashboard", "Finance", "Payouts", "PTX-2025-W44-001" };
+    ViewData["Breadcrumb"] = new string[] { "Dashboard", "Finance", "Payouts", Model.Transaction.TransactionCode };
     Layout = "_AdminLayout";
 }
 
@@ -14,32 +14,41 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div class="flex flex-col gap-1">
             <div class="flex items-center gap-3 mb-1">
-                <a asp-page="/Admin/Payouts/Index" class="flex items-center gap-1 text-slate-500 hover:text-slate-700 transition-colors py-1">
+                <a asp-page="/Admin/PayoutBatches/Details" asp-route-id="@Model.Transaction.PayoutBatchId" class="flex items-center gap-1 text-slate-500 hover:text-slate-700 transition-colors py-1">
                     <span class="material-symbols-outlined text-[18px]">arrow_back</span>
                     <span class="text-sm font-medium">Back to Payout Batch</span>
                 </a>
             </div>
             <h1 class="text-[22px] font-bold text-slate-900 leading-tight">Payout Transaction Detail</h1>
-            <p class="font-mono text-[13px] text-slate-500">PTX-2025-W44-001 · BATCH-2025-W44 · Oct 28 – Nov 03, 2025</p>
+            <p class="font-mono text-[13px] text-slate-500">@Model.Transaction.TransactionCode · @Model.Transaction.BatchCode · Created @Model.Transaction.CreatedAt.ToString("MMM dd, yyyy")</p>
             <div class="flex flex-wrap gap-2 mt-3">
-                <span class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold border border-amber-200">
-                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Queued
+                @{
+                    var (tbg, ttx, tdt) = Model.Transaction.Status switch
+                    {
+                        GearZone.Domain.Enums.PayoutTransactionStatus.Queued => ("bg-slate-50 text-slate-600 ring-slate-500/20", "Queued", "bg-slate-400"),
+                        GearZone.Domain.Enums.PayoutTransactionStatus.Processing => ("bg-blue-50 text-blue-700 ring-blue-600/20", "Processing", "bg-blue-500"),
+                        GearZone.Domain.Enums.PayoutTransactionStatus.Success => ("bg-green-50 text-green-700 ring-green-600/20", "Success", "bg-green-500"),
+                        GearZone.Domain.Enums.PayoutTransactionStatus.Failed => ("bg-red-50 text-red-700 ring-red-600/20", "Failed", "bg-red-500"),
+                        GearZone.Domain.Enums.PayoutTransactionStatus.ManualRequired => ("bg-orange-50 text-orange-700 ring-orange-600/20", "Manual Req", "bg-orange-500"),
+                        GearZone.Domain.Enums.PayoutTransactionStatus.Excluded => ("bg-slate-100 text-slate-500 ring-slate-400/20", "Excluded", "bg-slate-400"),
+                        _ => ("bg-slate-50 text-slate-600 ring-slate-500/20", Model.Transaction.Status.ToString(), "bg-slate-400")
+                    };
+                }
+                <span class="flex items-center gap-1.5 px-3 py-1 rounded-full @tbg text-xs font-bold border">
+                    <span class="w-1.5 h-1.5 rounded-full @tdt"></span> @ttx
                 </span>
                 <span class="flex items-center gap-1 px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-bold border border-green-200">
-                    <span class="material-symbols-outlined text-[14px]">shield_with_heart</span> Bank Verified
-                </span>
-                <span class="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold border border-slate-200 uppercase">
-                    Auto-generated
+                    <span class="material-symbols-outlined text-[14px]">shield_with_heart</span> Bank Snapshot
                 </span>
             </div>
         </div>
         <div class="flex items-center gap-3 h-fit">
-            <button type="button" class="flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg font-medium hover:bg-slate-50 transition-all shadow-sm text-sm">
-                <span class="material-symbols-outlined text-[18px]">edit</span> Edit Bank Info
-            </button>
-            <button type="button" class="flex items-center justify-center gap-2 bg-white border border-amber-500 text-amber-600 px-4 py-2 rounded-lg font-medium hover:bg-amber-50 transition-all shadow-sm text-sm">
-                <span class="material-symbols-outlined text-[18px]">block</span> Exclude from Batch
-            </button>
+            @if (Model.Transaction.Status == GearZone.Domain.Enums.PayoutTransactionStatus.Failed || Model.Transaction.Status == GearZone.Domain.Enums.PayoutTransactionStatus.ManualRequired)
+            {
+                <button type="button" class="flex items-center justify-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-medium hover:bg-primary-dark transition-all shadow-sm text-sm">
+                    <span class="material-symbols-outlined text-[18px]">refresh</span> Retry Disbursement
+                </button>
+            }
         </div>
     </div>
 
@@ -49,7 +58,7 @@
             <h2 class="text-base font-bold text-slate-900">Payout Calculation</h2>
             <div class="flex items-center gap-2 text-[13px] text-slate-500">
                 <span class="material-symbols-outlined text-[16px]">calendar_today</span>
-                Period: Oct 28, 00:00 – Nov 03, 23:59
+                Snapshotted on: @Model.Transaction.CreatedAt.ToString("MMM dd, yyyy HH:mm")
             </div>
         </div>
         <div class="p-6">
@@ -57,42 +66,29 @@
                 <!-- Gross -->
                 <div class="flex-1 w-full p-5 rounded-lg bg-sky-50 border border-sky-200">
                     <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Gross Revenue</p>
-                    <div class="text-[28px] font-bold text-slate-900 leading-tight">₫14,200,000</div>
+                    <div class="text-[28px] font-bold text-slate-900 leading-tight">@Model.Transaction.GrossAmount.ToString("N0") ₫</div>
                     <div class="mt-2 space-y-0.5">
-                        <p class="text-[13px] text-slate-500">47 orders delivered</p>
-                        <p class="text-[11px] text-slate-400 font-mono italic">SUM(Order.GrandTotal)</p>
+                        <p class="text-[13px] text-slate-500">@Model.Transaction.OrderCount orders in this period</p>
                     </div>
                 </div>
                 <div class="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-400 font-bold text-xlshrink-0">−</div>
                 <!-- Commission -->
                 <div class="flex-1 w-full p-5 rounded-lg bg-blue-50 border border-blue-200">
                     <p class="text-[11px] font-bold text-teal-600 uppercase tracking-wider mb-2">Platform Commission</p>
-                    <div class="text-[24px] font-bold text-teal-600 leading-tight">₫1,207,000</div>
+                    <div class="text-[24px] font-bold text-teal-600 leading-tight">@Model.Transaction.CommissionAmount.ToString("N0") ₫</div>
                     <div class="mt-2 space-y-0.5">
-                        <p class="text-[13px] text-slate-500">Rate: 8.5% (snapshot)</p>
-                        <p class="text-[11px] text-slate-400 font-mono italic">SUM(Order.CommissionAmount)</p>
+                        <p class="text-[13px] text-slate-500">Rate: @Model.Transaction.StoreCommissionRate%</p>
                     </div>
                 </div>
                 <div class="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-400 font-bold text-xl shrink-0">=</div>
                 <!-- Net -->
                 <div class="flex-1 w-full p-5 rounded-lg bg-emerald-50 border-2 border-emerald-300 shadow-lg shadow-emerald-500/15">
                     <p class="text-[11px] font-bold text-green-600 uppercase tracking-wider mb-2">Net Payout to Store</p>
-                    <div class="text-[36px] font-bold text-green-600 leading-tight">₫12,993,000</div>
+                    <div class="text-[36px] font-bold text-green-600 leading-tight">@Model.Transaction.NetAmount.ToString("N0") ₫</div>
                     <div class="mt-2 space-y-0.5">
-                        <p class="text-[13px] text-slate-500">PayOS will transfer this amount</p>
-                        <p class="text-[11px] text-slate-400 font-mono italic">GrossRevenue − CommissionAmount</p>
+                        <p class="text-[13px] text-slate-500">Transfer amount via PayOS</p>
                     </div>
                 </div>
-            </div>
-        </div>
-        <div class="bg-slate-50 px-6 py-3 border-t border-slate-200 flex flex-wrap justify-between items-center gap-4 text-sm">
-            <div class="text-teal-600 font-bold flex items-center gap-1.5">
-                <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
-                Platform retains: ₫1,207,000 (8.5%)
-            </div>
-            <div class="text-green-600 font-bold flex items-center gap-1.5">
-                <span class="material-symbols-outlined text-[18px]">check_circle</span>
-                Store receives: ₫12,993,000 (91.5%)
             </div>
         </div>
     </div>
@@ -114,57 +110,49 @@
                 <!-- Store Details -->
                 <div class="flex items-start gap-4 mb-8">
                     <div class="w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden">
-                        <span class="text-lg">TS</span>
+                        <span class="text-lg">@Model.Transaction.StoreName[0]</span>
                     </div>
                     <div class="flex-1">
                         <div class="flex items-center gap-2">
-                            <h4 class="text-base font-bold text-slate-900">TechStore Official</h4>
+                            <h4 class="text-base font-bold text-slate-900">@Model.Transaction.StoreName</h4>
                             <span class="px-2 py-0.5 rounded bg-green-50 text-green-700 text-[10px] font-bold border border-green-200 uppercase">Active</span>
                         </div>
-                        <p class="font-mono text-[12px] text-slate-500">techstore-official</p>
-                        <a class="text-[12px] text-primary font-medium hover:underline mt-1 block" href="#">View Store →</a>
+                        <p class="font-mono text-[12px] text-slate-500">store-id: @Model.Transaction.StoreId.ToString().Substring(0,8)...</p>
+                        <a class="text-[12px] text-primary font-medium hover:underline mt-1 block" asp-page="/Admin/Stores/Details" asp-route-id="@Model.Transaction.StoreId">View Store →</a>
                     </div>
                 </div>
 
                 <div class="space-y-4 mb-8">
                     <div class="flex text-[14px]">
                         <span class="w-[130px] text-slate-500">Owner</span>
-                        <a class="text-primary font-medium" href="#">Nguyễn Văn An</a>
+                        <span class="text-slate-900">@Model.Transaction.StoreOwnerName</span>
                     </div>
                     <div class="flex text-[14px]">
                         <span class="w-[130px] text-slate-500">Email</span>
-                        <span class="text-slate-900">contact@techstore.vn</span>
+                        <span class="text-slate-900">@Model.Transaction.StoreEmail</span>
                     </div>
                     <div class="flex text-[14px]">
                         <span class="w-[130px] text-slate-500">Phone</span>
-                        <span class="text-slate-900">0912 345 678</span>
-                    </div>
-                    <div class="flex text-[14px]">
-                        <span class="w-[130px] text-slate-500">Province</span>
-                        <span class="text-slate-900">Hồ Chí Minh</span>
-                    </div>
-                    <div class="flex text-[14px]">
-                        <span class="w-[130px] text-slate-500">Tax Code</span>
-                        <span class="font-mono text-slate-900">0123456789</span>
+                        <span class="text-slate-900">@Model.Transaction.StorePhone</span>
                     </div>
                     <div class="flex text-[14px]">
                         <span class="w-[130px] text-slate-500">Commission</span>
-                        <span class="text-slate-900">8.5% <span class="text-slate-400 italic">(snapshotted at batch creation)</span></span>
+                        <span class="text-slate-900">@Model.Transaction.StoreCommissionRate% <span class="text-slate-400 italic">(at batch creation)</span></span>
                     </div>
                 </div>
 
                 <!-- Bank Info Divider -->
                 <div class="flex items-center gap-4 mb-6">
                     <div class="flex-1 h-px bg-slate-100"></div>
-                    <span class="text-[11px] font-bold text-slate-400 tracking-widest uppercase">Bank Account</span>
+                    <span class="text-[11px] font-bold text-slate-400 tracking-widest uppercase">Bank Account (Snapshot)</span>
                     <div class="flex-1 h-px bg-slate-100"></div>
                 </div>
 
                 <div class="flex items-center justify-between mb-6">
                     <div class="flex items-center gap-3">
-                        <span class="text-lg font-bold text-slate-900">Vietcombank</span>
+                        <span class="text-lg font-bold text-slate-900">@Model.Transaction.BankName</span>
                         <span class="flex items-center gap-1 px-2 py-0.5 rounded bg-green-50 text-green-700 text-[11px] font-bold border border-green-200">
-                            <span class="material-symbols-outlined text-[14px]">verified</span> Verified
+                            <span class="material-symbols-outlined text-[14px]">verified</span> Recorded
                         </span>
                     </div>
                 </div>
@@ -173,17 +161,16 @@
                     <div class="flex text-[14px]">
                         <span class="w-[130px] text-slate-500">Account No.</span>
                         <div class="flex-1 flex items-center justify-between">
-                            <span class="font-mono text-slate-900">**** **** **** 4521</span>
-                            <button class="text-primary font-medium text-[12px] hover:underline">👁 Reveal</button>
+                            <span class="font-mono text-slate-900">@Model.Transaction.BankAccountNumber</span>
                         </div>
                     </div>
                     <div class="flex text-[14px]">
                         <span class="w-[130px] text-slate-500">Account Name</span>
-                        <span class="font-bold text-slate-900 uppercase">NGUYEN VAN AN</span>
+                        <span class="font-bold text-slate-900 uppercase">@Model.Transaction.BankAccountName</span>
                     </div>
                     <div class="flex text-[14px]">
                         <span class="w-[130px] text-slate-500">Bank Name</span>
-                        <span class="text-slate-900">Vietcombank</span>
+                        <span class="text-slate-900">@Model.Transaction.BankName</span>
                     </div>
                 </div>
 
@@ -303,7 +290,7 @@
                             <span class="material-symbols-outlined text-[24px]">shopping_bag</span>
                         </div>
                         <div>
-                            <p class="text-sm font-bold text-slate-900">47 Delivered Orders</p>
+                            <p class="text-sm font-bold text-slate-900">47 Completed Orders</p>
                             <p class="text-[10px] text-slate-400 font-medium">Period: Oct 28–Nov 03</p>
                         </div>
                     </div>
@@ -460,7 +447,7 @@
         <div class="p-6 pb-4 border-b border-slate-100 bg-slate-50/50">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                 <div>
-                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">47 Orders in Period <span class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full border border-green-200 shrink-0">Delivered</span></h3>
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">47 Orders in Period <span class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full border border-green-200 shrink-0">Completed</span></h3>
                     <p class="text-[13px] text-slate-500 mt-1">Oct 28, 00:00 – Nov 03, 23:59</p>
                 </div>
             </div>
@@ -543,7 +530,7 @@
                 <tfoot>
                     <tr class="bg-slate-50 border-t-2 border-slate-200 font-bold">
                         <td class="px-6 py-4">47 orders total</td>
-                        <td class="px-6 py-4 text-slate-500 font-normal italic text-xs">All delivered &amp; paid</td>
+                        <td class="px-6 py-4 text-slate-500 font-normal italic text-xs">All completed &amp; paid</td>
                         <td class="px-6 py-4 text-right">₫14,200,000</td>
                         <td class="px-6 py-4 text-right text-teal-600">₫1,207,000</td>
                         <td class="px-6 py-4 text-right text-green-600 text-[16px]">₫12,993,000</td>
@@ -554,7 +541,7 @@
         </div>
         <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
             <p class="text-[11px] italic text-slate-400">
-                Includes: Order.Status = Delivered AND Order.PaidAt IS NOT NULL within period Oct 28–Nov 03
+                Includes: Order.Status = Completed AND Order.PaidAt IS NOT NULL within period Oct 28–Nov 03
             </p>
             <nav class="flex items-center gap-1">
                 <button class="p-1 px-2 text-slate-400 hover:text-primary transition-colors text-sm font-medium">Prev</button>

@@ -87,5 +87,46 @@ namespace GearZone.Infrastructure.Repositories
                     IsDeleted = u.IsDeleted
                 }).FirstOrDefaultAsync();
         }
+
+        public async Task<int> GetNewUsersCountAsync(DateTime start, DateTime end, CancellationToken ct = default)
+        {
+            return await _context.Users.CountAsync(u => u.CreatedAt >= start && u.CreatedAt <= end, ct);
+        }
+
+        public async Task<List<ChartDataPoint>> GetUserGrowthAsync(DateTime start, DateTime end, string period, CancellationToken ct = default)
+        {
+            var dailyNewUsers = await _context.Users
+                .Where(u => u.CreatedAt >= start && u.CreatedAt <= end)
+                .GroupBy(u => u.CreatedAt.Date)
+                .Select(g => new
+                {
+                    Date = g.Key,
+                    Count = g.Count()
+                })
+                .OrderBy(g => g.Date)
+                .ToListAsync(ct);
+
+            var totalBefore = await GetTotalUsersCountBeforeAsync(start, ct);
+            var result = new List<ChartDataPoint>();
+            var cumulative = totalBefore;
+
+            foreach (var day in dailyNewUsers)
+            {
+                cumulative += day.Count;
+                result.Add(new ChartDataPoint
+                {
+                    Label = day.Date.ToString("dd MMM"),
+                    Value = day.Count,
+                    SecondaryValue = cumulative
+                });
+            }
+
+            return result;
+        }
+
+        public async Task<int> GetTotalUsersCountBeforeAsync(DateTime date, CancellationToken ct = default)
+        {
+            return await _context.Users.CountAsync(u => u.CreatedAt < date, ct);
+        }
     }
 }

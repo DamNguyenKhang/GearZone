@@ -1,6 +1,7 @@
 using GearZone.Application.Abstractions.External;
 using GearZone.Application.Abstractions.Persistence;
 using GearZone.Infrastructure.External;
+using GearZone.Infrastructure.Jobs;
 using GearZone.Infrastructure.Repositories;
 using GearZone.Infrastructure.Settings;
 using Hangfire;
@@ -64,6 +65,11 @@ namespace GearZone.Infrastructure
             services.AddScoped<IPayoutTransactionRepository, PayoutTransactionRepository>();
             services.AddScoped<IPayoutItemRepository, PayoutItemRepository>();
             services.AddScoped<IWalletTransactionRepository, WalletTransactionRepository>();
+            services.AddScoped<IPlatformTransactionRepository, PlatformTransactionRepository>();
+
+            // Jobs
+            services.AddScoped<PayoutBatchJob>();
+            services.AddScoped<OrderAutoCompleteJob>();
 
             services.AddScoped<IPaymentStrategy, PayOSPaymentStrategy>();
             services.AddScoped<IPaymentStrategy, CodPaymentStrategy>();

@@ -26,5 +26,14 @@ namespace GearZone.Application.Abstractions.Persistence
         Task<PagedResult<SubOrder>> GetAdminOrdersAsync(AdminOrderQueryDto queryDto);
         Task<AdminOrderStatsDto> GetAdminOrderStatsAsync();
         Task<decimal> GetTotalEligiblePayoutAmountAsync(CancellationToken ct = default);
+        
+        // Dashboard Methods
+        Task<List<ChartDataPoint>> GetRevenueOverviewAsync(DateTime start, DateTime end, string period, CancellationToken ct = default);
+        Task<List<CategoryRevenueDto>> GetCategoryBreakdownAsync(DateTime start, DateTime end, CancellationToken ct = default);
+        Task<List<OrderStatusBreakdownDto>> GetOrderStatusBreakdownAsync(DateTime start, DateTime end, CancellationToken ct = default);
+        Task<List<DashboardStoreDto>> GetTopStoresAsync(DateTime start, DateTime end, CancellationToken ct = default);
+        Task<decimal> GetGrossRevenueAsync(DateTime start, DateTime end, CancellationToken ct = default);
+        Task<int> GetTotalOrdersCountAsync(DateTime start, DateTime end, CancellationToken ct = default);
+        Task<List<SubOrder>> GetDeliveredOrdersForAutoCompleteAsync(int days, CancellationToken ct = default);
     }
 }

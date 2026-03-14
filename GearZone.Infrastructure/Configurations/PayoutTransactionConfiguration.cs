@@ -13,8 +13,8 @@ namespace GearZone.Infrastructure.Configurations
             builder.HasKey(x => x.Id);
 
             builder.Property(x => x.TransactionCode)
-                   .ValueGeneratedOnAdd()
-                   .UseIdentityColumn();
+                   .IsRequired()
+                   .HasMaxLength(50);
 
             builder.Property(x => x.BankName)
                 .IsRequired()

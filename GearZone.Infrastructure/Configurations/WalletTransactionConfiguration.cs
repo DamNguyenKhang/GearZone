@@ -37,7 +37,8 @@ namespace GearZone.Infrastructure.Configurations
                 .HasMaxLength(50);
 
             builder.Property(x => x.ProviderTransactionId)
-                .HasMaxLength(100);
+                .HasMaxLength(100)
+                .HasColumnType("nvarchar(100)");
 
             builder.Property(x => x.Note)
                 .HasMaxLength(500);

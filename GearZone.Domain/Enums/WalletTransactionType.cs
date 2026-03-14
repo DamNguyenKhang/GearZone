@@ -1,10 +1,11 @@
-﻿namespace GearZone.Domain.Enums
+namespace GearZone.Domain.Enums
 {
     public enum WalletTransactionType
     {
         Topup,
         Payout,
         Refund,
-        Adjustment
+        Adjustment,
+        Payment
     }
 }

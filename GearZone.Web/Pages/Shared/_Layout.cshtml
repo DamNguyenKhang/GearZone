@@ -1,17 +1,27 @@
 ﻿@using GearZone.Application.Features.Catalog
 @using GearZone.Application.Abstractions.Services
+@using GearZone.Web.Pages.Shared.Models
+@using System
 @using System.Security.Claims
 @inject ICatalogService CatalogService
 @inject ICartService CartService
+@inject IChatService ChatService
 @{
     var layoutCategories = await CatalogService.GetCategoriesAsync();
     var currentSlug = ViewContext.RouteData.Values["CategorySlug"]?.ToString() ?? "";
+    var currentPath = Context.Request.Path.Value ?? "";
+    var showBuyerChatWidget = !currentPath.Equals("/messages", StringComparison.OrdinalIgnoreCase);
     
     int cartCount = 0;
+    int buyerUnreadCount = 0;
     if (User.Identity?.IsAuthenticated == true)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        cartCount = await CartService.GetCartItemsCountAsync(userId);
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            cartCount = await CartService.GetCartItemsCountAsync(userId);
+            buyerUnreadCount = await ChatService.GetBuyerUnreadCountAsync(userId);
+        }
     }
 }
 <!DOCTYPE html>
@@ -80,6 +90,11 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
     </style>
+    @if (showBuyerChatWidget)
+    {
+        <partial name="/Pages/Shared/_ChatInboxStyles.cshtml" />
+        <partial name="/Pages/Shared/_BuyerChatWidgetStyles.cshtml" />
+    }
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="bg-slate-50 text-text-primary min-h-screen flex flex-col">
@@ -122,6 +137,14 @@
                 </div>
                 <!-- Right Actions -->
                 <div class="flex items-center gap-4 flex-shrink-0">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a href="/messages" class="relative p-2 text-gray-500 hover:text-primary transition-colors rounded-full hover:bg-gray-100" id="header-chat-icon" data-chat-launch data-chat-toggle="true">
+                            <span class="material-symbols-outlined">chat</span>
+                            <span class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-orange-500 rounded-full @(buyerUnreadCount > 0 ? "" : "hidden")" data-header-chat-badge>@(buyerUnreadCount > 99 ? "99+" : buyerUnreadCount.ToString())</span>
+                        </a>
+                    }
+
                     <a href="/Cart" class="relative p-2 text-gray-500 hover:text-primary transition-colors rounded-full hover:bg-gray-100" id="header-cart-icon">
                         <span class="material-symbols-outlined">shopping_cart</span>
                         <span class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full @(cartCount > 0 ? "" : "hidden")" id="header-cart-count">@cartCount</span>
@@ -153,13 +176,13 @@
                                         <span class="material-symbols-outlined text-[20px]">account_circle</span>
                                         My Profile
                                     </a>
-                                    <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors">
+                                    <a href="/Public/User/Profile?tab=orders" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors">
                                         <span class="material-symbols-outlined text-[20px]">shopping_bag</span>
                                         My Orders
                                     </a>
-                                    <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors">
-                                        <span class="material-symbols-outlined text-[20px]">settings</span>
-                                        Settings
+                                    <a href="/messages" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors">
+                                        <span class="material-symbols-outlined text-[20px]">chat</span>
+                                        Messages
                                     </a>
                                 </div>
 
@@ -305,6 +328,18 @@
         </div>
     </footer>
 
+    @if (showBuyerChatWidget)
+    {
+        <partial name="/Pages/Shared/_BuyerChatWidget.cshtml"
+                 model='new BuyerChatWidgetViewModel
+                 {
+                     IsAuthenticated = User.Identity?.IsAuthenticated == true,
+                     TotalUnreadCount = buyerUnreadCount,
+                     BootstrapUrl = "/messages?handler=WidgetBootstrap",
+                     MessagesUrl = "/messages"
+                 }' />
+    }
+
     <!-- Login Redirect Modal -->
     <div id="login-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
         <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
@@ -354,6 +389,10 @@
 
     <partial name="_Toast" />
     @await RenderSectionAsync("Scripts", required: false)
+    @if (showBuyerChatWidget)
+    {
+        <partial name="/Pages/Shared/_BuyerChatWidgetScripts.cshtml" />
+    }
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const userMenuButton = document.getElementById('user-menu-button');

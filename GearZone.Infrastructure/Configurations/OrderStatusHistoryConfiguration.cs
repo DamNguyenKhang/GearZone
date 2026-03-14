@@ -15,7 +15,15 @@ namespace GearZone.Infrastructure.Configurations
 
             builder.HasKey(x => x.Id);
 
-            builder.Property(x => x.NewStatus).HasMaxLength(30).IsRequired();
+            builder.Property(x => x.OldStatus)
+                   .HasConversion<string>()
+                   .HasMaxLength(30);
+
+            builder.Property(x => x.NewStatus)
+                   .HasConversion<string>()
+                   .HasMaxLength(30)
+                   .IsRequired();
+
             builder.Property(x => x.Note).HasMaxLength(500);
 
             builder.HasIndex(x => new { x.OrderId, x.ChangedAt });

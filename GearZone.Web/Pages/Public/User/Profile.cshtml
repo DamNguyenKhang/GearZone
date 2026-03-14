@@ -1,0 +1,373 @@
+@page
+@model GearZone.Web.Pages.Public.User.ProfileModel
+@using GearZone.Domain.Enums
+@{
+    ViewData["Title"] = "My Profile - GearZone";
+}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Sidebar -->
+        <aside class="w-full lg:w-72 flex-shrink-0">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <!-- User Header -->
+                <div class="p-6 text-center border-b border-gray-50 bg-gray-50/50">
+                    <div class="relative inline-block mb-3">
+                        <div class="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-primary text-3xl font-bold border-4 border-white shadow-sm overflow-hidden">
+                            @if (!string.IsNullOrEmpty(Model.CurrentUser?.AvatarUrl))
+                            {
+                                <img src="@Model.CurrentUser.AvatarUrl" alt="Avatar" class="w-full h-full object-cover">
+                            }
+                            else
+                            {
+                                <span class="material-symbols-outlined text-4xl">person</span>
+                            }
+                        </div>
+                        <button class="absolute bottom-0 right-0 p-1.5 bg-white rounded-full shadow-sm border border-gray-100 text-gray-500 hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined text-sm">photo_camera</span>
+                        </button>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900">@(Model.CurrentUser?.FullName ?? Model.CurrentUser?.UserName)</h3>
+                    <div class="flex items-center justify-center gap-1.5 mt-1">
+                        <span class="inline-flex items-center rounded-full bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-600 border border-orange-100">
+                            <span class="material-symbols-outlined text-[14px] mr-1">star</span>
+                            Gold Member
+                        </span>
+                    </div>
+
+                    <div class="mt-4 px-4">
+                        @if (Model.UserStore == null)
+                        {
+                            <a asp-page="/Public/User/RegisterSeller" class="w-full py-2 bg-orange-50 text-orange-600 font-bold rounded-lg hover:bg-orange-100 transition-all border border-orange-200 flex items-center justify-center gap-2 text-sm">
+                                <span class="material-symbols-outlined text-[18px]">storefront</span>
+                                Register as Seller
+                            </a>
+                        }
+                        else if (Model.UserStore.Status == StoreStatus.Pending)
+                        {
+                            <div class="w-full py-2 bg-blue-50 text-blue-600 font-bold rounded-lg border border-blue-200 flex items-center justify-center gap-2 text-sm" title="Your application is currently being reviewed.">
+                                <span class="material-symbols-outlined text-[18px]">hourglass_empty</span>
+                                App Pending
+                            </div>
+                        }
+                        else if (Model.UserStore.Status == StoreStatus.Approved)
+                        {
+                            <a href="/StoreOwner/Dashboard" class="w-full py-2 bg-green-50 text-green-600 font-bold rounded-lg hover:bg-green-100 transition-all border border-green-200 flex items-center justify-center gap-2 text-sm">
+                                <span class="material-symbols-outlined text-[18px]">store</span>
+                                Go to Store
+                            </a>
+                        }
+                        else if (Model.UserStore.Status == StoreStatus.Rejected)
+                        {
+                            <div class="w-full py-2 bg-red-50 text-red-600 font-bold rounded-lg border border-red-200 flex items-center justify-center gap-2 text-sm cursor-help" title="Reason: @Model.UserStore.RejectReason">
+                                <span class="material-symbols-outlined text-[18px]">cancel</span>
+                                App Rejected
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <nav class="p-3 space-y-1">
+                    <a asp-page="/Public/User/Profile" asp-route-tab="account" 
+                       class="flex items-center gap-3 px-4 py-3 text-sm @(Model.ActiveTab == "account" ? "font-bold text-primary bg-primary/5 border-l-4 border-primary" : "font-medium text-gray-600 hover:bg-gray-50 hover:text-primary") rounded-xl transition-all">
+                        <span class="material-symbols-outlined text-[20px] @(Model.ActiveTab == "account" ? "filled" : "")">person</span>
+                        My Account
+                    </a>
+                    <a asp-page="/Public/User/Profile" asp-route-tab="orders" 
+                       class="flex items-center gap-3 px-4 py-3 text-sm @(Model.ActiveTab == "orders" ? "font-bold text-primary bg-primary/5 border-l-4 border-primary" : "font-medium text-gray-600 hover:bg-gray-50 hover:text-primary") rounded-xl transition-all">
+                        <span class="material-symbols-outlined text-[20px] @(Model.ActiveTab == "orders" ? "filled" : "")">shopping_bag</span>
+                        Orders
+                    </a>
+                    <a asp-page="/Public/User/Profile" asp-route-tab="addresses" 
+                       class="flex items-center gap-3 px-4 py-3 text-sm @(Model.ActiveTab == "addresses" ? "font-bold text-primary bg-primary/5 border-l-4 border-primary" : "font-medium text-gray-600 hover:bg-gray-50 hover:text-primary") rounded-xl transition-all">
+                        <span class="material-symbols-outlined text-[20px] @(Model.ActiveTab == "addresses" ? "filled" : "")">location_on</span>
+                        Addresses
+                    </a>
+                    <a asp-page="/Public/User/Profile" asp-route-tab="reviews" 
+                       class="flex items-center gap-3 px-4 py-3 text-sm @(Model.ActiveTab == "reviews" ? "font-bold text-primary bg-primary/5 border-l-4 border-primary" : "font-medium text-gray-600 hover:bg-gray-50 hover:text-primary") rounded-xl transition-all">
+                        <span class="material-symbols-outlined text-[20px] @(Model.ActiveTab == "reviews" ? "filled" : "")">star</span>
+                        Reviews
+                    </a>
+                    <a asp-page="/Public/User/Profile" asp-route-tab="password" 
+                       class="flex items-center gap-3 px-4 py-3 text-sm @(Model.ActiveTab == "password" ? "font-bold text-primary bg-primary/5 border-l-4 border-primary" : "font-medium text-gray-600 hover:bg-gray-50 hover:text-primary") rounded-xl transition-all">
+                        <span class="material-symbols-outlined text-[20px] @(Model.ActiveTab == "password" ? "filled" : "")">lock</span>
+                        Password
+                    </a>
+                    <div class="pt-3 mt-3 border-t border-gray-50">
+                        <a href="/Public/Auth/Logout" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-all">
+                            <span class="material-symbols-outlined text-[20px]">logout</span>
+                            Logout
+                        </a>
+                    </div>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1 space-y-6">
+            @if (Model.ActiveTab == "account")
+            {
+                <div class="space-y-6">
+                    <h1 class="text-2xl font-bold text-gray-900">My Account</h1>
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                        <form class="space-y-6 max-w-2xl">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-gray-700">Full Name</label>
+                                    <input type="text" value="@Model.CurrentUser?.FullName" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all" />
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-gray-700">Email Address</label>
+                                    <input type="email" value="@Model.CurrentUser?.Email" disabled class="block w-full px-4 py-3 border border-gray-100 bg-gray-50 text-gray-500 rounded-xl cursor-not-allowed" />
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-gray-700">Phone Number</label>
+                                    <input type="tel" value="@Model.CurrentUser?.PhoneNumber" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all" />
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-semibold text-gray-700">Username</label>
+                                    <input type="text" value="@Model.CurrentUser?.UserName" disabled class="block w-full px-4 py-3 border border-gray-100 bg-gray-50 text-gray-500 rounded-xl cursor-not-allowed" />
+                                </div>
+                            <div class="pt-4">
+                                <button type="submit" class="px-8 py-3 bg-primary text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-primary/20">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+            else if (Model.ActiveTab == "orders")
+            {
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between flex-wrap gap-4">
+                        <h1 class="text-2xl font-bold text-gray-900">My Orders</h1>
+                        
+                        <!-- Search -->
+                        <div class="relative w-full sm:w-80">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="material-symbols-outlined text-gray-400">search</span>
+                            </div>
+                            <input type="text" placeholder="Search by Order ID or Product Name" 
+                                   class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary text-sm transition-all bg-white" />
+                        </div>
+                    </div>
+
+                    <!-- Filter Tabs -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-1 flex overflow-x-auto hide-scrollbar">
+                        <button class="flex-shrink-0 px-6 py-2.5 text-sm font-bold text-primary border-b-2 border-primary">All Orders</button>
+                        <button class="flex-shrink-0 px-6 py-2.5 text-sm font-medium text-gray-500 hover:text-primary transition-colors">To Pay <span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] ml-1">2</span></button>
+                        <button class="flex-shrink-0 px-6 py-2.5 text-sm font-medium text-gray-500 hover:text-primary transition-colors">Processing</button>
+                        <button class="flex-shrink-0 px-6 py-2.5 text-sm font-medium text-gray-500 hover:text-primary transition-colors">Shipping</button>
+                        <button class="flex-shrink-0 px-6 py-2.5 text-sm font-medium text-gray-500 hover:text-primary transition-colors">Received</button>
+                        <button class="flex-shrink-0 px-6 py-2.5 text-sm font-medium text-gray-500 hover:text-primary transition-colors">Cancelled</button>
+                    </div>
+
+                    <!-- Order List (Mock Data) -->
+                    <div class="space-y-4">
+                        <!-- Order 1 -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div class="px-6 py-4 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between flex-wrap gap-2 text-sm">
+                                <div class="flex items-center gap-4">
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-primary text-[20px]">store</span>
+                                        <span class="font-bold text-gray-900">TechStore Official</span>
+                                    </div>
+                                    <span class="text-gray-400">|</span>
+                                    <span class="text-gray-500">Order #GZ-99281</span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span class="text-gray-500">Oct 24, 2023 14:30</span>
+                                    <span class="inline-flex items-center rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">Processing</span>
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <div class="flex gap-4">
+                                    <div class="w-20 h-20 rounded-xl bg-gray-50 flex-shrink-0 overflow-hidden border border-gray-100">
+                                        <img src="https://m.media-amazon.com/images/I/71u9S9i7qBL._AC_SL1500_.jpg" alt="Product" class="w-full h-full object-contain">
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-gray-900">NVIDIA GeForce RTX 4060 Ti 8GB Graphics Card</h4>
+                                        <p class="text-sm text-gray-500 mt-1">Variant: OC Edition</p>
+                                        <p class="text-sm font-medium mt-1">x1</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold text-gray-900">$450.00</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-6 py-4 bg-gray-50/30 border-t border-gray-100 flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500">Total Amount: <span class="text-lg font-bold text-primary ml-1">$450.00</span></p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button class="px-5 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Contact Seller</button>
+                                    <button class="px-5 py-2 text-sm font-bold text-white bg-primary rounded-lg hover:bg-blue-700 transition-all shadow-sm shadow-primary/20">Track Order</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Order 2 -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                            <div class="px-6 py-4 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between flex-wrap gap-2 text-sm">
+                                <div class="flex items-center gap-4">
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-primary text-[20px]">store</span>
+                                        <span class="font-bold text-gray-900">AudioPhile Direct</span>
+                                    </div>
+                                    <span class="text-gray-400">|</span>
+                                    <span class="text-gray-500">Order #GZ-88120</span>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <span class="text-gray-500">Oct 15, 2023 09:12</span>
+                                    <span class="inline-flex items-center rounded-lg bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">Received</span>
+                                </div>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                <div class="flex gap-4 pb-4 border-b border-gray-50 last:border-0 last:pb-0">
+                                    <div class="w-20 h-20 rounded-xl bg-gray-50 flex-shrink-0 overflow-hidden border border-gray-100">
+                                        <img src="https://m.media-amazon.com/images/I/61+9Ew2eI6L._AC_SL1500_.jpg" alt="Product" class="w-full h-full object-contain">
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-gray-900">Sony WH-1000XM5 Wireless Noise Cancelling Headphones</h4>
+                                        <p class="text-sm text-gray-500 mt-1">Color: Black</p>
+                                        <p class="text-sm font-medium mt-1">x1</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold text-gray-900">$348.00</p>
+                                    </div>
+                                </div>
+                                <div class="flex gap-4 pb-4 border-b border-gray-50 last:border-0 last:pb-0">
+                                    <div class="w-20 h-20 rounded-xl bg-gray-50 flex-shrink-0 overflow-hidden border border-gray-100">
+                                        <img src="https://m.media-amazon.com/images/I/51A616K1M8L._AC_SL1200_.jpg" alt="Product" class="w-full h-full object-contain">
+                                    </div>
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-gray-900">Universal Aluminum Headphone Stand Holder</h4>
+                                        <p class="text-sm text-gray-500 mt-1">Color: Space Grey</p>
+                                        <p class="text-sm font-medium mt-1">x1</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold text-gray-900">$25.00</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-6 py-4 bg-gray-50/30 border-t border-gray-100 flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500">Total Amount: <span class="text-lg font-bold text-primary ml-1">$373.00</span></p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button class="px-5 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Review</button>
+                                    <button class="px-5 py-2 text-sm font-bold text-primary bg-primary/5 rounded-lg hover:bg-primary/10 transition-all border border-primary/10">Buy Again</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="flex justify-center mt-8">
+                        <nav class="flex items-center gap-1">
+                            <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50">
+                                <span class="material-symbols-outlined">chevron_left</span>
+                            </button>
+                            <button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-white font-bold">1</button>
+                            <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium">2</button>
+                            <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium">3</button>
+                            <span class="w-10 h-10 flex items-center justify-center text-gray-400">...</span>
+                            <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50">
+                                <span class="material-symbols-outlined">chevron_right</span>
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+            }
+            else if (Model.ActiveTab == "addresses")
+            {
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between">
+                        <h1 class="text-2xl font-bold text-gray-900">My Addresses</h1>
+                        <button class="px-5 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+                            <span class="material-symbols-outlined">add</span>
+                            Add New Address
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-2xl shadow-sm border-2 border-primary p-6 relative">
+                            <div class="absolute top-4 right-4 flex items-center gap-2">
+                                <span class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">Default</span>
+                            </div>
+                            <h4 class="font-bold text-gray-900 text-lg">Home Address</h4>
+                            <p class="text-sm text-gray-500 mt-2">Nguyen Van A</p>
+                            <p class="text-sm text-gray-500">090 123 4567</p>
+                            <p class="text-sm text-gray-600 mt-4 leading-relaxed">
+                                123 Tech Avenue, District 1,<br />
+                                Ho Chi Minh City, Vietnam
+                            </p>
+                            <div class="mt-6 flex gap-4 border-t border-gray-50 pt-4">
+                                <button class="text-sm font-bold text-primary hover:text-blue-700 transition-colors">Edit</button>
+                                <button class="text-sm font-bold text-red-600 hover:text-red-700 transition-colors">Delete</button>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                            <h4 class="font-bold text-gray-900 text-lg">Office</h4>
+                            <p class="text-sm text-gray-500 mt-2">Nguyen Van A</p>
+                            <p class="text-sm text-gray-500">090 123 4567</p>
+                            <p class="text-sm text-gray-600 mt-4 leading-relaxed">
+                                456 Business Park, District 7,<br />
+                                Ho Chi Minh City, Vietnam
+                            </p>
+                            <div class="mt-6 flex gap-4 border-t border-gray-50 pt-4">
+                                <button class="text-sm font-bold text-primary hover:text-blue-700 transition-colors">Edit</button>
+                                <button class="text-sm font-bold text-red-600 hover:text-red-700 transition-colors">Delete</button>
+                                <button class="text-sm font-bold text-gray-400 hover:text-primary transition-colors ml-auto">Set as Default</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (Model.ActiveTab == "reviews")
+            {
+                <div class="space-y-6">
+                    <h1 class="text-2xl font-bold text-gray-900">My Reviews</h1>
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex flex-col items-center justify-center text-center py-20">
+                        <div class="w-20 h-20 rounded-full bg-gray-50 flex items-center justify-center text-gray-300 mb-6">
+                            <span class="material-symbols-outlined text-5xl">rate_review</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900">No reviews yet</h3>
+                        <p class="text-gray-500 mt-2 max-w-xs mx-auto">You haven't reviewed any products yet. After you receive your orders, you can share your experience with others.</p>
+                        <a href="/Index" class="mt-8 px-8 py-3 bg-primary text-white font-bold rounded-xl hover:bg-blue-700 transition-all">Go Shopping</a>
+                    </div>
+                </div>
+            }
+            else if (Model.ActiveTab == "password")
+            {
+                <div class="space-y-6">
+                    <h1 class="text-2xl font-bold text-gray-900">Change Password</h1>
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+                        <form class="space-y-6 max-w-md">
+                            <div class="space-y-2">
+                                <label class="text-sm font-semibold text-gray-700">Current Password</label>
+                                <input type="password" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all" />
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-semibold text-gray-700">New Password</label>
+                                <input type="password" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all" />
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-sm font-semibold text-gray-700">Confirm New Password</label>
+                                <input type="password" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all" />
+                            </div>
+                            <div class="pt-4">
+                                <button type="submit" class="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-primary/20">Update Password</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .material-symbols-outlined.filled {
+        font-variation-settings: 'FILL' 1;
+    }
+</style>

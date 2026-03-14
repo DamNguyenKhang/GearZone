@@ -1,4 +1,5 @@
-﻿using System;
+using GearZone.Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,16 +7,11 @@ namespace GearZone.Domain.Entities
 {
     public class Order : Entity<Guid>
     {
-        public string OrderCode { get; set; } = string.Empty;
+        public long OrderCode { get; set; }
         public string UserId { get; set; } = string.Empty;
-        public Guid StoreId { get; set; }
-        public string Status { get; set; } = string.Empty;
-
-        public decimal Subtotal { get; set; }
+        // Shipping Information
         public decimal ShippingFee { get; set; }
         public decimal GrandTotal { get; set; }
-        public decimal CommissionRateSnapshot { get; set; }
-        public decimal CommissionAmount { get; set; }
 
         public string ReceiverName { get; set; } = string.Empty;
         public string ReceiverPhone { get; set; } = string.Empty;
@@ -29,8 +25,7 @@ namespace GearZone.Domain.Entities
 
         // Navigation
         public ApplicationUser User { get; set; } = null!;
-        public Store Store { get; set; } = null!;
-        public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
+        public ICollection<SubOrder> SubOrders { get; set; } = new List<SubOrder>();
         public ICollection<OrderStatusHistory> StatusHistories { get; set; } = new List<OrderStatusHistory>();
         public ICollection<Payment> Payments { get; set; } = new List<Payment>();
     }

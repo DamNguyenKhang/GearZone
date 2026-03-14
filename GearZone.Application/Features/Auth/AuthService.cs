@@ -1,10 +1,12 @@
 ﻿using GearZone.Application.Abstractions.Services;
-using GearZone.Domain.Abstractions.External;
+using GearZone.Application.Abstractions.External;
 using GearZone.Domain.Entities;
+using GearZone.Application.Features.Admin.Dtos;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Linq;
+using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 
@@ -51,6 +53,38 @@ namespace GearZone.Application.Features.Auth
             }
         }
 
+        public async Task SignOutAsync()
+        {
+            await _signInManager.SignOutAsync();
+        }
+
+        public async Task<UserDto?> GetUserAsync(ClaimsPrincipal principal)
+        {
+            var user = await _userManager.GetUserAsync(principal);
+            if (user == null) return null;
+
+            return new UserDto
+            {
+                Id = user.Id,
+                FullName = user.FullName,
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                UserName = user.UserName,
+                AvatarUrl = user.AvatarUrl,
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt
+            };
+        }
+
+        public async Task<string?> GetUserRoleAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return null;
+
+            var roles = await _userManager.GetRolesAsync(user);
+            return roles.FirstOrDefault();
+        }
+
         public async Task<string?> GetUserIdAsync(string emailOrUsername)
         {
             var user = await _userManager.FindByNameAsync(emailOrUsername) ?? await _userManager.FindByEmailAsync(emailOrUsername);
@@ -59,6 +93,12 @@ namespace GearZone.Application.Features.Auth
 
         public async Task<(bool Succeeded, string[] Errors, string? UserId)> RegisterAsync(string fullName, string email, string password)
         {
+            var existingUser = await _userManager.FindByEmailAsync(email);
+            if (existingUser != null)
+            {
+                return (false, new[] { $"Email {email} is already taken." }, null);
+            }
+
             var user = new ApplicationUser
             {
                 UserName = email,
@@ -142,18 +182,19 @@ namespace GearZone.Application.Features.Auth
             return _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
         }
 
-        public async Task<(bool Succeeded, string? Error)> HandleExternalLoginCallbackAsync()
+        public async Task<(bool Succeeded, string? Error, string? UserId)> HandleExternalLoginCallbackAsync()
         {
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
             {
-                return (false, "Error loading external login information.");
+                return (false, "Error loading external login information.", null);
             }
 
             var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
             if (result.Succeeded)
             {
-                return (true, null);
+                var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+                return (true, null, user?.Id);
             }
 
             var email = info.Principal.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
@@ -174,7 +215,7 @@ namespace GearZone.Application.Features.Auth
                     var createResult = await _userManager.CreateAsync(user);
                     if (!createResult.Succeeded)
                     {
-                        return (false, string.Join(", ", createResult.Errors.Select(e => e.Description)));
+                        return (false, string.Join(", ", createResult.Errors.Select(e => e.Description)), null);
                     }
                     await _userManager.AddToRoleAsync(user, "Customer");
                 }
@@ -183,11 +224,11 @@ namespace GearZone.Application.Features.Auth
                 if (addLoginResult.Succeeded)
                 {
                     await _signInManager.SignInAsync(user, isPersistent: false);
-                    return (true, null);
+                    return (true, null, user.Id);
                 }
             }
 
-            return (false, "Error during external login.");
+            return (false, "Error during external login.", null);
         }
     }
 }

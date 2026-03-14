@@ -1,4 +1,7 @@
-﻿using GearZone.Domain.Abstractions.External;
+﻿using GearZone.Application.Abstractions.External;
+using GearZone.Application.Common;
+using GearZone.Domain.Entities;
+using GearZone.Domain.Enums;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Configuration;
@@ -45,5 +48,43 @@ namespace GearZone.Infrastructure.External
             await client.DisconnectAsync(true);
         }
 
+        public async Task SendStoreStatusEmailAsync(Store store, StoreStatus status, string? reason)
+        {
+            if (store.OwnerUser == null || string.IsNullOrWhiteSpace(store.OwnerUser.Email))
+                return;
+
+            if (!Constant.subject.ContainsKey(status) || !Constant.body.ContainsKey(status))
+                return;
+
+            var subject = Constant.subject[status];
+            var bodyTemplate = Constant.body[status];
+
+            string body;
+
+            switch (status)
+            {
+                case StoreStatus.Approved:
+                    body = string.Format(
+                        bodyTemplate,
+                        store.OwnerUser.FullName,
+                        store.StoreName
+                    );
+                    break;
+
+                case StoreStatus.Rejected:
+                    body = string.Format(
+                        bodyTemplate,
+                        store.OwnerUser.FullName,
+                        store.StoreName,
+                        reason
+                    );
+                    break;
+
+                default:
+                    return;
+            }
+
+            await SendAsync(store.OwnerUser.Email, subject, body);
+        }
     }
 }

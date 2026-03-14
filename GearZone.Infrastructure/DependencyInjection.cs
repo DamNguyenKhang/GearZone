@@ -50,6 +50,7 @@ namespace GearZone.Infrastructure
             services.AddScoped<IOrderStatusHistoryRepository, OrderStatusHistoryRepository>();
             services.AddScoped<IPaymentRepository, PaymentRepository>();
             services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<IProductReviewRepository, ProductReviewRepository>();
             services.AddScoped<IProductAttributeValueRepository, ProductAttributeValueRepository>();
             services.AddScoped<IProductImageRepository, ProductImageRepository>();
             services.AddScoped<IProductVariantRepository, ProductVariantRepository>();

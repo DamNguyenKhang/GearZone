@@ -19,6 +19,7 @@ namespace GearZone.Domain.Entities
         // Navigation
         public SubOrder SubOrder { get; set; } = null!;
         public ProductVariant Variant { get; set; } = null!;
+        public ProductReview? Review { get; set; }
     }
 
 }

@@ -8,6 +8,7 @@ using GearZone.Application.Common.ProductSpecifications;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Catalog.DTOs;
+using GearZone.Application.Features.Reviews.Dtos;
 using GearZone.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,8 +22,7 @@ namespace GearZone.Application.Features.Catalog
         private readonly ICategoryAttributeRepository _categoryAttributeRepository;
         private readonly IStoreRepository _storeRepository;
         private readonly IStoreFollowRepository _storeFollowRepository;
-        private readonly IConversationRepository _conversationRepository;
-        private readonly IChatMessageRepository _chatMessageRepository;
+        private readonly IProductReviewRepository _productReviewRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public CatalogService(
@@ -32,8 +32,7 @@ namespace GearZone.Application.Features.Catalog
             ICategoryAttributeRepository categoryAttributeRepository,
             IStoreRepository storeRepository,
             IStoreFollowRepository storeFollowRepository,
-            IConversationRepository conversationRepository,
-            IChatMessageRepository chatMessageRepository,
+            IProductReviewRepository productReviewRepository,
             IUnitOfWork unitOfWork)
         {
             _productRepository = productRepository;
@@ -42,8 +41,7 @@ namespace GearZone.Application.Features.Catalog
             _categoryAttributeRepository = categoryAttributeRepository;
             _storeRepository = storeRepository;
             _storeFollowRepository = storeFollowRepository;
-            _conversationRepository = conversationRepository;
-            _chatMessageRepository = chatMessageRepository;
+            _productReviewRepository = productReviewRepository;
             _unitOfWork = unitOfWork;
         }
 
@@ -68,6 +66,7 @@ namespace GearZone.Application.Features.Catalog
             var followerCount = await _storeFollowRepository.GetFollowerCountAsync(store.Id);
             var isFollowing = !string.IsNullOrEmpty(currentUserId) 
                 && await _storeFollowRepository.ExistsAsync(currentUserId, store.Id);
+            var reviewSnapshot = await _productReviewRepository.GetStoreReviewSnapshotAsync(store.Id);
 
             return new StoreProfileDto
             {
@@ -79,11 +78,12 @@ namespace GearZone.Application.Features.Catalog
                 Province = store.Province,
                 ProductCount = productCount,
                 TotalSold = totalSold,
-                Rating = 0,
-                ReviewCount = 0,
+                Rating = reviewSnapshot.AverageRating,
+                ReviewCount = reviewSnapshot.TotalReviews,
                 FollowerCount = followerCount,
                 IsFollowing = isFollowing,
-                CreatedAt = store.CreatedAt
+                CreatedAt = store.CreatedAt,
+                ReviewSummary = reviewSnapshot
             };
         }
 
@@ -119,75 +119,6 @@ namespace GearZone.Application.Features.Catalog
         public async Task<int> GetFollowerCountAsync(Guid storeId)
         {
             return await _storeFollowRepository.GetFollowerCountAsync(storeId);
-        }
-
-        // ===== CHAT =====
-
-        public async Task<ChatMessageDto> SendMessageAsync(string userId, Guid storeId, string content)
-        {
-            var conversation = await _conversationRepository.GetByBuyerAndStoreAsync(userId, storeId);
-            if (conversation == null)
-            {
-                conversation = new Conversation
-                {
-                    Id = Guid.NewGuid(),
-                    BuyerUserId = userId,
-                    StoreId = storeId,
-                    CreatedAt = DateTime.UtcNow,
-                    LastMessageAt = DateTime.UtcNow
-                };
-                await _conversationRepository.AddAsync(conversation);
-            }
-            else
-            {
-                conversation.LastMessageAt = DateTime.UtcNow;
-                await _conversationRepository.UpdateAsync(conversation);
-            }
-
-            var message = new ChatMessage
-            {
-                Id = Guid.NewGuid(),
-                ConversationId = conversation.Id,
-                SenderUserId = userId,
-                Content = content,
-                SentAt = DateTime.UtcNow,
-                IsRead = false
-            };
-            await _chatMessageRepository.AddAsync(message);
-            await _unitOfWork.SaveChangesAsync();
-
-            return new ChatMessageDto
-            {
-                Id = message.Id,
-                SenderUserId = message.SenderUserId,
-                SenderName = "You",
-                Content = message.Content,
-                SentAt = message.SentAt,
-                IsFromStore = false
-            };
-        }
-
-        public async Task<List<ChatMessageDto>> GetMessagesAsync(string userId, Guid storeId, int page = 1, int pageSize = 50)
-        {
-            var conversation = await _conversationRepository.GetByBuyerAndStoreAsync(userId, storeId);
-            if (conversation == null) return new List<ChatMessageDto>();
-
-            // Get store owner to determine which messages are from store
-            var store = await _storeRepository.GetByIdAsync(storeId);
-            var storeOwnerId = store?.OwnerUserId;
-
-            var messages = await _chatMessageRepository.GetMessagesAsync(conversation.Id, page, pageSize);
-            
-            return messages.Select(m => new ChatMessageDto
-            {
-                Id = m.Id,
-                SenderUserId = m.SenderUserId,
-                SenderName = m.SenderUser?.FullName ?? "User",
-                SenderAvatar = m.SenderUser?.AvatarUrl,
-                Content = m.Content,
-                SentAt = m.SentAt,
-                IsFromStore = m.SenderUserId == storeOwnerId
-            }).ToList();
         }
 
         // ===== CATEGORIES & FILTERS =====
@@ -364,6 +295,10 @@ namespace GearZone.Application.Features.Catalog
                 ImageUrls = product.Images.OrderByDescending(i => i.IsPrimary).Select(i => i.ImageUrl).ToList(),
             };
 
+            dto.ReviewSummary = await _productReviewRepository.GetProductReviewSummaryAsync(product.Id);
+            dto.Rating = dto.ReviewSummary.AverageRating;
+            dto.ReviewCount = dto.ReviewSummary.TotalReviews;
+
             var allAttributeValues = product.Variants.SelectMany(v => v.AttributeValues).ToList();
 
             if (product.Variants.Any())
@@ -480,8 +415,8 @@ namespace GearZone.Application.Features.Catalog
                     BasePrice = p.BasePrice,
                     ImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault() 
                                ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? "",
-                    Rating = 0, // Placeholder
-                    ReviewCount = 0,
+                    Rating = p.Reviews.Where(r => !r.IsDeleted).Select(r => (decimal?)r.Rating).Average() ?? 0,
+                    ReviewCount = p.Reviews.Count(r => !r.IsDeleted),
                     StoreName = p.Store.StoreName,
                     StoreLogoUrl = p.Store.LogoUrl ?? string.Empty,
                     IsInStock = p.Variants.Where(v => v.IsActive && !v.IsDeleted).Any(v => v.StockQuantity > 0),

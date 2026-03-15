@@ -1,10 +1,11 @@
-﻿using GearZone.Application.Abstractions.Persistence;
+using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Cart.DTOs;
 using GearZone.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
@@ -165,6 +166,11 @@ namespace GearZone.Application.Features.Cart
                 .FirstOrDefaultAsync(c => c.UserId == userId);
 
             return cart?.Items.Sum(i => i.Quantity) ?? 0;
+        }
+
+        public async Task ClearCartItemsAsync(IEnumerable<Guid> cartItemIds, CancellationToken ct = default)
+        {
+            await _cartItemRepository.DeleteRangeByIdsAsync(cartItemIds, ct);
         }
     }
 }

@@ -36,6 +36,7 @@ namespace GearZone.Application
             services.AddScoped<IAdminWalletService, AdminWalletService>();
             services.AddScoped<IAdminPlatformService, AdminPlatformService>();
             services.AddScoped<IAdminDashboardService, AdminDashboardService>();
+            services.AddScoped<IAdminVoucherService, AdminVoucherService>();
 
             return services;
         }

@@ -5,7 +5,6 @@ namespace GearZone.Domain.Enums
         Topup,
         Payout,
         Refund,
-        Adjustment,
-        Payment
+        Adjustment
     }
 }

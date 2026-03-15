@@ -97,7 +97,7 @@
                 var href = QueryHelpers.AddQueryString(Model.BasePath, queryParams);
 
                 <a href="@href"
-                   class="chat-conversation-row flex items-start gap-3 border-b border-[#f5f5f5] px-3 py-2.5 transition @(isActive ? "bg-[#f6f6f6]" : "bg-white hover:bg-[#fafafa]") @(Model.IsFullCanvasPage ? "chat-conversation-row--compact" : "")"
+                   class="chat-conversation-row flex items-start gap-3 border-b border-[#f5f5f5] px-3 py-2.5 transition @(isActive ? "bg-[#f6f6f6]" : "bg-white hover:bg-[#fafafa]") @((Model.IsFullCanvasPage || Model.IsAccountCenterSurface) ? "chat-conversation-row--compact" : "")"
                    data-chat-conversation-link
                    data-conversation-id="@conversation.ConversationId"
                    data-active="@(isActive ? "true" : "false")">

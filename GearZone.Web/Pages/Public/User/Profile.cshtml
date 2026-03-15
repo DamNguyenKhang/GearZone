@@ -136,7 +136,7 @@
         </aside>
 
         <!-- Main Content -->
-        <div class="flex-1 space-y-6">
+        <div class="min-w-0 flex-1 space-y-6">
             @if (TempData["SuccessMessage"] is string successMessage)
             {
                 <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-700">
@@ -183,14 +183,8 @@
             }
             else if (Model.ActiveTab == "orders")
             {
-                <div class="space-y-6">
-                    <div class="flex items-center justify-between flex-wrap gap-4">
-                        <div>
-                            <p class="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Post Purchase</p>
-                            <h1 class="text-2xl font-bold text-gray-900 mt-2">My Orders</h1>
-                            <p class="text-sm text-gray-500 mt-2">Track your purchases and review delivered items within 7 days, just like a marketplace order center.</p>
-                        </div>
-
+                <div class="space-y-5">
+                    <div class="flex justify-end">
                         <form method="get" class="relative w-full sm:w-96">
                             <input type="hidden" name="tab" value="orders" />
                             <input type="hidden" name="orderStatus" value="@Model.OrderStatus" />
@@ -568,15 +562,7 @@
             }
             else if (Model.ActiveTab == "messages")
             {
-                <div class="space-y-6">
-                    <div class="flex items-center justify-between flex-wrap gap-4">
-                        <div>
-                            <p class="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Message Center</p>
-                            <h1 class="text-2xl font-bold text-gray-900 mt-2">Messages</h1>
-                            <p class="text-sm text-gray-500 mt-2">Keep every shop conversation inside your account center so orders, reviews, and chat stay in one place.</p>
-                        </div>
-                    </div>
-
+                <div class="min-w-0">
                     <partial name="/Pages/Shared/_ChatInboxLayout.cshtml" model="Model.MessagesInbox" />
                 </div>
             }

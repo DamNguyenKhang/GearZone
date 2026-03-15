@@ -6,7 +6,7 @@
     var isWidget = Model.IsWidgetSurface;
 }
 
-<div class="chat-thread-panel flex h-full min-h-0 flex-col @(isWidget || Model.IsFullCanvasPage ? "bg-white" : "overflow-hidden rounded-sm border border-[#e8e8e8] bg-white") @(Model.IsFullCanvasPage ? "chat-thread-panel--seller-canvas" : string.Empty)"
+<div class="chat-thread-panel flex h-full min-h-0 min-w-0 flex-col @(isWidget || Model.IsFullCanvasPage || Model.IsAccountCenterSurface ? "bg-white" : "overflow-hidden rounded-sm border border-[#e8e8e8] bg-white") @(Model.IsFullCanvasPage ? "chat-thread-panel--seller-canvas" : string.Empty) @(Model.IsAccountCenterSurface ? "chat-thread-panel--account" : string.Empty)"
      data-chat-thread-pane
      data-loaded-page-count="@(thread?.LoadedPageCount ?? 1)"
      data-conversation-id="@(thread?.ConversationId ?? Guid.Empty)">
@@ -133,8 +133,8 @@
                     }
 
                     var isOwn = message.SenderUserId == Model.CurrentUserId;
-                    <div class="flex @(isOwn ? "justify-end" : "justify-start")">
-                        <div class="chat-message-bubble @(isOwn ? "chat-message-own" : "chat-message-other")">
+                    <div class="flex min-w-0 @(isOwn ? "justify-end" : "justify-start")">
+                        <div class="chat-message-bubble min-w-0 @(isOwn ? "chat-message-own" : "chat-message-other")">
                             @if (!isOwn)
                             {
                                 <p class="mb-1 text-[11px] font-medium text-[#666]">@message.SenderDisplayName</p>

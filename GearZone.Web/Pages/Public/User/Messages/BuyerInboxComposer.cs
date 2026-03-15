@@ -78,6 +78,7 @@ namespace GearZone.Web.Pages.Public.User.Messages
             {
                 IsSellerView = false,
                 IsWidgetSurface = request.IsWidgetSurface,
+                IsAccountCenterSurface = request.IsAccountCenterSurface,
                 CurrentUserId = userId,
                 BasePath = request.BasePath,
                 Filter = query.Filter,
@@ -123,6 +124,7 @@ namespace GearZone.Web.Pages.Public.User.Messages
             {
                 IsSellerView = false,
                 IsWidgetSurface = true,
+                IsAccountCenterSurface = false,
                 CurrentUserId = userId,
                 BasePath = basePath,
                 Filter = widget.Filter,
@@ -145,6 +147,7 @@ namespace GearZone.Web.Pages.Public.User.Messages
             {
                 IsSellerView = false,
                 IsWidgetSurface = inbox.IsWidgetSurface,
+                IsAccountCenterSurface = inbox.IsAccountCenterSurface,
                 CurrentUserId = inbox.CurrentUserId,
                 BasePath = inbox.BasePath,
                 Filter = inbox.Filter,
@@ -159,12 +162,17 @@ namespace GearZone.Web.Pages.Public.User.Messages
             };
         }
 
-        public ChatThreadPaneViewModel BuildThreadPaneViewModel(string userId, ChatThreadDto? thread, bool isWidgetSurface)
+        public ChatThreadPaneViewModel BuildThreadPaneViewModel(
+            string userId,
+            ChatThreadDto? thread,
+            bool isWidgetSurface,
+            bool isAccountCenterSurface = false)
         {
             return new ChatThreadPaneViewModel
             {
                 IsSellerView = false,
                 IsWidgetSurface = isWidgetSurface,
+                IsAccountCenterSurface = isAccountCenterSurface,
                 CurrentUserId = userId,
                 EmptyTitle = DefaultEmptyTitle,
                 EmptyDescription = DefaultEmptyDescription,
@@ -183,6 +191,7 @@ namespace GearZone.Web.Pages.Public.User.Messages
         public Guid? SelectedConversationId { get; set; }
         public bool IncludeThread { get; set; } = true;
         public bool IsWidgetSurface { get; set; }
+        public bool IsAccountCenterSurface { get; set; }
         public int LoadedPageCount { get; set; } = 1;
         public int InboxPageSize { get; set; } = 20;
         public int MessagePageSize { get; set; } = 30;

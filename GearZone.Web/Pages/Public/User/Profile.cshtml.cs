@@ -126,7 +126,8 @@ namespace GearZone.Web.Pages.Public.User
                     CounterpartScopeKey = CounterpartScopeKey,
                     ProductSlug = ProductSlug,
                     SelectedConversationId = ConversationId,
-                    IncludeThread = true
+                    IncludeThread = true,
+                    IsAccountCenterSurface = true
                 });
             }
 
@@ -149,7 +150,8 @@ namespace GearZone.Web.Pages.Public.User
                 CounterpartScopeKey = CounterpartScopeKey,
                 ProductSlug = ProductSlug,
                 SelectedConversationId = conversationId,
-                IncludeThread = false
+                IncludeThread = false,
+                IsAccountCenterSurface = true
             });
 
             return new PartialViewResult
@@ -176,7 +178,7 @@ namespace GearZone.Web.Pages.Public.User
             return new PartialViewResult
             {
                 ViewName = "/Pages/Shared/_ChatThreadPane.cshtml",
-                ViewData = new ViewDataDictionary<ChatThreadPaneViewModel>(ViewData, _buyerInboxComposer.BuildThreadPaneViewModel(userId, thread, false))
+                ViewData = new ViewDataDictionary<ChatThreadPaneViewModel>(ViewData, _buyerInboxComposer.BuildThreadPaneViewModel(userId, thread, false, true))
             };
         }
 

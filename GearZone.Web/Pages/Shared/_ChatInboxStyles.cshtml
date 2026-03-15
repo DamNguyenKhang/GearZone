@@ -47,6 +47,7 @@
 
     .chat-thread-panel {
         background: #ffffff;
+        min-width: 0;
     }
 
     .chat-message-bubble {
@@ -55,6 +56,14 @@
         padding: 0.55rem 0.7rem;
         border: 1px solid #ececec;
         background: #ffffff;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .chat-message-bubble p,
+    .chat-message-bubble span {
+        overflow-wrap: anywhere;
+        word-break: break-word;
     }
 
     .chat-message-bubble.chat-message-own {
@@ -77,6 +86,56 @@
 
     .chat-shell--widget .chat-message-bubble {
         max-width: min(19rem, 100%);
+    }
+
+    .chat-shell--account {
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid #e8e8e8;
+        border-radius: 1.1rem;
+        background: #ffffff;
+        box-shadow: 0 18px 48px rgba(15, 23, 42, 0.06);
+        align-self: flex-start;
+    }
+
+    .chat-shell--account > div,
+    .chat-shell--account [data-chat-list-host],
+    .chat-shell--account [data-chat-pane-host] {
+        min-width: 0;
+    }
+
+    .chat-shell--account .chat-conversation-row--compact {
+        padding-top: 0.82rem;
+        padding-bottom: 0.82rem;
+    }
+
+    .chat-shell--account .chat-message-bubble {
+        max-width: min(23rem, 82%);
+        border-radius: 0.85rem;
+        padding: 0.6rem 0.78rem;
+    }
+
+    .chat-shell--account .chat-thread-panel--account [data-chat-message-list] {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    .chat-shell--account .chat-thread-panel--account .chat-composer-input {
+        min-height: 2.5rem;
+        max-height: 7rem;
+        padding-top: 0.78rem;
+        padding-bottom: 0.78rem;
+    }
+
+    .chat-shell--account .chat-thread-panel--account [data-chat-composer] {
+        gap: 0.75rem;
+    }
+
+    .chat-shell--account .chat-thread-panel--account [data-chat-send-button] {
+        height: 2.15rem;
+        min-width: 2.15rem;
+        padding-left: 0.65rem;
+        padding-right: 0.65rem;
     }
 
     .chat-shell--seller-canvas {
@@ -127,6 +186,12 @@
     }
 
     @@media (max-width: 1023.98px) {
+        .chat-shell--account {
+            min-height: 34rem;
+            height: 34rem !important;
+            max-height: 34rem !important;
+        }
+
         .chat-shell--widget {
             position: relative;
             height: 100%;
@@ -169,6 +234,11 @@
     }
 
     @@media (min-width: 1024px) {
+        .chat-shell--account {
+            height: min(39rem, calc(100vh - 10rem)) !important;
+            max-height: min(39rem, calc(100vh - 10rem)) !important;
+        }
+
         .chat-shell--widget .chat-mobile-back {
             display: none;
         }

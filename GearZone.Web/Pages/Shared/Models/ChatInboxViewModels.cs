@@ -8,6 +8,7 @@ namespace GearZone.Web.Pages.Shared.Models
         public bool IsSellerView { get; set; }
         public bool IsWidgetSurface { get; set; }
         public bool IsFullCanvasPage { get; set; }
+        public bool IsAccountCenterSurface { get; set; }
         public string CurrentUserId { get; set; } = string.Empty;
         public string BasePath { get; set; } = string.Empty;
         public string Filter { get; set; } = "all";
@@ -28,6 +29,7 @@ namespace GearZone.Web.Pages.Shared.Models
         public bool IsSellerView { get; set; }
         public bool IsWidgetSurface { get; set; }
         public bool IsFullCanvasPage { get; set; }
+        public bool IsAccountCenterSurface { get; set; }
         public string CurrentUserId { get; set; } = string.Empty;
         public string BasePath { get; set; } = string.Empty;
         public string Filter { get; set; } = "all";
@@ -46,6 +48,7 @@ namespace GearZone.Web.Pages.Shared.Models
         public bool IsSellerView { get; set; }
         public bool IsWidgetSurface { get; set; }
         public bool IsFullCanvasPage { get; set; }
+        public bool IsAccountCenterSurface { get; set; }
         public string CurrentUserId { get; set; } = string.Empty;
         public string EmptyTitle { get; set; } = string.Empty;
         public string EmptyDescription { get; set; } = string.Empty;

@@ -51,29 +51,20 @@
     </div>
 
     <!-- Filters & Actions Bar -->
-    <form method="get" class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-end">
-        <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto flex-1">
+    <form method="get" class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex flex-col lg:flex-row gap-4 justify-between items-start">
+        <div class="flex flex-col sm:flex-row gap-4 w-full lg:w-auto flex-1 items-start">
             <!-- Search -->
             <div class="relative w-full sm:max-w-xs">
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                     <span class="material-symbols-outlined text-[20px]">search</span>
                 </span>
-                <input asp-for="Query.SearchTerm" class="form-input w-full rounded-lg border-slate-200 bg-slate-50 pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-primary" placeholder="Search Company or Tax Code..." type="text" />
+                <input asp-for="Query.SearchTerm" class="form-input w-full rounded-lg border-slate-200 bg-slate-50 pl-10 pr-4 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-primary h-[42px]" placeholder="Search Company or Tax Code..." type="text" />
             </div>
             <!-- Status Filter -->
             <div class="w-full sm:w-40">
-                <select asp-for="Query.Status" asp-items="Html.GetEnumSelectList<StoreStatus>()" class="form-select w-full rounded-lg border-slate-200 bg-slate-50 py-2.5 text-sm text-slate-900 focus:border-primary focus:ring-primary">
+                <select asp-for="Query.Status" asp-items="Html.GetEnumSelectList<StoreStatus>()" class="form-select w-full rounded-lg border-slate-200 bg-slate-50 py-2 text-sm text-slate-900 focus:border-primary focus:ring-primary h-[42px]">
                     <option value="">All Status</option>
                 </select>
-            </div>
-            <!-- Date Filter -->
-            <div class="w-full flex gap-2 sm:w-80">
-                <div class="relative w-1/2">
-                    <input type="date" asp-for="Query.StartDate" class="form-input w-full rounded-lg border-slate-200 bg-slate-50 py-2.5 px-3 text-sm text-slate-900 focus:border-primary focus:ring-primary" title="Start Date" />
-                </div>
-                <div class="relative w-1/2">
-                    <input type="date" asp-for="Query.EndDate" class="form-input w-full rounded-lg border-slate-200 bg-slate-50 py-2.5 px-3 text-sm text-slate-900 focus:border-primary focus:ring-primary" title="End Date" />
-                </div>
             </div>
             <button type="submit"
                     class="w-full sm:w-auto h-[42px] flex items-center justify-center gap-2
@@ -86,9 +77,25 @@
                 </span>
                 Search
             </button>
+            <!-- Date Filter -->
+            <div class="w-full sm:w-80 space-y-2">
+                <select asp-for="DateRangeShortcut" id="dateRangeShortcut" class="form-select w-full rounded-lg border-slate-200 bg-slate-50 py-2 text-sm focus:ring-primary focus:border-primary h-[42px]" onchange="toggleCustomDateRange()">
+                    <option value="">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+                <div id="customDateRangeContainer" class="relative @(Model.DateRangeShortcut == "custom" ? "" : "hidden")">
+                    <span class="absolute inset-y-0 left-3 flex items-center text-slate-400 font-bold">
+                        <span class="material-symbols-outlined text-[18px]">calendar_today</span>
+                    </span>
+                    <input type="text" asp-for="DateRange" id="dateRangePicker" class="form-input w-full pl-10 pr-4 py-2 border-slate-200 bg-slate-50 rounded-lg text-sm focus:ring-primary focus:border-primary cursor-pointer transition-all h-[42px]" placeholder="Select Range" />
+                </div>
+            </div>
         </div>
         <!-- Export Button -->
-        <button type="button" class="w-full lg:w-auto flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-lg font-medium hover:bg-slate-50 transition-all shadow-sm">
+        <button type="button" class="w-full lg:w-auto flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 px-5 py-2.5 rounded-lg font-medium hover:bg-slate-50 transition-all shadow-sm h-[42px]">
             <span class="material-symbols-outlined text-[20px]">download</span>
             <span>Export CSV</span>
         </button>
@@ -197,6 +204,8 @@
                        asp-route-Query.PageNumber="@(Model.StoreApplications.PageNumber - 1)" 
                        asp-route-Query.SearchTerm="@Model.Query.SearchTerm"
                        asp-route-Query.Status="@Model.Query.Status"
+                       asp-route-DateRangeShortcut="@Model.DateRangeShortcut"
+                       asp-route-DateRange="@Model.DateRange"
                        class="p-2 rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-slate-600 transition-all">
                         <span class="material-symbols-outlined text-[20px]">chevron_left</span>
                     </a>
@@ -218,6 +227,8 @@
                        asp-route-Query.PageNumber="@(Model.StoreApplications.PageNumber + 1)" 
                        asp-route-Query.SearchTerm="@Model.Query.SearchTerm"
                        asp-route-Query.Status="@Model.Query.Status"
+                       asp-route-DateRangeShortcut="@Model.DateRangeShortcut"
+                       asp-route-DateRange="@Model.DateRange"
                        class="p-2 rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-slate-600 transition-all">
                         <span class="material-symbols-outlined text-[20px]">chevron_right</span>
                     </a>
@@ -234,7 +245,27 @@
 </div>
 
 @section Scripts {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
-        // Placeholder for future logic
+        function toggleCustomDateRange() {
+            const select = document.getElementById('dateRangeShortcut');
+            const container = document.getElementById('customDateRangeContainer');
+            if (select.value === 'custom') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+                const picker = document.getElementById('dateRangePicker');
+                if (picker) picker.value = '';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            flatpickr("#dateRangePicker", {
+                mode: "range",
+                dateFormat: "Y-m-d",
+                allowInput: true
+            });
+        });
     </script>
 }

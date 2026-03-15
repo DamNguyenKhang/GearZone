@@ -72,7 +72,7 @@ namespace GearZone.Web.Pages.Checkout
                 FullName = CurrentUser.FullName,
                 PhoneNumber = CurrentUser.PhoneNumber,
                 EmailAddress = CurrentUser.Email ?? string.Empty,
-                StreetAddress = CurrentUser.Address // In a real app we might parse this, but for now just map it
+                Address = CurrentUser.Address ?? string.Empty
             };
             CheckoutRequest.CartItemIds = SelectedCartItemIds;
 

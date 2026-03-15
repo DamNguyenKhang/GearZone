@@ -17,10 +17,7 @@ namespace GearZone.Application.Features.Checkout.Dtos
         public string FullName { get; set; } = null!;
         public string PhoneNumber { get; set; } = null!;
         public string EmailAddress { get; set; } = null!;
-        public string StreetAddress { get; set; } = null!;
-        public string City { get; set; } = null!;
-        public string District { get; set; } = null!;
-        public string Ward { get; set; } = null!;
+        public string Address { get; set; } = null!;
     }
 
     public class CheckoutResponseDto

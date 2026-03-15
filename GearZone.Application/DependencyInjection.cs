@@ -9,6 +9,7 @@ using GearZone.Application.Features.Payout;
 using GearZone.Application.Features.Payment;
 using GearZone.Application.Features.Seller;
 using GearZone.Application.Features.Checkout;
+using GearZone.Application.Features.Orders;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GearZone.Application
@@ -30,6 +31,7 @@ namespace GearZone.Application
             services.AddScoped<ISellerStoreService, SellerStoreService>();
             services.AddScoped<ISellerProductService, SellerProductService>();
             services.AddScoped<ICartService, CartService>();
+            services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IPayoutService, PayoutService>();
             services.AddScoped<ICheckoutService, CheckoutService>();
             services.AddScoped<PaymentStrategyFactory>();

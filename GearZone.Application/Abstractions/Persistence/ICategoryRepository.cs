@@ -1,3 +1,4 @@
+using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Admin.Dtos;
 using GearZone.Domain.Entities;
@@ -10,6 +11,7 @@ namespace GearZone.Application.Abstractions.Persistence
         Task<PagedResult<Category>> GetPaginatedCategoriesAsync(CategoryQueryDto query);
         Task<List<Category>> GetAllCategoriesListAsync();
         Task<List<CategoryDto>> GetHierarchicalCategoriesAsync(CategoryQueryDto query);
+
     }
 }
 

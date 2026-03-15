@@ -54,18 +54,14 @@
                     
                     <div class="space-y-2 relative" id="street-address-container">
                         <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Địa chỉ giao hàng</label>
-                        <input asp-for="CheckoutRequest.ShippingInfo.StreetAddress" class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white py-2.5 px-4 focus:ring-primary focus:border-primary transition-colors" placeholder="Nhập địa chỉ hoặc chọn từ gợi ý" required autocomplete="off" />
-                        <span asp-validation-for="CheckoutRequest.ShippingInfo.StreetAddress" class="text-xs text-red-500"></span>
+                        <input asp-for="CheckoutRequest.ShippingInfo.Address" id="shipping-address-input" class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white py-2.5 px-4 focus:ring-primary focus:border-primary transition-colors" placeholder="Nhập địa chỉ hoặc chọn từ gợi ý" required autocomplete="off" />
+                        <span asp-validation-for="CheckoutRequest.ShippingInfo.Address" class="text-xs text-red-500"></span>
                         
                         <!-- Goong Autocomplete Results -->
                         <div id="goong-results" class="hidden absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto"></div>
                     </div>
 
-                    <div class="hidden">
-                        <input type="hidden" asp-for="CheckoutRequest.ShippingInfo.City" value="N/A" />
-                        <input type="hidden" asp-for="CheckoutRequest.ShippingInfo.District" value="N/A" />
-                        <input type="hidden" asp-for="CheckoutRequest.ShippingInfo.Ward" value="N/A" />
-                    </div>
+                    <!-- Hidden fields for legacy components not needed anymore -->
 
 
                     <div class="flex items-center gap-2 mt-2 pt-4 border-t border-slate-100 dark:border-slate-700">
@@ -225,10 +221,7 @@
                 return;
             }
 
-            const streetInput = document.getElementById('CheckoutRequest_ShippingInfo_StreetAddress');
-            const cityInput = document.getElementById('CheckoutRequest_ShippingInfo_City');
-            const districtInput = document.getElementById('CheckoutRequest_ShippingInfo_District');
-            const wardInput = document.getElementById('CheckoutRequest_ShippingInfo_Ward');
+            const streetInput = document.getElementById('shipping-address-input');
             const resultsElement = document.getElementById('goong-results');
 
             new GoongAutocomplete(apiKey, {
@@ -237,32 +230,10 @@
                 onSelect: (place) => {
                     console.log('Selected Place:', place);
                     
-                    // Reset fields
-                    cityInput.value = 'N/A';
-                    districtInput.value = 'N/A';
-                    wardInput.value = 'N/A';
-
                     // Use full formatted address if available from detail
                     if (place.formatted_address) {
                         streetInput.value = place.formatted_address;
                     }
-
-                    // Map address components (even if hidden, we keep them for backend structure)
-                    if (place.address_components) {
-                        place.address_components.forEach(component => {
-                            const types = component.types;
-                            if (types.includes('administrative_area_level_1')) {
-                                cityInput.value = component.long_name;
-                            } else if (types.includes('administrative_area_level_2')) {
-                                districtInput.value = component.long_name;
-                            } else if (types.includes('administrative_area_level_3')) {
-                                wardInput.value = component.long_name;
-                            }
-                        });
-                    }
-
-                    // Fallback: If components are missing, try to parse from plus_code or other fields
-                    // or just use the description from predictions (already set in StreetAddress)
                 }
             });
         });

@@ -20,6 +20,7 @@ namespace GearZone.Application.Features.Payout
         private readonly IPayoutBatchRepository _payoutBatchRepository;
         private readonly IPayoutTransactionRepository _payoutTransactionRepository;
         private readonly IPayoutItemRepository _payoutItemRepository;
+        private readonly IWalletTransactionRepository _walletTransactionRepository;
         private readonly ILogger<PayoutService> _logger;
 
         public PayoutService(
@@ -29,6 +30,7 @@ namespace GearZone.Application.Features.Payout
             IPayoutBatchRepository payoutBatchRepository,
             IPayoutTransactionRepository payoutTransactionRepository,
             IPayoutItemRepository payoutItemRepository,
+            IWalletTransactionRepository walletTransactionRepository,
             ILogger<PayoutService> logger)
         {
             _unitOfWork = unitOfWork;
@@ -37,6 +39,7 @@ namespace GearZone.Application.Features.Payout
             _payoutBatchRepository = payoutBatchRepository;
             _payoutTransactionRepository = payoutTransactionRepository;
             _payoutItemRepository = payoutItemRepository;
+            _walletTransactionRepository = walletTransactionRepository;
             _logger = logger;
         }
 
@@ -86,6 +89,7 @@ namespace GearZone.Application.Features.Payout
 
             // 6. Build transactions + items
             var transactions = new List<PayoutTransaction>();
+            var sequence = 1;
 
             foreach (var group in storeGroups)
             {
@@ -107,6 +111,7 @@ namespace GearZone.Application.Features.Payout
                     Id = Guid.NewGuid(),
                     PayoutBatchId = batch.Id,
                     StoreId = group.Key,
+                    TransactionCode = $"{batch.BatchCode.Replace("BATCH", "PTX")}-{sequence:D3}",
                     BankName = store.BankName,
                     BankAccountNumber = store.BankAccountNumber,
                     BankAccountName = store.BankAccountName,
@@ -122,6 +127,7 @@ namespace GearZone.Application.Features.Payout
                 };
 
                 transactions.Add(transaction);
+                sequence++;
             }
 
             // 7. Gán tổng vào batch
@@ -211,7 +217,13 @@ namespace GearZone.Application.Features.Payout
             // 5. Gọi PayOS batch API
             var result = await _payoutClient.CreateBatchPayoutAsync(requests);
 
-            // 6. Xử lý kết quả
+            // 6. Lấy balance snapshot trước khi tạo wallet transactions
+            var lastTx = await _walletTransactionRepository.GetLastCompletedTransactionAsync(ct);
+            var runningBalance = lastTx?.BalanceAfter ?? 0m;
+
+            // 7. Xử lý kết quả + tạo WalletTransactions
+            var walletTxs = new List<WalletTransaction>();
+
             if (result.IsSuccess)
             {
                 foreach (var t in queued)
@@ -219,6 +231,31 @@ namespace GearZone.Application.Features.Payout
                     t.Status = PayoutTransactionStatus.Success;
                     t.PayOSTransactionId = result.ReferenceId;
                     t.ProcessedAt = DateTime.UtcNow;
+
+                    // Tạo WalletTransaction OUT - Completed cho mỗi payout thành công
+                    var balanceBefore = runningBalance;
+                    var balanceAfter = runningBalance - t.NetAmount;
+                    runningBalance = balanceAfter;
+
+                    walletTxs.Add(new WalletTransaction
+                    {
+                        Id = Guid.NewGuid(),
+                        TransactionCode = $"WTX-{DateTime.UtcNow:yyyyMMddHHmmss}-{t.Id.ToString()[..6].ToUpper()}",
+                        Type = WalletTransactionType.Payout,
+                        Direction = TransactionDirection.OUT,
+                        Amount = t.NetAmount,
+                        Currency = "VND",
+                        BalanceBefore = balanceBefore,
+                        BalanceAfter = balanceAfter,
+                        ReferenceCode = batch.BatchCode,
+                        PayoutBatchId = batch.Id,
+                        PayoutTransactionId = t.Id,
+                        Provider = "PayOS",
+                        ProviderTransactionId = result.ReferenceId,
+                        Status = WalletTransactionStatus.Completed,
+                        Note = $"Payout to {t.BankAccountName} - {t.BankAccountNumber}",
+                        CreatedAt = DateTime.UtcNow
+                    });
                 }
 
                 // Đánh dấu orders đã paid
@@ -231,11 +268,30 @@ namespace GearZone.Application.Features.Payout
             }
             else
             {
-                // Batch API fail toàn bộ → đánh dấu từng cái Failed
+                // Batch API fail toàn bộ → đánh dấu từng cái Failed + tạo WalletTransaction Failed
                 foreach (var t in queued)
                 {
                     t.Status = PayoutTransactionStatus.Failed;
                     t.FailureReason = result.ErrorMessage;
+
+                    walletTxs.Add(new WalletTransaction
+                    {
+                        Id = Guid.NewGuid(),
+                        TransactionCode = $"WTX-{DateTime.UtcNow:yyyyMMddHHmmss}-{t.Id.ToString()[..6].ToUpper()}",
+                        Type = WalletTransactionType.Payout,
+                        Direction = TransactionDirection.OUT,
+                        Amount = t.NetAmount,
+                        Currency = "VND",
+                        BalanceBefore = runningBalance,
+                        BalanceAfter = runningBalance, // Balance không thay đổi vì failed
+                        ReferenceCode = batch.BatchCode,
+                        PayoutBatchId = batch.Id,
+                        PayoutTransactionId = t.Id,
+                        Provider = "PayOS",
+                        Status = WalletTransactionStatus.Failed,
+                        Note = $"[FAILED] Payout to {t.BankAccountName}: {result.ErrorMessage}",
+                        CreatedAt = DateTime.UtcNow
+                    });
                 }
 
                 _logger.LogWarning(
@@ -243,10 +299,14 @@ namespace GearZone.Application.Features.Payout
                     batch.BatchCode, result.ErrorMessage);
             }
 
-            // 7. Update transactions
+            // 8. Update transactions
             await _payoutTransactionRepository.UpdateRangeAsync(queued, ct);
 
-            // 8. Tính lại batch status
+            // 9. Lưu wallet transactions
+            foreach (var wtx in walletTxs)
+                await _walletTransactionRepository.AddAsync(wtx, ct);
+
+            // 10. Tính lại batch status
             RecalculateBatchStatus(batch);
             await _payoutBatchRepository.UpdateAsync(batch);
 
@@ -308,6 +368,12 @@ namespace GearZone.Application.Features.Payout
 
                 var result = await _payoutClient.CreatePayoutAsync(request);
 
+                // Lấy balance snapshot
+                var lastTx = await _walletTransactionRepository.GetLastCompletedTransactionAsync(ct);
+                var balanceBefore = lastTx?.BalanceAfter ?? 0m;
+
+                WalletTransaction walletTx;
+
                 if (result.IsSuccess)
                 {
                     transaction.Status = PayoutTransactionStatus.Success;
@@ -323,6 +389,27 @@ namespace GearZone.Application.Features.Payout
                     // Recalculate parent batch
                     await RecalculateParentBatchAsync(
                         transaction.PayoutBatchId, ct);
+
+                    // Tạo WalletTransaction OUT - Completed
+                    walletTx = new WalletTransaction
+                    {
+                        Id = Guid.NewGuid(),
+                        TransactionCode = $"WTX-{DateTime.UtcNow:yyyyMMddHHmmss}-R{transaction.RetryCount}",
+                        Type = WalletTransactionType.Payout,
+                        Direction = TransactionDirection.OUT,
+                        Amount = transaction.NetAmount,
+                        Currency = "VND",
+                        BalanceBefore = balanceBefore,
+                        BalanceAfter = balanceBefore - transaction.NetAmount,
+                        ReferenceCode = transaction.Batch?.BatchCode,
+                        PayoutBatchId = transaction.PayoutBatchId,
+                        PayoutTransactionId = transaction.Id,
+                        Provider = "PayOS",
+                        ProviderTransactionId = result.ReferenceId,
+                        Status = WalletTransactionStatus.Completed,
+                        Note = $"[RETRY {transaction.RetryCount}] Payout to {transaction.BankAccountName} - {transaction.BankAccountNumber}",
+                        CreatedAt = DateTime.UtcNow
+                    };
                 }
                 else
                 {
@@ -331,7 +418,29 @@ namespace GearZone.Application.Features.Payout
                         : PayoutTransactionStatus.Failed;
                     transaction.FailureReason =
                         $"[Retry {transaction.RetryCount}] {result.ErrorMessage}";
+
+                    // Tạo WalletTransaction OUT - Failed (balance không đổi)
+                    walletTx = new WalletTransaction
+                    {
+                        Id = Guid.NewGuid(),
+                        TransactionCode = $"WTX-{DateTime.UtcNow:yyyyMMddHHmmss}-R{transaction.RetryCount}",
+                        Type = WalletTransactionType.Payout,
+                        Direction = TransactionDirection.OUT,
+                        Amount = transaction.NetAmount,
+                        Currency = "VND",
+                        BalanceBefore = balanceBefore,
+                        BalanceAfter = balanceBefore,
+                        ReferenceCode = transaction.Batch?.BatchCode,
+                        PayoutBatchId = transaction.PayoutBatchId,
+                        PayoutTransactionId = transaction.Id,
+                        Provider = "PayOS",
+                        Status = WalletTransactionStatus.Failed,
+                        Note = $"[RETRY {transaction.RetryCount} FAILED] {result.ErrorMessage}",
+                        CreatedAt = DateTime.UtcNow
+                    };
                 }
+
+                await _walletTransactionRepository.AddAsync(walletTx, ct);
             }
             catch (Exception ex)
             {

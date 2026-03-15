@@ -1,4 +1,5 @@
 using GearZone.Application.Common.Models;
+using GearZone.Application.Features.Admin.Dtos;
 using GearZone.Domain.Entities;
 
 namespace GearZone.Application.Abstractions.Persistence;
@@ -12,6 +13,10 @@ public interface IPayoutTransactionRepository : IRepository<PayoutTransaction, G
     Task<List<PayoutTransaction>> GetFailedWithRetryRemainingAsync(int maxRetry, CancellationToken ct = default);
 
     Task<PagedResult<PayoutTransaction>> GetByStoreIdAsync(Guid storeId, int page, int pageSize, CancellationToken ct = default);
+
+    Task<PagedResult<PayoutTransaction>> GetPagedAsync(PayoutTransactionQueryDto query);
+
+    Task<AdminPayoutTransactionSummaryDto> GetSummaryAsync(PayoutTransactionQueryDto query);
 
     Task UpdateRangeAsync(List<PayoutTransaction> transactions, CancellationToken ct = default);
 }

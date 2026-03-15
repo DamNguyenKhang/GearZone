@@ -9,6 +9,7 @@
         Processing,
         Delivered,
         Cancelled,
+        Completed,
         Refunded
     }
 }

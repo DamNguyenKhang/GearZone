@@ -1,4 +1,5 @@
 using GearZone.Application.Common.Models;
+using GearZone.Application.Features.Admin.Dtos;
 using GearZone.Domain.Entities;
 using GearZone.Domain.Enums;
 
@@ -10,6 +11,7 @@ public interface IPayoutBatchRepository : IRepository<PayoutBatch, Guid>
 
     Task<bool> ExistsByPeriodAsync(DateTime periodStart, DateTime periodEnd, CancellationToken ct = default);
 
-    Task<PagedResult<PayoutBatch>> GetPagedAsync(int page, int pageSize, PayoutBatchStatus? status = null, CancellationToken ct = default);
+    Task<PagedResult<PayoutBatch>> GetPagedAsync(AdminPayoutBatchQueryDto query, CancellationToken ct = default);
+    Task<AdminPayoutBatchSummaryDto> GetSummaryAsync(AdminPayoutBatchQueryDto query, CancellationToken ct = default);
     Task<decimal> GetTotalNetAmountByStatusesAsync(PayoutBatchStatus[] statuses, CancellationToken ct = default);
 }

@@ -1,11 +1,31 @@
+using GearZone.Application.Abstractions.Services;
+using GearZone.Application.Features.Admin.Dtos;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace GearZone.Web.Pages.Admin.Payouts
 {
     public class TransactionDetailModel : PageModel
     {
-        public void OnGet()
+        private readonly IAdminPayoutService _payoutService;
+
+        public TransactionDetailModel(IAdminPayoutService payoutService)
         {
+            _payoutService = payoutService;
+        }
+
+        public AdminPayoutTransactionDetailDto Transaction { get; set; } = null!;
+
+        public async Task<IActionResult> OnGetAsync(Guid id)
+        {
+            var tx = await _payoutService.GetPayoutTransactionDetailAsync(id);
+            if (tx == null)
+            {
+                return NotFound();
+            }
+
+            Transaction = tx;
+            return Page();
         }
     }
 }

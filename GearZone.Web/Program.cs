@@ -119,6 +119,12 @@ using (var scope = app.Services.CreateScope())
         job => job.RetryFailedTransactionsAsync(),
         "0 */6 * * *",
         TimeZoneInfo.Utc);
+
+    RecurringJob.AddOrUpdate<OrderAutoCompleteJob>(
+        "order-auto-complete",
+        job => job.AutoCompleteOrdersAsync(),
+        Cron.Daily(),
+        TimeZoneInfo.Utc);
 }
 
 app.UseStaticFiles();

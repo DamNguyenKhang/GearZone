@@ -136,18 +136,19 @@
                 <div class="flex flex-wrap items-end gap-x-6 gap-y-4">
 
                     <!-- Date Range Selection -->
-                    <div class="w-full sm:w-auto sm:min-w-[260px] space-y-1">
+                    <div class="w-full sm:w-60 space-y-1">
                         <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                             <span class="material-symbols-outlined text-[14px]">calendar_today</span> Date Range
                         </label>
-                        <input type="hidden" id="date-range-input" asp-for="Query.DateRange" />
-                        <div class="flex items-center bg-white rounded-lg border border-slate-200 p-1 shadow-sm h-[38px]">
-                            <button type="button" data-range="today" class="date-btn flex-1 h-full px-2 text-[11px] font-medium rounded-md @(Model.Query.DateRange == "today" ? "bg-slate-100 text-slate-900" : "bg-transparent text-slate-500 hover:text-slate-900")">Today</button>
-                            <button type="button" data-range="week" class="date-btn flex-1 h-full px-2 text-[11px] font-medium rounded-md @(Model.Query.DateRange == "week" ? "bg-slate-100 text-slate-900" : "bg-transparent text-slate-500 hover:text-slate-900")">Week</button>
-                            <button type="button" data-range="month" class="date-btn flex-1 h-full px-2 text-[11px] font-medium rounded-md @(Model.Query.DateRange == "month" ? "bg-slate-100 text-slate-900" : "bg-transparent text-slate-500 hover:text-slate-900")">Month</button>
-                            <button type="button" data-range="year" class="date-btn flex-1 h-full px-2 text-[11px] font-medium rounded-md @(Model.Query.DateRange == "year" ? "bg-slate-100 text-slate-900" : "bg-transparent text-slate-500 hover:text-slate-900")">Year</button>
-                            <button type="button" data-range="custom" id="btn-custom-date" class="date-btn flex-1 h-full px-2 text-[11px] font-medium rounded-md @(Model.Query.DateRange == "custom" ? "bg-slate-100 text-slate-900" : "bg-transparent text-slate-500 hover:text-slate-900")">Custom</button>
-                        </div>
+                        <select asp-for="Query.DateRange" class="form-select w-full rounded-lg border-slate-200 bg-white py-2 text-sm text-slate-900 focus:border-primary focus:ring-primary shadow-sm h-[38px]"
+                                onchange="toggleOrderDateRange(this.value)">
+                            <option value="">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="year">This Year</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
                     </div>
 
                     <!-- Custom Date Inputs (Hidden by default) -->
@@ -163,7 +164,7 @@
                     </div>
 
                     <!-- Amount Range -->
-                    <div class="w-full sm:w-48 space-y-1">
+                    <div class="w-full sm:w-72 space-y-1">
                         <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                             <span class="material-symbols-outlined text-[14px]">payments</span> Total Range (₫)
                         </label>
@@ -372,6 +373,25 @@
             }
         }
 
+        function toggleOrderDateRange(val) {
+            const customDateInputs = document.getElementById('custom-date-inputs');
+            if (val === 'custom') {
+                customDateInputs.classList.remove('hidden');
+            } else {
+                customDateInputs.classList.add('hidden');
+                // Clear inputs if not custom
+                const startInput = document.querySelector('input[name="Query.StartDate"]');
+                const endInput = document.querySelector('input[name="Query.EndDate"]');
+                if (startInput) startInput.value = '';
+                if (endInput) endInput.value = '';
+                
+                // If not custom and selection changed, we can auto-submit or let user click apply
+                // In Payouts we auto-submitted for non-custom. Let's stay consistent if desired.
+                // But Orders has an "Apply Filters" button, so maybe wait for it.
+                // User asked: "nếu chọn custom range thì hiển thị input để người dùng nhập"
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const toggleAdvancedBtn = document.getElementById('toggle-advanced-btn');
             const advancedFilters = document.getElementById('advanced-filters');
@@ -392,35 +412,6 @@
                     }
                 });
             }
-
-            // ─── Date Range Filter Logic ───
-            const dateButtons = document.querySelectorAll('.date-btn');
-            const customDateInputs = document.getElementById('custom-date-inputs');
-            const dateRangeInput = document.getElementById('date-range-input');
-
-            dateButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    dateButtons.forEach(b => {
-                        b.classList.remove('bg-slate-100', 'text-slate-900');
-                        b.classList.add('bg-transparent', 'text-slate-500');
-                    });
-                    
-                    this.classList.remove('bg-transparent', 'text-slate-500');
-                    this.classList.add('bg-slate-100', 'text-slate-900');
-                    
-                    const range = this.getAttribute('data-range');
-                    dateRangeInput.value = range;
-
-                    if (range === 'custom') {
-                        customDateInputs.classList.remove('hidden');
-                    } else {
-                        customDateInputs.classList.add('hidden');
-                        
-                        document.querySelector('input[name="Query.StartDate"]').value = '';
-                        document.querySelector('input[name="Query.EndDate"]').value = '';
-                    }
-                });
-            });
 
             // ─── Column Sort Logic (3-state: desc → asc → default) ───
             const sortByInput = document.getElementById('sort-by-input');

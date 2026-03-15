@@ -85,99 +85,133 @@
         </div>
     }
 
-    <!-- Summary Card -->
-    <div class="bg-white rounded-xl shadow-card border border-slate-100 p-6">
-        <h2 class="text-sm font-semibold text-slate-700 mb-4 uppercase tracking-wider">Batch Summary</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-4">
-            <div>
-                <p class="text-xs text-slate-400 uppercase tracking-wider">Batch Code</p>
-                <p class="text-sm font-mono font-semibold text-slate-900 mt-0.5">@Model.Batch.BatchCode</p>
+    <!-- Summary Stats Widgets -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Status Widget -->
+        <div class="bg-white p-5 rounded-xl shadow-card border border-slate-100 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-slate-500 text-xs font-bold uppercase tracking-wider">Current Status</span>
+                <span class="material-symbols-outlined text-slate-400 text-[20px]">info</span>
             </div>
-            <div>
-                <p class="text-xs text-slate-400 uppercase tracking-wider">Period</p>
-                <p class="text-sm text-slate-900 mt-0.5">@Model.Batch.PeriodStart.ToString("dd/MM/yyyy") – @Model.Batch.PeriodEnd.ToString("dd/MM/yyyy")</p>
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 rounded-full @statusClass px-3 py-1 text-xs font-bold ring-1 ring-inset uppercase tracking-tight">
+                    <span class="size-1.5 rounded-full @dotClass"></span>
+                    @Model.Batch.Status
+                </span>
             </div>
-            <div>
-                <p class="text-xs text-slate-400 uppercase tracking-wider">Status</p>
-                @{
-                    var (sbg, stx) = Model.Batch.Status switch
-                    {
-                        GearZone.Domain.Enums.PayoutBatchStatus.PendingApproval => ("bg-amber-50 text-amber-700 ring-amber-600/20", "Pending Approval"),
-                        GearZone.Domain.Enums.PayoutBatchStatus.Approved => ("bg-blue-50 text-blue-700 ring-blue-600/20", "Approved"),
-                        GearZone.Domain.Enums.PayoutBatchStatus.Processing => ("bg-violet-50 text-violet-700 ring-violet-600/20", "Processing"),
-                        GearZone.Domain.Enums.PayoutBatchStatus.Completed => ("bg-green-50 text-green-700 ring-green-600/20", "Completed"),
-                        GearZone.Domain.Enums.PayoutBatchStatus.PartialFailed => ("bg-orange-50 text-orange-700 ring-orange-600/20", "Partial Failed"),
-                        GearZone.Domain.Enums.PayoutBatchStatus.OnHold => ("bg-red-50 text-red-700 ring-red-600/20", "On Hold"),
-                        _ => ("bg-slate-50 text-slate-600 ring-slate-500/20", Model.Batch.Status.ToString())
-                    };
+            <p class="text-[11px] text-slate-400 mt-3">Created on @Model.Batch.CreatedAt.ToString("dd/MM/yyyy")</p>
+        </div>
+
+        <!-- Gross Widget -->
+        <div class="bg-white p-5 rounded-xl shadow-card border border-slate-100 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-slate-500 text-xs font-bold uppercase tracking-wider">Gross Revenue</span>
+                <div class="size-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[18px]">payments</span>
+                </div>
+            </div>
+            <h3 class="text-xl font-bold text-slate-900">@Model.Batch.TotalGrossAmount.ToString("N0") ₫</h3>
+            <p class="text-[11px] text-slate-400 mt-2">From @Model.Batch.TotalStores stores</p>
+        </div>
+
+        <!-- Commission Widget -->
+        <div class="bg-white p-5 rounded-xl shadow-card border border-slate-100 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-slate-500 text-xs font-bold uppercase tracking-wider">Commission</span>
+                <div class="size-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+                </div>
+            </div>
+            <h3 class="text-xl font-bold text-indigo-600">@Model.Batch.TotalCommissionAmount.ToString("N0") ₫</h3>
+            <p class="text-[11px] text-slate-400 mt-2">Platform fee collected</p>
+        </div>
+
+        <!-- Net Widget -->
+        <div class="bg-white p-5 rounded-xl shadow-card border border-slate-100 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-slate-500 text-xs font-bold uppercase tracking-wider">Net Disbursed</span>
+                <div class="size-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                </div>
+            </div>
+            <h3 class="text-xl font-bold text-emerald-600">@Model.Batch.TotalNetAmount.ToString("N0") ₫</h3>
+            <p class="text-[11px] text-slate-400 mt-2">PayOS transfer total</p>
+        </div>
+    </div>
+
+    <!-- Details Card -->
+    <div class="bg-white rounded-xl shadow-card border border-slate-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
+            <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Batch Information</h2>
+            <div class="flex items-center gap-4 text-xs font-medium text-slate-500">
+                <div class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">calendar_today</span>
+                    @Model.Batch.PeriodStart.ToString("dd/MM/yyyy") – @Model.Batch.PeriodEnd.ToString("dd/MM/yyyy")
+                </div>
+                |
+                <div class="flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">fingerprint</span>
+                    @Model.Batch.Id
+                </div>
+            </div>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-y-6 gap-x-8">
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 text-center sm:text-left">Success / Failed</p>
+                    <div class="flex items-center justify-center sm:justify-start gap-4">
+                        <div class="flex items-center gap-1.5">
+                            <span class="size-2 rounded-full bg-emerald-500"></span>
+                            <span class="text-sm font-bold text-slate-900">@Model.Batch.SuccessCount</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="size-2 rounded-full bg-red-500"></span>
+                            <span class="text-sm font-bold text-slate-900">@Model.Batch.FailedCount</span>
+                        </div>
+                    </div>
+                </div>
+                @if (Model.Batch.ApprovedAt.HasValue)
+                {
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Approved At</p>
+                        <p class="text-sm font-semibold text-slate-900">@Model.Batch.ApprovedAt.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                    </div>
                 }
-                <span class="inline-flex mt-1 items-center rounded-full @sbg px-2.5 py-1 text-xs font-semibold ring-1 ring-inset">@stx</span>
+                @if (Model.Batch.CompletedAt.HasValue)
+                {
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Completed At</p>
+                        <p class="text-sm font-semibold text-slate-900">@Model.Batch.CompletedAt.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(Model.Batch.HoldReason))
+                {
+                    <div class="col-span-2">
+                        <p class="text-[10px] font-bold text-red-400 uppercase tracking-widest mb-1.5">Hold Reason</p>
+                        <p class="text-sm font-semibold text-red-600 bg-red-50 px-3 py-1.5 rounded-lg border border-red-100">@Model.Batch.HoldReason</p>
+                    </div>
+                }
             </div>
-            <div>
-                <p class="text-xs text-slate-400 uppercase tracking-wider">Stores</p>
-                <p class="text-sm font-semibold text-slate-900 mt-0.5">@Model.Batch.TotalStores</p>
-            </div>
-            <div>
-                <p class="text-xs text-slate-400 uppercase tracking-wider">Gross Amount</p>
-                <p class="text-sm font-semibold text-slate-900 mt-0.5">@Model.Batch.TotalGrossAmount.ToString("N0") ₫</p>
-            </div>
-            <div>
-                <p class="text-xs text-slate-400 uppercase tracking-wider">Commission</p>
-                <p class="text-sm font-semibold text-blue-600 mt-0.5">@Model.Batch.TotalCommissionAmount.ToString("N0") ₫</p>
-            </div>
-            <div>
-                <p class="text-xs text-slate-400 uppercase tracking-wider">Net Amount</p>
-                <p class="text-sm font-semibold text-green-600 mt-0.5">@Model.Batch.TotalNetAmount.ToString("N0") ₫</p>
-            </div>
-            <div>
-                <p class="text-xs text-slate-400 uppercase tracking-wider">OK / Failed</p>
-                <p class="text-sm mt-0.5"><span class="text-green-600 font-semibold">@Model.Batch.SuccessCount</span> / <span class="text-red-500 font-semibold">@Model.Batch.FailedCount</span></p>
-            </div>
-            <div>
-                <p class="text-xs text-slate-400 uppercase tracking-wider">Created At</p>
-                <p class="text-sm text-slate-700 mt-0.5">@Model.Batch.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
-            </div>
-            @if (Model.Batch.ApprovedAt.HasValue)
-            {
-                <div>
-                    <p class="text-xs text-slate-400 uppercase tracking-wider">Approved At</p>
-                    <p class="text-sm text-slate-700 mt-0.5">@Model.Batch.ApprovedAt.Value.ToString("dd/MM/yyyy HH:mm")</p>
-                </div>
-            }
-            @if (Model.Batch.CompletedAt.HasValue)
-            {
-                <div>
-                    <p class="text-xs text-slate-400 uppercase tracking-wider">Completed At</p>
-                    <p class="text-sm text-slate-700 mt-0.5">@Model.Batch.CompletedAt.Value.ToString("dd/MM/yyyy HH:mm")</p>
-                </div>
-            }
-            @if (!string.IsNullOrEmpty(Model.Batch.HoldReason))
-            {
-                <div class="col-span-2">
-                    <p class="text-xs text-slate-400 uppercase tracking-wider">Hold Reason</p>
-                    <p class="text-sm text-red-600 mt-0.5">@Model.Batch.HoldReason</p>
-                </div>
-            }
         </div>
     </div>
 
     <!-- Transactions Table -->
     <div class="bg-white rounded-xl shadow-card border border-slate-100 overflow-hidden">
-        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-            <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wider">Transactions (@Model.Batch.Transactions.Count)</h2>
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/30">
+            <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Transactions (@Model.Batch.Transactions.Count)</h2>
         </div>
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+            <table class="w-full text-left border-collapse min-w-max">
                 <thead>
                     <tr class="border-b border-slate-100 bg-slate-50/50">
-                        <th class="py-4 pl-6 pr-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Code</th>
-                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Store</th>
-                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Bank Info</th>
-                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 text-right">Net Amount</th>
-                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 text-center">Status</th>
-                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 text-center">Retries</th>
-                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Created</th>
-                        <th class="py-4 pr-6 pl-3 text-xs font-semibold uppercase tracking-wider text-slate-500 text-right">Actions</th>
+                        <th class="py-4 pl-6 pr-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">Transaction</th>
+                        <th class="py-4 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">Store</th>
+                        <th class="py-4 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 text-right">Gross revenue</th>
+                        <th class="py-4 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 text-right">Commission</th>
+                        <th class="py-4 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 text-right">Net disbursed</th>
+                        <th class="py-4 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">Bank Reference</th>
+                        <th class="py-4 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 text-center">Status</th>
+                        <th class="py-4 pr-6 pl-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -185,34 +219,52 @@
                     {
                         @foreach (var tx in Model.Batch.Transactions)
                         {
-                            <tr class="group hover:bg-slate-50 transition-all">
-                                <td class="py-4 pl-6 pr-3 align-middle font-mono text-sm font-semibold text-slate-900">@tx.TransactionCode</td>
+                            <tr class="group hover:bg-slate-50 transition-all cursor-pointer" onclick="if(!event.target.closest('a, button, input')) window.location.href='/Admin/Payouts/TransactionDetail?id=@tx.Id'">
+                                <td class="py-4 pl-6 pr-3 align-middle">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-mono font-bold text-slate-900 group-hover:text-primary transition-colors">@tx.TransactionCode</span>
+                                        <span class="text-[10px] text-slate-400 font-medium">@tx.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                                    </div>
+                                </td>
                                 <td class="py-4 px-3 align-middle">
-                                    <span class="text-sm font-medium text-slate-700">@tx.StoreName</span>
+                                    <div class="flex items-center gap-3">
+                                        <div class="size-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
+                                            @tx.StoreName.Substring(0, Math.Min(2, tx.StoreName.Length)).ToUpper()
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-bold text-slate-900 leading-tight">@tx.StoreName</span>
+                                            <span class="text-[10px] text-slate-400">@tx.StoreEmail</span>
+                                        </div>
+                                    </div>
                                 </td>
-                                <td class="py-4 px-3 align-middle whitespace-nowrap">
-                                    <div class="text-xs font-medium text-slate-700">@tx.BankName</div>
-                                    <div class="text-xs text-slate-400 mt-0.5">@tx.BankAccountNumber</div>
+                                <td class="py-4 px-3 text-right text-sm font-semibold text-slate-700 align-middle">@tx.GrossAmount.ToString("N0") ₫</td>
+                                <td class="py-4 px-3 text-right text-sm font-semibold text-indigo-600/80 align-middle">@tx.CommissionAmount.ToString("N0") ₫</td>
+                                <td class="py-4 px-3 text-right text-sm font-bold text-emerald-600 align-middle">@tx.NetAmount.ToString("N0") ₫</td>
+                                <td class="py-4 px-3 align-middle">
+                                    <div class="flex flex-col">
+                                        <span class="text-xs font-bold text-slate-700">@tx.BankName</span>
+                                        <span class="text-[11px] text-slate-400 font-mono">@tx.BankAccountNumber</span>
+                                    </div>
                                 </td>
-                                <td class="py-4 px-3 text-right text-sm font-semibold text-green-600 align-middle whitespace-nowrap">@tx.NetAmount.ToString("N0") ₫</td>
                                 <td class="py-4 px-3 text-center align-middle">
                                     @{
-                                        var (tbg, ttx) = tx.Status switch
+                                        var (tbg, ttx, tdt) = tx.Status switch
                                         {
-                                            GearZone.Domain.Enums.PayoutTransactionStatus.Queued => ("bg-slate-50 text-slate-600 ring-slate-500/20", "Queued"),
-                                            GearZone.Domain.Enums.PayoutTransactionStatus.Processing => ("bg-violet-50 text-violet-700 ring-violet-600/20", "Processing"),
-                                            GearZone.Domain.Enums.PayoutTransactionStatus.Success => ("bg-green-50 text-green-700 ring-green-600/20", "Success"),
-                                            GearZone.Domain.Enums.PayoutTransactionStatus.Failed => ("bg-red-50 text-red-700 ring-red-600/20", "Failed"),
-                                            GearZone.Domain.Enums.PayoutTransactionStatus.ManualRequired => ("bg-orange-50 text-orange-700 ring-orange-600/20", "Manual"),
-                                            GearZone.Domain.Enums.PayoutTransactionStatus.Excluded => ("bg-slate-100 text-slate-500 ring-slate-400/20", "Excluded"),
-                                            _ => ("bg-slate-50 text-slate-600 ring-slate-500/20", tx.Status.ToString())
+                                            GearZone.Domain.Enums.PayoutTransactionStatus.Queued => ("bg-slate-50 text-slate-600 ring-slate-500/20", "Queued", "bg-slate-400"),
+                                            GearZone.Domain.Enums.PayoutTransactionStatus.Processing => ("bg-blue-50 text-blue-700 ring-blue-600/20", "Processing", "bg-blue-500"),
+                                            GearZone.Domain.Enums.PayoutTransactionStatus.Success => ("bg-green-50 text-green-700 ring-green-600/20", "Success", "bg-green-500"),
+                                            GearZone.Domain.Enums.PayoutTransactionStatus.Failed => ("bg-red-50 text-red-700 ring-red-600/20", "Failed", "bg-red-500"),
+                                            GearZone.Domain.Enums.PayoutTransactionStatus.ManualRequired => ("bg-orange-50 text-orange-700 ring-orange-600/20", "Manual Req", "bg-orange-500"),
+                                            GearZone.Domain.Enums.PayoutTransactionStatus.Excluded => ("bg-slate-100 text-slate-500 ring-slate-400/20", "Excluded", "bg-slate-400"),
+                                            _ => ("bg-slate-50 text-slate-600 ring-slate-500/20", tx.Status.ToString(), "bg-slate-400")
                                         };
                                     }
-                                    <span class="inline-flex items-center rounded-full @tbg px-2.5 py-1 text-xs font-semibold ring-1 ring-inset whitespace-nowrap">@ttx</span>
+                                    <span class="inline-flex items-center gap-1.5 rounded-full @tbg px-2.5 py-1 text-[10px] font-bold ring-1 ring-inset uppercase tracking-tight">
+                                        <span class="size-1 rounded-full @tdt"></span>
+                                        @ttx
+                                    </span>
                                 </td>
-                                <td class="py-4 px-3 text-center text-sm text-slate-600 align-middle">@tx.OrderCount</td>
-                                <td class="py-4 px-3 align-middle whitespace-nowrap text-xs text-slate-500">@tx.CreatedAt.ToString("dd/MM/yyyy")</td>
-                                <td class="py-4 pr-6 pl-3 align-middle text-right whitespace-nowrap">
+                                <td class="py-4 pr-6 pl-3 align-middle text-right">
                                     <div class="flex items-center justify-end gap-1.5">
                                         @if (tx.Status == GearZone.Domain.Enums.PayoutTransactionStatus.Failed ||
                                              tx.Status == GearZone.Domain.Enums.PayoutTransactionStatus.ManualRequired)
@@ -221,20 +273,17 @@
                                                 <input type="hidden" name="txId" value="@tx.Id" />
                                                 <input type="hidden" name="id" value="@Model.Batch.Id" />
                                                 <button type="submit"
-                                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 text-xs font-medium transition-colors">
-                                                    <span class="material-symbols-outlined text-[14px]">refresh</span> Retry
+                                                        class="p-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 transition-colors"
+                                                        title="Retry Transaction">
+                                                    <span class="material-symbols-outlined text-[18px]">refresh</span>
                                                 </button>
                                             </form>
                                         }
-                                        @if (tx.Status != GearZone.Domain.Enums.PayoutTransactionStatus.Excluded &&
-                                             tx.Status != GearZone.Domain.Enums.PayoutTransactionStatus.Success)
-                                        {
-                                            <button type="button"
-                                                    onclick="openExcludeModal('@tx.Id')"
-                                                    class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-medium transition-colors">
-                                                <span class="material-symbols-outlined text-[14px]">block</span> Exclude
-                                            </button>
-                                        }
+                                        <a href="/Admin/Payouts/TransactionDetail?id=@tx.Id"
+                                           class="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-primary hover:border-primary transition-all"
+                                           title="View details">
+                                            <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
@@ -243,7 +292,10 @@
                     else
                     {
                         <tr>
-                            <td colspan="8" class="py-10 text-center text-sm text-slate-400">No transactions in this batch.</td>
+                            <td colspan="8" class="py-12 text-center">
+                                <span class="material-symbols-outlined text-slate-200 text-[48px] block mb-2">payments</span>
+                                <p class="text-sm text-slate-400">No transactions found in this batch</p>
+                            </td>
                         </tr>
                     }
                 </tbody>

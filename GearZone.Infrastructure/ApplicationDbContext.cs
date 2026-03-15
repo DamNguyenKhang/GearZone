@@ -41,6 +41,9 @@ namespace GearZone.Infrastructure
         public DbSet<PayoutItem> PayoutItems { get; set; }
         public DbSet<WalletTransaction> WalletTransactions { get; set; }
         
+        public DbSet<Voucher> Vouchers { get; set; }
+        public DbSet<VoucherUsage> VoucherUsages { get; set; }
+        
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder builder)

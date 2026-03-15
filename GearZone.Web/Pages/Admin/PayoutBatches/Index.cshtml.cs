@@ -31,6 +31,7 @@ namespace GearZone.Web.Pages.Admin.PayoutBatches
         public AdminPayoutBatchQueryDto Query { get; set; } = new AdminPayoutBatchQueryDto();
 
         public PagedResult<AdminPayoutBatchDto> Batches { get; set; } = new PagedResult<AdminPayoutBatchDto>();
+        public AdminPayoutBatchSummaryDto Summary { get; set; } = new AdminPayoutBatchSummaryDto();
 
         public async Task OnGetAsync()
         {
@@ -39,14 +40,15 @@ namespace GearZone.Web.Pages.Admin.PayoutBatches
                 var today = DateTime.UtcNow.Date;
                 switch (Query.DateRange.ToLower())
                 {
-                    case "today": Query.StartDate = today; Query.EndDate = today; break;
-                    case "week": Query.StartDate = today.AddDays(-7); Query.EndDate = today; break;
-                    case "month": Query.StartDate = today.AddDays(-30); Query.EndDate = today; break;
-                    case "year": Query.StartDate = today.AddDays(-365); Query.EndDate = today; break;
+                    case "today": Query.StartDate = today; Query.EndDate = today.AddDays(1).AddSeconds(-1); break;
+                    case "week": Query.StartDate = today.AddDays(-7); Query.EndDate = today.AddDays(1).AddSeconds(-1); break;
+                    case "month": Query.StartDate = today.AddDays(-30); Query.EndDate = today.AddDays(1).AddSeconds(-1); break;
+                    case "year": Query.StartDate = today.AddDays(-365); Query.EndDate = today.AddDays(1).AddSeconds(-1); break;
                 }
             }
 
             Batches = await _payoutService.GetPayoutBatchesAsync(Query);
+            Summary = await _payoutService.GetPayoutSummaryAsync(Query);
         }
 
         public async Task<IActionResult> OnPostApproveBatchAsync(Guid id)

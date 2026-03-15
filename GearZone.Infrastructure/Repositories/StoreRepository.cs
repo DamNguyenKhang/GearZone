@@ -106,5 +106,15 @@ namespace GearZone.Infrastructure.Repositories
                 .FirstOrDefaultAsync(s => s.Slug == slug 
                     && s.Status == Domain.Enums.StoreStatus.Approved);
         }
+
+        public async Task<int> GetActiveStoresCountAsync(CancellationToken ct = default)
+        {
+            return await _dbSet.CountAsync(s => s.Status == Domain.Enums.StoreStatus.Approved, ct);
+        }
+
+        public async Task<int> GetNewStoresCountAsync(DateTime start, DateTime end, CancellationToken ct = default)
+        {
+            return await _dbSet.CountAsync(s => s.CreatedAt >= start && s.CreatedAt <= end, ct);
+        }
     }
 }

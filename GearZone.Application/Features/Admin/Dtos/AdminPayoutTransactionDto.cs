@@ -7,6 +7,7 @@ namespace GearZone.Application.Features.Admin.Dtos
     {
         public Guid Id { get; set; }
         public string TransactionCode { get; set; } = string.Empty;
+        public string BatchCode { get; set; } = string.Empty;
         
         // Store Info
         public Guid StoreId { get; set; }

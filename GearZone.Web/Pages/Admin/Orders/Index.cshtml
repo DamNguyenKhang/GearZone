@@ -103,7 +103,7 @@
                         <span class="hidden sm:inline font-medium">Filters</span>
                         @{
                             var advancedActiveCount = 0;
-                            if (!string.IsNullOrEmpty(Model.Query.DateRange) || Model.Query.StartDate.HasValue || Model.Query.EndDate.HasValue) advancedActiveCount++;
+                            if (!string.IsNullOrEmpty(Model.DateRangeShortcut)) advancedActiveCount++;
                             if (Model.Query.MinPrice.HasValue || Model.Query.MaxPrice.HasValue) advancedActiveCount++;
                         }
                         @if (advancedActiveCount > 0)
@@ -133,38 +133,9 @@
             <div id="advanced-filters"
                  class="@(hasAdvanced ? "" : "hidden") border-t border-slate-100 bg-slate-50/40 px-4 pt-4 pb-5 flex flex-col gap-5">
 
-                <div class="flex flex-wrap items-end gap-x-6 gap-y-4">
-
-                    <!-- Date Range Selection -->
-                    <div class="w-full sm:w-60 space-y-1">
-                        <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[14px]">calendar_today</span> Date Range
-                        </label>
-                        <select asp-for="Query.DateRange" class="form-select w-full rounded-lg border-slate-200 bg-white py-2 text-sm text-slate-900 focus:border-primary focus:ring-primary shadow-sm h-[38px]"
-                                onchange="toggleOrderDateRange(this.value)">
-                            <option value="">All Time</option>
-                            <option value="today">Today</option>
-                            <option value="week">This Week</option>
-                            <option value="month">This Month</option>
-                            <option value="year">This Year</option>
-                            <option value="custom">Custom Range</option>
-                        </select>
-                    </div>
-
-                    <!-- Custom Date Inputs (Hidden by default) -->
-                    <div id="custom-date-inputs" class="@(Model.Query.DateRange == "custom" ? "" : "hidden") w-full sm:w-auto sm:min-w-[280px] space-y-1 border-slate-200 transition-all">
-                        <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[14px]">edit_calendar</span> Custom Range
-                        </label>
-                        <div class="flex items-center gap-1.5 h-[38px]">
-                            <input asp-for="Query.StartDate" type="date" class="form-input min-w-0 w-full h-full rounded-lg border-slate-200 bg-white py-1.5 text-xs px-2 shadow-sm" />
-                            <span class="text-slate-300 flex-shrink-0 text-lg font-light">—</span>
-                            <input asp-for="Query.EndDate" type="date" class="form-input min-w-0 w-full h-full rounded-lg border-slate-200 bg-white py-1.5 text-xs px-2 shadow-sm" />
-                        </div>
-                    </div>
-
+                <div class="flex flex-wrap lg:flex-nowrap items-start gap-4 lg:gap-6">
                     <!-- Amount Range -->
-                    <div class="w-full sm:w-72 space-y-1">
+                    <div class="w-full lg:w-72 space-y-1 lg:shrink-0">
                         <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                             <span class="material-symbols-outlined text-[14px]">payments</span> Total Range (₫)
                         </label>
@@ -175,10 +146,32 @@
                         </div>
                     </div>
 
+                    <!-- Date Range -->
+                    <div class="w-full lg:w-80 space-y-1 lg:shrink-0">
+                        <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[14px]">calendar_today</span> Order Date
+                        </label>
+                        <div class="flex flex-col gap-2">
+                            <select asp-for="DateRangeShortcut" id="dateRangeShortcut" class="form-select w-full rounded-lg border-slate-200 bg-white py-2 text-sm focus:ring-primary focus:border-primary h-[40px]" onchange="toggleCustomDateRange()">
+                                <option value="">All Time</option>
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                            <div id="customDateRangeContainer" class="relative @(Model.DateRangeShortcut == "custom" ? "" : "hidden")">
+                                <span class="absolute inset-y-0 left-3 flex items-center text-slate-400">
+                                    <span class="material-symbols-outlined text-[18px]">event</span>
+                                </span>
+                                <input type="text" asp-for="Query.DateRange" id="dateRangePicker" class="form-input w-full pl-10 pr-4 py-2 border-slate-200 bg-white rounded-lg text-sm focus:ring-primary focus:border-primary cursor-pointer transition-all h-[40px]" placeholder="Select Range" />
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Apply button -->
-                    <div class="ms-auto flex items-end">
+                    <div class="w-full lg:w-auto mt-2 lg:mt-[22px] lg:ms-auto">
                         <button type="submit"
-                                class="w-full sm:w-auto h-[38px] flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white px-6 rounded-lg text-sm font-semibold transition-colors shadow-sm">
+                                class="w-full sm:w-auto h-[40px] flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white px-6 rounded-lg text-sm font-semibold transition-colors shadow-sm">
                             <span class="material-symbols-outlined text-[17px]">check</span>
                             Apply Filters
                         </button>
@@ -363,6 +356,8 @@
 </div>
 
 @section Scripts {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         function gotoPage(page) {
             const pageInput = document.getElementById('page-number-input');
@@ -373,26 +368,24 @@
             }
         }
 
-        function toggleOrderDateRange(val) {
-            const customDateInputs = document.getElementById('custom-date-inputs');
-            if (val === 'custom') {
-                customDateInputs.classList.remove('hidden');
+        function toggleCustomDateRange() {
+            const select = document.getElementById('dateRangeShortcut');
+            const container = document.getElementById('customDateRangeContainer');
+            if (select.value === 'custom') {
+                container.classList.remove('hidden');
             } else {
-                customDateInputs.classList.add('hidden');
-                // Clear inputs if not custom
-                const startInput = document.querySelector('input[name="Query.StartDate"]');
-                const endInput = document.querySelector('input[name="Query.EndDate"]');
-                if (startInput) startInput.value = '';
-                if (endInput) endInput.value = '';
-                
-                // If not custom and selection changed, we can auto-submit or let user click apply
-                // In Payouts we auto-submitted for non-custom. Let's stay consistent if desired.
-                // But Orders has an "Apply Filters" button, so maybe wait for it.
-                // User asked: "nếu chọn custom range thì hiển thị input để người dùng nhập"
+                container.classList.add('hidden');
+                const picker = document.getElementById('dateRangePicker');
+                if (picker) picker.value = '';
             }
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            flatpickr("#dateRangePicker", {
+                mode: "range",
+                dateFormat: "Y-m-d",
+                allowInput: true
+            });
             const toggleAdvancedBtn = document.getElementById('toggle-advanced-btn');
             const advancedFilters = document.getElementById('advanced-filters');
 

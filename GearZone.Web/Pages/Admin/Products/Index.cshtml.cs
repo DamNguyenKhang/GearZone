@@ -32,6 +32,12 @@ namespace GearZone.Web.Pages.Admin.Products
         [BindProperty(SupportsGet = true)]
         public AdminProductQueryDto Query { get; set; } = new AdminProductQueryDto();
 
+        [BindProperty(SupportsGet = true)]
+        public string? DateRangeShortcut { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? DateRange { get; set; }
+
         public PagedResult<AdminProductDto> Products { get; set; } = new PagedResult<AdminProductDto>();
         public AdminProductStatsDto Stats { get; set; } = new AdminProductStatsDto();
 
@@ -44,6 +50,45 @@ namespace GearZone.Web.Pages.Admin.Products
 
         public async Task OnGetAsync()
         {
+            if (!string.IsNullOrEmpty(DateRangeShortcut))
+            {
+                var today = DateTime.UtcNow.Date;
+                switch (DateRangeShortcut.ToLower())
+                {
+                    case "today":
+                        Query.StartDate = today;
+                        Query.EndDate = today;
+                        break;
+                    case "week":
+                        Query.StartDate = today.AddDays(-7);
+                        Query.EndDate = today;
+                        break;
+                    case "month":
+                        Query.StartDate = today.AddDays(-30);
+                        Query.EndDate = today;
+                        break;
+                    case "custom":
+                        if (!string.IsNullOrEmpty(DateRange))
+                        {
+                            var dates = DateRange.Split(" to ");
+                            if (dates.Length == 2)
+                            {
+                                if (DateTime.TryParse(dates[0], out var start)) Query.StartDate = start;
+                                if (DateTime.TryParse(dates[1], out var end)) Query.EndDate = end;
+                            }
+                            else if (dates.Length == 1)
+                            {
+                                if (DateTime.TryParse(dates[0], out var start))
+                                {
+                                    Query.StartDate = start;
+                                    Query.EndDate = start;
+                                }
+                            }
+                        }
+                        break;
+                }
+            }
+
             Stats = await _productService.GetProductStatsAsync();
             Products = await _productService.GetProductsAsync(Query);
 
@@ -128,7 +173,7 @@ namespace GearZone.Web.Pages.Admin.Products
                 TempData["ErrorMessage"] = "Failed to update product statuses.";
             }
 
-            return RedirectToPage(new { Query.SearchTerm, Query.Status, Query.CategoryId, Query.BrandId, Query.StoreId, Query.PageNumber });
+            return RedirectToPage(new { Query.SearchTerm, Query.Status, Query.CategoryId, Query.BrandId, Query.StoreId, Query.PageNumber, DateRangeShortcut, DateRange });
         }
     }
 }

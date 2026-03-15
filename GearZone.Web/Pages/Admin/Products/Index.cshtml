@@ -110,7 +110,7 @@
                             if (Model.Query.CategoryId.HasValue && Model.Query.CategoryId.Value > 0) advancedActiveCount++;
                             if (Model.Query.StoreId.HasValue && Model.Query.StoreId.Value != Guid.Empty) advancedActiveCount++;
                             if (Model.Query.MinPrice.HasValue || Model.Query.MaxPrice.HasValue) advancedActiveCount++;
-                            if (Model.Query.StartDate.HasValue || Model.Query.EndDate.HasValue) advancedActiveCount++;
+                            if (!string.IsNullOrEmpty(Model.DateRangeShortcut)) advancedActiveCount++;
                             if (Model.Query.OutOfStock) advancedActiveCount++;
                             if (Model.Query.AttributeOptionIds.Any()) advancedActiveCount++;
                         }
@@ -186,12 +186,20 @@
                         <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
                             <span class="material-symbols-outlined text-[14px]">calendar_today</span> Created Date
                         </label>
-                        <div class="flex items-center gap-1.5">
-                            <input asp-for="Query.StartDate" type="date"
-                                   class="form-input min-w-0 w-full rounded-lg border-slate-200 bg-white py-2 text-xs px-2 shadow-sm" />
-                            <span class="text-slate-300 flex-shrink-0 text-lg font-light">—</span>
-                            <input asp-for="Query.EndDate" type="date"
-                                   class="form-input min-w-0 w-full rounded-lg border-slate-200 bg-white py-2 text-xs px-2 shadow-sm" />
+                        <div class="flex flex-col gap-2">
+                            <select asp-for="DateRangeShortcut" id="dateRangeShortcut" class="form-select w-full rounded-lg border-slate-200 bg-white py-2 text-sm focus:ring-primary focus:border-primary h-[40px]" onchange="toggleCustomDateRange()">
+                                <option value="">All Time</option>
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                                <option value="custom">Custom Range</option>
+                            </select>
+                            <div id="customDateRangeContainer" class="relative @(Model.DateRangeShortcut == "custom" ? "" : "hidden")">
+                                <span class="absolute inset-y-0 left-3 flex items-center text-slate-400">
+                                    <span class="material-symbols-outlined text-[18px]">event</span>
+                                </span>
+                                <input type="text" asp-for="DateRange" id="dateRangePicker" class="form-input w-full pl-10 pr-4 py-2 border-slate-200 bg-white rounded-lg text-sm focus:ring-primary focus:border-primary cursor-pointer transition-all h-[40px]" placeholder="Select Range" />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -541,6 +549,8 @@
 </form>
 
 @section Scripts {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         function gotoPage(page) {
             const pageInput = document.getElementById('page-number-input');
@@ -551,7 +561,31 @@
             }
         }
 
+        function toggleCustomDateRange() {
+            const select = document.getElementById('dateRangeShortcut');
+            const container = document.getElementById('customDateRangeContainer');
+            if (select.value === 'custom') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+                // Clear range value if not custom
+                const picker = document.getElementById('dateRangePicker');
+                if (picker) picker.value = '';
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+            flatpickr("#dateRangePicker", {
+                mode: "range",
+                dateFormat: "Y-m-d",
+                allowInput: true,
+                onClose: function(selectedDates, dateStr, instance) {
+                    if (selectedDates.length === 2) {
+                        // Optional: auto-submit? For now just let them click Apply
+                    }
+                }
+            });
+
             const toggleAdvancedBtn = document.getElementById('toggle-advanced-btn');
             const advancedFilters = document.getElementById('advanced-filters');
             const categorySelect = document.getElementById('category-filter-select');

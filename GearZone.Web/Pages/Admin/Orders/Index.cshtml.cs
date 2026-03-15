@@ -22,15 +22,18 @@ namespace GearZone.Web.Pages.Admin.Orders
         [BindProperty(SupportsGet = true)]
         public AdminOrderQueryDto Query { get; set; } = new AdminOrderQueryDto();
 
+        [BindProperty(SupportsGet = true)]
+        public string? DateRangeShortcut { get; set; }
+
         public PagedResult<AdminOrderDto> Orders { get; set; } = new PagedResult<AdminOrderDto>();
         public AdminOrderStatsDto Stats { get; set; } = new AdminOrderStatsDto();
 
         public async Task OnGetAsync()
         {
-            if (!string.IsNullOrEmpty(Query.DateRange) && Query.DateRange.ToLower() != "custom")
+            if (!string.IsNullOrEmpty(DateRangeShortcut))
             {
                 var today = System.DateTime.UtcNow.Date;
-                switch (Query.DateRange.ToLower())
+                switch (DateRangeShortcut.ToLower())
                 {
                     case "today":
                         Query.StartDate = today;
@@ -44,9 +47,24 @@ namespace GearZone.Web.Pages.Admin.Orders
                         Query.StartDate = today.AddDays(-30);
                         Query.EndDate = today;
                         break;
-                    case "year":
-                        Query.StartDate = today.AddDays(-365);
-                        Query.EndDate = today;
+                    case "custom":
+                        if (!string.IsNullOrEmpty(Query.DateRange))
+                        {
+                            var dates = Query.DateRange.Split(" to ");
+                            if (dates.Length == 2)
+                            {
+                                if (System.DateTime.TryParse(dates[0], out var start)) Query.StartDate = start;
+                                if (System.DateTime.TryParse(dates[1], out var end)) Query.EndDate = end;
+                            }
+                            else if (dates.Length == 1)
+                            {
+                                if (System.DateTime.TryParse(dates[0], out var start))
+                                {
+                                    Query.StartDate = start;
+                                    Query.EndDate = start;
+                                }
+                            }
+                        }
                         break;
                 }
             }

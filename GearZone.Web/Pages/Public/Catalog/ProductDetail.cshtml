@@ -61,11 +61,8 @@
                         <span class="material-symbols-outlined text-[14px]">storefront</span>
                         @Model.Product.StoreName
                     </a>
-                    <a href="/messages?storeSlug=@Model.Product.StoreSlug&productSlug=@Model.Product.Slug"
-                       class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-orange-600 transition hover:-translate-y-0.5 hover:bg-orange-100"
-                       data-chat-launch
-                       data-chat-store-slug="@Model.Product.StoreSlug"
-                       data-chat-product-slug="@Model.Product.Slug">
+                    <a href="/Public/User/Profile?tab=messages&storeSlug=@Model.Product.StoreSlug&productSlug=@Model.Product.Slug"
+                       class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-orange-600 transition hover:-translate-y-0.5 hover:bg-orange-100">
                         <span class="material-symbols-outlined text-[14px]">chat</span>
                         Chat Now
                     </a>

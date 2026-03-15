@@ -47,10 +47,11 @@ namespace GearZone.Web.Pages.StoreOwner.Messages
                 return Redirect("/Public/Auth/Login");
             }
 
-            ViewData["Title"] = "Tin nhan khach hang";
-            ViewData["PageHeader"] = "Tin nhan khach hang";
+            ViewData["Title"] = "Tin nhắn khách hàng";
+            ViewData["PageHeader"] = "Tin nhắn khách hàng";
             ViewData["ActivePage"] = "Messages";
-            ViewData["Breadcrumb"] = new[] { "Tin nhan" };
+            ViewData["Breadcrumb"] = new[] { "Tin nhắn" };
+            ViewData["ContentMode"] = "ChatFullCanvas";
 
             if (SubOrderId.HasValue && !ConversationId.HasValue)
             {
@@ -182,6 +183,7 @@ namespace GearZone.Web.Pages.StoreOwner.Messages
             return new ChatInboxPageViewModel
             {
                 IsSellerView = true,
+                IsFullCanvasPage = true,
                 CurrentUserId = userId,
                 BasePath = "/StoreOwner/Messages",
                 Filter = query.Filter,

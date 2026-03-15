@@ -105,9 +105,9 @@
                         <span class="material-symbols-outlined text-[20px] @(Model.ActiveTab == "orders" ? "filled" : "")">shopping_bag</span>
                         Orders
                     </a>
-                    <a href="/messages"
-                       class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-primary rounded-xl transition-all">
-                        <span class="material-symbols-outlined text-[20px]">chat</span>
+                    <a asp-page="/Public/User/Profile" asp-route-tab="messages"
+                       class="flex items-center gap-3 px-4 py-3 text-sm @(Model.ActiveTab == "messages" ? "font-bold text-primary bg-primary/5 border-l-4 border-primary" : "font-medium text-gray-600 hover:bg-gray-50 hover:text-primary") rounded-xl transition-all">
+                        <span class="material-symbols-outlined text-[20px] @(Model.ActiveTab == "messages" ? "filled" : "")">chat</span>
                         Messages
                     </a>
                     <a asp-page="/Public/User/Profile" asp-route-tab="addresses" 
@@ -312,10 +312,10 @@
                                             }
                                         </div>
                                         <div class="flex flex-wrap gap-2">
-                                            <a href="/messages?storeSlug=@order.StoreSlug"
-                                               class="px-5 py-2 text-sm font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors"
-                                               data-chat-launch
-                                               data-chat-store-slug="@order.StoreSlug">
+                                            <a asp-page="/Public/User/Profile"
+                                               asp-route-tab="messages"
+                                               asp-route-storeSlug="@order.StoreSlug"
+                                               class="px-5 py-2 text-sm font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors">
                                                 Chat Shop
                                             </a>
                                             <a href="/store/@order.StoreSlug" class="px-5 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
@@ -566,6 +566,20 @@
                     }
                 </div>
             }
+            else if (Model.ActiveTab == "messages")
+            {
+                <div class="space-y-6">
+                    <div class="flex items-center justify-between flex-wrap gap-4">
+                        <div>
+                            <p class="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Message Center</p>
+                            <h1 class="text-2xl font-bold text-gray-900 mt-2">Messages</h1>
+                            <p class="text-sm text-gray-500 mt-2">Keep every shop conversation inside your account center so orders, reviews, and chat stay in one place.</p>
+                        </div>
+                    </div>
+
+                    <partial name="/Pages/Shared/_ChatInboxLayout.cshtml" model="Model.MessagesInbox" />
+                </div>
+            }
             else if (Model.ActiveTab == "password")
             {
                 <div class="space-y-6">
@@ -597,4 +611,15 @@
 
 @section Styles {
     <partial name="/Pages/Shared/_ReviewUiStyles.cshtml" />
+    @if (Model.ActiveTab == "messages")
+    {
+        <partial name="/Pages/Shared/_ChatInboxStyles.cshtml" />
+    }
+}
+
+@section Scripts {
+    @if (Model.ActiveTab == "messages")
+    {
+        <partial name="/Pages/Shared/_ChatInboxScripts.cshtml" />
+    }
 }

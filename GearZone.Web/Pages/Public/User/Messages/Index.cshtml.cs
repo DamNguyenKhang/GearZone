@@ -14,11 +14,16 @@ namespace GearZone.Web.Pages.Public.User.Messages
     public class IndexModel : PageModel
     {
         private readonly IChatService _chatService;
+        private readonly BuyerInboxComposer _buyerInboxComposer;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public IndexModel(IChatService chatService, UserManager<ApplicationUser> userManager)
+        public IndexModel(
+            IChatService chatService,
+            BuyerInboxComposer buyerInboxComposer,
+            UserManager<ApplicationUser> userManager)
         {
             _chatService = chatService;
+            _buyerInboxComposer = buyerInboxComposer;
             _userManager = userManager;
         }
 
@@ -50,20 +55,16 @@ namespace GearZone.Web.Pages.Public.User.Messages
                 return Redirect("/Public/Auth/Login");
             }
 
-            if (!string.IsNullOrWhiteSpace(StoreSlug) && !ConversationId.HasValue)
+            return RedirectToPage("/Public/User/Profile", new
             {
-                var conversationId = await _chatService.EnsureBuyerConversationAsync(userId, StoreSlug);
-                if (!conversationId.HasValue)
-                {
-                    TempData["ErrorMessage"] = "This shop cannot be opened in chat right now.";
-                    return RedirectToPage("/Public/User/Messages/Index");
-                }
-
-                return RedirectToPage(new { conversationId, productSlug = ProductSlug });
-            }
-
-            Inbox = await BuildInboxAsync(userId, ConversationId, 1);
-            return Page();
+                tab = "messages",
+                conversationId = ConversationId,
+                filter = string.Equals(Filter, "all", StringComparison.OrdinalIgnoreCase) ? null : Filter,
+                searchTerm = SearchTerm,
+                counterpartScopeKey = CounterpartScopeKey,
+                storeSlug = StoreSlug,
+                productSlug = ProductSlug
+            });
         }
 
         public async Task<IActionResult> OnGetWidgetBootstrapAsync(Guid? conversationId, string? storeSlug, string? productSlug, string? counterpartScopeKey = null)
@@ -97,7 +98,7 @@ namespace GearZone.Web.Pages.Public.User.Messages
             return new PartialViewResult
             {
                 ViewName = "/Pages/Shared/_ChatInboxLayout.cshtml",
-                ViewData = new ViewDataDictionary<ChatInboxPageViewModel>(ViewData, MapInbox(widget, userId, isWidgetSurface: true))
+                ViewData = new ViewDataDictionary<ChatInboxPageViewModel>(ViewData, _buyerInboxComposer.MapWidget(widget, userId, "/messages"))
             };
         }
 
@@ -110,26 +111,21 @@ namespace GearZone.Web.Pages.Public.User.Messages
             }
 
             var isWidgetSurface = string.Equals(surface, "widget", StringComparison.OrdinalIgnoreCase);
-            var inbox = await BuildInboxAsync(userId, conversationId, 1, includeThread: false, isWidgetSurface: isWidgetSurface);
+            var inbox = await _buyerInboxComposer.BuildInboxAsync(userId, new BuyerInboxBuildRequest
+            {
+                BasePath = "/messages",
+                Filter = Filter,
+                SearchTerm = SearchTerm,
+                CounterpartScopeKey = CounterpartScopeKey,
+                ProductSlug = ProductSlug,
+                SelectedConversationId = conversationId,
+                IncludeThread = false,
+                IsWidgetSurface = isWidgetSurface
+            });
             return new PartialViewResult
             {
                 ViewName = "/Pages/Shared/_ChatConversationList.cshtml",
-                ViewData = new ViewDataDictionary<ChatConversationListViewModel>(ViewData, new ChatConversationListViewModel
-                {
-                    IsSellerView = false,
-                    IsWidgetSurface = inbox.IsWidgetSurface,
-                    CurrentUserId = userId,
-                    BasePath = "/messages",
-                    Filter = inbox.Filter,
-                    SearchTerm = inbox.SearchTerm,
-                    CounterpartScopeKey = inbox.CounterpartScopeKey,
-                    ActiveConversationId = inbox.ActiveConversationId,
-                    TotalUnreadCount = inbox.TotalUnreadCount,
-                    EmptyInboxTitle = inbox.EmptyInboxTitle,
-                    EmptyInboxDescription = inbox.EmptyInboxDescription,
-                    CounterpartScopeOptions = inbox.CounterpartScopeOptions,
-                    Conversations = inbox.Conversations
-                })
+                ViewData = new ViewDataDictionary<ChatConversationListViewModel>(ViewData, _buyerInboxComposer.BuildConversationListViewModel(inbox))
             };
         }
 
@@ -142,126 +138,16 @@ namespace GearZone.Web.Pages.Public.User.Messages
             }
 
             var isWidgetSurface = string.Equals(surface, "widget", StringComparison.OrdinalIgnoreCase);
-            var thread = await _chatService.GetBuyerThreadAsync(userId, conversationId, new ChatThreadQueryDto
-            {
-                LoadedPageCount = loadedPageCount,
-                PageSize = 30,
-                ProductSlug = productSlug
-            });
-
-            if (thread != null)
-            {
-                await _chatService.MarkConversationReadAsync(userId, conversationId);
-            }
+            var thread = await _buyerInboxComposer.GetThreadAsync(
+                userId,
+                conversationId,
+                loadedPageCount,
+                productSlug ?? ProductSlug);
 
             return new PartialViewResult
             {
                 ViewName = "/Pages/Shared/_ChatThreadPane.cshtml",
-                ViewData = new ViewDataDictionary<ChatThreadPaneViewModel>(ViewData, new ChatThreadPaneViewModel
-                {
-                    IsSellerView = false,
-                    IsWidgetSurface = isWidgetSurface,
-                    CurrentUserId = userId,
-                    EmptyTitle = "Chon mot cuoc tro chuyen",
-                    EmptyDescription = "Chon shop o cot ben trai de xem toan bo tin nhan.",
-                    Thread = thread
-                })
-            };
-        }
-
-        private async Task<ChatInboxPageViewModel> BuildInboxAsync(
-            string userId,
-            Guid? selectedConversationId,
-            int loadedPageCount,
-            bool includeThread = true,
-            bool isWidgetSurface = false)
-        {
-            var query = new ChatInboxQueryDto
-            {
-                Filter = Filter,
-                SearchTerm = SearchTerm,
-                CounterpartScopeKey = CounterpartScopeKey,
-                PageNumber = 1,
-                PageSize = 20
-            };
-
-            var conversations = await _chatService.GetBuyerInboxAsync(userId, query);
-            var counterpartScopeOptions = await _chatService.GetBuyerCounterpartScopeOptionsAsync(userId);
-            var activeConversationId = selectedConversationId;
-            if (!activeConversationId.HasValue && conversations.Items.Any())
-            {
-                activeConversationId = conversations.Items[0].ConversationId;
-            }
-
-            ChatThreadDto? thread = null;
-            if (includeThread && activeConversationId.HasValue)
-            {
-                thread = await _chatService.GetBuyerThreadAsync(userId, activeConversationId.Value, new ChatThreadQueryDto
-                {
-                    LoadedPageCount = loadedPageCount,
-                    PageSize = 30,
-                    ProductSlug = ProductSlug
-                });
-
-                if (thread == null && conversations.Items.Any())
-                {
-                    activeConversationId = conversations.Items[0].ConversationId;
-                    thread = await _chatService.GetBuyerThreadAsync(userId, activeConversationId.Value, new ChatThreadQueryDto
-                    {
-                        LoadedPageCount = 1,
-                        PageSize = 30,
-                        ProductSlug = ProductSlug
-                    });
-                }
-
-                if (thread != null)
-                {
-                    await _chatService.MarkConversationReadAsync(userId, thread.ConversationId);
-                }
-            }
-
-            return new ChatInboxPageViewModel
-            {
-                IsSellerView = false,
-                IsWidgetSurface = isWidgetSurface,
-                CurrentUserId = userId,
-                BasePath = "/messages",
-                Filter = query.Filter,
-                SearchTerm = query.SearchTerm,
-                CounterpartScopeKey = query.CounterpartScopeKey,
-                ProductSlug = ProductSlug,
-                ActiveConversationId = activeConversationId,
-                TotalUnreadCount = await _chatService.GetBuyerUnreadCountAsync(userId),
-                EmptyInboxTitle = "Chua co cuoc tro chuyen nao",
-                EmptyInboxDescription = "Mo bat ky shop hop le nao va bam Chat de bat dau tro chuyen.",
-                CounterpartScopeOptions = counterpartScopeOptions,
-                Conversations = conversations,
-                ActiveThread = thread
-            };
-        }
-
-        private static ChatInboxPageViewModel MapInbox(
-            ChatWidgetBootstrapDto widget,
-            string userId,
-            bool isWidgetSurface)
-        {
-            return new ChatInboxPageViewModel
-            {
-                IsSellerView = false,
-                IsWidgetSurface = isWidgetSurface,
-                CurrentUserId = userId,
-                BasePath = "/messages",
-                Filter = widget.Filter,
-                SearchTerm = widget.SearchTerm,
-                CounterpartScopeKey = widget.CounterpartScopeKey,
-                ProductSlug = widget.ActiveThread?.ActiveProductContext?.ProductSlug,
-                ActiveConversationId = widget.ActiveConversationId,
-                TotalUnreadCount = widget.TotalUnreadCount,
-                EmptyInboxTitle = "Chua co cuoc tro chuyen nao",
-                EmptyInboxDescription = "Mo bat ky shop hop le nao va bam Chat de bat dau tro chuyen.",
-                CounterpartScopeOptions = widget.CounterpartScopeOptions,
-                Conversations = widget.Conversations,
-                ActiveThread = widget.ActiveThread
+                ViewData = new ViewDataDictionary<ChatThreadPaneViewModel>(ViewData, _buyerInboxComposer.BuildThreadPaneViewModel(userId, thread, isWidgetSurface))
             };
         }
     }

@@ -1,4 +1,6 @@
 @using System
+@using System.Collections.Generic
+@using Microsoft.AspNetCore.WebUtilities
 @using GearZone.Web.Pages.Shared.Models
 @model ChatConversationListViewModel
 @{
@@ -76,22 +78,26 @@
                 var timeLabel = conversation.LastMessageAt.ToLocalTime().Date == DateTime.Now.Date
                     ? conversation.LastMessageAt.ToLocalTime().ToString("HH:mm")
                     : conversation.LastMessageAt.ToLocalTime().ToString("dd/MM");
-                var href = $"{Model.BasePath}?conversationId={conversation.ConversationId}";
+                var queryParams = new Dictionary<string, string?>
+                {
+                    ["conversationId"] = conversation.ConversationId.ToString()
+                };
                 if (!string.IsNullOrWhiteSpace(Model.Filter) && !string.Equals(Model.Filter, "all", StringComparison.OrdinalIgnoreCase))
                 {
-                    href += $"&filter={Uri.EscapeDataString(Model.Filter)}";
+                    queryParams["filter"] = Model.Filter;
                 }
                 if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
                 {
-                    href += $"&searchTerm={Uri.EscapeDataString(Model.SearchTerm)}";
+                    queryParams["searchTerm"] = Model.SearchTerm;
                 }
                 if (!string.IsNullOrWhiteSpace(Model.CounterpartScopeKey))
                 {
-                    href += $"&counterpartScopeKey={Uri.EscapeDataString(Model.CounterpartScopeKey)}";
+                    queryParams["counterpartScopeKey"] = Model.CounterpartScopeKey;
                 }
+                var href = QueryHelpers.AddQueryString(Model.BasePath, queryParams);
 
                 <a href="@href"
-                   class="chat-conversation-row flex items-start gap-3 border-b border-[#f5f5f5] px-3 py-2.5 transition @(isActive ? "bg-[#f6f6f6]" : "bg-white hover:bg-[#fafafa]")"
+                   class="chat-conversation-row flex items-start gap-3 border-b border-[#f5f5f5] px-3 py-2.5 transition @(isActive ? "bg-[#f6f6f6]" : "bg-white hover:bg-[#fafafa]") @(Model.IsFullCanvasPage ? "chat-conversation-row--compact" : "")"
                    data-chat-conversation-link
                    data-conversation-id="@conversation.ConversationId"
                    data-active="@(isActive ? "true" : "false")">

@@ -6,7 +6,7 @@
     var isWidget = Model.IsWidgetSurface;
 }
 
-<div class="chat-thread-panel flex h-full min-h-0 flex-col @(isWidget ? "bg-white" : "overflow-hidden rounded-sm border border-[#e8e8e8] bg-white")"
+<div class="chat-thread-panel flex h-full min-h-0 flex-col @(isWidget || Model.IsFullCanvasPage ? "bg-white" : "overflow-hidden rounded-sm border border-[#e8e8e8] bg-white") @(Model.IsFullCanvasPage ? "chat-thread-panel--seller-canvas" : string.Empty)"
      data-chat-thread-pane
      data-loaded-page-count="@(thread?.LoadedPageCount ?? 1)"
      data-conversation-id="@(thread?.ConversationId ?? Guid.Empty)">

@@ -1,9 +1,11 @@
 using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Admin.Dtos;
+using GearZone.Application.Features.Catalog.DTOs;
 using GearZone.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -105,6 +107,46 @@ namespace GearZone.Infrastructure.Repositories
                 .AsNoTracking()
                 .FirstOrDefaultAsync(s => s.Slug == slug 
                     && s.Status == Domain.Enums.StoreStatus.Approved);
+        }
+
+        public async Task<List<HomeStoreCardDto>> GetHomeStoresBySlugsAsync(IReadOnlyCollection<string> slugs)
+        {
+            if (slugs == null || slugs.Count == 0)
+            {
+                return new List<HomeStoreCardDto>();
+            }
+
+            var normalizedSlugs = slugs
+                .Where(slug => !string.IsNullOrWhiteSpace(slug))
+                .Select(slug => slug.Trim())
+                .Distinct()
+                .ToList();
+
+            return await _dbSet
+                .AsNoTracking()
+                .Where(s => normalizedSlugs.Contains(s.Slug) && s.Status == Domain.Enums.StoreStatus.Approved)
+                .Select(s => new HomeStoreCardDto
+                {
+                    Id = s.Id,
+                    StoreName = s.StoreName,
+                    Slug = s.Slug,
+                    Description = s.Description ?? string.Empty,
+                    LogoUrl = s.LogoUrl,
+                    Province = s.Province,
+                    ProductCount = s.Products.Count(p => !p.IsDeleted && p.Status == Domain.Enums.ProductStatus.Active),
+                    TotalSold = s.Products.Where(p => !p.IsDeleted).Sum(p => p.SoldCount),
+                    Rating = s.Products
+                        .SelectMany(p => p.Reviews)
+                        .Where(r => !r.IsDeleted)
+                        .Select(r => (decimal?)r.Rating)
+                        .Average() ?? 0,
+                    ReviewCount = s.Products
+                        .SelectMany(p => p.Reviews)
+                        .Count(r => !r.IsDeleted),
+                    FollowerCount = s.StoreFollows.Count(),
+                    Href = "/store/" + s.Slug
+                })
+                .ToListAsync();
         }
     }
 }

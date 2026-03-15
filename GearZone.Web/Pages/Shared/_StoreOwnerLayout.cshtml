@@ -6,6 +6,7 @@
     var sellerUnreadCount = string.IsNullOrWhiteSpace(sellerUserId)
         ? 0
         : await ChatService.GetSellerUnreadCountAsync(sellerUserId);
+    var isChatFullCanvas = string.Equals(ViewData["ContentMode"]?.ToString(), "ChatFullCanvas", StringComparison.OrdinalIgnoreCase);
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -272,8 +273,8 @@
         </header>
 
         <!-- Main Content Area -->
-        <div class="flex-1 overflow-y-auto p-6 scroll-smooth bg-background-light">
-            <div class="max-w-7xl mx-auto flex flex-col gap-6">
+        <div class="flex-1 @(isChatFullCanvas ? "min-h-0 overflow-hidden bg-background-light px-0 pb-0 pt-4" : "overflow-y-auto p-6 scroll-smooth bg-background-light")">
+            <div class="@(isChatFullCanvas ? "h-full min-h-0 w-full" : "max-w-7xl mx-auto flex flex-col gap-6")">
                 @RenderBody()
             </div>
         </div>

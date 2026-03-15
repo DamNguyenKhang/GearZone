@@ -25,6 +25,42 @@ namespace GearZone.Application.Features.Catalog
         private readonly IProductReviewRepository _productReviewRepository;
         private readonly IUnitOfWork _unitOfWork;
 
+        private static readonly string[] HomeCategorySlugs =
+        {
+            "cpus",
+            "gpus",
+            "motherboards",
+            "gaming-monitors",
+            "mechanical-keyboards",
+            "gaming-headsets"
+        };
+
+        private static readonly string[] HomeStoreSlugs =
+        {
+            "gearzone-official"
+        };
+
+        private static readonly string[] FlashDealSlugs =
+        {
+            "asus-dual-rtx-4060-ti",
+            "amd-ryzen-7-7800x3d",
+            "akko-asa-pbt-keycaps",
+            "lg-27gp850-b",
+            "samsung-980-pro-nvme-1tb"
+        };
+
+        private static readonly string[] RecommendedSlugs =
+        {
+            "logitech-gpro-x-superlight2",
+            "keychron-q2-pro-65",
+            "corsair-virtuoso-rgb-xt",
+            "corsair-vengeance-ddr5-5600",
+            "msi-pro-b650m-a-wifi"
+        };
+
+        private const string HeroProductSlug = "asus-rog-swift-oled-pg27aqdm";
+        private const string PromoProductSlug = "corsair-4000d-airflow";
+
         public CatalogService(
             IProductRepository productRepository, 
             ICategoryRepository categoryRepository,
@@ -43,6 +79,101 @@ namespace GearZone.Application.Features.Catalog
             _storeFollowRepository = storeFollowRepository;
             _productReviewRepository = productReviewRepository;
             _unitOfWork = unitOfWork;
+        }
+
+        public async Task<HomePageDto> GetHomePageAsync(string? currentUserId)
+        {
+            var curatedProductSlugs = new[]
+            {
+                HeroProductSlug,
+                PromoProductSlug
+            }
+            .Concat(FlashDealSlugs)
+            .Concat(RecommendedSlugs)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+            var curatedProducts = await _productRepository.GetCatalogProductsBySlugsAsync(curatedProductSlugs);
+            var productsBySlug = curatedProducts.ToDictionary(p => p.Slug, StringComparer.OrdinalIgnoreCase);
+
+            var categories = await _categoryRepository.GetHomeCategoriesBySlugsAsync(HomeCategorySlugs);
+            var stores = await _storeRepository.GetHomeStoresBySlugsAsync(HomeStoreSlugs);
+
+            productsBySlug.TryGetValue(HeroProductSlug, out var heroProduct);
+            productsBySlug.TryGetValue(PromoProductSlug, out var promoProduct);
+            var featuredStore = stores.FirstOrDefault();
+
+            return new HomePageDto
+            {
+                Hero = new HomeHeroDto
+                {
+                    Eyebrow = "Premium marketplace picks",
+                    Title = "Build a cleaner,",
+                    AccentTitle = "faster setup.",
+                    Description = "Browse curated PC hardware with calmer spacing, cleaner routing, and real catalog data behind every card.",
+                    PrimaryLabel = "Shop now",
+                    PrimaryHref = "/products",
+                    SecondaryLabel = "Explore featured gear",
+                    SecondaryHref = heroProduct != null ? $"/product/{heroProduct.Slug}" : "/products",
+                    ImageUrl = heroProduct?.ImageUrl ?? string.Empty,
+                    ProductSlug = heroProduct?.Slug,
+                    ProductName = heroProduct?.Name,
+                    StoreName = featuredStore?.StoreName,
+                    StoreHref = featuredStore?.Href,
+                    Highlights = new List<string>
+                    {
+                        "Verified catalog",
+                        "Real store routes",
+                        "Quick support"
+                    }
+                },
+                PromoCard = new HomePromoCardDto
+                {
+                    Eyebrow = "Setup comfort",
+                    Title = "Compact promos, calmer spacing.",
+                    Description = "A focused side card keeps the fold balanced while still taking buyers to a real product page.",
+                    LinkLabel = "Open featured case",
+                    Href = promoProduct != null ? $"/product/{promoProduct.Slug}" : "/products",
+                    ImageUrl = promoProduct?.ImageUrl ?? string.Empty
+                },
+                QuickActions = new List<HomeQuickActionDto>
+                {
+                    new HomeQuickActionDto { Title = "Fast shipping", Subtitle = "Nationwide coverage", Icon = "local_shipping", Href = "/products", Tone = "blue" },
+                    new HomeQuickActionDto { Title = "Verified store", Subtitle = "Official GearZone desk", Icon = "verified", Href = featuredStore?.Href ?? "/products", Tone = "orange" },
+                    new HomeQuickActionDto { Title = "Daily deals", Subtitle = "Curated flash picks", Icon = "bolt", Href = "/products?sort=popular", Tone = "violet" },
+                    new HomeQuickActionDto { Title = "Quick chat", Subtitle = "Talk to shops fast", Icon = "forum", Href = "/Public/User/Profile?tab=messages", Tone = "sky" }
+                },
+                Categories = OrderBySlug(categories, HomeCategorySlugs)
+                    .Select(category =>
+                    {
+                        var presentation = GetCategoryPresentation(category.Slug, category.Name, category.ProductCount);
+                        category.Subtitle = presentation.Subtitle;
+                        category.Icon = presentation.Icon;
+                        category.Href = $"/products/{category.Slug}";
+                        category.Tone = presentation.Tone;
+                        return category;
+                    })
+                    .ToList(),
+                FlashRail = new HomeProductRailDto
+                {
+                    Eyebrow = "Flash zone",
+                    Title = "Compact flash sale picks",
+                    Description = "Curated best-value hardware already in the demo catalog.",
+                    ViewAllLabel = "See all deals",
+                    ViewAllHref = "/products?sort=popular",
+                    Products = OrderBySlug(curatedProducts, FlashDealSlugs)
+                },
+                Stores = OrderBySlug(stores, HomeStoreSlugs),
+                RecommendedRail = new HomeProductRailDto
+                {
+                    Eyebrow = "Recommended",
+                    Title = "Popular picks for a cleaner setup",
+                    Description = "Smaller cards, better rhythm, and direct routes into real product pages.",
+                    ViewAllLabel = "Browse catalog",
+                    ViewAllHref = "/products",
+                    Products = OrderBySlug(curatedProducts, RecommendedSlugs)
+                }
+            };
         }
 
         public async Task<PagedResult<CatalogProductDto>> GetProductsAsync(ProductFilterDto filter)
@@ -240,6 +371,42 @@ namespace GearZone.Application.Features.Catalog
             }
 
             return result;
+        }
+
+        private static List<T> OrderBySlug<T>(IEnumerable<T> items, IReadOnlyList<string> slugs) where T : class
+        {
+            var order = slugs
+                .Select((slug, index) => new { slug, index })
+                .ToDictionary(item => item.slug, item => item.index, StringComparer.OrdinalIgnoreCase);
+
+            return items
+                .OrderBy(item =>
+                {
+                    var slug = item switch
+                    {
+                        CatalogProductDto product => product.Slug,
+                        HomeCategoryTileDto category => category.Slug,
+                        HomeStoreCardDto store => store.Slug,
+                        _ => string.Empty
+                    };
+
+                    return order.TryGetValue(slug, out var index) ? index : int.MaxValue;
+                })
+                .ToList();
+        }
+
+        private static (string Subtitle, string Icon, string Tone) GetCategoryPresentation(string slug, string fallbackName, int productCount)
+        {
+            return slug.ToLowerInvariant() switch
+            {
+                "cpus" => ("Desktop & gaming", "memory", "blue"),
+                "gpus" => ("RTX & Radeon", "developer_board", "violet"),
+                "motherboards" => ("ATX & compact", "dashboard_customize", "emerald"),
+                "gaming-monitors" => ("High refresh", "monitor", "sky"),
+                "mechanical-keyboards" => ("Mechanical picks", "keyboard", "orange"),
+                "gaming-headsets" => ("Work & play", "headphones", "slate"),
+                _ => ($"{productCount:N0} live products", "inventory_2", "blue")
+            };
         }
 
         public async Task<ProductDetailDto?> GetProductDetailBySlugAsync(string slug)

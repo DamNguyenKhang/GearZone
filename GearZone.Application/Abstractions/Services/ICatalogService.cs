@@ -8,6 +8,7 @@ namespace GearZone.Application.Abstractions.Services
 {
     public interface ICatalogService
     {
+        Task<HomePageDto> GetHomePageAsync(string? currentUserId);
         Task<PagedResult<CatalogProductDto>> GetProductsAsync(ProductFilterDto filter);
         Task<CatalogFilterSidebarDto> GetFiltersForCategoryAsync(string categorySlug);
         Task<List<CatalogCategoryDto>> GetCategoriesAsync();

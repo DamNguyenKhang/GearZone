@@ -15,6 +15,10 @@ namespace GearZone.Application.Abstractions.Persistence
         Task<Store?> GetStoreByOwnerIdAsync(string userId);
         Task<StoreApplicationStatsDto> GetStoreApplicationStatsAsync();
         Task<Store?> GetBySlugAsync(string slug);
+        
+        // Dashboard Methods
+        Task<int> GetActiveStoresCountAsync(CancellationToken ct = default);
+        Task<int> GetNewStoresCountAsync(DateTime start, DateTime end, CancellationToken ct = default);
         Task<List<HomeStoreCardDto>> GetHomeStoresBySlugsAsync(IReadOnlyCollection<string> slugs);
     }
 }

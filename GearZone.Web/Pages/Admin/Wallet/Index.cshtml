@@ -398,13 +398,13 @@
                         <span asp-validation-for="TopupInput.Amount" class="text-xs text-red-500"></span>
                     </div>
 
-                    <!-- Reference -->
+                    <!-- Provider Transaction ID -->
                     <div class="space-y-1.5">
-                        <label asp-for="TopupInput.BankTransferReference" class="block text-[11px] font-black text-slate-500 uppercase tracking-widest pl-1">Bank Transfer Reference *</label>
-                        <input asp-for="TopupInput.BankTransferReference" type="text"
+                        <label asp-for="TopupInput.ProviderTransactionId" class="block text-[11px] font-black text-slate-500 uppercase tracking-widest pl-1">Provider Transaction ID *</label>
+                        <input asp-for="TopupInput.ProviderTransactionId" type="text"
                                class="form-input block w-full px-4 py-2.5 bg-slate-50 border-slate-200 rounded-xl text-sm font-semibold font-mono text-slate-900 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
-                               placeholder="e.g. TXN-20250312-00001" />
-                        <span asp-validation-for="TopupInput.BankTransferReference" class="text-xs text-red-500"></span>
+                               placeholder="e.g. BK12345678" />
+                        <span asp-validation-for="TopupInput.ProviderTransactionId" class="text-xs text-red-500"></span>
                     </div>
 
                     <!-- Note -->

@@ -1,4 +1,4 @@
-﻿using GearZone.Application.Abstractions.External;
+using GearZone.Application.Abstractions.External;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Admin;
 using GearZone.Application.Features.Auth;
@@ -40,6 +40,9 @@ namespace GearZone.Application
             services.AddScoped<IProductReviewService, ProductReviewService>();
             services.AddScoped<PaymentStrategyFactory>();
             services.AddScoped<IAdminWalletService, AdminWalletService>();
+            services.AddScoped<IAdminPlatformService, AdminPlatformService>();
+            services.AddScoped<IAdminDashboardService, AdminDashboardService>();
+            services.AddScoped<IAdminVoucherService, AdminVoucherService>();
 
             return services;
         }

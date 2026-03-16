@@ -8,7 +8,10 @@ namespace GearZone.Application.Features.Admin.Dtos
     {
         public string? SearchTerm { get; set; }
         public PayoutTransactionStatus? Status { get; set; }
+        public string? DateRangeType { get; set; } // "Today", "Week", "Month", "Custom"
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public decimal? MinAmount { get; set; }
+        public decimal? MaxAmount { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using GearZone.Domain.Enums;
@@ -9,7 +9,7 @@ namespace GearZone.Domain.Entities
     {
         public Guid PayoutBatchId { get; set; }
         public Guid StoreId { get; set; }
-        public long TransactionCode { get; set; }
+        public string TransactionCode { get; set; } = string.Empty;
         // Bank snapshot
         public string BankName { get; set; }
         public string BankAccountNumber { get; set; }

@@ -60,7 +60,7 @@ namespace GearZone.Application.Features.Admin
             summary.PendingPayoutAmount = await _payoutBatchRepository.GetTotalNetAmountByStatusesAsync(
                 new[] { PayoutBatchStatus.Approved, PayoutBatchStatus.Processing }, ct);
 
-            // 3. Next batch required = sum of SubOrders that are Delivered but Unpaid (Eligible for payout)
+            // 3. Next batch required = sum of SubOrders that are Completed but Unpaid (Eligible for payout)
             summary.NextBatchRequiredAmount = await _subOrderRepository.GetTotalEligiblePayoutAmountAsync(ct);
 
             // 4. Determine status level
@@ -100,7 +100,7 @@ namespace GearZone.Application.Features.Admin
             var lastTx = await _walletTransactionRepository.GetLastCompletedTransactionAsync(ct);
 
             var balanceBefore = lastTx?.BalanceAfter ?? 0m;
-            var txCode = $"TOP-{DateTime.UtcNow:yyyyMMddHHmmss}";
+            var txCode = $"WTX-{DateTime.UtcNow:yyyyMMddHHmmss}";
 
             var transaction = new WalletTransaction
             {
@@ -112,7 +112,8 @@ namespace GearZone.Application.Features.Admin
                 Currency = "VND",
                 BalanceBefore = balanceBefore,
                 BalanceAfter = balanceBefore, // Will be updated when confirmed
-                ReferenceCode = dto.BankTransferReference,
+                ReferenceCode = $"TOPUP-{DateTime.UtcNow:yyyyMMddHHmmss}",
+                ProviderTransactionId = dto.ProviderTransactionId,
                 Note = dto.Note,
                 Status = WalletTransactionStatus.Pending,
                 CreatedByAdminId = adminId,

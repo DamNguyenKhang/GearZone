@@ -9,233 +9,368 @@
 }
 
 <div class="flex flex-col gap-6 relative overflow-hidden">
-    <!-- Live Stats Bar -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <!-- Card 1 -->
-        <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
-            <div class="size-12 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100/50 shrink-0">
-                <span class="material-symbols-outlined">payments</span>
+    <!-- KPI Cards Grid -->
+    <div class="flex flex-wrap gap-4">
+        <!-- Card 1: Today's Volume -->
+        <div class="bg-white p-4 lg:p-5 rounded-[10px] shadow-card border border-slate-100 flex items-start gap-4 flex-1 min-w-[220px]">
+            <div class="size-9 rounded-full bg-[#EFF6FF] text-[#1A56DB] flex items-center justify-center shrink-0 mt-0.5">
+                <span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
             </div>
-            <div>
-                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Today's Volume</p>
-                <div class="flex flex-col">
-                    <h3 class="text-xl font-bold text-slate-900 leading-tight">₫48,200,000</h3>
-                    <p class="text-[11px] text-slate-500 mt-1">247 transactions</p>
+            <div class="flex flex-col min-w-0">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Transactions</p>
+                <h3 class="text-xl font-bold text-slate-900 leading-tight">@(Model.Summary?.TotalTransactions ?? 0)</h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">Across all accounts</p>
+                <div class="flex items-center gap-1 mt-2 text-[10px] text-slate-400 font-bold">
+                    <span class="material-symbols-outlined text-[12px]">info</span>
+                    <span>Synchronized</span>
                 </div>
             </div>
         </div>
-        <!-- Card 2 -->
-        <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
-            <div class="size-12 rounded-lg bg-green-50 text-green-600 flex items-center justify-center border border-green-100/50 shrink-0">
-                <span class="material-symbols-outlined">account_balance_wallet</span>
+
+        <!-- Card 2: Total Revenue In -->
+        <div class="bg-white p-4 lg:p-5 rounded-[10px] shadow-card border border-slate-100 flex items-start gap-4 flex-1 min-w-[220px]">
+            <div class="size-9 rounded-full bg-[#ECFDF5] text-[#0E9F6E] flex items-center justify-center shrink-0 mt-0.5">
+                <span class="material-symbols-outlined text-[20px]">arrow_downward</span>
             </div>
-            <div>
-                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Week Revenue In</p>
-                <div class="flex flex-col">
-                    <h3 class="text-xl font-bold text-slate-900 leading-tight">₫312,400,000</h3>
-                    <p class="text-[11px] text-slate-500 mt-1">Order payments received</p>
+            <div class="flex flex-col min-w-0">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Revenue In</p>
+                <h3 class="text-xl font-bold text-slate-900 leading-tight">₫@(Model.Summary?.TotalInflow.ToString("N0") ?? "0")</h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">Payments received</p>
+                <div class="flex items-center gap-1 mt-2 text-[10px] text-green-600 font-bold">
+                    <span class="material-symbols-outlined text-[12px]">arrow_upward</span>
+                    <span>Lifetime total</span>
                 </div>
             </div>
         </div>
-        <!-- Card 3 -->
-        <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
-            <div class="size-12 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100/50 shrink-0">
-                <span class="material-symbols-outlined">account_balance</span>
+
+        <!-- Card 3: Total Paid Out -->
+        <div class="bg-white p-4 lg:p-5 rounded-[10px] shadow-card border border-slate-100 flex items-start gap-4 flex-1 min-w-[220px]">
+            <div class="size-9 rounded-full bg-[#F5F3FF] text-[#7C3AED] flex items-center justify-center shrink-0 mt-0.5">
+                <span class="material-symbols-outlined text-[20px]">account_balance</span>
             </div>
-            <div>
-                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Week Paid Out</p>
-                <div class="flex flex-col">
-                    <h3 class="text-xl font-bold text-slate-900 leading-tight">₫124,500,000</h3>
-                    <p class="text-[11px] text-slate-500 mt-1 font-mono hover:text-primary cursor-pointer">BATCH-2025-W44</p>
+            <div class="flex flex-col min-w-0">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Paid Out</p>
+                <h3 class="text-xl font-bold text-slate-900 leading-tight">₫@(Model.Summary?.TotalOutflow.ToString("N0") ?? "0")</h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">Disbursed to stores</p>
+                <div class="flex items-center gap-1 mt-2 text-[10px] text-slate-400 font-bold">
+                    <span class="material-symbols-outlined text-[12px]">remove</span>
+                    <span>Lifetime total</span>
                 </div>
             </div>
         </div>
-        <!-- Card 4 -->
-        <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
-            <div class="size-12 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center border border-teal-100/50 shrink-0">
-                <span class="material-symbols-outlined">local_atm</span>
+
+
+        <!-- Card 5: Wallet Balance -->
+        <div class="bg-slate-900 p-4 lg:p-5 rounded-[10px] shadow-card border border-slate-800 flex items-start gap-4 flex-1 min-w-[220px] relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform">
+                <span class="material-symbols-outlined text-[64px] text-white">account_balance_wallet</span>
             </div>
-            <div>
-                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Commission</p>
-                <div class="flex flex-col">
-                    <h3 class="text-xl font-bold text-slate-900 leading-tight">₫26,554,000</h3>
-                    <p class="text-[11px] text-slate-500 mt-1">Collected this week</p>
-                </div>
+            <div class="size-9 rounded-full bg-white/10 text-white flex items-center justify-center shrink-0 mt-0.5 z-10">
+                <span class="material-symbols-outlined text-[20px]">savings</span>
             </div>
-        </div>
-        <!-- Card 5 -->
-        <div class="bg-white p-4 rounded-xl shadow-card border border-slate-100 flex items-center gap-4">
-            <div class="size-12 rounded-lg bg-red-50 text-red-600 flex items-center justify-center border border-red-100/50 shrink-0">
-                <span class="material-symbols-outlined">receipt_long</span>
-            </div>
-            <div>
-                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Refunds</p>
-                <div class="flex flex-col">
-                    <h3 class="text-xl font-bold text-slate-900 leading-tight">₫8,200,000</h3>
-                    <p class="text-[11px] text-slate-500 mt-1">12 refunds this week</p>
+            <div class="flex flex-col min-w-0 z-10">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Platform Wallet Balance</p>
+                <h3 class="text-xl font-bold text-white leading-tight">₫@(Model.Summary?.WalletBalance.ToString("N0") ?? "0")</h3>
+                <p class="text-[11px] text-slate-400 mt-0.5">Current operational funds</p>
+                <div class="flex items-center gap-1 mt-2 text-[10px] text-[#0E9F6E] font-bold">
+                    <span class="material-symbols-outlined text-[12px]">verified</span>
+                    <span>Synchronized with Bank</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Filters & Actions Bar -->
-    <div class="bg-white rounded-xl shadow-card border border-slate-100 overflow-hidden">
-        <form method="get" id="filter-form" class="flex flex-col">
-            <input type="hidden" name="Query.PageNumber" id="page-number-input" value="1" />
-            
-            <!-- Primary toolbar -->
-            <div class="flex flex-col lg:flex-row gap-3 p-4 items-start lg:items-center">
+    <!-- Filter Bar Section -->
+    <div class="space-y-4">
+        <div class="bg-white rounded-[10px] shadow-card border border-slate-100 p-4 xl:p-5">
+            <form method="get" id="filter-form" class="space-y-5">
+                <input type="hidden" name="Query.PageNumber" id="page-number-input" value="@Model.Query.PageNumber" />
+                <input type="hidden" name="Query.SortBy" id="sort-by-input" value="@Model.Query.SortBy" />
+                <input type="hidden" name="Query.SortDirection" id="sort-direction-input" value="@Model.Query.SortDirection" />
+                
+                <!-- ROW 1: Primary Filters -->
+                <div class="flex flex-wrap items-center gap-4">
+                    <!-- Search Input -->
+                    <div class="relative flex-1 min-w-[280px] group">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none group-focus-within:text-primary transition-colors">
+                            <span class="material-symbols-outlined text-[20px]">search</span>
+                        </span>
+                        <input name="Query.Search" class="form-input w-full rounded-lg border-slate-200 bg-slate-50 pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-primary focus:bg-white transition-all h-[42px]"
+                               placeholder="Order code, PayOS txn ID, batch, ref..." type="text" autocomplete="off" value="@Model.Query.Search" />
+                    </div>
 
-                <!-- Search box -->
-                <div class="relative flex-1 w-full">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 pointer-events-none">
-                        <span class="material-symbols-outlined text-[20px]">search</span>
-                    </span>
-                    <input class="form-input w-full rounded-lg border-slate-200 bg-slate-50 pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-primary focus:bg-white transition-colors"
-                           placeholder="Search by ref, order code, store name…" type="text" autocomplete="off" />
-                </div>
-
-                <!-- Status quick-filter -->
-                <div class="shrink-0 w-full lg:w-40">
-                    <select class="form-select w-full rounded-lg border-slate-200 bg-slate-50 py-2.5 text-sm text-slate-900 focus:border-primary focus:ring-primary shadow-sm">
-                        <option value="">All Statuses</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Failed">Failed</option>
-                        <option value="Reversed">Reversed</option>
-                    </select>
-                </div>
-
-                <!-- Type quick-filter -->
-                <div class="shrink-0 w-full lg:w-44">
-                    <select class="form-select w-full rounded-lg border-slate-200 bg-slate-50 py-2.5 text-sm text-slate-900 focus:border-primary focus:ring-primary shadow-sm">
-                        <option value="">All Types</option>
-                        <option value="OrderRevenue">Order Revenue</option>
-                        <option value="Commission">Commission</option>
-                        <option value="Payout">Payout</option>
-                        <option value="Refund">Refund</option>
-                    </select>
-                </div>
-
-                <!-- Toolbar actions -->
-                <div class="flex items-center gap-2 shrink-0 w-full lg:w-auto">
-                    <button type="submit" class="flex-1 lg:flex-none flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm shadow-blue-500/20 transition-all">
-                        <span class="material-symbols-outlined text-[18px]">search</span>
-                        <span>Search</span>
-                    </button>
-
-                    <button type="button" id="toggle-advanced-btn" class="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-sm text-sm whitespace-nowrap">
-                        <span class="material-symbols-outlined text-[18px]">tune</span>
-                        <span class="hidden sm:inline font-medium">Filters</span>
-                    </button>
-
-                    <a href="#" class="flex items-center justify-center p-2.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors bg-white shadow-sm" title="Reset all filters">
-                        <span class="material-symbols-outlined text-[18px]">restart_alt</span>
-                    </a>
-
-                    <button type="button" class="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors shadow-sm text-sm whitespace-nowrap">
-                        <span class="material-symbols-outlined text-[18px]">file_download</span>
-                        <span class="hidden sm:inline font-medium">Export</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Advanced Filters (Collapsible) -->
-            <div id="advanced-filters" class="hidden border-t border-slate-100 bg-slate-50/40 px-4 pt-4 pb-5 flex flex-col gap-5">
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                    
-                    <!-- Store -->
-                    <div class="space-y-1">
-                        <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[14px]">storefront</span> Store
-                        </label>
-                        <select class="form-select w-full rounded-lg border-slate-200 bg-white py-2 text-sm text-slate-900 focus:border-primary focus:ring-primary shadow-sm">
-                            <option value="">All Stores</option>
-                            <option value="1">TechStore Official</option>
-                            <option value="2">Gaming Haven</option>
+                    <!-- Status Filter -->
+                    <div class="w-full sm:w-[160px]">
+                        <select name="Query.Status" class="form-select w-full rounded-lg border-slate-200 bg-slate-50 py-2.5 px-3 text-sm text-slate-900 focus:border-primary focus:ring-primary shadow-sm h-[42px]">
+                            <option value="">○ All Statuses</option>
+                            <option value="Completed" selected="@(Model.Query.Status == "Completed")" class="text-emerald-600">● Completed</option>
+                            <option value="Paid" selected="@(Model.Query.Status == "Paid")" class="text-emerald-600">● Paid</option>
+                            <option value="Pending" selected="@(Model.Query.Status == "Pending")" class="text-amber-500">● Pending</option>
+                            <option value="Failed" selected="@(Model.Query.Status == "Failed")" class="text-red-600">● Failed</option>
+                            <option value="Reversed" selected="@(Model.Query.Status == "Reversed")" class="text-slate-400">● Reversed</option>
                         </select>
                     </div>
 
-                    <!-- Date Range Selection -->
-                    <div class="space-y-1">
-                        <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[14px]">calendar_today</span> Date Range
-                        </label>
-                        <div class="flex items-center bg-white rounded-lg border border-slate-200 p-1 shadow-sm h-[38px]">
-                            <button type="button" class="date-btn flex-1 h-full px-2 text-[11px] font-medium rounded-md bg-slate-100 text-slate-900">Today</button>
-                            <button type="button" class="date-btn flex-1 h-full px-2 text-[11px] font-medium rounded-md bg-transparent text-slate-500 hover:text-slate-900">Week</button>
-                            <button type="button" class="date-btn flex-1 h-full px-2 text-[11px] font-medium rounded-md bg-transparent text-slate-500 hover:text-slate-900">Month</button>
-                            <button type="button" id="btn-custom-date" class="date-btn flex-1 h-full px-2 text-[11px] font-medium rounded-md bg-transparent text-slate-500 hover:text-slate-900">Custom</button>
+                    <!-- Types Multi-select -->
+                    <div class="w-full sm:w-[160px] relative" id="types-dropdown-container">
+                        <button type="button" onclick="toggleTypesDropdown()" class="w-full flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 hover:bg-white hover:border-slate-300 transition-all h-[42px] shadow-sm">
+                            <span id="types-selected-label" class="truncate">All Types</span>
+                            <span class="material-symbols-outlined text-[18px] text-slate-400">expand_more</span>
+                        </button>
+                        <div id="types-dropdown-panel" class="hidden absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 p-3 z-30 ring-1 ring-black/5">
+                            <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-50">
+                                <button type="button" onclick="selectAllTypes()" class="text-[12px] font-bold text-primary hover:underline">Select All</button>
+                                <button type="button" onclick="clearAllTypes()" class="text-[12px] font-bold text-slate-400 hover:underline">Clear</button>
+                            </div>
+                            <div class="space-y-1 max-h-60 overflow-y-auto custom-scrollbar">
+                                @{
+                                    var selectedTypes = Request.Query["Types"].ToList();
+                                    bool NoTypesSelected = selectedTypes.Count == 0;
+                                }
+                                <label class="flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg cursor-pointer group">
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" name="Types" value="OrderRevenue" @(NoTypesSelected || selectedTypes.Contains("OrderRevenue") ? "checked" : "") class="rounded border-slate-300 text-primary focus:ring-primary h-4 w-4" />
+                                        <span class="material-symbols-outlined text-[18px] text-emerald-500">payments</span>
+                                        <span class="text-sm text-slate-700 font-medium">Order Revenue</span>
+                                    </div>
+                                    <span class="text-xs text-slate-400">847</span>
+                                </label>
+                                <label class="flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg cursor-pointer group">
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" name="Types" value="Commission" @(NoTypesSelected || selectedTypes.Contains("Commission") ? "checked" : "") class="rounded border-slate-300 text-primary focus:ring-primary h-4 w-4" />
+                                        <span class="material-symbols-outlined text-[18px] text-teal-500">percent</span>
+                                        <span class="text-sm text-slate-700 font-medium">Commission</span>
+                                    </div>
+                                    <span class="text-xs text-slate-400">847</span>
+                                </label>
+                                <label class="flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg cursor-pointer group">
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" name="Types" value="Payout" @(NoTypesSelected || selectedTypes.Contains("Payout") ? "checked" : "") class="rounded border-slate-300 text-primary focus:ring-primary h-4 w-4" />
+                                        <span class="material-symbols-outlined text-[18px] text-indigo-500">account_balance</span>
+                                        <span class="text-sm text-slate-700 font-medium">Payout</span>
+                                    </div>
+                                    <span class="text-xs text-slate-400">124</span>
+                                </label>
+                                <label class="flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg cursor-pointer group">
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" name="Types" value="Refund" @(NoTypesSelected || selectedTypes.Contains("Refund") ? "checked" : "") class="rounded border-slate-300 text-primary focus:ring-primary h-4 w-4" />
+                                        <span class="material-symbols-outlined text-[18px] text-red-500">restart_alt</span>
+                                        <span class="text-sm text-slate-700 font-medium">Refund</span>
+                                    </div>
+                                    <span class="text-xs text-slate-400">38</span>
+                                </label>
+                            </div>
+                            <button type="button" onclick="applyTypesFilter()" class="w-full mt-3 bg-primary py-2 rounded-lg text-xs font-bold text-white hover:bg-primary-dark transition-colors shadow-sm">Apply</button>
                         </div>
                     </div>
 
-                    <!-- Custom Date Inputs (Hidden by default) -->
-                    <div id="custom-date-inputs" class="hidden space-y-1 md:col-span-2 xl:col-span-1 xl:border-l border-slate-200 xl:pl-4 transition-all">
-                        <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[14px]">edit_calendar</span> Custom Range
-                        </label>
-                        <div class="flex items-center gap-1.5 h-[38px]">
-                            <input type="date" class="form-input min-w-0 w-full h-full rounded-lg border-slate-200 bg-white py-1.5 text-xs px-2 shadow-sm" />
-                            <span class="text-slate-300 flex-shrink-0 text-lg font-light">—</span>
-                            <input type="date" class="form-input min-w-0 w-full h-full rounded-lg border-slate-200 bg-white py-1.5 text-xs px-2 shadow-sm" />
-                        </div>
+                    <!-- Search & Actions -->
+                    <div class="flex items-center gap-2">
+                        <button type="submit" class="w-[100px] h-[42px] flex items-center justify-center gap-2 bg-[#1A56DB] hover:bg-blue-700 text-white rounded-lg text-sm font-bold shadow-sm shadow-blue-500/10 transition-all">
+                            <span class="material-symbols-outlined text-[18px]">search</span>
+                            <span>Search</span>
+                        </button>
+                        
+                        <button type="button" id="toggle-filters-btn" onclick="toggleAdvancedFilters()"
+                                class="flex items-center justify-center gap-1.5 px-3.5 h-[42px] rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-sm text-sm whitespace-nowrap">
+                            <span class="material-symbols-outlined text-[18px]">tune</span>
+                            <span class="hidden sm:inline font-bold">Filters</span>
+                            @{
+                                var activeAdvCount = 0;
+                                if (!string.IsNullOrEmpty(Request.Query["StoreName"])) activeAdvCount++;
+                                if (!string.IsNullOrEmpty(Request.Query["BatchCode"])) activeAdvCount++;
+                                if (!string.IsNullOrEmpty(Request.Query["MinAmount"]) || !string.IsNullOrEmpty(Request.Query["MaxAmount"])) activeAdvCount++;
+                                if (!string.IsNullOrEmpty(Request.Query["StartDate"]) || !string.IsNullOrEmpty(Request.Query["EndDate"])) activeAdvCount++;
+                            }
+                            @if (activeAdvCount > 0)
+                            {
+                                <span class="inline-flex items-center justify-center size-5 rounded-full bg-primary text-white text-[10px] font-bold">@activeAdvCount</span>
+                            }
+                        </button>
+
+                        <button type="button" onclick="clearAllFilters()" class="size-[42px] flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-all shadow-sm" title="Reset all filters">
+                            <span class="material-symbols-outlined text-[20px]">restart_alt</span>
+                        </button>
                     </div>
 
-                    <!-- Amount Range -->
-                    <div class="space-y-1">
-                        <label class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[14px]">payments</span> Amount Range (₫)
-                        </label>
-                        <div class="flex items-center gap-1.5">
-                            <input type="number" placeholder="Min" class="form-input min-w-0 w-full rounded-lg border-slate-200 bg-white py-2 text-sm px-2.5 shadow-sm" />
-                            <span class="text-slate-300 flex-shrink-0 text-lg font-light">—</span>
-                            <input type="number" placeholder="Max" class="form-input min-w-0 w-full rounded-lg border-slate-200 bg-white py-2 text-sm px-2.5 shadow-sm" />
+                    <!-- Export -->
+                    <div class="relative ml-auto">
+                        <button type="button" onclick="toggleExportDropdown()" class="flex items-center justify-center gap-1.5 px-4 h-[42px] rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-all shadow-sm text-sm font-semibold">
+                            <span class="material-symbols-outlined text-[18px]">file_download</span>
+                            <span>Export</span>
+                            <span class="material-symbols-outlined text-[16px]">expand_more</span>
+                        </button>
+                        <div id="export-dropdown-panel" class="hidden absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 py-1 z-30 ring-1 ring-black/5 overflow-hidden">
+                            <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                                <span class="material-symbols-outlined text-slate-400 text-[18px]">description</span>
+                                <span>Export as CSV</span>
+                            </a>
+                            <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors font-medium">
+                                <span class="material-symbols-outlined text-blue-500 text-[18px]">cloud_download</span>
+                                <span>Export All as CSV</span>
+                            </a>
                         </div>
                     </div>
                 </div>
 
-                <!-- Row 2: Toggles + Actions -->
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-2">
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-tight mr-2">Direction</label>
-                        <div class="flex items-center gap-4">
-                            <label class="flex items-center gap-2 cursor-pointer select-none">
-                                <input type="radio" name="direction" value="all" checked class="text-primary focus:ring-primary h-4 w-4 border-slate-300" />
-                                <span class="text-sm font-medium text-slate-700">All</span>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer select-none">
-                                <input type="radio" name="direction" value="in" class="text-primary focus:ring-primary h-4 w-4 border-slate-300" />
-                                <span class="text-sm font-medium text-slate-700">In (Credit)</span>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer select-none">
-                                <input type="radio" name="direction" value="out" class="text-primary focus:ring-primary h-4 w-4 border-slate-300" />
-                                <span class="text-sm font-medium text-slate-700">Out (Debit)</span>
-                            </label>
+                <!-- Collapsible Advanced Filters -->
+                <div id="advanced-filters-section" class="@(activeAdvCount > 0 ? "" : "hidden") space-y-5 pt-4 border-t border-slate-50">
+                    <!-- ROW 2: Secondary Filters -->
+                    <div class="flex flex-wrap items-end gap-x-8 gap-y-4">
+                        <!-- Store Filter -->
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-0.5">Store</label>
+                            <div class="relative w-full sm:w-[220px]" id="store-search-container">
+                                <input name="StoreName" type="text" placeholder="All Stores" class="form-input w-full rounded-lg border-slate-200 bg-white py-2 text-sm text-slate-900 focus:border-primary focus:ring-primary shadow-sm h-[40px] pl-3" onfocus="toggleStoreSearch(true)" value="@Request.Query["StoreName"]" />
+                                <div id="store-search-panel" class="hidden absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-30 ring-1 ring-black/5">
+                                    <button type="button" class="w-full flex items-center px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 text-left">TechStore Official</button>
+                                    <button type="button" class="w-full flex items-center px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 text-left">Gaming Haven</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Date Range -->
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-0.5">Date Range</label>
+                            <div class="flex items-center gap-3">
+                                <div class="flex items-center gap-1 p-1 bg-slate-100 rounded-lg h-[40px] w-fit">
+                                    <button type="button" class="date-pill px-3 py-1 text-[11px] font-bold rounded-md transition-all whitespace-nowrap bg-transparent text-slate-500" data-range="today">Today</button>
+                                    <button type="button" class="date-pill px-3 py-1 text-[11px] font-bold rounded-md transition-all whitespace-nowrap shadow-sm bg-primary text-white" data-range="week">Week</button>
+                                    <button type="button" class="date-pill px-3 py-1 text-[11px] font-bold rounded-md transition-all whitespace-nowrap bg-transparent text-slate-500" data-range="month">Month</button>
+                                    <button type="button" class="date-pill px-3 py-1 text-[11px] font-bold rounded-md transition-all whitespace-nowrap bg-transparent text-slate-500" data-range="custom">Custom</button>
+                                </div>
+                                <div id="inline-custom-dates" class="hidden flex items-center gap-1.5">
+                                    <input name="StartDate" type="date" class="form-input rounded-lg border-slate-200 bg-white py-1.5 text-[11px] w-28 h-[40px] px-2 shadow-sm" value="@Request.Query["StartDate"]" />
+                                    <span class="text-slate-300">—</span>
+                                    <input name="EndDate" type="date" class="form-input rounded-lg border-slate-200 bg-white py-1.5 text-[11px] w-28 h-[40px] px-2 shadow-sm" value="@Request.Query["EndDate"]" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Batch Filter -->
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-0.5">Batch</label>
+                            <select name="BatchCode" class="form-select w-full sm:w-[200px] rounded-lg border-slate-200 bg-white py-2 text-sm text-slate-900 focus:border-primary focus:ring-primary shadow-sm h-[40px]">
+                                <option value="">All Batches</option>
+                                <option value="BATCH-2025-W44">BATCH-2025-W44</option>
+                                <option value="BATCH-2025-W43">BATCH-2025-W43</option>
+                            </select>
+                        </div>
+
+                        <!-- Amount Range -->
+                        <div class="space-y-1.5 flex-1 min-w-[240px]">
+                            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-0.5">Amount Range (₫)</label>
+                            <div class="flex items-center gap-1.5">
+                                <input name="MinAmount" type="number" placeholder="Min" class="form-input min-w-0 w-full rounded-lg border-slate-200 bg-white shadow-sm h-[40px] px-3 text-sm" value="@Request.Query["MinAmount"]" />
+                                <span class="text-slate-300 font-light">—</span>
+                                <input name="MaxAmount" type="number" placeholder="Max" class="form-input min-w-0 w-full rounded-lg border-slate-200 bg-white shadow-sm h-[40px] px-3 text-sm" value="@Request.Query["MaxAmount"]" />
+                            </div>
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white px-6 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm">
-                        <span class="material-symbols-outlined text-[17px]">check</span> Apply Filters
-                    </button>
+                    <!-- ROW 3: Direction -->
+                    <div class="flex flex-wrap items-center justify-between pt-3 border-t border-slate-50 gap-4">
+                        <div class="flex items-center gap-6">
+                            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Direction</label>
+                            <div class="flex items-center gap-6">
+                                <label class="flex items-center gap-2 cursor-pointer group">
+                                    <input type="radio" name="Direction" value="all" checked class="text-primary focus:ring-primary h-4 w-4 border-slate-300" />
+                                    <span class="text-sm font-semibold text-slate-700 group-hover:text-primary transition-colors">All</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer group">
+                                    <input type="radio" name="Direction" value="in" class="text-primary focus:ring-primary h-4 w-4 border-slate-300" />
+                                    <span class="text-sm font-semibold text-slate-700 group-hover:text-primary transition-colors">In</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer group">
+                                    <input type="radio" name="Direction" value="out" class="text-primary focus:ring-primary h-4 w-4 border-slate-300" />
+                                    <span class="text-sm font-semibold text-slate-700 group-hover:text-primary transition-colors">Out</span>
+                                </label>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-white px-8 py-2.5 rounded-lg text-sm font-bold shadow-lg transition-all flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-[18px]">done_all</span>
+                            <span>Apply Filters</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </form>
+
+                <!-- Active Filter Chips -->
+                @if (Request.Query.Count > 0)
+                {
+                    <div id="active-filter-chips" class="flex flex-wrap items-center gap-2 pt-2">
+                        @if (!string.IsNullOrEmpty(Request.Query["SearchTerm"]))
+                        {
+                            <div class="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 border border-blue-100">
+                                <span class="material-symbols-outlined text-[14px]">search</span>
+                                <span>"@Request.Query["SearchTerm"]"</span>
+                                <button type="button" onclick="removeFilter('SearchTerm')" class="hover:text-blue-900">
+                                    <span class="material-symbols-outlined text-[16px]">close</span>
+                                </button>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Request.Query["Status"]))
+                        {
+                            <div class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 border border-slate-200">
+                                <span class="material-symbols-outlined text-[14px]">info</span>
+                                <span>@Request.Query["Status"]</span>
+                                <button type="button" onclick="removeFilter('Status')" class="hover:text-red-500">
+                                    <span class="material-symbols-outlined text-[16px]">close</span>
+                                </button>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Request.Query["BatchCode"]))
+                        {
+                            <div class="bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 border border-indigo-100">
+                                <span class="material-symbols-outlined text-[14px]">layers</span>
+                                <span>@Request.Query["BatchCode"]</span>
+                                <button type="button" onclick="removeFilter('BatchCode')" class="hover:text-indigo-900">
+                                    <span class="material-symbols-outlined text-[16px]">close</span>
+                                </button>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Request.Query["StoreName"]))
+                        {
+                            <div class="bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 border border-emerald-100">
+                                <span class="material-symbols-outlined text-[14px]">store</span>
+                                <span>@Request.Query["StoreName"]</span>
+                                <button type="button" onclick="removeFilter('StoreName')" class="hover:text-emerald-900">
+                                    <span class="material-symbols-outlined text-[16px]">close</span>
+                                </button>
+                            </div>
+                        }
+                        <button type="button" onclick="clearAllFilters()" class="text-[11px] font-bold text-red-500 hover:bg-red-50 px-2 py-1 rounded-md transition-colors">Clear all filters</button>
+                    </div>
+                }
+            </form>
+        </div>
     </div>
+
 
     <!-- Data Table Card -->
     <div class="bg-white rounded-xl shadow-card border border-slate-100 overflow-hidden flex flex-col">
         <div class="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
             <p class="text-sm font-medium text-slate-600">
-                Showing <span class="text-slate-900">1,247</span> transactions | 
-                Total: <span class="text-emerald-600 font-bold">+₫312,400,000</span>
+                Showing <span class="text-slate-900">@Model.Transactions.Items.Count</span> transactions | 
+                Total: <span class="@(Model.Summary?.TotalInflow >= Model.Summary?.TotalOutflow ? "text-emerald-600" : "text-red-600") font-bold">
+                    ₫@((Model.Summary?.TotalInflow - Model.Summary?.TotalOutflow)?.ToString("N0") ?? "0")
+                </span>
             </p>
             <div class="flex gap-4 items-center">
                 <button class="text-xs font-semibold text-slate-600 flex items-center gap-1.5 hover:text-primary transition-colors">
                     <span class="material-symbols-outlined text-[16px]">view_list</span> Group by Store
                 </button>
                 <div class="w-px h-4 bg-slate-300"></div>
-                <button class="text-xs font-semibold text-slate-600 flex items-center gap-1.5 hover:text-primary transition-colors">
-                    Sort: Newest <span class="material-symbols-outlined text-[16px]">expand_more</span>
+                @{
+                    var currentSortLabel = Model.Query.SortBy switch {
+                        "date" => "Date",
+                        "amount" => "Amount",
+                        "type" => "Type",
+                        "store" => "Store",
+                        _ => "Newest"
+                    };
+                }
+                <button type="button" class="text-xs font-semibold text-slate-600 flex items-center gap-1.5 hover:text-primary transition-colors" onclick="toggleSortDropdown()">
+                    Sort: @currentSortLabel <span class="material-symbols-outlined text-[16px]">expand_more</span>
                 </button>
             </div>
         </div>
@@ -257,213 +392,164 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-sm">
-                    <!-- Row 1: Order Revenue -->
-                    <tr class="group hover:bg-slate-50 transition-all cursor-pointer" onclick="toggleDetailPanel()">
-                        <td class="py-4 px-4 text-slate-400 font-mono text-xs">1247</td>
-                        <td class="py-4 px-4 whitespace-nowrap">
-                            <div class="font-medium text-slate-900">Oct 24, 2023</div>
-                            <div class="text-[10px] text-slate-400">14:32:01</div>
-                        </td>
-                        <td class="py-4 px-4">
-                            <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-emerald-100/60 text-emerald-700">Order Revenue</span>
-                        </td>
-                        <td class="py-4 px-4">
-                            <div class="flex items-center gap-2">
-                                <div class="size-6 bg-emerald-50 text-emerald-600 rounded flex items-center justify-center text-[10px] font-bold shrink-0">TS</div>
-                                <span class="font-medium text-slate-900">TechStore Official</span>
-                            </div>
-                        </td>
-                        <td class="py-4 px-4 text-primary font-medium text-[13px]">ORD-99812</td>
-                        <td class="py-4 px-4 text-slate-600 max-w-[200px] truncate text-[13px]">Payment for iPhone 15 Pro Max...</td>
-                        <td class="py-4 px-4 text-right font-bold text-emerald-600">+₫2,350,000</td>
-                        <td class="py-4 px-4 text-center">
-                            <span class="inline-flex items-center text-emerald-600 font-bold text-[10px] gap-0.5"><span class="material-symbols-outlined text-[14px]">arrow_downward</span> IN</span>
-                        </td>
-                        <td class="py-4 px-4 text-right text-slate-500 text-[13px]">₫44,120,400</td>
-                        <td class="py-4 px-4 text-right">
-                            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
-                                <span class="size-1.5 rounded-full bg-emerald-500"></span> Completed
-                            </span>
-                        </td>
-                    </tr>
-                    
-                    <!-- Row 2: Commission Link -->
-                    <tr class="group hover:bg-slate-50 transition-all cursor-pointer" onclick="toggleDetailPanel()">
-                        <td class="py-4 px-4 text-slate-400 font-mono text-xs">1246</td>
-                        <td class="py-4 px-4 whitespace-nowrap">
-                            <div class="font-medium text-slate-900">Oct 24, 2023</div>
-                            <div class="text-[10px] text-slate-400">14:32:02</div>
-                        </td>
-                        <td class="py-4 px-4 flex items-center h-[58px]">
-                            <!-- Bracket equivalent -->
-                            <div class="w-2 h-full border-l-[2px] border-y-[2px] border-slate-200 rounded-l mr-2 opacity-50 shrink-0"></div>
-                            <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-teal-100/60 text-teal-700">Commission</span>
-                        </td>
-                        <td class="py-4 px-4">
-                            <div class="flex items-center gap-2 opacity-60">
-                                <div class="size-6 bg-emerald-50 text-emerald-600 rounded flex items-center justify-center text-[10px] font-bold shrink-0">TS</div>
-                                <span class="font-medium text-slate-900">TechStore Official</span>
-                            </div>
-                        </td>
-                        <td class="py-4 px-4 text-primary font-medium text-[13px]">CMS-99812</td>
-                        <td class="py-4 px-4 text-slate-500 italic text-xs">8.5% Platform fee for ORD-99812</td>
-                        <td class="py-4 px-4 text-right font-bold text-teal-600">−₫199,750</td>
-                        <td class="py-4 px-4 text-center">
-                            <span class="inline-flex items-center text-red-500 font-bold text-[10px] gap-0.5"><span class="material-symbols-outlined text-[14px]">arrow_upward</span> OUT</span>
-                        </td>
-                        <td class="py-4 px-4 text-right text-slate-500 text-[13px]">₫43,920,650</td>
-                        <td class="py-4 px-4 text-right">
-                            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
-                                <span class="size-1.5 rounded-full bg-emerald-500"></span> Completed
-                            </span>
-                        </td>
-                    </tr>
-
-                    <!-- Row 3: Payout -->
-                    <tr class="group hover:bg-slate-50 transition-all cursor-pointer border-t-[3px] border-dashed border-slate-100" onclick="toggleDetailPanel()">
-                        <td class="py-4 px-4 text-slate-400 font-mono text-xs">1245</td>
-                        <td class="py-4 px-4 whitespace-nowrap">
-                            <div class="font-medium text-slate-900">Oct 23, 2023</div>
-                            <div class="text-[10px] text-slate-400">09:00:00</div>
-                        </td>
-                        <td class="py-4 px-4">
-                            <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-indigo-100/60 text-indigo-700">Payout</span>
-                        </td>
-                        <td class="py-4 px-4 text-slate-400 italic text-[13px]">Global Distribution</td>
-                        <td class="py-4 px-4 text-indigo-600 font-medium text-[13px]">PYT-B7720</td>
-                        <td class="py-4 px-4 text-slate-600 text-[13px]">Weekly settlement transfer</td>
-                        <td class="py-4 px-4 text-right font-bold text-indigo-600">−₫10,431,000</td>
-                        <td class="py-4 px-4 text-center">
-                            <span class="inline-flex items-center text-indigo-600 font-bold text-[10px] gap-0.5"><span class="material-symbols-outlined text-[14px]">arrow_upward</span> OUT</span>
-                        </td>
-                        <td class="py-4 px-4 text-right text-slate-500 text-[13px]">₫33,489,650</td>
-                        <td class="py-4 px-4 text-right">
-                            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
-                                <span class="size-1.5 rounded-full bg-emerald-500"></span> Completed
-                            </span>
-                        </td>
-                    </tr>
-
-                    <!-- Row 4: Refund -->
-                    <tr class="group hover:bg-slate-50 transition-all cursor-pointer" onclick="toggleDetailPanel()">
-                        <td class="py-4 px-4 text-slate-400 font-mono text-xs">1244</td>
-                        <td class="py-4 px-4 whitespace-nowrap">
-                            <div class="font-medium text-slate-900">Oct 23, 2023</div>
-                            <div class="text-[10px] text-slate-400">10:45:15</div>
-                        </td>
-                        <td class="py-4 px-4">
-                            <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-red-100/60 text-red-700">Refund</span>
-                        </td>
-                        <td class="py-4 px-4 font-medium text-slate-900">Gaming Haven</td>
-                        <td class="py-4 px-4 text-red-600 font-medium text-[13px]">REF-00122</td>
-                        <td class="py-4 px-4 text-slate-600 text-[13px]">Customer return: RMA-442</td>
-                        <td class="py-4 px-4 text-right font-bold text-red-600">−₫1,200,000</td>
-                        <td class="py-4 px-4 text-center">
-                            <span class="inline-flex items-center text-red-500 font-bold text-[10px] gap-0.5"><span class="material-symbols-outlined text-[14px]">arrow_upward</span> OUT</span>
-                        </td>
-                        <td class="py-4 px-4 text-right text-slate-500 text-[13px]">₫32,289,650</td>
-                        <td class="py-4 px-4 text-right">
-                            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
-                                <span class="size-1.5 rounded-full bg-emerald-500"></span> Completed
-                            </span>
-                        </td>
-                    </tr>
-
-                    <!-- Row 5: Failed Payout -->
-                    <tr class="bg-red-50/40 hover:bg-red-50/70 transition-all cursor-pointer" onclick="toggleDetailPanel()">
-                        <td class="py-4 px-4 text-slate-400 font-mono text-xs">1241</td>
-                        <td class="py-4 px-4 whitespace-nowrap">
-                            <div class="font-medium text-slate-900">Oct 22, 2023</div>
-                            <div class="text-[10px] text-slate-400">16:20:10</div>
-                        </td>
-                        <td class="py-4 px-4">
-                            <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-red-200/50 text-red-800">Payout</span>
-                        </td>
-                        <td class="py-4 px-4 font-medium text-slate-900">Alpha Electronics</td>
-                        <td class="py-4 px-4 text-red-600 font-medium font-mono text-[13px]">PYT-B7718</td>
-                        <td class="py-4 px-4 text-red-600 text-[11px] font-semibold">Bank connection timed out</td>
-                        <td class="py-4 px-4 text-right font-bold text-red-600 line-through italic">−₫4,500,000</td>
-                        <td class="py-4 px-4 text-center">
-                            <span class="material-symbols-outlined text-[16px] text-red-500">close</span>
-                        </td>
-                        <td class="py-4 px-4 text-right text-slate-500 text-[13px]">₫36,789,650</td>
-                        <td class="py-4 px-4 text-right">
-                            <span class="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase text-red-600">Failed</span>
-                        </td>
-                    </tr>
-
-                    <!-- Row 6: Pending Payout -->
-                    <tr class="bg-amber-50/30 hover:bg-amber-50/60 border-l-[3px] border-l-amber-400 transition-all cursor-pointer" onclick="toggleDetailPanel()">
-                        <td class="py-4 px-4 text-slate-400 font-mono text-xs pl-[13px]">1236</td>
-                        <td class="py-4 px-4 whitespace-nowrap">
-                            <div class="font-medium text-slate-900">Oct 22, 2023</div>
-                            <div class="text-[10px] text-slate-400">18:00:00</div>
-                        </td>
-                        <td class="py-4 px-4">
-                            <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-indigo-100/60 text-indigo-700">Payout</span>
-                        </td>
-                        <td class="py-4 px-4 font-medium text-slate-900">TechStore Official</td>
-                        <td class="py-4 px-4 text-indigo-600 font-medium text-[13px]">PYT-B7719</td>
-                        <td class="py-4 px-4 text-slate-600 text-[13px]">Pending review (High Volume)</td>
-                        <td class="py-4 px-4 text-right font-bold text-indigo-600">−₫82,000,000</td>
-                        <td class="py-4 px-4 text-center">
-                            <span class="inline-flex items-center text-indigo-600 font-bold text-[10px] gap-0.5"><span class="material-symbols-outlined text-[14px]">arrow_upward</span> OUT</span>
-                        </td>
-                        <td class="py-4 px-4 text-right text-slate-500 text-[13px]">₫118,789,650</td>
-                        <td class="py-4 px-4 text-right">
-                            <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-500 tracking-wide uppercase">
-                                <span class="size-1.5 rounded-full bg-amber-500 animate-pulse"></span> Pending
-                            </span>
-                        </td>
-                    </tr>
-
-                    <!-- Row 7: Reversed -->
-                    <tr class="hover:bg-slate-50 transition-all cursor-pointer text-slate-400 opacity-60" onclick="toggleDetailPanel()">
-                        <td class="py-4 px-4 font-mono text-xs">1234</td>
-                        <td class="py-4 px-4 whitespace-nowrap">
-                            <div class="font-medium text-[13px]">Oct 21, 2023</div>
-                        </td>
-                        <td class="py-4 px-4">
-                            <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-slate-100/80 text-slate-500">Adjustment</span>
-                        </td>
-                        <td class="py-4 px-4 font-medium text-[13px]">System</td>
-                        <td class="py-4 px-4 font-medium text-[13px]">ADJ-0045</td>
-                        <td class="py-4 px-4 italic line-through text-[11px]">Correction for double credit</td>
-                        <td class="py-4 px-4 text-right font-bold line-through">₫500,000</td>
-                        <td class="py-4 px-4 text-center">—</td>
-                        <td class="py-4 px-4 text-right text-[13px]">₫118,289,650</td>
-                        <td class="py-4 px-4 text-right">
-                            <span class="inline-flex items-center gap-1.5 text-xs font-semibold italic uppercase">Reversed</span>
-                        </td>
-                    </tr>
+                    @if (Model.Transactions?.Items != null)
+                    {
+                        @foreach (var item in Model.Transactions.Items)
+                        {
+                            <tr class="group hover:bg-slate-50 transition-all cursor-pointer" onclick="viewDetail('@item.Id', '@item.TypeLabel')">
+                                <td class="py-4 px-4 text-slate-400 font-mono text-xs">@((Model.Transactions.PageNumber - 1) * Model.Transactions.PageSize + Model.Transactions.Items.IndexOf(item) + 1)</td>
+                                <td class="py-4 px-4 whitespace-nowrap">
+                                    <div class="font-medium text-slate-900">@item.CreatedAt.ToString("MMM dd, yyyy")</div>
+                                    <div class="text-[10px] text-slate-400">@item.CreatedAt.ToString("HH:mm:ss")</div>
+                                </td>
+                                <td class="py-4 px-4">
+                                    @{
+                                        var typeClass = item.TypeLabel switch
+                                        {
+                                            "Payment" => "bg-emerald-100/60 text-emerald-700",
+                                            "Payout" => "bg-indigo-100/60 text-indigo-700",
+                                            "Refund" => "bg-red-100/60 text-red-700",
+                                            "Adjustment" => "bg-slate-100/80 text-slate-500",
+                                            _ => "bg-blue-100/60 text-blue-700"
+                                        };
+                                    }
+                                    <span class="px-2 py-1 rounded-md text-[10px] font-bold uppercase @typeClass">@item.TypeLabel</span>
+                                </td>
+                                <td class="py-4 px-4">
+                                    @if (!string.IsNullOrEmpty(item.StoreName))
+                                    {
+                                        <div class="flex items-center gap-2">
+                                            <div class="size-6 bg-slate-50 text-slate-600 rounded flex items-center justify-center text-[10px] font-bold shrink-0">@item.StoreName.Substring(0, Math.Min(2, item.StoreName.Length)).ToUpper()</div>
+                                            <span class="font-medium text-slate-900">@item.StoreName</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-slate-400 italic">System</span>
+                                    }
+                                </td>
+                                <td class="py-4 px-4 text-primary font-medium text-[13px]">@item.ReferenceCode</td>
+                                <td class="py-4 px-4 text-slate-600 max-w-[200px] truncate text-[13px]">@item.Note</td>
+                                <td class="py-4 px-4 text-right font-bold @(item.Direction == "IN" ? "text-emerald-600" : "text-red-600")">
+                                    @(item.Direction == "IN" ? "+" : "−")₫@item.Amount.ToString("N0")
+                                </td>
+                                <td class="py-4 px-4 text-center">
+                                    @if (item.Direction == "IN")
+                                    {
+                                        <span class="inline-flex items-center text-emerald-600 font-bold text-[10px] gap-0.5"><span class="material-symbols-outlined text-[14px]">arrow_downward</span> IN</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center text-red-600 font-bold text-[10px] gap-0.5"><span class="material-symbols-outlined text-[14px]">arrow_upward</span> OUT</span>
+                                    }
+                                </td>
+                                <td class="py-4 px-4 text-right text-slate-500 text-[13px]">
+                                    @* Balance column might not be easily available from UNION query unless we store it. Showing '-' for now if not tracked in real-time summary *@
+                                    —
+                                </td>
+                                <td class="py-4 px-4 text-right">
+                                    @{
+                                        var statusClass = item.StatusLabel switch
+                                        {
+                                            "Completed" or "Paid" => "text-emerald-600",
+                                            "Pending" => "text-amber-500",
+                                            "Failed" => "text-red-600",
+                                            _ => "text-slate-400"
+                                        };
+                                        var dotClass = item.StatusLabel switch
+                                        {
+                                            "Completed" or "Paid" => "bg-emerald-500",
+                                            "Pending" => "bg-amber-500",
+                                            "Failed" => "bg-red-500",
+                                            _ => "bg-slate-400"
+                                        };
+                                    }
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold @statusClass">
+                                        <span class="size-1.5 rounded-full @dotClass"></span> @item.StatusLabel
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }
                 </tbody>
             </table>
         </div>
         
         <!-- Pagination -->
-        <div class="border-t border-slate-100 px-6 py-4 bg-slate-50/30 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="text-sm text-slate-500">
-                Showing <span class="font-medium text-slate-900">1</span> to
-                <span class="font-medium text-slate-900">20</span> of
-                <span class="font-medium text-slate-900">1,247</span> transactions
-            </div>
-
-            <nav aria-label="Pagination" class="flex items-center gap-1">
-                <div class="p-2 rounded-lg border border-slate-100 text-slate-300 bg-slate-50 cursor-not-allowed">
-                    <span class="material-symbols-outlined text-lg leading-none">chevron_left</span>
-                </div>
+        <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p class="text-[13px] text-slate-500">
+                Showing <span class="font-bold text-slate-900">@((Model.Transactions.PageNumber - 1) * Model.Transactions.PageSize + 1)</span> to 
+                <span class="font-bold text-slate-900">@Math.Min(Model.Transactions.PageNumber * Model.Transactions.PageSize, Model.Transactions.TotalCount)</span> 
+                of <span class="font-bold text-slate-900">@Model.Transactions.TotalCount</span> transactions
+            </p>
+            
+            <nav class="flex items-center gap-2">
+                @if (Model.Transactions.PageNumber > 1)
+                {
+                    <button type="button" 
+                            class="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-primary hover:border-primary transition-all shadow-sm cursor-pointer"
+                            onclick="changePage(@(Model.Transactions.PageNumber - 1))">
+                        <span class="material-symbols-outlined text-lg leading-none">chevron_left</span>
+                    </button>
+                }
+                else
+                {
+                    <div class="p-2 rounded-lg border border-slate-100 text-slate-300 bg-slate-50 cursor-not-allowed">
+                        <span class="material-symbols-outlined text-lg leading-none">chevron_left</span>
+                    </div>
+                }
 
                 <div class="flex items-center gap-1 px-1">
-                    <button type="button" class="min-w-[36px] h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all bg-primary text-white shadow-sm shadow-blue-500/20">1</button>
-                    <button type="button" class="min-w-[36px] h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all border border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-primary">2</button>
-                    <button type="button" class="min-w-[36px] h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all border border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-primary">3</button>
-                    <span class="text-slate-400 px-1">...</span>
-                    <button type="button" class="min-w-[36px] h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all border border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-primary">62</button>
+                    @{
+                        int startPage = Math.Max(1, Model.Transactions.PageNumber - 2);
+                        int endPage = Math.Min(Model.Transactions.TotalPages, startPage + 4);
+                        if (endPage - startPage < 4 && startPage > 1)
+                        {
+                            startPage = Math.Max(1, endPage - 4);
+                        }
+                    }
+                    
+                    @if (startPage > 1)
+                    {
+                        <button type="button" onclick="changePage(1)" class="min-w-[36px] h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all border border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-primary">1</button>
+                        @if (startPage > 2)
+                        {
+                            <span class="text-slate-400 px-1">...</span>
+                        }
+                    }
+
+                    @for (int i = startPage; i <= endPage; i++)
+                    {
+                        <button type="button" @(i != Model.Transactions.PageNumber ? $"onclick=changePage({i})" : "") 
+                                class="min-w-[36px] h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all @(i == Model.Transactions.PageNumber ? "bg-primary text-white shadow-sm shadow-blue-500/20" : "border border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-primary")">
+                            @i
+                        </button>
+                    }
+
+                    @if (endPage < Model.Transactions.TotalPages)
+                    {
+                        @if (endPage < Model.Transactions.TotalPages - 1)
+                        {
+                            <span class="text-slate-400 px-1">...</span>
+                        }
+                        <button type="button" onclick="changePage(@Model.Transactions.TotalPages)" class="min-w-[36px] h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all border border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-primary">@Model.Transactions.TotalPages</button>
+                    }
                 </div>
 
-                <button type="button" class="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-primary hover:border-primary transition-all shadow-sm">
-                    <span class="material-symbols-outlined text-lg leading-none">chevron_right</span>
-                </button>
+                @if (Model.Transactions.PageNumber < Model.Transactions.TotalPages)
+                {
+                    <button type="button" 
+                            class="p-2 rounded-lg border border-slate-200 text-slate-400 hover:bg-white hover:text-primary hover:border-primary transition-all shadow-sm cursor-pointer"
+                            onclick="changePage(@(Model.Transactions.PageNumber + 1))">
+                        <span class="material-symbols-outlined text-lg leading-none">chevron_right</span>
+                    </button>
+                }
+                else
+                {
+                    <div class="p-2 rounded-lg border border-slate-100 text-slate-300 bg-slate-50 cursor-not-allowed">
+                        <span class="material-symbols-outlined text-lg leading-none">chevron_right</span>
+                    </div>
+                }
             </nav>
         </div>
     </div>
@@ -566,6 +652,30 @@
     </div>
 </aside>
 
+@section Styles {
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f8fafc;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #cbd5e1;
+        }
+
+        .date-pill.active {
+            background-color: #1A56DB !important;
+            color: white !important;
+            box-shadow: 0 4px 6px -1px rgba(26, 86, 219, 0.2);
+        }
+    </style>
+}
+
 @section Scripts {
     <script>
         function toggleDetailPanel() {
@@ -577,44 +687,167 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Toggle advanced filters
-            const toggleAdvancedBtn = document.getElementById('toggle-advanced-btn');
-            const advancedFilters = document.getElementById('advanced-filters');
-            
-            if (toggleAdvancedBtn && advancedFilters) {
-                toggleAdvancedBtn.addEventListener('click', function() {
-                    advancedFilters.classList.toggle('hidden');
-                    if (advancedFilters.classList.contains('hidden')) {
-                        this.classList.remove('bg-slate-50', 'text-slate-900', 'border-slate-300');
-                    } else {
-                        this.classList.add('bg-slate-50', 'text-slate-900', 'border-slate-300');
-                    }
-                });
-            }
+        function toggleAdvancedFilters() {
+            const section = document.getElementById('advanced-filters-section');
+            section.classList.toggle('hidden');
+        }
 
-            // Custom date toggle logic
-            const dateButtons = document.querySelectorAll('.date-btn');
-            const customDateInputs = document.getElementById('custom-date-inputs');
+        // --- Types Dropdown Logic ---
+        function toggleTypesDropdown() {
+            const panel = document.getElementById('types-dropdown-panel');
+            panel.classList.toggle('hidden');
+        }
+
+        function selectAllTypes() {
+            document.querySelectorAll('input[name="Types"]').forEach(cb => cb.checked = true);
+            updateTypesLabel();
+        }
+
+        function clearAllTypes() {
+            document.querySelectorAll('input[name="Types"]').forEach(cb => cb.checked = false);
+            updateTypesLabel();
+        }
+
+        function updateTypesLabel() {
+            const checked = document.querySelectorAll('input[name="Types"]:checked');
+            const total = document.querySelectorAll('input[name="Types"]').length;
+            const label = document.getElementById('types-selected-label');
             
-            dateButtons.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    // Remove active styles from all buttons
-                    dateButtons.forEach(b => {
-                        b.classList.remove('bg-slate-100', 'text-slate-900');
-                        b.classList.add('bg-transparent', 'text-slate-500');
+            if (checked.length === 0) label.innerText = "Select Types";
+            else if (checked.length === total) label.innerText = "All Types";
+            else if (checked.length === 1) label.innerText = checked[0].parentElement.querySelector('span.text-sm').innerText;
+            else label.innerText = `${checked.length} Types`;
+        }
+
+        function applyTypesFilter() {
+            document.getElementById('types-dropdown-panel').classList.add('hidden');
+            // Form submission will happen on "Apply Filters" or Search
+        }
+
+        // --- Export & Store Logic ---
+        function toggleExportDropdown() {
+            document.getElementById('export-dropdown-panel').classList.toggle('hidden');
+        }
+
+        function toggleStoreSearch(show) {
+            const panel = document.getElementById('store-search-panel');
+            if (show) panel.classList.remove('hidden');
+            else setTimeout(() => panel.classList.add('hidden'), 200);
+        }
+
+        // --- KPI Card Filter Logic ---
+        function filterByStatus(status) {
+            const statusSelect = document.querySelector('select[name="Status"]');
+            if (statusSelect) {
+                statusSelect.value = status;
+                document.getElementById('filter-form').submit();
+            }
+        }
+
+        // --- Filter Chip Logic ---
+        function removeFilter(filterName) {
+            const form = document.getElementById('filter-form');
+            if (filterName === 'DateRange') {
+                document.querySelectorAll('.date-pill').forEach(p => {
+                    p.classList.remove('bg-primary', 'text-white', 'shadow-sm');
+                    p.classList.add('bg-transparent', 'text-slate-500');
+                });
+                form.querySelectorAll('input[type="date"]').forEach(i => i.value = '');
+                document.getElementById('inline-custom-dates').classList.add('hidden');
+            } else if (filterName === 'Store') {
+                form.querySelector('input[onfocus*="toggleStoreSearch"]').value = '';
+            } else if (filterName === 'BatchCode') {
+                form.querySelector('select[name="BatchCode"]').value = '';
+            } else if (filterName === 'Status') {
+                form.querySelector('select[name="Status"]').value = '';
+            } else if (filterName === 'SearchTerm') {
+                form.querySelector('input[name="SearchTerm"]').value = '';
+            }
+            form.submit();
+        }
+
+        function clearAllFilters() {
+            const form = document.getElementById('filter-form');
+            form.reset();
+            // Also need to manually clear pills and hidden custom dates
+            document.querySelectorAll('.date-pill').forEach(p => {
+                p.classList.remove('bg-primary', 'text-white', 'shadow-sm');
+                p.classList.add('bg-transparent', 'text-slate-500');
+            });
+            document.getElementById('inline-custom-dates').classList.add('hidden');
+            updateTypesLabel();
+            form.submit();
+        }
+
+        function changePage(page) {
+            document.getElementById('page-number-input').value = page;
+            document.getElementById('filter-form').submit();
+        }
+
+        function toggleSortDropdown() {
+            // Since we have a simple Sort: Newest button, let's just cycle or use a simple logic for now
+            // or we could show a real dropdown. For now, let's keep it simple as requested.
+            // Actually, let's implement a simple sort cycle: date desc -> date asc -> amount desc -> amount asc
+            const sortBy = document.getElementById('sort-by-input').value;
+            const sortDir = document.getElementById('sort-direction-input').value;
+
+            if (sortBy === 'date' && sortDir === 'desc') {
+                applySort('date', 'asc');
+            } else if (sortBy === 'date' && sortDir === 'asc') {
+                applySort('amount', 'desc');
+            } else {
+                applySort('date', 'desc');
+            }
+        }
+
+        function applySort(sortBy, direction) {
+            document.getElementById('sort-by-input').value = sortBy;
+            document.getElementById('sort-direction-input').value = direction;
+            document.getElementById('page-number-input').value = 1;
+            document.getElementById('filter-form').submit();
+        }
+
+        function viewDetail(id, type) {
+            // For now, just show the slide-in panel. In a real app, we'd fetch details via AJAX.
+            console.log("Viewing detail for:", id, type);
+            toggleDetailPanel();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTypesLabel();
+
+            // Date Pill Logic
+            const pills = document.querySelectorAll('.date-pill');
+            const inlineCustom = document.getElementById('inline-custom-dates');
+            
+            pills.forEach(pill => {
+                pill.addEventListener('click', function() {
+                    pills.forEach(p => {
+                        p.classList.remove('bg-primary', 'text-white', 'shadow-sm');
+                        p.classList.add('bg-transparent', 'text-slate-500');
                     });
-                    
-                    // Add active style to the clicked one
                     this.classList.remove('bg-transparent', 'text-slate-500');
-                    this.classList.add('bg-slate-100', 'text-slate-900');
-                    
-                    if (this.id === 'btn-custom-date') {
-                        customDateInputs.classList.remove('hidden');
+                    this.classList.add('bg-primary', 'text-white', 'shadow-sm');
+
+                    if (this.dataset.range === 'custom') {
+                        inlineCustom.classList.remove('hidden');
                     } else {
-                        customDateInputs.classList.add('hidden');
+                        inlineCustom.classList.add('hidden');
                     }
                 });
+            });
+
+            // Close dropdowns on outside click
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('#types-dropdown-container')) {
+                    document.getElementById('types-dropdown-panel').classList.add('hidden');
+                }
+                if (!e.target.closest('.ml-auto.relative')) {
+                    document.getElementById('export-dropdown-panel').classList.add('hidden');
+                }
+                if (!e.target.closest('#store-search-container')) {
+                    document.getElementById('store-search-panel').classList.add('hidden');
+                }
             });
         });
     </script>

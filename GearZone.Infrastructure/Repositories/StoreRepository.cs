@@ -109,6 +109,16 @@ namespace GearZone.Infrastructure.Repositories
                     && s.Status == Domain.Enums.StoreStatus.Approved);
         }
 
+        public async Task<int> GetActiveStoresCountAsync(CancellationToken ct = default)
+        {
+            return await _dbSet.CountAsync(s => s.Status == Domain.Enums.StoreStatus.Approved, ct);
+        }
+
+        public async Task<int> GetNewStoresCountAsync(DateTime start, DateTime end, CancellationToken ct = default)
+        {
+            return await _dbSet.CountAsync(s => s.CreatedAt >= start && s.CreatedAt <= end, ct);
+        }
+
         public async Task<List<HomeStoreCardDto>> GetHomeStoresBySlugsAsync(IReadOnlyCollection<string> slugs)
         {
             if (slugs == null || slugs.Count == 0)

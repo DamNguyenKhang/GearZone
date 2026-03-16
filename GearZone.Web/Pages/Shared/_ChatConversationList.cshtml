@@ -5,13 +5,16 @@
 @model ChatConversationListViewModel
 @{
     var hasItems = Model.Conversations.Items.Any();
-    var isWidget = Model.IsWidgetSurface;
-    var title = Model.IsSellerView ? "Tin nhắn khách hàng" : "Chat";
-    var searchPlaceholder = Model.IsSellerView ? "Tìm theo tên người mua" : "Tìm theo tên shop";
-    var defaultScopeLabel = Model.IsSellerView ? "Tất cả người mua" : "Tất cả shop";
+    var title = Model.IsSellerView ? "Customer Messages" : "Chat";
+    var searchPlaceholder = Model.IsSellerView ? "Search by buyer name" : "Search by shop name";
+    var defaultScopeLabel = Model.IsSellerView ? "All buyers" : "All shops";
 }
 
-<div class="flex h-full min-h-0 flex-col bg-white" data-chat-conversation-list data-first-conversation-id="@(hasItems ? Model.Conversations.Items[0].ConversationId : Guid.Empty)">
+<div class="flex h-full min-h-0 flex-col bg-white"
+     data-chat-conversation-list
+     data-first-conversation-id="@(hasItems ? Model.Conversations.Items[0].ConversationId : Guid.Empty)"
+     data-loaded-conversation-page-count="@Model.LoadedConversationPageCount"
+     data-has-more-conversations="@((Model.Conversations.TotalCount > Model.Conversations.Items.Count).ToString().ToLowerInvariant())">
     <div class="border-b border-[#efefef] bg-white px-4 py-3">
         <div class="flex items-center justify-between gap-3">
             <div class="min-w-0">
@@ -35,8 +38,8 @@
             <div class="grid grid-cols-2 gap-2">
                 <select class="h-9 min-w-0 rounded-md border border-[#e5e5e5] bg-white px-3 text-[13px] text-[#333] outline-none transition focus:border-[#ee4d2d] focus:ring-0"
                         data-chat-filter-select>
-                    <option value="all" selected="@(Model.Filter == "all" ? "selected" : null)">Tất cả</option>
-                    <option value="unread" selected="@(Model.Filter == "unread" ? "selected" : null)">Chưa đọc</option>
+                    <option value="all" selected="@(Model.Filter == "all" ? "selected" : null)">All</option>
+                    <option value="unread" selected="@(Model.Filter == "unread" ? "selected" : null)">Unread</option>
                 </select>
 
                 <select class="h-9 min-w-0 rounded-md border border-[#e5e5e5] bg-white px-3 text-[13px] text-[#333] outline-none transition focus:border-[#ee4d2d] focus:ring-0"
@@ -68,11 +71,11 @@
             {
                 var isActive = conversation.ConversationId == Model.ActiveConversationId;
                 var preview = string.IsNullOrWhiteSpace(conversation.LastMessagePreview)
-                    ? (conversation.HasMessages ? "Mở cuộc trò chuyện" : "Bắt đầu nhắn tin")
+                    ? (conversation.HasMessages ? "Open conversation" : "Start chatting")
                     : conversation.LastMessagePreview;
                 if (!string.IsNullOrWhiteSpace(conversation.LastMessageSenderUserId) && conversation.LastMessageSenderUserId == Model.CurrentUserId)
                 {
-                    preview = $"Bạn: {preview}";
+                    preview = $"You: {preview}";
                 }
 
                 var timeLabel = conversation.LastMessageAt.ToLocalTime().Date == DateTime.Now.Date

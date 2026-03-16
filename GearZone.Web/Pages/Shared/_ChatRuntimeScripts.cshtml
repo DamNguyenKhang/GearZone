@@ -1,4 +1,4 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+﻿<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
     (function () {
         if (window.GearZoneChatRuntime) {
@@ -30,6 +30,11 @@
             let joinedConversationId = '';
             let connectionReady = false;
             let destroyed = false;
+            let loadedConversationPageCount = Number.parseInt(root.dataset.loadedConversationPageCount || '1', 10) || 1;
+            let conversationScrollEl = null;
+            let threadScrollEl = null;
+            let accountHeightObserver = null;
+            let accountHeightTarget = null;
 
             const storageNamespace = settings.storageNamespace || '';
             const draftStorageKey = storageNamespace ? `${storageNamespace}:drafts` : '';
@@ -102,6 +107,26 @@
                 return Number.parseInt(pane?.dataset.loadedPageCount || '1', 10) || 1;
             }
 
+            function getCurrentLoadedConversationPageCount() {
+                const list = listHost.querySelector('[data-chat-conversation-list]');
+                return Number.parseInt(list?.dataset.loadedConversationPageCount || root.dataset.loadedConversationPageCount || String(loadedConversationPageCount), 10) || 1;
+            }
+
+            function hasMoreConversations() {
+                const list = listHost.querySelector('[data-chat-conversation-list]');
+                return list?.dataset.hasMoreConversations === 'true';
+            }
+
+            function hasOlderMessages() {
+                const pane = paneHost.querySelector('[data-chat-thread-pane]');
+                return pane?.dataset.hasOlderMessages === 'true';
+            }
+
+            function getRenderedConversationId() {
+                const pane = paneHost.querySelector('[data-chat-thread-pane]');
+                return pane?.dataset.conversationId || '';
+            }
+
             function getFilter() {
                 const filterSelect = listHost.querySelector('[data-chat-filter-select]');
                 if (filterSelect) {
@@ -127,6 +152,8 @@
                     searchTerm: getSearchTerm(),
                     counterpartScopeKey: getCounterpartScopeKey(),
                     productSlug,
+                    loadedConversationPageCount,
+                    loadedThreadPageCount: getCurrentLoadedPageCount(),
                     mobileView: root.dataset.mobileView || 'list'
                 };
             }
@@ -135,10 +162,16 @@
                 settings.onStateChange?.(getState());
             }
 
+            function resetConversationPagination() {
+                loadedConversationPageCount = 1;
+                updateRootState();
+            }
+
             function updateRootState() {
                 root.dataset.activeConversationId = activeConversationId;
                 root.dataset.productSlug = productSlug;
                 root.dataset.counterpartScopeKey = getCounterpartScopeKey();
+                root.dataset.loadedConversationPageCount = String(loadedConversationPageCount);
                 notifyStateChange();
             }
 
@@ -190,6 +223,166 @@
                 return url;
             }
 
+            function syncAccountCenterHeight() {
+                if (root.dataset.accountFitShell !== 'true') {
+                    return;
+                }
+
+                if (window.innerWidth < 1024) {
+                    root.style.removeProperty('--chat-account-height');
+                    return;
+                }
+
+                const sidebarCard = root.closest('[data-profile-layout-shell]')?.querySelector('[data-profile-sidebar-card]');
+                if (!sidebarCard) {
+                    root.style.removeProperty('--chat-account-height');
+                    return;
+                }
+
+                const nextHeight = Math.ceil(sidebarCard.getBoundingClientRect().height);
+                if (nextHeight > 0) {
+                    root.style.setProperty('--chat-account-height', `${nextHeight}px`);
+                }
+            }
+
+            function bindAccountCenterHeightSync() {
+                if (root.dataset.accountFitShell !== 'true') {
+                    return;
+                }
+
+                const sidebarCard = root.closest('[data-profile-layout-shell]')?.querySelector('[data-profile-sidebar-card]');
+                if (!sidebarCard) {
+                    return;
+                }
+
+                accountHeightTarget = sidebarCard;
+                syncAccountCenterHeight();
+
+                if ('ResizeObserver' in window) {
+                    accountHeightObserver = new ResizeObserver(() => {
+                        syncAccountCenterHeight();
+                    });
+                    accountHeightObserver.observe(sidebarCard);
+                }
+
+                window.addEventListener('resize', syncAccountCenterHeight);
+            }
+
+            function unbindAccountCenterHeightSync() {
+                if (accountHeightObserver) {
+                    accountHeightObserver.disconnect();
+                    accountHeightObserver = null;
+                }
+
+                accountHeightTarget = null;
+                window.removeEventListener('resize', syncAccountCenterHeight);
+            }
+
+            function handleConversationListScroll() {
+                if (!conversationScrollEl || listController || !hasMoreConversations()) {
+                    return;
+                }
+
+                const threshold = 96;
+                const remaining = conversationScrollEl.scrollHeight - conversationScrollEl.clientHeight - conversationScrollEl.scrollTop;
+                if (remaining <= threshold) {
+                    fetchConversationList(false, {
+                        loadedConversationPageCountOverride: getCurrentLoadedConversationPageCount() + 1,
+                        preserveListScroll: true,
+                        silent: true
+                    });
+                }
+            }
+
+            function handleThreadScroll() {
+                if (!threadScrollEl || threadController || !activeConversationId || !hasOlderMessages()) {
+                    return;
+                }
+
+                const threshold = 72;
+                if (threadScrollEl.scrollTop <= threshold) {
+                    fetchThread(activeConversationId, getCurrentLoadedPageCount() + 1, {
+                        pushHistory: false,
+                        refreshList: false,
+                        preserveScrollOnPrepend: true,
+                        silent: true
+                    });
+                }
+            }
+
+            function bindDynamicScrollTargets() {
+                if (conversationScrollEl) {
+                    conversationScrollEl.removeEventListener('scroll', handleConversationListScroll);
+                }
+                if (threadScrollEl) {
+                    threadScrollEl.removeEventListener('scroll', handleThreadScroll);
+                }
+
+                conversationScrollEl = listHost.querySelector('[data-chat-list-scroll]');
+                threadScrollEl = paneHost.querySelector('[data-chat-thread-scroll]');
+
+                conversationScrollEl?.addEventListener('scroll', handleConversationListScroll, { passive: true });
+                threadScrollEl?.addEventListener('scroll', handleThreadScroll, { passive: true });
+            }
+
+            function getThreadMessageList() {
+                return threadScrollEl || paneHost.querySelector('[data-chat-message-list]');
+            }
+
+            function isNearThreadBottom(scrollEl, threshold) {
+                if (!scrollEl) {
+                    return true;
+                }
+
+                const distanceFromBottom = scrollEl.scrollHeight - scrollEl.clientHeight - scrollEl.scrollTop;
+                return distanceFromBottom <= (threshold || 72);
+            }
+
+            function preserveThreadViewportOnPrepend(scrollEl, previousScrollHeight, previousScrollTop) {
+                if (!scrollEl) {
+                    return;
+                }
+
+                const nextScrollHeight = scrollEl.scrollHeight;
+                scrollEl.scrollTop = Math.max(0, nextScrollHeight - previousScrollHeight + previousScrollTop);
+            }
+
+            function restoreThreadViewport(scrollEl, previousScrollTop) {
+                if (!scrollEl) {
+                    return;
+                }
+
+                scrollEl.scrollTop = Math.max(0, previousScrollTop);
+            }
+
+            function scrollThreadToBottom(scrollEl, attempt) {
+                if (!scrollEl) {
+                    return Promise.resolve();
+                }
+
+                return new Promise((resolve) => {
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            scrollEl.scrollTop = scrollEl.scrollHeight;
+                            const nextAttempt = attempt || 0;
+                            const needsRetry = (scrollEl.clientHeight === 0 || !isNearThreadBottom(scrollEl, 12)) && nextAttempt < 6;
+                            if (needsRetry) {
+                                window.setTimeout(() => {
+                                    scrollThreadToBottom(scrollEl, nextAttempt + 1).then(resolve);
+                                }, 40);
+                                return;
+                            }
+
+                            resolve();
+                        });
+                    });
+                });
+            }
+
+            async function scrollActiveThreadToLatest() {
+                await scrollThreadToBottom(getThreadMessageList());
+            }
+
             function setUnreadBadgeValue(value) {
                 const normalized = Number.parseInt(value || '0', 10) || 0;
 
@@ -236,8 +429,8 @@
                             <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#fff1ed] text-[#ee4d2d]">
                                 <span class="material-symbols-outlined text-[32px]">chat</span>
                             </div>
-                            <h3 class="mt-5 text-xl font-semibold text-[#333]">${root.dataset.emptyTitle || 'Chọn cuộc trò chuyện'}</h3>
-                            <p class="mt-3 max-w-md text-[13px] leading-7 text-[#999]">${root.dataset.emptyDescription || 'Chọn một cuộc trò chuyện để bắt đầu.'}</p>
+                            <h3 class="mt-5 text-xl font-semibold text-[#333]">${root.dataset.emptyTitle || 'Choose a conversation'}</h3>
+                            <p class="mt-3 max-w-md text-[13px] leading-7 text-[#999]">${root.dataset.emptyDescription || 'Pick a conversation to get started.'}</p>
                         </div>
                     </div>
                 `;
@@ -269,10 +462,14 @@
                 }
             }
 
-            async function fetchConversationList(pushHistory) {
+            async function fetchConversationList(pushHistory, fetchOptions) {
                 if (destroyed) {
                     return;
                 }
+
+                const options = fetchOptions || {};
+                const requestedLoadedConversationPageCount = Math.max(1, Number.parseInt(options.loadedConversationPageCountOverride || loadedConversationPageCount || '1', 10) || 1);
+                const previousListScrollTop = options.preserveListScroll ? (conversationScrollEl?.scrollTop || 0) : 0;
 
                 if (listController) {
                     listController.abort();
@@ -280,14 +477,17 @@
 
                 const controller = new AbortController();
                 listController = controller;
-                root.classList.add('is-list-loading');
+                if (!options.silent) {
+                    root.classList.add('is-list-loading');
+                }
 
                 try {
                     const response = await fetch(buildHandlerUrl('ConversationList', {
                         conversationId: activeConversationId || null,
                         filter: getFilter(),
                         searchTerm: getSearchTerm() || null,
-                        counterpartScopeKey: getCounterpartScopeKey() || null
+                        counterpartScopeKey: getCounterpartScopeKey() || null,
+                        loadedConversationPageCount: requestedLoadedConversationPageCount
                     }), {
                         headers: { 'X-Requested-With': 'XMLHttpRequest' },
                         signal: controller.signal
@@ -299,6 +499,14 @@
 
                     const html = await response.text();
                     replaceHostContent(listHost, html);
+                    loadedConversationPageCount = requestedLoadedConversationPageCount;
+                    updateRootState();
+                    bindDynamicScrollTargets();
+                    syncAccountCenterHeight();
+
+                    if (options.preserveListScroll && conversationScrollEl) {
+                        conversationScrollEl.scrollTop = previousListScrollTop;
+                    }
 
                     const activeItem = activeConversationId
                         ? listHost.querySelector(`[data-conversation-id="${activeConversationId}"]`)
@@ -314,13 +522,15 @@
                         await fetchThread(activeConversationId, 1, {
                             pushHistory: false,
                             refreshList: false,
-                            productSlugOverride: productSlug
+                            productSlugOverride: productSlug,
+                            forceScrollToBottom: true
                         });
                     } else if (!firstItem) {
                         activeConversationId = '';
                         productSlug = '';
                         updateRootState();
                         renderEmptyThread();
+                        bindDynamicScrollTargets();
                         if (isWidgetSurface) {
                             setMobileView('list');
                         }
@@ -342,7 +552,9 @@
                     if (listController === controller) {
                         listController = null;
                     }
-                    root.classList.remove('is-list-loading');
+                    if (!options.silent) {
+                        root.classList.remove('is-list-loading');
+                    }
                 }
             }
 
@@ -352,12 +564,17 @@
                 }
 
                 const options = fetchOptions || {};
+                const requestedLoadedPageCount = Math.max(1, Number.parseInt(loadedPageCount || '1', 10) || 1);
                 if (Object.prototype.hasOwnProperty.call(options, 'productSlugOverride')) {
                     productSlug = options.productSlugOverride || '';
                 }
 
                 const previousConversationId = activeConversationId;
                 const currentInput = paneHost.querySelector('[data-chat-input]');
+                const previousThreadScrollHeight = threadScrollEl?.scrollHeight || 0;
+                const previousThreadScrollTop = threadScrollEl?.scrollTop || 0;
+                const previousThreadWasNearBottom = isNearThreadBottom(threadScrollEl);
+                const shouldOpenToLatest = options.forceScrollToBottom === true;
                 if (currentInput && previousConversationId) {
                     saveDraftFor(previousConversationId, currentInput.value);
                 }
@@ -367,11 +584,14 @@
 
                 if (!activeConversationId) {
                     renderEmptyThread();
+                    bindDynamicScrollTargets();
                     if (isWidgetSurface) {
                         setMobileView('list');
                     }
                     if (options.refreshList) {
-                        await fetchConversationList(false);
+                        await fetchConversationList(false, {
+                            loadedConversationPageCountOverride: getCurrentLoadedConversationPageCount()
+                        });
                     }
                     return;
                 }
@@ -382,12 +602,14 @@
 
                 const controller = new AbortController();
                 threadController = controller;
-                root.classList.add('is-thread-loading');
+                if (!options.silent) {
+                    root.classList.add('is-thread-loading');
+                }
 
                 try {
                     const response = await fetch(buildHandlerUrl('Thread', {
                         conversationId: activeConversationId,
-                        loadedPageCount: loadedPageCount || 1,
+                        loadedPageCount: requestedLoadedPageCount,
                         productSlug: productSlug || null
                     }), {
                         headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -400,6 +622,8 @@
 
                     const html = await response.text();
                     replaceHostContent(paneHost, html);
+                    bindDynamicScrollTargets();
+                    syncAccountCenterHeight();
 
                     const input = paneHost.querySelector('[data-chat-input]');
                     if (input) {
@@ -409,9 +633,17 @@
 
                     await syncConversationGroup();
 
-                    const messageList = paneHost.querySelector('[data-chat-message-list]');
+                    const messageList = getThreadMessageList();
                     if (messageList) {
-                        messageList.scrollTop = messageList.scrollHeight;
+                        if (options.preserveScrollOnPrepend) {
+                            preserveThreadViewportOnPrepend(messageList, previousThreadScrollHeight, previousThreadScrollTop);
+                        } else if (shouldOpenToLatest) {
+                            await scrollThreadToBottom(messageList);
+                        } else if (options.preserveViewportOnRefresh && !previousThreadWasNearBottom) {
+                            restoreThreadViewport(messageList, previousThreadScrollTop);
+                        } else {
+                            await scrollThreadToBottom(messageList);
+                        }
                     }
 
                     if (isWidgetSurface) {
@@ -419,7 +651,10 @@
                     }
 
                     if (options.refreshList) {
-                        await fetchConversationList(false);
+                        await fetchConversationList(false, {
+                            loadedConversationPageCountOverride: getCurrentLoadedConversationPageCount(),
+                            silent: options.silent
+                        });
                     }
 
                     if (!isWidgetSurface) {
@@ -442,7 +677,9 @@
                     if (threadController === controller) {
                         threadController = null;
                     }
-                    root.classList.remove('is-thread-loading');
+                    if (!options.silent) {
+                        root.classList.remove('is-thread-loading');
+                    }
                 }
             }
 
@@ -450,16 +687,24 @@
                 if (message?.conversationId && String(message.conversationId) === String(activeConversationId)) {
                     await fetchThread(activeConversationId, getCurrentLoadedPageCount(), {
                         pushHistory: false,
-                        refreshList: false
+                        refreshList: true,
+                        preserveViewportOnRefresh: true,
+                        silent: true
                     });
                     return;
                 }
 
-                await fetchConversationList(false);
+                await fetchConversationList(false, {
+                    loadedConversationPageCountOverride: getCurrentLoadedConversationPageCount(),
+                    silent: true
+                });
             }
 
             async function handleConversationUpdated() {
-                await fetchConversationList(false);
+                await fetchConversationList(false, {
+                    loadedConversationPageCountOverride: getCurrentLoadedConversationPageCount(),
+                    silent: true
+                });
             }
 
             function handleUnreadCountsUpdated(payload) {
@@ -469,15 +714,24 @@
             }
 
             async function handleConversationRead(payload) {
+                if (payload?.readByUserId && String(payload.readByUserId) === String(currentUserId)) {
+                    return;
+                }
+
                 if (payload?.conversationId && String(payload.conversationId) === String(activeConversationId)) {
                     await fetchThread(activeConversationId, getCurrentLoadedPageCount(), {
                         pushHistory: false,
-                        refreshList: false
+                        refreshList: true,
+                        preserveViewportOnRefresh: true,
+                        silent: true
                     });
                     return;
                 }
 
-                await fetchConversationList(false);
+                await fetchConversationList(false, {
+                    loadedConversationPageCountOverride: getCurrentLoadedConversationPageCount(),
+                    silent: true
+                });
             }
 
             async function handleListClick(event) {
@@ -491,7 +745,8 @@
                 await fetchThread(conversationId, 1, {
                     pushHistory: true,
                     refreshList: false,
-                    productSlugOverride: ''
+                    productSlugOverride: '',
+                    forceScrollToBottom: true
                 });
             }
 
@@ -503,7 +758,10 @@
 
                 window.clearTimeout(searchDebounce);
                 searchDebounce = window.setTimeout(() => {
-                    fetchConversationList(true);
+                    resetConversationPagination();
+                    fetchConversationList(true, {
+                        loadedConversationPageCountOverride: 1
+                    });
                 }, 250);
             }
 
@@ -513,21 +771,13 @@
                     return;
                 }
 
-                fetchConversationList(true);
+                resetConversationPagination();
+                fetchConversationList(true, {
+                    loadedConversationPageCountOverride: 1
+                });
             }
 
             async function handlePaneClick(event) {
-                const loadOlderButton = event.target.closest('[data-chat-load-older]');
-                if (loadOlderButton && activeConversationId) {
-                    event.preventDefault();
-                    const nextPageCount = Number.parseInt(loadOlderButton.dataset.nextPageCount || '1', 10) || 1;
-                    await fetchThread(activeConversationId, nextPageCount, {
-                        pushHistory: false,
-                        refreshList: false
-                    });
-                    return;
-                }
-
                 const mobileBackButton = event.target.closest('[data-chat-mobile-back]');
                 if (mobileBackButton) {
                     event.preventDefault();
@@ -626,13 +876,20 @@
                     counterpartSelect.value = nextCounterpartScopeKey;
                 }
 
+                resetConversationPagination();
                 updateRootState();
-                await fetchConversationList(false);
-                await fetchThread(activeConversationId, 1, {
-                    pushHistory: false,
-                    refreshList: false,
-                    productSlugOverride: productSlug
+                await fetchConversationList(false, {
+                    loadedConversationPageCountOverride: 1
                 });
+
+                if (activeConversationId && getRenderedConversationId() !== activeConversationId) {
+                    await fetchThread(activeConversationId, 1, {
+                        pushHistory: false,
+                        refreshList: false,
+                        productSlugOverride: productSlug,
+                        forceScrollToBottom: true
+                    });
+                }
             }
 
             async function init() {
@@ -650,6 +907,9 @@
                 if (!isWidgetSurface) {
                     window.addEventListener('popstate', handlePopState);
                 }
+                bindDynamicScrollTargets();
+                bindAccountCenterHeightSync();
+                syncAccountCenterHeight();
 
                 connection.on('MessageReceived', handleMessageReceived);
                 connection.on('ConversationUpdated', handleConversationUpdated);
@@ -682,7 +942,8 @@
                     await fetchThread(activeConversationId, getCurrentLoadedPageCount(), {
                         pushHistory: false,
                         refreshList: true,
-                        productSlugOverride: productSlug
+                        productSlugOverride: productSlug,
+                        forceScrollToBottom: true
                     });
                 } else if (isWidgetSurface) {
                     setMobileView('list');
@@ -698,6 +959,7 @@
                 }
 
                 destroyed = true;
+                window.clearTimeout(searchDebounce);
                 listHost.removeEventListener('click', handleListClick);
                 listHost.removeEventListener('input', handleListInput);
                 listHost.removeEventListener('change', handleListChange);
@@ -708,6 +970,15 @@
                 if (!isWidgetSurface) {
                     window.removeEventListener('popstate', handlePopState);
                 }
+                if (conversationScrollEl) {
+                    conversationScrollEl.removeEventListener('scroll', handleConversationListScroll);
+                    conversationScrollEl = null;
+                }
+                if (threadScrollEl) {
+                    threadScrollEl.removeEventListener('scroll', handleThreadScroll);
+                    threadScrollEl = null;
+                }
+                unbindAccountCenterHeightSync();
 
                 connection.off('MessageReceived', handleMessageReceived);
                 connection.off('ConversationUpdated', handleConversationUpdated);
@@ -737,6 +1008,7 @@
                     }
                 }
 
+                root.__gearzoneChatInitialized = false;
                 root.__gearzoneChatController = null;
             }
 
@@ -745,6 +1017,7 @@
                 destroy,
                 fetchConversationList,
                 fetchThread,
+                scrollActiveThreadToLatest,
                 getState,
                 setUnreadBadgeValue,
                 setMobileView,
@@ -774,3 +1047,4 @@
         document.addEventListener('DOMContentLoaded', initPageSurfaces);
     })();
 </script>
+

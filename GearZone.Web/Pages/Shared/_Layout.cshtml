@@ -105,6 +105,20 @@
         .custom-shadow {
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
         }
+
+        .category-nav-scroll {
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        .category-nav-item.is-open {
+            color: #1a57db;
+            border-color: #1a57db;
+        }
+
+        .category-nav-item.is-open .category-nav-trigger {
+            color: #1a57db;
+        }
         
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -227,39 +241,65 @@
 
     <!-- Secondary Nav -->
     <nav class="bg-white border-b border-gray-200 hidden md:block relative z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-x-auto hide-scrollbar">
-            <div class="flex items-center gap-5 lg:gap-6 h-12 text-[13px] lg:text-sm font-medium relative min-w-max">
-                <a class="category-nav-link flex items-center gap-2 @(string.IsNullOrEmpty(currentSlug) ? "text-primary border-b-2 border-primary" : "text-text-secondary border-b-2 border-transparent") hover:text-primary whitespace-nowrap h-full px-1 transition-colors cursor-pointer" data-category-slug="" asp-page="/Public/Catalog/Browse" asp-route-slug="">
-                    <span class="material-symbols-outlined text-[20px]">grid_view</span>
-                    All Categories
-                </a>
-                @foreach (var category in layoutCategories)
-                {
-                    bool isActive = category.Slug == currentSlug || category.SubCategories.Any(sc => sc.Slug == currentSlug);
-                    if (category.SubCategories.Any())
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative overflow-visible" data-category-nav-shell>
+            <div class="category-nav-scroll hide-scrollbar">
+                <div class="flex items-center gap-5 lg:gap-6 h-12 text-[13px] lg:text-sm font-medium relative min-w-max">
+                    <a class="category-nav-link flex items-center gap-2 @(string.IsNullOrEmpty(currentSlug) ? "text-primary border-b-2 border-primary" : "text-text-secondary border-b-2 border-transparent") hover:text-primary whitespace-nowrap h-full px-1 transition-colors cursor-pointer" data-category-slug="" asp-page="/Public/Catalog/Browse" asp-route-slug="">
+                        <span class="material-symbols-outlined text-[20px]">grid_view</span>
+                        All Categories
+                    </a>
+                    @foreach (var category in layoutCategories)
                     {
-                        <div class="relative group h-full flex items-center">
-                            <a class="category-nav-link @(isActive ? "text-primary border-b-2 border-primary" : "text-text-secondary border-b-2 border-transparent") hover:text-primary transition-colors whitespace-nowrap h-full flex items-center px-1 cursor-pointer" data-category-slug="@category.Slug" asp-page="/Public/Catalog/Browse" asp-route-slug="@category.Slug">
-                                @GetCategoryNavLabel(category.Name)
-                                <span class="material-symbols-outlined text-[16px] ml-1">expand_more</span>
-                            </a>
-                            <div class="absolute left-0 top-full mt-0 w-48 bg-white border border-gray-200 shadow-xl rounded-md py-1 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-50">
-                                @foreach (var sub in category.SubCategories)
-                                {
-                                    <a class="category-nav-link block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary @(sub.Slug == currentSlug ? "bg-gray-50 text-primary font-bold" : "") cursor-pointer" data-category-slug="@sub.Slug" asp-page="/Public/Catalog/Browse" asp-route-slug="@sub.Slug">@sub.Name</a>
-                                }
+                        bool isActive = category.Slug == currentSlug || category.SubCategories.Any(sc => sc.Slug == currentSlug);
+                        if (category.SubCategories.Any())
+                        {
+                            <div class="category-nav-item relative h-full flex items-center @(isActive ? "text-primary border-b-2 border-primary" : "text-text-secondary border-b-2 border-transparent")"
+                                 data-nav-item
+                                 data-nav-slug="@category.Slug">
+                                <a class="category-nav-parent-link hover:text-primary transition-colors whitespace-nowrap h-full flex items-center pl-1 cursor-pointer"
+                                   data-category-slug="@category.Slug"
+                                   asp-page="/Public/Catalog/Browse"
+                                   asp-route-slug="@category.Slug">
+                                    @GetCategoryNavLabel(category.Name)
+                                </a>
+                                <button type="button"
+                                        class="category-nav-trigger inline-flex h-full items-center pr-1 text-current transition-colors hover:text-primary focus:outline-none"
+                                        aria-haspopup="true"
+                                        aria-expanded="false"
+                                        data-nav-trigger>
+                                    <span class="material-symbols-outlined text-[16px]">expand_more</span>
+                                </button>
+                                <div class="hidden" data-nav-dropdown-template>
+                                    @foreach (var sub in category.SubCategories)
+                                    {
+                                        <a class="category-nav-link block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 hover:text-primary @(sub.Slug == currentSlug ? "bg-gray-50 text-primary font-bold" : "") cursor-pointer"
+                                           data-category-slug="@sub.Slug"
+                                           asp-page="/Public/Catalog/Browse"
+                                           asp-route-slug="@sub.Slug">
+                                            @sub.Name
+                                        </a>
+                                    }
+                                </div>
                             </div>
-                        </div>
+                        }
+                        else
+                        {
+                            <a class="category-nav-link @(isActive ? "text-primary border-b-2 border-primary" : "text-text-secondary border-b-2 border-transparent") hover:text-primary transition-colors whitespace-nowrap h-full flex items-center px-1 cursor-pointer" data-category-slug="@category.Slug" asp-page="/Public/Catalog/Browse" asp-route-slug="@category.Slug">@GetCategoryNavLabel(category.Name)</a>
+                        }
                     }
-                    else
-                    {
-                        <a class="category-nav-link @(isActive ? "text-primary border-b-2 border-primary" : "text-text-secondary border-b-2 border-transparent") hover:text-primary transition-colors whitespace-nowrap h-full flex items-center px-1 cursor-pointer" data-category-slug="@category.Slug" asp-page="/Public/Catalog/Browse" asp-route-slug="@category.Slug">@GetCategoryNavLabel(category.Name)</a>
-                    }
-                }
-                <a class="text-red-600 hover:text-red-700 font-semibold transition-colors whitespace-nowrap h-full flex items-center px-1" href="/#home-flash-zone">
-                    <span class="material-symbols-outlined text-[18px] mr-1">bolt</span>
-                    Flash
-                </a>
+                    <a class="text-red-600 hover:text-red-700 font-semibold transition-colors whitespace-nowrap h-full flex items-center px-1" href="/#home-flash-zone">
+                        <span class="material-symbols-outlined text-[18px] mr-1">bolt</span>
+                        Flash
+                    </a>
+                </div>
+            </div>
+
+            <div class="pointer-events-none absolute inset-x-0 top-full z-[80] hidden" data-nav-dropdown-layer>
+                <div class="relative">
+                    <div class="pointer-events-auto absolute top-0 hidden w-56 overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-2xl ring-1 ring-black/5"
+                         data-nav-dropdown-panel>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
@@ -447,6 +487,162 @@
                     }
                 });
             }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const navShell = document.querySelector('[data-category-nav-shell]');
+            const dropdownLayer = navShell?.querySelector('[data-nav-dropdown-layer]');
+            const dropdownPanel = navShell?.querySelector('[data-nav-dropdown-panel]');
+            const navItems = navShell ? Array.from(navShell.querySelectorAll('[data-nav-item]')) : [];
+            const desktopQuery = window.matchMedia('(min-width: 768px)');
+            let activeItem = null;
+            let closeTimer = null;
+
+            if (!navShell || !dropdownLayer || !dropdownPanel || navItems.length === 0) {
+                return;
+            }
+
+            function clearCloseTimer() {
+                if (closeTimer) {
+                    clearTimeout(closeTimer);
+                    closeTimer = null;
+                }
+            }
+
+            function getTrigger(item) {
+                return item.querySelector('[data-nav-trigger]');
+            }
+
+            function getTemplate(item) {
+                return item.querySelector('[data-nav-dropdown-template]');
+            }
+
+            function resetItem(item) {
+                item.classList.remove('is-open');
+                delete item.dataset.locked;
+                const trigger = getTrigger(item);
+                if (trigger) {
+                    trigger.setAttribute('aria-expanded', 'false');
+                }
+            }
+
+            function closeDropdown(force = false) {
+                clearCloseTimer();
+
+                if (!activeItem) {
+                    dropdownPanel.classList.add('hidden');
+                    dropdownLayer.classList.add('hidden');
+                    return;
+                }
+
+                if (!force && activeItem.dataset.locked === 'true') {
+                    return;
+                }
+
+                resetItem(activeItem);
+                activeItem = null;
+                dropdownPanel.innerHTML = '';
+                dropdownPanel.classList.add('hidden');
+                dropdownLayer.classList.add('hidden');
+            }
+
+            function scheduleClose() {
+                clearCloseTimer();
+                closeTimer = window.setTimeout(() => closeDropdown(false), 120);
+            }
+
+            function openDropdown(item, lockOpen = false) {
+                if (!desktopQuery.matches) {
+                    return;
+                }
+
+                const template = getTemplate(item);
+                const trigger = getTrigger(item);
+                if (!template || !trigger) {
+                    return;
+                }
+
+                clearCloseTimer();
+
+                if (activeItem && activeItem !== item) {
+                    resetItem(activeItem);
+                }
+
+                activeItem = item;
+                if (lockOpen) {
+                    item.dataset.locked = 'true';
+                } else {
+                    delete item.dataset.locked;
+                }
+
+                item.classList.add('is-open');
+                trigger.setAttribute('aria-expanded', 'true');
+                dropdownPanel.innerHTML = template.innerHTML;
+                dropdownLayer.classList.remove('hidden');
+                dropdownPanel.classList.remove('hidden');
+
+                requestAnimationFrame(() => {
+                    const shellRect = navShell.getBoundingClientRect();
+                    const itemRect = item.getBoundingClientRect();
+                    const panelWidth = dropdownPanel.offsetWidth;
+                    const availableWidth = navShell.clientWidth;
+                    const preferredLeft = itemRect.left - shellRect.left;
+                    const clampedLeft = Math.max(0, Math.min(preferredLeft, Math.max(0, availableWidth - panelWidth)));
+                    dropdownPanel.style.left = `${clampedLeft}px`;
+                });
+            }
+
+            navItems.forEach(item => {
+                const trigger = getTrigger(item);
+                if (!trigger) {
+                    return;
+                }
+
+                item.addEventListener('mouseenter', () => openDropdown(item));
+                item.addEventListener('mouseleave', scheduleClose);
+                item.addEventListener('focusin', () => openDropdown(item));
+                item.addEventListener('focusout', event => {
+                    const nextTarget = event.relatedTarget;
+                    if (!nextTarget || (!item.contains(nextTarget) && !dropdownPanel.contains(nextTarget))) {
+                        scheduleClose();
+                    }
+                });
+
+                trigger.addEventListener('click', event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    if (activeItem === item && item.dataset.locked === 'true') {
+                        closeDropdown(true);
+                        return;
+                    }
+
+                    openDropdown(item, true);
+                });
+            });
+
+            dropdownPanel.addEventListener('mouseenter', clearCloseTimer);
+            dropdownPanel.addEventListener('mouseleave', scheduleClose);
+            dropdownPanel.addEventListener('focusin', clearCloseTimer);
+            dropdownPanel.addEventListener('click', () => closeDropdown(true));
+
+            document.addEventListener('click', event => {
+                if (!navShell.contains(event.target) && !dropdownPanel.contains(event.target)) {
+                    closeDropdown(true);
+                }
+            });
+
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape') {
+                    closeDropdown(true);
+                }
+            });
+
+            desktopQuery.addEventListener('change', event => {
+                if (!event.matches) {
+                    closeDropdown(true);
+                }
+            });
         });
 
         // Global Live Search Logic

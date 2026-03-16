@@ -51,5 +51,37 @@ namespace GearZone.Web.Pages.StoreOwner.Orders
 
             return Page();
         }
+
+        public async Task<IActionResult> OnPostApproveAsync(Guid subOrderId)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Redirect("/Public/Auth/Login");
+            }
+
+            var ok = await _chatService.ApproveSellerOrderAsync(userId, subOrderId);
+            TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok
+                ? "Order approved successfully."
+                : "Cannot approve this order. Only pending orders can be approved.";
+
+            return RedirectToPage(new { SearchTerm, PageNumber });
+        }
+
+        public async Task<IActionResult> OnPostRejectAsync(Guid subOrderId)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Redirect("/Public/Auth/Login");
+            }
+
+            var ok = await _chatService.RejectSellerOrderAsync(userId, subOrderId);
+            TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok
+                ? "Order rejected successfully."
+                : "Cannot reject this order. Only pending orders can be rejected.";
+
+            return RedirectToPage(new { SearchTerm, PageNumber });
+        }
     }
 }

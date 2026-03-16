@@ -1,0 +1,201 @@
+@page
+@using GearZone.Domain.Enums
+@model GearZone.Web.Pages.StoreOwner.Orders.DetailModel
+@{
+    ViewData["Title"] = $"Order #{Model.OrderDetail.OrderCode}";
+    ViewData["PageHeader"] = "Order Detail";
+    ViewData["ActivePage"] = "Orders";
+    Layout = "_StoreOwnerLayout";
+
+    string GetBadgeClass(OrderStatus status) => status switch
+    {
+        OrderStatus.Pending => "bg-amber-50 text-amber-700 border border-amber-200",
+        OrderStatus.Approved => "bg-sky-50 text-sky-700 border border-sky-200",
+        OrderStatus.Paid => "bg-indigo-50 text-indigo-700 border border-indigo-200",
+        OrderStatus.Processing => "bg-blue-50 text-blue-700 border border-blue-200",
+        OrderStatus.Delivered => "bg-emerald-50 text-emerald-700 border border-emerald-200",
+        OrderStatus.Cancelled => "bg-rose-50 text-rose-700 border border-rose-200",
+        OrderStatus.Refunded => "bg-orange-50 text-orange-700 border border-orange-200",
+        OrderStatus.Rejected => "bg-red-50 text-red-700 border border-red-200",
+        _ => "bg-slate-50 text-slate-700 border border-slate-200"
+    };
+}
+
+<div class="space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <a asp-page="/StoreOwner/Orders/Index"
+           class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-50">
+            <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+            Back To Orders
+        </a>
+
+        <a asp-page="/StoreOwner/Messages/Index"
+           asp-route-subOrderId="@Model.OrderDetail.SubOrderId"
+           class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-orange-600 transition hover:-translate-y-0.5 hover:bg-orange-100">
+            <span class="material-symbols-outlined text-[16px]">chat</span>
+            Contact Buyer
+        </a>
+    </div>
+
+    <div class="rounded-[1.8rem] border border-slate-200 bg-white px-6 py-5 shadow-soft">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+                <p class="text-[11px] font-black uppercase tracking-[0.24em] text-orange-500">Seller Order Detail</p>
+                <h1 class="mt-2 text-3xl font-black text-slate-900">#@Model.OrderDetail.OrderCode</h1>
+                <p class="mt-2 text-sm text-slate-500">Created @Model.OrderDetail.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
+            </div>
+
+            <span class="inline-flex rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] @GetBadgeClass(Model.OrderDetail.Status)">
+                @Model.OrderDetail.Status
+            </span>
+        </div>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-3">
+        <div class="rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-soft lg:col-span-2">
+            <h2 class="text-sm font-black uppercase tracking-[0.14em] text-slate-500">Order Items</h2>
+            <div class="mt-4 overflow-hidden rounded-2xl border border-slate-100">
+                <table class="min-w-full divide-y divide-slate-100">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Product</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">SKU</th>
+                            <th class="px-4 py-3 text-right text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Qty</th>
+                            <th class="px-4 py-3 text-right text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Unit</th>
+                            <th class="px-4 py-3 text-right text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach (var item in Model.OrderDetail.Items)
+                        {
+                            <tr>
+                                <td class="px-4 py-3">
+                                    <p class="text-sm font-semibold text-slate-900">@item.ProductName</p>
+                                    <p class="mt-1 text-xs text-slate-500">@(!string.IsNullOrWhiteSpace(item.VariantName) ? item.VariantName : "Default")</p>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-slate-600">@item.Sku</td>
+                                <td class="px-4 py-3 text-right text-sm font-semibold text-slate-700">@item.Quantity</td>
+                                <td class="px-4 py-3 text-right text-sm text-slate-600">@item.UnitPrice.ToString("N0") VND</td>
+                                <td class="px-4 py-3 text-right text-sm font-black text-slate-900">@item.LineTotal.ToString("N0") VND</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-soft">
+                <h2 class="text-sm font-black uppercase tracking-[0.14em] text-slate-500">Buyer</h2>
+                <div class="mt-4 flex items-center gap-3">
+                    <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-100 text-sm font-black text-slate-700">
+                        @if (!string.IsNullOrWhiteSpace(Model.OrderDetail.BuyerAvatarUrl))
+                        {
+                            <img src="@Model.OrderDetail.BuyerAvatarUrl" alt="@Model.OrderDetail.BuyerDisplayName" class="h-full w-full object-cover" />
+                        }
+                        else
+                        {
+                            @(string.IsNullOrWhiteSpace(Model.OrderDetail.BuyerDisplayName) ? "B" : Model.OrderDetail.BuyerDisplayName[0])
+                        }
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-slate-900">@Model.OrderDetail.BuyerDisplayName</p>
+                        @if (!string.IsNullOrWhiteSpace(Model.OrderDetail.BuyerEmail))
+                        {
+                            <p class="text-xs text-slate-500">@Model.OrderDetail.BuyerEmail</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-soft">
+                <h2 class="text-sm font-black uppercase tracking-[0.14em] text-slate-500">Shipping</h2>
+                <dl class="mt-4 space-y-2 text-sm">
+                    <div class="flex items-start justify-between gap-3">
+                        <dt class="text-slate-500">Receiver</dt>
+                        <dd class="text-right font-semibold text-slate-800">@Model.OrderDetail.ReceiverName</dd>
+                    </div>
+                    <div class="flex items-start justify-between gap-3">
+                        <dt class="text-slate-500">Phone</dt>
+                        <dd class="text-right font-semibold text-slate-800">@Model.OrderDetail.ReceiverPhone</dd>
+                    </div>
+                    <div class="flex items-start justify-between gap-3">
+                        <dt class="text-slate-500">Address</dt>
+                        <dd class="text-right font-semibold text-slate-800">@Model.OrderDetail.ShippingAddress</dd>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(Model.OrderDetail.ShippingProvider))
+                    {
+                        <div class="flex items-start justify-between gap-3">
+                            <dt class="text-slate-500">Provider</dt>
+                            <dd class="text-right font-semibold text-slate-800">@Model.OrderDetail.ShippingProvider</dd>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.OrderDetail.TrackingNumber))
+                    {
+                        <div class="flex items-start justify-between gap-3">
+                            <dt class="text-slate-500">Tracking</dt>
+                            <dd class="text-right font-semibold text-slate-800">@Model.OrderDetail.TrackingNumber</dd>
+                        </div>
+                    }
+                </dl>
+            </div>
+
+            <div class="rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-soft">
+                <h2 class="text-sm font-black uppercase tracking-[0.14em] text-slate-500">Amount</h2>
+                <dl class="mt-4 space-y-2 text-sm">
+                    <div class="flex items-center justify-between">
+                        <dt class="text-slate-500">Subtotal</dt>
+                        <dd class="font-semibold text-slate-800">@Model.OrderDetail.Subtotal.ToString("N0") VND</dd>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <dt class="text-slate-500">Shipping Fee</dt>
+                        <dd class="font-semibold text-slate-800">@Model.OrderDetail.ShippingFee.ToString("N0") VND</dd>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <dt class="text-slate-500">Commission (@Model.OrderDetail.CommissionRateSnapshot.ToString("N0")%)</dt>
+                        <dd class="font-semibold text-slate-800">@Model.OrderDetail.CommissionAmount.ToString("N0") VND</dd>
+                    </div>
+                    <div class="flex items-center justify-between border-t border-slate-100 pt-2">
+                        <dt class="font-bold text-slate-900">Grand Total</dt>
+                        <dd class="font-black text-slate-900">@Model.OrderDetail.GrandTotal.ToString("N0") VND</dd>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <dt class="text-slate-500">Net Amount</dt>
+                        <dd class="font-bold text-emerald-700">@Model.OrderDetail.NetAmount.ToString("N0") VND</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="rounded-[1.6rem] border border-slate-200 bg-white p-5 shadow-soft">
+        <h2 class="text-sm font-black uppercase tracking-[0.14em] text-slate-500">Status Timeline</h2>
+        @if (!Model.OrderDetail.StatusHistory.Any())
+        {
+            <p class="mt-4 text-sm text-slate-500">No status history recorded yet.</p>
+        }
+        else
+        {
+            <div class="mt-4 space-y-3">
+                @foreach (var history in Model.OrderDetail.StatusHistory)
+                {
+                    <div class="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <p class="text-sm font-bold text-slate-900">@history.NewStatus</p>
+                            <p class="text-xs font-semibold text-slate-500">@history.ChangedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
+                        </div>
+                        <p class="mt-1 text-xs text-slate-600">By @history.ChangedByDisplayName</p>
+                        @if (history.OldStatus.HasValue)
+                        {
+                            <p class="mt-1 text-xs text-slate-500">From @history.OldStatus.Value to @history.NewStatus</p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(history.Note))
+                        {
+                            <p class="mt-1 text-xs text-slate-500">@history.Note</p>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>

@@ -8,7 +8,6 @@ using GearZone.Application.Features.Chat;
 using GearZone.Application.Features.Orders;
 using GearZone.Application.Features.Payment;
 using GearZone.Application.Features.Payout;
-using GearZone.Application.Features.Payment;
 using GearZone.Application.Features.Reviews;
 using GearZone.Application.Features.Seller;
 using GearZone.Application.Features.User;
@@ -47,6 +46,7 @@ namespace GearZone.Application
             services.AddScoped<IAdminVoucherService, AdminVoucherService>();
             services.AddScoped<IMapService, MapService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<ISellerVoucherService, SellerVoucherService>();
 
             return services;
         }

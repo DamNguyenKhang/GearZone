@@ -467,6 +467,79 @@ namespace GearZone.Infrastructure.Repositories
                 .FirstOrDefaultAsync(x => x.Id == subOrderId && x.Store.OwnerUserId == ownerUserId, ct);
         }
 
+        public async Task<SellerChatOrderDetailDto?> GetSellerChatOrderDetailAsync(string ownerUserId, Guid subOrderId, CancellationToken ct = default)
+        {
+            var subOrder = await _dbSet
+                .AsNoTracking()
+                .Include(x => x.Order)
+                .ThenInclude(o => o.User)
+                .Include(x => x.Store)
+                .Include(x => x.Items)
+                .FirstOrDefaultAsync(x => x.Id == subOrderId && x.Store.OwnerUserId == ownerUserId, ct);
+
+            if (subOrder == null)
+            {
+                return null;
+            }
+
+            var statusHistory = await _context.OrderStatusHistories
+                .AsNoTracking()
+                .Where(x => x.OrderId == subOrder.OrderId)
+                .OrderByDescending(x => x.ChangedAt)
+                .Select(x => new SellerChatOrderStatusHistoryDto
+                {
+                    ChangedAt = x.ChangedAt,
+                    OldStatus = x.OldStatus,
+                    NewStatus = x.NewStatus,
+                    ChangedByDisplayName = x.ChangedByUser.FullName ?? x.ChangedByUser.UserName ?? x.ChangedByUser.Email ?? "System",
+                    Note = x.Note
+                })
+                .ToListAsync(ct);
+
+            return new SellerChatOrderDetailDto
+            {
+                SubOrderId = subOrder.Id,
+                OrderCode = subOrder.Order.OrderCode,
+                StoreId = subOrder.StoreId,
+                StoreName = subOrder.Store.StoreName,
+                BuyerUserId = subOrder.Order.UserId,
+                BuyerDisplayName = subOrder.Order.User.FullName ?? subOrder.Order.User.UserName ?? subOrder.Order.User.Email ?? "Buyer",
+                BuyerAvatarUrl = subOrder.Order.User.AvatarUrl,
+                BuyerEmail = subOrder.Order.User.Email,
+                CreatedAt = subOrder.CreatedAt,
+                DeliveredAt = subOrder.DeliveredAt,
+                UpdatedAt = subOrder.UpdatedAt,
+                Status = subOrder.Status,
+                Subtotal = subOrder.Subtotal,
+                ShippingFee = subOrder.Order.ShippingFee,
+                GrandTotal = subOrder.Order.GrandTotal,
+                CommissionRateSnapshot = subOrder.CommissionRateSnapshot,
+                CommissionAmount = subOrder.CommissionAmount,
+                NetAmount = subOrder.NetAmount,
+                ReceiverName = subOrder.Order.ReceiverName,
+                ReceiverPhone = subOrder.Order.ReceiverPhone,
+                ShippingAddress = subOrder.Order.ShippingAddress,
+                ShippingProvider = subOrder.Order.ShippingProvider,
+                TrackingNumber = subOrder.Order.TrackingNumber,
+                Items = subOrder.Items
+                    .OrderBy(x => x.ProductNameSnapshot)
+                    .ThenBy(x => x.SkuSnapshot)
+                    .Select(x => new SellerChatOrderItemDetailDto
+                    {
+                        OrderItemId = x.Id,
+                        VariantId = x.VariantId,
+                        ProductName = x.ProductNameSnapshot,
+                        VariantName = x.VariantNameSnapshot,
+                        Sku = x.SkuSnapshot,
+                        Quantity = x.Quantity,
+                        UnitPrice = x.UnitPriceSnapshot,
+                        LineTotal = x.LineTotal
+                    })
+                    .ToList(),
+                StatusHistory = statusHistory
+            };
+        }
+
         public async Task<List<ChatContextOrderDto>> GetConversationOrderContextAsync(string buyerUserId, Guid storeId, int take, CancellationToken ct = default)
         {
             return await _dbSet

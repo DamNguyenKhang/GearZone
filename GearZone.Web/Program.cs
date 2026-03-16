@@ -13,7 +13,25 @@ using Microsoft.AspNetCore.Rewrite;
 
 var builder = WebApplication.CreateBuilder(args);
 
-DotNetEnv.Env.Load();
+var envCandidates = new[]
+{
+    System.IO.Path.Combine(builder.Environment.ContentRootPath, ".env"),
+    System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), ".env"),
+    System.IO.Path.GetFullPath(System.IO.Path.Combine(builder.Environment.ContentRootPath, "..", ".env"))
+}
+.Distinct(StringComparer.OrdinalIgnoreCase);
+
+foreach (var envPath in envCandidates)
+{
+    if (!System.IO.File.Exists(envPath))
+    {
+        continue;
+    }
+
+    DotNetEnv.Env.Load(envPath);
+    Console.WriteLine($"Environment: loaded {envPath}");
+}
+
 builder.Configuration.AddEnvironmentVariables();
 
 var connectionString = builder.Configuration["DB_CONNECTION_STRING"] ?? builder.Configuration.GetConnectionString("DefaultConnection");
@@ -88,8 +106,26 @@ using (var scope = app.Services.CreateScope())
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var configuration = services.GetRequiredService<IConfiguration>();
-    await IdentitySeeder.SeedAsync(userManager, roleManager, configuration);
-    await CatalogSeeder.SeedAsync(dbContext);
+
+    try
+    {
+        await IdentitySeeder.SeedAsync(userManager, roleManager, configuration);
+        Console.WriteLine("Seed[Identity]: completed.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Seed[Identity]: {ex}");
+    }
+
+    try
+    {
+        await CatalogSeeder.SeedAsync(dbContext);
+        Console.WriteLine("Seed[Catalog]: completed.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Seed[Catalog]: {ex}");
+    }
 }
 
 app.UseHttpsRedirection();

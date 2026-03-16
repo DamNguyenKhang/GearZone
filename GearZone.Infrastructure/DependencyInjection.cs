@@ -1,6 +1,6 @@
-using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Abstractions.External;
 using GearZone.Application.Abstractions.Persistence;
+using GearZone.Application.Abstractions.Services;
 using GearZone.Infrastructure.External;
 using GearZone.Infrastructure.Jobs;
 using GearZone.Infrastructure.Repositories;
@@ -19,15 +19,17 @@ namespace GearZone.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
+            // PayOS PayIn settings (standardized variable names)
             services.Configure<PayOSSettings>(options =>
             {
-                options.ClientId = configuration["PAYOS_CLIENT_ID"]!;
-                options.ApiKey = configuration["PAYOS_API_KEY"]!;
-                options.ChecksumKey = configuration["PAYOS_CHECKSUM_KEY"]!;
-                options.ReturnUrl = configuration["PAYOS_RETURN_URL"]!;
-                options.CancelUrl = configuration["PAYOS_CANCEL_URL"]!;
+                options.ClientId = configuration["PAYOS_PAYIN_CLIENT_ID"]!;
+                options.ApiKey = configuration["PAYOS_PAYIN_API_KEY"]!;
+                options.ChecksumKey = configuration["PAYOS_PAYIN_CHECKSUM_KEY"]!;
+                options.ReturnUrl = configuration["PAYOS_PAYIN_RETURN_URL"]!;
+                options.CancelUrl = configuration["PAYOS_PAYIN_CANCEL_URL"]!;
             });
 
+            // PayOS Payout settings
             services.Configure<PayOSPayoutSettings>(options =>
             {
                 options.ClientId = configuration["PAYOS_PAYOUT_CLIENT_ID"]!;
@@ -75,11 +77,16 @@ namespace GearZone.Infrastructure
             // Jobs
             services.AddScoped<PayoutBatchJob>();
             services.AddScoped<OrderAutoCompleteJob>();
+            services.AddScoped<PaymentTimeoutJob>();
+            services.AddScoped<IBackgroundJobService, BackgroundJobService>();
 
+            // Payment strategies (registered once)
             services.AddScoped<IPaymentStrategy, PayOSPaymentStrategy>();
             services.AddScoped<IPaymentStrategy, CodPaymentStrategy>();
+            services.AddScoped<IPaymentGateway, PayOSPaymentGateway>();
             services.AddScoped<IPayoutClient, PayOSPayoutClient>();
 
+            // PayOS clients (keyed singletons)
             services.AddKeyedSingleton("OrderClient", (sp, key) =>
             {
                 var settings = sp.GetRequiredService<IOptions<PayOSSettings>>().Value;
@@ -124,4 +131,3 @@ namespace GearZone.Infrastructure
         }
     }
 }
-

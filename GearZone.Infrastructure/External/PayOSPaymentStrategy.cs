@@ -45,7 +45,7 @@ namespace GearZone.Infrastructure.External
                 {
                     OrderCode = order.OrderCode,
                     Amount = (long)order.GrandTotal,
-                    Description = $"PAY FOR ORDER {order.OrderCode}",
+                    Description = $"GZ {order.OrderCode}",
 
                     ReturnUrl = _settings.ReturnUrl,
                     CancelUrl = _settings.CancelUrl,
@@ -64,6 +64,24 @@ namespace GearZone.Infrastructure.External
                 };
 
                 var response = await _client.PaymentRequests.CreateAsync(paymentRequest);
+
+                // Create Payment record immediately
+                var payment = new Domain.Entities.Payment
+                {
+                    Id = Guid.NewGuid(),
+                    OrderId = order.Id,
+                    PaymentCode = order.OrderCode.ToString(),
+                    Method = PaymentMethod.PayOS,
+                    Provider = "PayOS",
+                    Amount = order.GrandTotal,
+                    Status = PaymentStatus.Pending,
+                    PaymentLinkId = response.PaymentLinkId,
+                    CheckoutUrl = response.CheckoutUrl,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                order.Payments.Add(payment);
 
                 return new PaymentResult(
                     success: true,

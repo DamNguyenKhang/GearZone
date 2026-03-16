@@ -1,7 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace GearZone.Domain.Enums
 {
     public enum PaymentStatus
@@ -9,6 +5,7 @@ namespace GearZone.Domain.Enums
         Pending,
         Paid,
         Failed,
+        Cancelled,
         Refunded
     }
 }

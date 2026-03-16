@@ -1,8 +1,9 @@
-﻿namespace GearZone.Domain.Enums
+namespace GearZone.Domain.Enums
 {
     public enum OrderStatus
     {
         Pending,
+        AwaitingPayment,
         Approved,
         Rejected,
         Paid,

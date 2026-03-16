@@ -150,8 +150,7 @@
                     </div>
                 </div>
                 
-                <form method="post" id="checkout-form" asp-page="/Checkout/Index">
-                    <input type="hidden" name="SelectedCartItemIds" id="selected-cart-items-input" value="" />
+                <form method="get" id="checkout-form" action="/Checkout">
                     <button type="submit" id="btn-checkout" disabled class="w-full bg-secondary hover:bg-orange-600 disabled:cursor-not-allowed text-white font-bold py-4 rounded-lg shadow-lg shadow-orange-500/20 transition-all transform hover:scale-[1.01] active:scale-[0.99] flex justify-center items-center gap-2 text-lg uppercase tracking-wider">
                         CHECKOUT NOW
                         <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
@@ -259,14 +258,21 @@
 
                 // Update checkout button state and hidden input
                 const btnCheckout = document.getElementById('btn-checkout');
-                const selectedItemsInput = document.getElementById('selected-cart-items-input');
+                const form = document.getElementById('checkout-form');
+                
+                form.querySelectorAll('input[name="SelectedCartItemIds"]').forEach(el => el.remove());
                 
                 if (checkedItemIds.length > 0) {
                     btnCheckout.removeAttribute('disabled');
-                    selectedItemsInput.value = checkedItemIds.join(',');
+                    checkedItemIds.forEach(id => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'SelectedCartItemIds';
+                        input.value = id;
+                        form.appendChild(input);
+                    });
                 } else {
                     btnCheckout.setAttribute('disabled', 'disabled');
-                    selectedItemsInput.value = '';
                 }
             };
 

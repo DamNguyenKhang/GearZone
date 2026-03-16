@@ -1,3 +1,4 @@
+using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Admin.Dtos;
 using GearZone.Application.Features.Catalog.DTOs;

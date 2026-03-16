@@ -1,4 +1,4 @@
-using GearZone.Application.Abstractions.Services;
+﻿using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Chat.Dtos;
 using GearZone.Domain.Entities;
 using GearZone.Web.Pages.Shared.Models;
@@ -47,10 +47,10 @@ namespace GearZone.Web.Pages.StoreOwner.Messages
                 return Redirect("/Public/Auth/Login");
             }
 
-            ViewData["Title"] = "Tin nhắn khách hàng";
-            ViewData["PageHeader"] = "Tin nhắn khách hàng";
+            ViewData["Title"] = "Customer Messages";
+            ViewData["PageHeader"] = "Customer Messages";
             ViewData["ActivePage"] = "Messages";
-            ViewData["Breadcrumb"] = new[] { "Tin nhắn" };
+            ViewData["Breadcrumb"] = new[] { "Messages" };
             ViewData["ContentMode"] = "ChatFullCanvas";
 
             if (SubOrderId.HasValue && !ConversationId.HasValue)
@@ -69,7 +69,7 @@ namespace GearZone.Web.Pages.StoreOwner.Messages
             return Page();
         }
 
-        public async Task<IActionResult> OnGetConversationListAsync(Guid? conversationId)
+        public async Task<IActionResult> OnGetConversationListAsync(Guid? conversationId, int loadedConversationPageCount = 1)
         {
             var userId = _userManager.GetUserId(User);
             if (string.IsNullOrWhiteSpace(userId))
@@ -77,13 +77,14 @@ namespace GearZone.Web.Pages.StoreOwner.Messages
                 return Unauthorized();
             }
 
-            var inbox = await BuildInboxAsync(userId, conversationId, 1, includeThread: false);
+            var inbox = await BuildInboxAsync(userId, conversationId, 1, includeThread: false, loadedConversationPageCount: loadedConversationPageCount);
             return new PartialViewResult
             {
                 ViewName = "/Pages/Shared/_ChatConversationList.cshtml",
                 ViewData = new ViewDataDictionary<ChatConversationListViewModel>(ViewData, new ChatConversationListViewModel
                 {
                     IsSellerView = true,
+                    IsFullCanvasPage = true,
                     CurrentUserId = userId,
                     BasePath = "/StoreOwner/Messages",
                     Filter = inbox.Filter,
@@ -91,6 +92,7 @@ namespace GearZone.Web.Pages.StoreOwner.Messages
                     CounterpartScopeKey = inbox.CounterpartScopeKey,
                     ActiveConversationId = inbox.ActiveConversationId,
                     TotalUnreadCount = inbox.TotalUnreadCount,
+                    LoadedConversationPageCount = inbox.LoadedConversationPageCount,
                     EmptyInboxTitle = inbox.EmptyInboxTitle,
                     EmptyInboxDescription = inbox.EmptyInboxDescription,
                     CounterpartScopeOptions = inbox.CounterpartScopeOptions,
@@ -124,9 +126,10 @@ namespace GearZone.Web.Pages.StoreOwner.Messages
                 ViewData = new ViewDataDictionary<ChatThreadPaneViewModel>(ViewData, new ChatThreadPaneViewModel
                 {
                     IsSellerView = true,
+                    IsFullCanvasPage = true,
                     CurrentUserId = userId,
-                    EmptyTitle = "Chon mot nguoi mua",
-                    EmptyDescription = "Chon nguoi mua o cot ben trai de mo hoi thoai realtime.",
+                    EmptyTitle = "Choose a buyer",
+                    EmptyDescription = "Pick a buyer from the left column to open the realtime thread.",
                     Thread = thread
                 })
             };
@@ -136,7 +139,8 @@ namespace GearZone.Web.Pages.StoreOwner.Messages
             string userId,
             Guid? selectedConversationId,
             int loadedPageCount,
-            bool includeThread = true)
+            bool includeThread = true,
+            int loadedConversationPageCount = 1)
         {
             var query = new ChatInboxQueryDto
             {
@@ -144,7 +148,7 @@ namespace GearZone.Web.Pages.StoreOwner.Messages
                 SearchTerm = SearchTerm,
                 CounterpartScopeKey = CounterpartScopeKey,
                 PageNumber = 1,
-                PageSize = 20
+                PageSize = 20 * Math.Max(1, loadedConversationPageCount)
             };
 
             var conversations = await _chatService.GetSellerInboxAsync(userId, query);
@@ -191,8 +195,9 @@ namespace GearZone.Web.Pages.StoreOwner.Messages
                 CounterpartScopeKey = query.CounterpartScopeKey,
                 ActiveConversationId = activeConversationId,
                 TotalUnreadCount = await _chatService.GetSellerUnreadCountAsync(userId),
-                EmptyInboxTitle = "Chua co tin nhan nao",
-                EmptyInboxDescription = "Hoi thoai cua khach hang se hien thi tai day ngay khi co nguoi mua nhan tin.",
+                LoadedConversationPageCount = Math.Max(1, loadedConversationPageCount),
+                EmptyInboxTitle = "No messages yet",
+                EmptyInboxDescription = "Customer conversations will appear here as soon as a buyer sends a message.",
                 CounterpartScopeOptions = counterpartScopeOptions,
                 Conversations = conversations,
                 ActiveThread = thread
@@ -200,3 +205,4 @@ namespace GearZone.Web.Pages.StoreOwner.Messages
         }
     }
 }
+

@@ -1,5 +1,6 @@
 using GearZone.Domain.Enums;
 using System;
+using System.Text.Json.Serialization;
 
 namespace GearZone.Application.Features.User.Dtos;
 
@@ -28,6 +29,7 @@ public class CreateUserAddressDto
     public string? Province { get; set; }
     public double Latitude { get; set; }
     public double Longitude { get; set; }
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public AddressType AddressType { get; set; }
     public bool IsDefault { get; set; }
 }

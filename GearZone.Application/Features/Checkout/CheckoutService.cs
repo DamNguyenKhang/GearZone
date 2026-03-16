@@ -109,7 +109,13 @@ namespace GearZone.Application.Features.Checkout
                     FullName = request.ShippingInfo.FullName,
                     PhoneNumber = request.ShippingInfo.PhoneNumber,
                     AddressLine = request.ShippingInfo.Address,
-                    IsDefault = true // Make it default as requested by UI label
+                    Ward = request.ShippingInfo.Ward,
+                    District = request.ShippingInfo.District,
+                    Province = request.ShippingInfo.Province,
+                    Latitude = request.ShippingInfo.Latitude,
+                    Longitude = request.ShippingInfo.Longitude,
+                    IsDefault = request.IsDefaultAddress,
+                    AddressType = request.ShippingInfo.AddressType
                 });
             }
 

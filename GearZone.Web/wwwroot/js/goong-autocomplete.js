@@ -81,6 +81,8 @@ class GoongAutocomplete {
                 const data = await response.json();
 
                 if (data.status === 'OK') {
+                    // Pass the original prediction description along with the place details
+                    data.result.original_description = prediction.description;
                     this.onSelect(data.result);
                 }
             } catch (error) {

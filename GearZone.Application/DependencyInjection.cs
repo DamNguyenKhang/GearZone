@@ -13,6 +13,7 @@ using GearZone.Application.Features.Reviews;
 using GearZone.Application.Features.Seller;
 using GearZone.Application.Features.User;
 using GearZone.Application.Features.Map;
+using GearZone.Application.Features.Checkout;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GearZone.Application
@@ -37,6 +38,7 @@ namespace GearZone.Application
             services.AddScoped<IBankCatalogService, BankCatalogService>();
             services.AddScoped<ISellerProductService, SellerProductService>();
             services.AddScoped<ICartService, CartService>();
+            services.AddScoped<ICheckoutService, CheckoutService>();
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IPayoutService, PayoutService>();
             services.AddScoped<IProductReviewService, ProductReviewService>();

@@ -1,4 +1,5 @@
 @page
+@using GearZone.Domain.Enums
 @model GearZone.Web.Pages.Checkout.IndexModel
 @{
     ViewData["Title"] = "Checkout - GearZone";
@@ -35,75 +36,65 @@
         <div class="lg:col-span-8 space-y-6">
             <!-- Delivery Address -->
             <div class="bg-white dark:bg-[#1a202c] rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 relative z-10">
-                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 flex gap-3 items-center">
-                    <span class="material-symbols-outlined text-primary text-xl">location_on</span>
-                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Shipping Information</h2>
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 flex justify-between items-center">
+                    <div class="flex gap-3 items-center">
+                        <span class="material-symbols-outlined text-primary text-xl">location_on</span>
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white">Shipping Information</h2>
+                    </div>
+                    <button type="button" onclick="openNewAddressModal()" class="text-primary hover:text-blue-700 font-medium text-sm flex items-center gap-1 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">add</span>
+                        Add New Address
+                    </button>
                 </div>
                 
-                <div class="p-6 space-y-5">
-                    @if (Model.UserAddresses.Any())
-                    {
-                        <div class="mb-6">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Saved Addresses</label>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                @foreach (var addr in Model.UserAddresses)
-                                {
-                                    <div class="address-card p-3 border-2 @(addr.IsDefault ? "border-primary bg-primary/5" : "border-slate-100 dark:border-slate-800") rounded-xl cursor-pointer hover:border-primary/50 transition-all relative group"
-                                         data-name="@addr.FullName" 
-                                         data-phone="@addr.PhoneNumber" 
-                                         data-address="@addr.AddressLine">
-                                        <div class="flex justify-between items-start mb-1">
-                                            <span class="text-sm font-bold text-slate-900 dark:text-white">@addr.FullName</span>
-                                            @if (addr.IsDefault)
-                                            {
-                                                <span class="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold uppercase">Default</span>
-                                            }
-                                        </div>
-                                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mb-1">@addr.PhoneNumber</p>
-                                        <p class="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">@addr.AddressLine</p>
-                                        
-                                        <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
-                                            <span class="text-xs font-bold text-primary">Use this address</span>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-
-                        <div class="relative flex py-2 items-center">
-                            <div class="flex-grow border-t border-slate-100 dark:border-slate-800"></div>
-                            <span class="flex- Johnston mx-4 text-xs text-slate-400 uppercase font-bold tracking-wider">Or New Address</span>
-                            <div class="flex-grow border-t border-slate-100 dark:border-slate-800"></div>
-                        </div>
-                    }
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                        <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Full Name</label>
-                            <input asp-for="CheckoutRequest.ShippingInfo.FullName" class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white py-2.5 px-4 focus:ring-primary focus:border-primary transition-colors" placeholder="Enter your full name" required />
-                            <span asp-validation-for="CheckoutRequest.ShippingInfo.FullName" class="text-xs text-red-500"></span>
-                        </div>
-                        <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Phone Number</label>
-                            <input asp-for="CheckoutRequest.ShippingInfo.PhoneNumber" class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white py-2.5 px-4 focus:ring-primary focus:border-primary transition-colors" placeholder="Enter phone number" required />
-                            <span asp-validation-for="CheckoutRequest.ShippingInfo.PhoneNumber" class="text-xs text-red-500"></span>
-                        </div>
-                    </div>
+                <div class="p-6">
+                    <!-- Hidden inputs for form submission -->
+                    <input type="hidden" asp-for="CheckoutRequest.ShippingInfo.FullName" id="shipping-fullname-input" />
+                    <input type="hidden" asp-for="CheckoutRequest.ShippingInfo.PhoneNumber" id="shipping-phone-input" />
+                    <input type="hidden" asp-for="CheckoutRequest.ShippingInfo.Address" id="shipping-address-input" />
+                    <input type="hidden" asp-for="CheckoutRequest.ShippingInfo.Ward" id="shipping-ward-input" />
+                    <input type="hidden" asp-for="CheckoutRequest.ShippingInfo.District" id="shipping-district-input" />
+                    <input type="hidden" asp-for="CheckoutRequest.ShippingInfo.Province" id="shipping-province-input" />
+                    <input type="hidden" asp-for="CheckoutRequest.ShippingInfo.Latitude" id="shipping-lat-input" />
+                    <input type="hidden" asp-for="CheckoutRequest.ShippingInfo.Longitude" id="shipping-lng-input" />
+                    <input type="hidden" asp-for="CheckoutRequest.ShippingInfo.AddressType" id="shipping-type-input" />
                     
-                    <div class="space-y-2 relative" id="street-address-container">
-                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Địa chỉ giao hàng</label>
-                        <input asp-for="CheckoutRequest.ShippingInfo.Address" id="shipping-address-input" class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white py-2.5 px-4 focus:ring-primary focus:border-primary transition-colors" placeholder="Nhập địa chỉ hoặc chọn từ gợi ý" required autocomplete="off" />
-                        <span asp-validation-for="CheckoutRequest.ShippingInfo.Address" class="text-xs text-red-500"></span>
-                        
-                        <!-- Goong Autocomplete Results -->
-                        <div id="goong-results" class="hidden absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto"></div>
-                    </div>
+                    <input type="hidden" asp-for="CheckoutRequest.SaveAddress" id="shipping-save-address-input" />
+                    <input type="hidden" asp-for="CheckoutRequest.IsDefaultAddress" id="shipping-is-default-input" />
 
-                    <div class="flex items-center gap-2 mt-2 pt-4 border-t border-slate-100 dark:border-slate-700">
-                        <input type="checkbox" asp-for="CheckoutRequest.SaveAddress" class="size-5 rounded border-slate-300 text-primary focus:ring-primary/20 cursor-pointer" />
-                        <label for="CheckoutRequest_SaveAddress" class="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
-                            Set as my default address
-                        </label>
+                    <!-- Selected Address Summary Card -->
+                    <div id="selected-address-card" class="relative bg-primary/5 border-2 border-primary/20 rounded-xl p-5 hover:border-primary/40 transition-colors">
+                        <div class="flex items-start justify-between gap-4">
+                            <div class="flex gap-4 min-w-0">
+                                <div class="w-10 h-10 rounded-full bg-primary/10 flex-shrink-0 flex items-center justify-center text-primary mt-1">
+                                    <span class="material-symbols-outlined">home</span>
+                                </div>
+                                <div class="space-y-1 min-w-0">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <h3 class="font-bold text-slate-900 dark:text-white text-base" id="summary-fullname">
+                                            @(Model.CheckoutRequest.ShippingInfo.FullName != "" ? Model.CheckoutRequest.ShippingInfo.FullName : "No Name")
+                                        </h3>
+                                        <span class="text-slate-300 dark:text-slate-600 hidden sm:inline">|</span>
+                                        <p class="font-semibold text-slate-600 dark:text-slate-400 text-sm" id="summary-phone">
+                                            @(Model.CheckoutRequest.ShippingInfo.PhoneNumber != "" ? Model.CheckoutRequest.ShippingInfo.PhoneNumber : "No Phone")
+                                        </p>
+                                    </div>
+                                    <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed" id="summary-address">
+                                        @if (!string.IsNullOrEmpty(Model.CheckoutRequest.ShippingInfo.Address))
+                                        {
+                                            @($"{Model.CheckoutRequest.ShippingInfo.Address}, {(string.IsNullOrEmpty(Model.CheckoutRequest.ShippingInfo.Ward) ? "" : Model.CheckoutRequest.ShippingInfo.Ward + ", ")}{Model.CheckoutRequest.ShippingInfo.District}, {Model.CheckoutRequest.ShippingInfo.Province}")
+                                        }
+                                        else
+                                        {
+                                            <span class="text-red-500 font-medium">Please select a delivery address</span>
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                            <button type="button" onclick="openAddressModal()" class="flex-shrink-0 text-sm font-bold text-primary hover:text-blue-700 bg-white border border-primary/20 px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all">
+                                Change
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -254,30 +245,352 @@
             </div>
         </div>
     </div>
+
+        <!-- Address Modal -->
+        <div id="addressModal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity opacity-0" id="addressModalBackdrop" aria-hidden="true" onclick="closeAddressModal()"></div>
+
+            <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+                <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                    <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-xl opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" id="addressModalContent">
+                        
+                        <!-- Modal Header -->
+                        <div class="bg-white dark:bg-slate-900 px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center sticky top-0 z-10">
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-primary text-2xl">book</span>
+                                <h3 class="text-lg font-bold text-slate-900 dark:text-white" id="modal-title">Address Book</h3>
+                            </div>
+                            <button type="button" onclick="closeAddressModal()" class="text-slate-400 hover:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 p-2 rounded-full transition-colors focus:outline-none">
+                                <span class="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        <!-- Modal Body (List of Addresses) -->
+                        <div class="px-6 py-4 max-h-[60vh] overflow-y-auto space-y-4">
+                            @if (Model.UserAddresses.Any())
+                            {
+                                @foreach (var addr in Model.UserAddresses.OrderByDescending(a => a.IsDefault))
+                                {
+                                    <div class="group relative bg-white dark:bg-slate-900 border @(addr.IsDefault ? "border-primary/40 ring-1 ring-primary/20 bg-primary/5 dark:bg-primary/10" : "border-slate-200 dark:border-slate-700") rounded-xl p-4 transition-all hover:border-primary/40 cursor-pointer"
+                                         onclick="selectAddressFromModal(this)"
+                                         data-id="@addr.Id"
+                                         data-name="@addr.FullName"
+                                         data-phone="@addr.PhoneNumber"
+                                         data-address="@addr.AddressLine"
+                                         data-ward="@addr.Ward"
+                                         data-district="@addr.District"
+                                         data-province="@addr.Province"
+                                         data-lat="@addr.Latitude"
+                                         data-lng="@addr.Longitude">
+                                        
+                                        <div class="flex items-start gap-4">
+                                            <div class="w-10 h-10 rounded-full @(addr.IsDefault ? "bg-primary/20 text-primary" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400") flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                                <span class="material-symbols-outlined text-[20px]">
+                                                    @(addr.AddressType == AddressType.Home ? "home" : addr.AddressType == AddressType.Office ? "business" : "location_on")
+                                                </span>
+                                            </div>
+                                            <div class="flex-grow min-w-0">
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <span class="font-bold text-slate-900 dark:text-white text-sm">@addr.FullName</span>
+                                                    <span class="text-slate-300 dark:text-slate-600">|</span>
+                                                    <span class="text-sm text-slate-600 dark:text-slate-400">@addr.PhoneNumber</span>
+                                                    @if (addr.IsDefault)
+                                                    {
+                                                        <span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase bg-primary/10 text-primary border border-primary/20">
+                                                            Default
+                                                        </span>
+                                                    }
+                                                </div>
+                                                <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-[90%]">@addr.AddressLine, @addr.Ward, @addr.District, @addr.Province</p>
+                                            </div>
+                                            <div class="flex-shrink-0">
+                                                <div class="w-6 h-6 rounded-full border-2 border-slate-300 dark:border-slate-600 group-hover:border-primary flex items-center justify-center transition-colors">
+                                                    <div class="w-2.5 h-2.5 rounded-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-center py-10">
+                                    <span class="material-symbols-outlined text-4xl text-slate-300 mb-2">location_off</span>
+                                    <p class="text-slate-500">No saved addresses found.</p>
+                                </div>
+                            }
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+            <!-- New Address Modal -->
+            <div id="newAddressModal" class="fixed inset-0 z-[110] hidden overflow-y-auto">
+                <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                    <div id="newAddressModalBackdrop" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity opacity-0" onclick="closeNewAddressModal()"></div>
+                    
+                    <div id="newAddressModalContent" class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-slate-900 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+                        <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                            <h3 class="text-xl font-bold text-slate-900 dark:text-white">Add New Address</h3>
+                            <button type="button" onclick="closeNewAddressModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+                                <span class="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        <!-- New Address Form (Modeled from Profile.cshtml but operates purely via JS) -->
+                        <div class="px-6 py-5 max-h-[70vh] overflow-y-auto space-y-5">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="space-y-1.5">
+                                    <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Full Name</label>
+                                    <input type="text" id="modal-new-fullname" class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white py-2.5 px-4 focus:ring-primary focus:border-primary transition-colors" placeholder="Recipient Name" />
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Phone Number</label>
+                                    <input type="tel" id="modal-new-phone" class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white py-2.5 px-4 focus:ring-primary focus:border-primary transition-colors" placeholder="Phone Number" />
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-1.5 relative">
+                                <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Street Address</label>
+                                <input type="text" id="modal-new-address" class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white py-2.5 px-4 focus:ring-primary focus:border-primary transition-colors" placeholder="Search address..." autocomplete="off" />
+                                <div id="modal-new-goong-results" class="hidden absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto"></div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div class="space-y-1.5">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ward</label>
+                                    <input type="text" id="modal-new-ward" readonly class="w-full bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-600 dark:text-slate-400 py-2.5 px-4 focus:ring-primary focus:border-primary transition-colors" />
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">District</label>
+                                    <input type="text" id="modal-new-district" readonly class="w-full bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-600 dark:text-slate-400 py-2.5 px-4 focus:ring-primary focus:border-primary transition-colors" />
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Province</label>
+                                    <input type="text" id="modal-new-province" readonly class="w-full bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-600 dark:text-slate-400 py-2.5 px-4 focus:ring-primary focus:border-primary transition-colors" />
+                                </div>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[16px] text-primary">pin_drop</span> Location Preview
+                                </label>
+                                <div id="modal-new-map" class="w-full h-[250px] rounded-xl border border-slate-200 dark:border-slate-700 shadow-inner overflow-hidden"></div>
+                                <input type="hidden" id="modal-new-lat" value="0"/>
+                                <input type="hidden" id="modal-new-lng" value="0"/>
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="text-sm font-semibold text-slate-700 dark:text-slate-300">Address Type</label>
+                                <input type="hidden" id="modal-new-type" value="Home" />
+                                <div class="flex gap-3">
+                                    @foreach (AddressType type in Enum.GetValues(typeof(AddressType)))
+                                    {
+                                        <button type="button" 
+                                                onclick="setAddressType('@type')"
+                                                id="typeBtn_@type"
+                                                class="flex-1 py-2 px-3 border-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 type-selector-btn @(type == AddressType.Home ? "border-primary bg-primary/5 text-primary" : "border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400")">
+                                            <span class="material-symbols-outlined text-[16px]">
+                                                @(type == AddressType.Home ? "home" : type == AddressType.Office ? "business" : "location_on")
+                                            </span>
+                                            @type
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                                <div class="flex items-center gap-2" id="modal-new-default-container">
+                                    <input type="checkbox" id="modal-new-is-default" class="size-4 rounded border-slate-300 text-primary focus:ring-primary/20 cursor-pointer" />
+                                    <label for="modal-new-is-default" class="text-sm text-slate-600 dark:text-slate-400 cursor-pointer">Set as default address</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col sm:flex-row-reverse items-center justify-start gap-3 rounded-b-2xl">
+                            <button type="button" onclick="confirmNewAddress()" class="w-full sm:w-auto px-6 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-primary/20">
+                                Confirm Address
+                            </button>
+                            <button type="button" onclick="closeNewAddressModal()" class="w-full sm:w-auto px-6 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-all">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
 </form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <link href="https://cdn.jsdelivr.net/npm/@@goongmaps/goong-js/dist/goong-js.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@@goongmaps/goong-js/dist/goong-js.js"></script>
     <script src="~/js/goong-autocomplete.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', function () {
+            const apiKey = '@Model.GoongApiKey';
+            const mapKey = '@Model.GoongMapKey';
+            let map, marker;
+
+            // Initialize Map
+            const initMap = () => {
+                const mapContainer = document.getElementById('checkout-map');
+                if (!mapContainer || !mapKey) return;
+
+                const initialLat = parseFloat(document.getElementById('shipping-lat-input')?.value || 21.028);
+                const initialLng = parseFloat(document.getElementById('shipping-lng-input')?.value || 105.839);
+
+                goongjs.accessToken = mapKey;
+                map = new goongjs.Map({
+                    container: 'checkout-map',
+                    style: 'https://tiles.goong.io/assets/goong_map_web.json',
+                    center: [initialLng, initialLat],
+                    zoom: 15
+                });
+
+                marker = new goongjs.Marker()
+                    .setLngLat([initialLng, initialLat])
+                    .addTo(map);
+                
+                // Ensure map resizes correctly if container was hidden/loaded dynamically
+                setTimeout(() => map.resize(), 500);
+            };
+
+            const updateMap = (lat, lng) => {
+                if (!map || isNaN(lat) || isNaN(lng) || lat === 0) return;
+                
+                map.flyTo({
+                    center: [lng, lat],
+                    zoom: 16,
+                    essential: true
+                });
+                marker.setLngLat([lng, lat]);
+            };
+
+            initMap();
 
             // ─── Goong Autocomplete ────────────────────────
-            const apiKey = '@Model.GoongApiKey';
+            
             if (apiKey) {
                 const streetInput = document.getElementById('shipping-address-input');
                 const resultsElement = document.getElementById('goong-results');
+                const latInput = document.getElementById('shipping-lat-input');
+                const lngInput = document.getElementById('shipping-lng-input');
 
                 if (streetInput && resultsElement) {
+                    const wardInput = document.getElementById('shipping-ward-input');
+                    const districtInput = document.getElementById('shipping-district-input');
+                    const provinceInput = document.getElementById('shipping-province-input');
+
                     new GoongAutocomplete(apiKey, {
                         inputElement: streetInput,
                         resultsElement: resultsElement,
                         onSelect: (place) => {
+                            console.log("Goong Place Selected:", place);
                             if (place.formatted_address) {
-                                streetInput.value = place.formatted_address;
+                                const components = place.address_components || [];
+                                
+                                if (place.original_description) {
+                                    streetInput.value = place.original_description.split(',')[0].trim();
+                                } else {
+                                    const streetNumber = components.find(c => c.types.includes('street_number'))?.long_name;
+                                    const route = components.find(c => c.types.includes('route'))?.long_name;
+                                    
+                                    if (streetNumber && route) {
+                                        streetInput.value = `${streetNumber} ${route}`;
+                                    } else {
+                                        const fullParts = place.formatted_address.split(',').map(p => p.trim());
+                                        if (fullParts.length > 1 && /^\d+[\/\d]*$/.test(fullParts[0])) {
+                                            streetInput.value = `${fullParts[0]} ${fullParts[1]}`;
+                                        } else {
+                                            streetInput.value = fullParts[0];
+                                        }
+                                    }
+                                }
+                                
+                                let ward = components.find(c => c.types.includes('sublocality_level_1') || c.types.includes('ward'))?.long_name;
+                                let district = components.find(c => c.types.includes('administrative_area_level_2') || c.types.includes('district'))?.long_name;
+                                let province = components.find(c => c.types.includes('administrative_area_level_1') || c.types.includes('city') || c.types.includes('province'))?.long_name;
+
+                                if (!ward || !district || !province) {
+                                    const parts = place.formatted_address.split(',').map(p => p.trim());
+                                    if (parts.length >= 3) {
+                                        province = province || parts[parts.length - 1];
+                                        district = district || parts[parts.length - 2];
+                                        ward = ward || (parts.length >= 4 ? parts[parts.length - 3] : null);
+                                    }
+                                }
+
+                                if (ward && wardInput) { wardInput.value = ward || ''; wardInput.dispatchEvent(new Event('change')); }
+                                if (district && districtInput) { districtInput.value = district || ''; districtInput.dispatchEvent(new Event('change')); }
+                                if (province && provinceInput) { provinceInput.value = province || ''; provinceInput.dispatchEvent(new Event('change')); }
+                                
+                                if (latInput) latInput.value = place.geometry?.location?.lat || 0;
+                                if (lngInput) lngInput.value = place.geometry?.location?.lng || 0;
+
+                                if (place.geometry?.location) {
+                                    updateMap(place.geometry.location.lat, place.geometry.location.lng);
+                                }
+                                
+                                streetInput.dispatchEvent(new Event('change'));
                             }
                         }
                     });
+                }
+                
+                // Initialize autocomplete for New Address Modal
+                const modalStreetInput = document.getElementById('modal-new-address');
+                const modalResultsElement = document.getElementById('modal-new-goong-results');
+                if (modalStreetInput && modalResultsElement) {
+                   new GoongAutocomplete(apiKey, {
+                        inputElement: modalStreetInput,
+                        resultsElement: modalResultsElement,
+                        onSelect: (place) => {
+                             if (place.formatted_address) {
+                                const components = place.address_components || [];
+                                
+                                if (place.original_description) {
+                                    modalStreetInput.value = place.original_description.split(',')[0].trim();
+                                } else {
+                                    const streetNumber = components.find(c => c.types.includes('street_number'))?.long_name;
+                                    const route = components.find(c => c.types.includes('route'))?.long_name;
+                                    if (streetNumber && route) {
+                                        modalStreetInput.value = `${streetNumber} ${route}`;
+                                    } else {
+                                        modalStreetInput.value = place.formatted_address.split(',')[0].trim();
+                                    }
+                                }
+
+                                let ward = components.find(c => c.types.includes('sublocality_level_1') || c.types.includes('ward'))?.long_name;
+                                let district = components.find(c => c.types.includes('administrative_area_level_2') || c.types.includes('district'))?.long_name;
+                                let province = components.find(c => c.types.includes('administrative_area_level_1') || c.types.includes('city') || c.types.includes('province'))?.long_name;
+
+                                if (!ward || !district || !province) {
+                                    const parts = place.formatted_address.split(',').map(p => p.trim());
+                                    if (parts.length >= 3) {
+                                        province = province || parts[parts.length - 1];
+                                        district = district || parts[parts.length - 2];
+                                        ward = ward || (parts.length >= 4 ? parts[parts.length - 3] : null);
+                                    }
+                                }
+
+                                document.getElementById('modal-new-ward').value = ward || '';
+                                document.getElementById('modal-new-district').value = district || '';
+                                document.getElementById('modal-new-province').value = province || '';
+                                
+                                const lat = place.geometry?.location?.lat || 0;
+                                const lng = place.geometry?.location?.lng || 0;
+                                document.getElementById('modal-new-lat').value = lat;
+                                document.getElementById('modal-new-lng').value = lng;
+                                
+                                updateModalMap(lat, lng);
+                             }
+                        }
+                   });
                 }
             }
 
@@ -304,33 +617,294 @@
 
             updateMethodStyles();
 
-            // ─── Address Selection ────────────────────────
-            const addressCards = document.querySelectorAll('.address-card');
+            // ─── Address Modal Selection ────────────────────────
             const nameInput = document.querySelector('input[name="CheckoutRequest.ShippingInfo.FullName"]');
             const phoneInput = document.querySelector('input[name="CheckoutRequest.ShippingInfo.PhoneNumber"]');
             const addressInput = document.getElementById('shipping-address-input');
+            const wardInput = document.getElementById('shipping-ward-input');
+            const districtInput = document.getElementById('shipping-district-input');
+            const provinceInput = document.getElementById('shipping-province-input');
+            const latInputManual = document.getElementById('shipping-lat-input');
+            const lngInputManual = document.getElementById('shipping-lng-input');
 
-            addressCards.forEach(card => {
-                card.addEventListener('click', () => {
-                    // Update highlight
-                    addressCards.forEach(c => {
-                        c.classList.remove('border-primary', 'bg-primary/5');
-                        c.classList.add('border-slate-100', 'dark:border-slate-800');
+            window.openAddressModal = function() {
+                const modal = document.getElementById('addressModal');
+                const backdrop = document.getElementById('addressModalBackdrop');
+                const content = document.getElementById('addressModalContent');
+                
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    backdrop.classList.remove('opacity-0');
+                    backdrop.classList.add('opacity-100');
+                    content.classList.remove('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
+                    content.classList.add('opacity-100', 'translate-y-0', 'sm:scale-100');
+                }, 10);
+                document.body.style.overflow = 'hidden';
+            };
+
+            window.closeAddressModal = function() {
+                const modal = document.getElementById('addressModal');
+                const backdrop = document.getElementById('addressModalBackdrop');
+                const content = document.getElementById('addressModalContent');
+                
+                backdrop.classList.remove('opacity-100');
+                backdrop.classList.add('opacity-0');
+                content.classList.remove('opacity-100', 'translate-y-0', 'sm:scale-100');
+                content.classList.add('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
+                
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }, 300);
+            };
+
+            function updateSummaryCard(name, phone, address, ward, district, province) {
+                document.getElementById('summary-fullname').textContent = name || "No Name";
+                document.getElementById('summary-phone').textContent = phone || "No Phone";
+                
+                let fullAddress = address || "";
+                if(fullAddress) {
+                    fullAddress += ", " + (ward ? ward + ", " : "") + district + ", " + province;
+                }
+                const summaryAddressEl = document.getElementById('summary-address');
+                if (fullAddress) {
+                    summaryAddressEl.textContent = fullAddress;
+                    summaryAddressEl.classList.remove('text-red-500', 'font-medium');
+                    summaryAddressEl.classList.add('text-slate-600', 'dark:text-slate-400');
+                } else {
+                    summaryAddressEl.innerHTML = '<span class="text-red-500 font-medium">Please select a delivery address</span>';
+                }
+            }
+
+            window.selectAddressFromModal = function(card) {
+                const data = card.dataset;
+                
+                // Copy to hidden inputs
+                if (nameInput) nameInput.value = data.name || '';
+                if (phoneInput) phoneInput.value = data.phone || '';
+                if (addressInput) addressInput.value = data.address || '';
+                if (wardInput) wardInput.value = data.ward || '';
+                if (districtInput) districtInput.value = data.district || '';
+                if (provinceInput) provinceInput.value = data.province || '';
+                if (latInputManual) latInputManual.value = data.lat || 0;
+                if (lngInputManual) lngInputManual.value = data.lng || 0;
+
+                // When selecting from existing, we don't save a new one or set new default
+                const saveInput = document.getElementById('shipping-save-address-input');
+                const defaultInput = document.getElementById('shipping-is-default-input');
+                if (saveInput) saveInput.value = "false";
+                if (defaultInput) defaultInput.value = "false";
+
+                // Update UI Card
+                updateSummaryCard(data.name, data.phone, data.address, data.ward, data.district, data.province);
+
+                closeAddressModal();
+            };
+
+            // ─── New Address Modal Logic ────────────────────────
+            
+            let newAddressMap, newAddressMarker;
+            
+            window.openNewAddressModal = function() {
+                closeAddressModal(); // Close the address book first
+                
+                // Clear modal fields
+                document.getElementById('modal-new-fullname').value = '';
+                document.getElementById('modal-new-phone').value = '';
+                document.getElementById('modal-new-address').value = '';
+                document.getElementById('modal-new-ward').value = '';
+                document.getElementById('modal-new-district').value = '';
+                document.getElementById('modal-new-province').value = '';
+                
+                if (window.setAddressType) setAddressType('Home');
+                
+                const modal = document.getElementById('newAddressModal');
+                const backdrop = document.getElementById('newAddressModalBackdrop');
+                const content = document.getElementById('newAddressModalContent');
+                
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    backdrop.classList.remove('opacity-0');
+                    backdrop.classList.add('opacity-100');
+                    content.classList.remove('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
+                    content.classList.add('opacity-100', 'translate-y-0', 'sm:scale-100');
+                }, 10);
+                document.body.style.overflow = 'hidden';
+                
+                setTimeout(() => { 
+                    initNewAddressMap(); 
+                    document.getElementById('modal-new-fullname').focus();
+                }, 300);
+            };
+
+            window.closeNewAddressModal = function() {
+                const modal = document.getElementById('newAddressModal');
+                const backdrop = document.getElementById('newAddressModalBackdrop');
+                const content = document.getElementById('newAddressModalContent');
+                
+                backdrop.classList.remove('opacity-100');
+                backdrop.classList.add('opacity-0');
+                content.classList.remove('opacity-100', 'translate-y-0', 'sm:scale-100');
+                content.classList.add('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
+                
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }, 300);
+            };
+            
+            function initNewAddressMap() {
+                const mapContainer = document.getElementById('modal-new-map');
+                if (!mapContainer || !mapKey) return;
+
+                if (!newAddressMap) {
+                    goongjs.accessToken = mapKey;
+                    // Default VN coord
+                    newAddressMap = new goongjs.Map({
+                        container: 'modal-new-map',
+                        style: 'https://tiles.goong.io/assets/goong_map_web.json',
+                        center: [106.660172, 10.762622], 
+                        zoom: 15
                     });
-                    card.classList.add('border-primary', 'bg-primary/5');
-                    card.classList.remove('border-slate-100', 'dark:border-slate-800');
 
-                    // Fill inputs
-                    if (nameInput) nameInput.value = card.dataset.name;
-                    if (phoneInput) phoneInput.value = card.dataset.phone;
-                    if (addressInput) addressInput.value = card.dataset.address;
-
-                    // Trigger validation if any
-                    [nameInput, phoneInput, addressInput].forEach(input => {
-                        if (input) input.dispatchEvent(new Event('change'));
+                    newAddressMarker = new goongjs.Marker({ draggable: true })
+                        .setLngLat([106.660172, 10.762622])
+                        .addTo(newAddressMap);
+                        
+                    newAddressMarker.on('dragend', async () => {
+                         const lngLat = newAddressMarker.getLngLat();
+                         document.getElementById('modal-new-lat').value = lngLat.lat;
+                         document.getElementById('modal-new-lng').value = lngLat.lng;
+                         // Reverse geocode could be added here if needed
                     });
+                }
+                setTimeout(() => newAddressMap.resize(), 100);
+            }
+            
+            function updateModalMap(lat, lng) {
+                 if (!newAddressMap || isNaN(lat) || isNaN(lng) || lat === 0) return;
+                 newAddressMap.flyTo({ center: [lng, lat], zoom: 16, essential: true });
+                 newAddressMarker.setLngLat([lng, lat]);
+            }
+
+            window.confirmNewAddress = async function() {
+                // Validation
+                const name = document.getElementById('modal-new-fullname').value;
+                const phone = document.getElementById('modal-new-phone').value;
+                const address = document.getElementById('modal-new-address').value;
+                const province = document.getElementById('modal-new-province').value;
+                const ward = document.getElementById('modal-new-ward').value;
+                const district = document.getElementById('modal-new-district').value;
+                const lat = parseFloat(document.getElementById('modal-new-lat').value || 0);
+                const lng = parseFloat(document.getElementById('modal-new-lng').value || 0);
+                const isDefault = document.getElementById('modal-new-is-default').checked;
+                const addressType = document.getElementById('modal-new-type').value || 'Home';
+                
+                if (!name || !phone || !address || !province) {
+                    alert("Please fill in all required fields (Name, Phone, Address).");
+                    return;
+                }
+
+                const btn = document.querySelector('button[onclick="confirmNewAddress()"]');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-[20px]">sync</span> Saving...';
+                btn.disabled = true;
+
+                try {
+                    const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                    
+                    const response = await fetch('?handler=AddNewAddress', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': csrfToken
+                        },
+                        body: JSON.stringify({
+                            fullName: name,
+                            phoneNumber: phone,
+                            addressLine: address,
+                            ward: ward,
+                            district: district,
+                            province: province,
+                            latitude: lat,
+                            longitude: lng,
+                            isDefault: isDefault,
+                            addressType: addressType
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        const msg = errorData.message || (errorData.errors ? errorData.errors.join(', ') : 'Failed to save address');
+                        throw new Error(msg);
+                    }
+                } catch (error) {
+                    console.error('Error saving address:', error);
+                    alert('Error saving address: ' + error.message);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+                
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                // Copy to hidden form inputs
+                if (nameInput) nameInput.value = name;
+                if (phoneInput) phoneInput.value = phone;
+                if (addressInput) addressInput.value = address;
+                if (wardInput) wardInput.value = ward;
+                if (districtInput) districtInput.value = district;
+                if (provinceInput) provinceInput.value = province;
+                if (latInputManual) latInputManual.value = lat;
+                if (lngInputManual) lngInputManual.value = lng;
+                
+                const typeInput = document.getElementById('shipping-type-input');
+                if (typeInput) typeInput.value = addressType;
+                
+                const saveInput = document.getElementById('shipping-save-address-input');
+                const defaultInput = document.getElementById('shipping-is-default-input');
+                
+                // If it was already saved directly to DB via AJAX, no need to save it again on form submission.
+                if (saveInput) saveInput.value = "false";
+                if (defaultInput) defaultInput.value = isDefault ? "true" : "false";
+
+                // Update UI Summary Card
+                updateSummaryCard(name, phone, address, ward, district, province);
+
+                closeNewAddressModal();
+            };
+
+            window.setAddressType = function(type) {
+                const typeInput = document.getElementById('modal-new-type');
+                if (typeInput) typeInput.value = type;
+                
+                document.querySelectorAll('.type-selector-btn').forEach(btn => {
+                    btn.classList.remove('border-primary', 'bg-primary/5', 'text-primary');
+                    btn.classList.add('border-slate-200', 'text-slate-500', 'dark:border-slate-700', 'dark:text-slate-400');
                 });
+                
+                const activeBtn = document.getElementById('typeBtn_' + type);
+                if (activeBtn) {
+                    activeBtn.classList.remove('border-slate-200', 'text-slate-500', 'dark:border-slate-700', 'dark:text-slate-400');
+                    activeBtn.classList.add('border-primary', 'bg-primary/5', 'text-primary');
+                }
+            };
+
+            // Esc key handles both modals
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    const addressModal = document.getElementById('addressModal');
+                    const newAddressModal = document.getElementById('newAddressModal');
+                    if(addressModal && !addressModal.classList.contains('hidden')) {
+                        closeAddressModal();
+                    }
+                    if(newAddressModal && !newAddressModal.classList.contains('hidden')) {
+                         closeNewAddressModal();
+                    }
+                }
             });
+
         });
     </script>
 }

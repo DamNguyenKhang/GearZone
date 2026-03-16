@@ -134,6 +134,7 @@ namespace GearZone.Infrastructure.Migrations
             migrationBuilder.Sql(
                 $"""
                 IF NOT EXISTS (SELECT 1 FROM [ProductVariants])
+                   AND EXISTS (SELECT 1 FROM [Products] WHERE [Id] = 'F86BA249-DCF5-407E-AF20-002AB766E697')
                 BEGIN
                 {CatalogSeedMigrationSql.ProductVariants}
                 END
@@ -142,6 +143,7 @@ namespace GearZone.Infrastructure.Migrations
             migrationBuilder.Sql(
                 $"""
                 IF NOT EXISTS (SELECT 1 FROM [VariantAttributeValues])
+                   AND EXISTS (SELECT 1 FROM [ProductVariants] WHERE [Id] = '448A4424-7ABA-4C41-99F5-F82D7CF3A5B6')
                 BEGIN
                 {CatalogSeedMigrationSql.VariantAttributeValues}
                 END
@@ -150,6 +152,7 @@ namespace GearZone.Infrastructure.Migrations
             migrationBuilder.Sql(
                 $"""
                 IF NOT EXISTS (SELECT 1 FROM [ProductAttributeValues])
+                   AND EXISTS (SELECT 1 FROM [Products] WHERE [Id] = '63AB88FD-3A38-4596-A425-169DC3917EC7')
                 BEGIN
                 {CatalogSeedMigrationSql.ProductAttributeValues}
                 END

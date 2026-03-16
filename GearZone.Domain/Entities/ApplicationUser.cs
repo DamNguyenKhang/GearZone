@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 
 namespace GearZone.Domain.Entities
 {
@@ -12,7 +12,8 @@ namespace GearZone.Domain.Entities
         public DateTime? IdentityIssuedDate { get; set; }
         public string? IdentityIssuedPlace { get; set; }
 
-        public string? Address { get; set; }
+
+        public ICollection<UserAddress> UserAddresses { get; set; } = new List<UserAddress>();
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

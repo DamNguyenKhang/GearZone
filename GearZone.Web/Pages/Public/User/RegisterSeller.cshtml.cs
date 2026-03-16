@@ -1,4 +1,5 @@
 using GearZone.Application.Abstractions.Services;
+using Microsoft.Extensions.Configuration;
 using GearZone.Application.Features.Seller.Dtos;
 using GearZone.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -14,11 +15,13 @@ namespace GearZone.Web.Pages.Public.User
     {
         private readonly ISellerStoreService _sellerStoreService;
         private readonly IAuthService _authService;
+        private readonly IConfiguration _configuration;
 
-        public RegisterSellerModel(ISellerStoreService sellerStoreService, IAuthService authService)
+        public RegisterSellerModel(ISellerStoreService sellerStoreService, IAuthService authService, IConfiguration configuration)
         {
             _sellerStoreService = sellerStoreService;
             _authService = authService;
+            _configuration = configuration;
         }
 
         [BindProperty]
@@ -33,6 +36,7 @@ namespace GearZone.Web.Pages.Public.User
         public int CurrentStep { get; set; } = 1;
         public Guid? StoreId { get; set; }
         public RegistrationProgressDto? Progress { get; set; }
+        public string GoongMapKey => _configuration["GOONG_MAP_KEY"] ?? "";
 
         public async Task<IActionResult> OnGetAsync()
         {

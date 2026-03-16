@@ -50,10 +50,10 @@ namespace GearZone.Infrastructure.External
                     ReturnUrl = _settings.ReturnUrl,
                     CancelUrl = _settings.CancelUrl,
 
-                    BuyerName = order.User?.FullName,
+                    BuyerName = order.ReceiverName,
                     BuyerEmail = order.User?.Email,
-                    BuyerPhone = order.User?.PhoneNumber,
-                    BuyerAddress = order.User?.Address,
+                    BuyerPhone = order.ReceiverPhone,
+                    BuyerAddress = order.ShippingAddress,
 
                     Items = allItems.Select(i => new PaymentLinkItem
                     {

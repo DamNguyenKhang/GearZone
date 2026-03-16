@@ -23,6 +23,19 @@
 }
 
 <div class="space-y-6">
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
     <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
             <p class="text-[11px] font-black uppercase tracking-[0.28em] text-orange-500">Minimal Seller Orders</p>
@@ -72,7 +85,11 @@
                         {
                             <tr class="hover:bg-slate-50/70">
                                 <td class="px-5 py-4 align-top">
-                                    <p class="text-sm font-black text-slate-900">#@order.OrderCode</p>
+                                    <a asp-page="/StoreOwner/Orders/Detail"
+                                       asp-route-subOrderId="@order.SubOrderId"
+                                       class="text-sm font-black text-slate-900 hover:text-orange-600">
+                                        #@order.OrderCode
+                                    </a>
                                     <p class="mt-1 text-xs text-slate-500">@order.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
                                 </td>
                                 <td class="px-5 py-4 align-top">
@@ -104,12 +121,35 @@
                                 </td>
                                 <td class="px-5 py-4 align-top text-sm font-black text-slate-900">@order.Subtotal.ToString("N0") VND</td>
                                 <td class="px-5 py-4 align-top text-right">
-                                    <a asp-page="/StoreOwner/Messages/Index"
-                                       asp-route-subOrderId="@order.SubOrderId"
-                                       class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-orange-600 transition hover:-translate-y-0.5 hover:bg-orange-100">
-                                        <span class="material-symbols-outlined text-[16px]">chat</span>
-                                        Contact Buyer
-                                    </a>
+                                    <div class="inline-flex items-center gap-2">
+                                        @if (order.Status == OrderStatus.Pending)
+                                        {
+                                            <form method="post" asp-page-handler="Approve" asp-route-subOrderId="@order.SubOrderId" asp-route-searchTerm="@Model.SearchTerm" asp-route-pageNumber="@Model.PageNumber" class="inline">
+                                                <button type="submit" class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-emerald-700 transition hover:-translate-y-0.5 hover:bg-emerald-100">
+                                                    <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                                                    Approve
+                                                </button>
+                                            </form>
+                                            <form method="post" asp-page-handler="Reject" asp-route-subOrderId="@order.SubOrderId" asp-route-searchTerm="@Model.SearchTerm" asp-route-pageNumber="@Model.PageNumber" class="inline">
+                                                <button type="submit" class="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-rose-700 transition hover:-translate-y-0.5 hover:bg-rose-100">
+                                                    <span class="material-symbols-outlined text-[16px]">cancel</span>
+                                                    Reject
+                                                </button>
+                                            </form>
+                                        }
+                                        <a asp-page="/StoreOwner/Orders/Detail"
+                                           asp-route-subOrderId="@order.SubOrderId"
+                                           class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-slate-700 transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50">
+                                            <span class="material-symbols-outlined text-[16px]">receipt_long</span>
+                                            Details
+                                        </a>
+                                        <a asp-page="/StoreOwner/Messages/Index"
+                                           asp-route-subOrderId="@order.SubOrderId"
+                                           class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-orange-600 transition hover:-translate-y-0.5 hover:bg-orange-100">
+                                            <span class="material-symbols-outlined text-[16px]">chat</span>
+                                            Contact Buyer
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         }

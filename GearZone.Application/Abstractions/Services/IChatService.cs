@@ -19,6 +19,9 @@ namespace GearZone.Application.Abstractions.Services
         Task<int> GetBuyerUnreadCountAsync(string userId);
         Task<int> GetSellerUnreadCountAsync(string ownerUserId);
         Task<PagedResult<SellerChatOrderListItemDto>> GetSellerChatOrdersAsync(string ownerUserId, SellerChatOrderQueryDto query);
+        Task<SellerChatOrderDetailDto?> GetSellerChatOrderDetailAsync(string ownerUserId, Guid subOrderId);
+        Task<bool> ApproveSellerOrderAsync(string ownerUserId, Guid subOrderId);
+        Task<bool> RejectSellerOrderAsync(string ownerUserId, Guid subOrderId);
         Task<ChatConversationUpdateDto?> GetConversationUpdateForBuyerAsync(string buyerUserId, Guid conversationId);
         Task<ChatConversationUpdateDto?> GetConversationUpdateForSellerAsync(string ownerUserId, Guid conversationId);
     }

@@ -141,10 +141,22 @@ namespace GearZone.Web.Pages.Admin.Products
             return new JsonResult(result);
         }
 
-        public async Task<IActionResult> OnPostBulkUpdateStatusAsync(List<Guid> productIds, string actionType)
+        public async Task<IActionResult> OnPostBulkUpdateStatusAsync(List<Guid> productIds, string actionType, string? reason = null)
         {
             if (productIds == null || !productIds.Any())
                 return RedirectToPage();
+
+            if (actionType.Equals("Delete", StringComparison.OrdinalIgnoreCase))
+            {
+                int deleteCount = 0;
+                foreach (var id in productIds)
+                {
+                    if (await _productService.DeleteProductAsync(id, reason ?? "No reason provided"))
+                        deleteCount++;
+                }
+                TempData["SuccessMessage"] = $"Successfully deleted {deleteCount} product(s).";
+                return RedirectToPage(new { Query.SearchTerm, Query.Status, Query.CategoryId, Query.BrandId, Query.StoreId, Query.PageNumber, DateRangeShortcut, DateRange });
+            }
 
             ProductStatus status;
             switch (actionType.ToLower())
@@ -162,7 +174,7 @@ namespace GearZone.Web.Pages.Admin.Products
                     return RedirectToPage();
             }
 
-            var success = await _productService.BulkUpdateStatusAsync(productIds, status);
+            var success = await _productService.BulkUpdateStatusAsync(productIds, status, reason);
 
             if (success)
             {

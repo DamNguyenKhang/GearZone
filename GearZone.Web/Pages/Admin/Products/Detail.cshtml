@@ -319,17 +319,23 @@
 <div class="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-200 p-4 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] z-40 mx-[-24px] px-[24px]">
     <div class="max-w-[1440px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
         <div class="w-full sm:w-auto">
-            <button class="text-red-500 hover:text-red-700 text-sm font-bold hover:bg-red-50 px-3 py-2 rounded-lg flex items-center justify-center gap-1.5 transition-colors w-full sm:w-auto">
-                <span class="material-symbols-outlined text-[18px]">delete</span>
-                Delete Product
-            </button>
+            <form method="post" asp-page-handler="Delete" asp-route-id="@p.Id" onsubmit="event.preventDefault(); window.handleSingleAction(this, 'Delete', 'delete', 'bg-red-100 text-red-600', 'bg-red-600')">
+                <input type="hidden" name="reason" class="action-reason" value="" />
+                <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-bold hover:bg-red-50 px-3 py-2 rounded-lg flex items-center justify-center gap-1.5 transition-colors w-full sm:w-auto">
+                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                    Delete Product
+                </button>
+            </form>
         </div>
         
         <div class="flex flex-wrap items-center justify-end gap-3 w-full sm:w-auto">
-            <button class="px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-sm bg-white">
-                <span class="material-symbols-outlined text-[18px]">visibility_off</span>
-                Hide / Suspend
-            </button>
+            <form method="post" asp-page-handler="Suspend" asp-route-id="@p.Id" onsubmit="event.preventDefault(); window.handleSingleAction(this, 'inactive', 'block', 'bg-amber-100 text-amber-600', 'bg-amber-600')">
+                <input type="hidden" name="reason" class="action-reason" value="" />
+                <button type="submit" class="px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-sm bg-white">
+                    <span class="material-symbols-outlined text-[18px]">visibility_off</span>
+                    Hide / Suspend
+                </button>
+            </form>
             
             <a href="#" class="px-4 py-2.5 rounded-lg border border-primary/20 text-primary font-bold text-sm hover:bg-primary/5 transition-colors flex items-center gap-2 shadow-sm bg-white">
                 <span class="material-symbols-outlined text-[18px]">edit</span>
@@ -357,14 +363,15 @@
 
             @if (p.Status == "Pending")
             {
-                <form method="post" asp-page-handler="Reject" asp-route-id="@p.Id" onsubmit="event.preventDefault(); confirmAction(this, 'Reject', 'cancel', 'bg-red-100 text-red-600', 'bg-red-600')">
+                <form method="post" asp-page-handler="Reject" asp-route-id="@p.Id" onsubmit="event.preventDefault(); window.handleSingleAction(this, 'Reject', 'cancel', 'bg-red-100 text-red-600', 'bg-red-600')">
+                    <input type="hidden" name="reason" class="action-reason" value="" />
                     <button type="submit" class="px-4 py-2.5 rounded-lg border border-red-200 text-red-600 font-bold text-sm hover:bg-red-50 transition-colors flex items-center gap-2 shadow-sm">
                         <span class="material-symbols-outlined text-[18px]">close</span>
-                        Reject
+                        Reject Request
                     </button>
                 </form>
                 
-                <form method="post" asp-page-handler="Approve" asp-route-id="@p.Id" onsubmit="event.preventDefault(); confirmAction(this, 'Approve', 'check_circle', 'bg-emerald-100 text-emerald-600', 'bg-emerald-600')">
+                <form method="post" asp-page-handler="Approve" asp-route-id="@p.Id" onsubmit="event.preventDefault(); window.handleSingleAction(this, 'Approve', 'check_circle', 'bg-emerald-100 text-emerald-600', 'bg-emerald-600')">
                     <button type="submit" class="px-6 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold text-sm shadow-md transition-colors flex items-center gap-2">
                         <span class="material-symbols-outlined text-[18px]">check_circle</span>
                         Approve Request
@@ -375,7 +382,7 @@
             {
                 <button disabled title="Product is currently @p.Status" class="px-6 py-2.5 rounded-lg bg-slate-100 text-slate-400 font-bold text-sm shadow-inner transition-colors border border-slate-200 cursor-not-allowed flex items-center gap-2">
                     <span class="material-symbols-outlined text-[18px]">gpp_good</span>
-                    @(p.Status == "Active" ? "Approved" : p.Status)
+                    Approved
                 </button>
             }
         </div>
@@ -406,16 +413,33 @@
             });
         });
 
-        function confirmAction(form, action, icon, iconClass, btnClass) {
-            window.showConfirmModal({
-                title: `${action} Product?`,
-                message: `Are you sure you want to ${action.toLowerCase()} this product?`,
-                confirmText: action,
-                confirmClass: btnClass,
-                icon: icon,
-                iconClass: iconClass,
-                onConfirm: () => form.submit()
-            });
+        window.handleSingleAction = function(form, action, icon, iconClass, btnClass) {
+            const isNasty = action === 'Reject' || action === 'inactive' || action === 'Delete';
+            if (isNasty) {
+                window.showReasonModal({
+                    title: `${action === 'inactive' ? 'Suspend' : action} Product?`,
+                    message: `Please provide a reason to ${action === 'inactive' ? 'suspend' : action.toLowerCase()} this product.`,
+                    confirmText: action === 'inactive' ? 'Suspend' : action,
+                    confirmClass: btnClass,
+                    icon: icon,
+                    iconClass: iconClass,
+                    onConfirm: (reason) => {
+                        const reasonInput = form.querySelector('.action-reason');
+                        if (reasonInput) reasonInput.value = reason;
+                        form.submit();
+                    }
+                });
+            } else {
+                window.showConfirmModal({
+                    title: `${action} Product?`,
+                    message: `Are you sure you want to ${action.toLowerCase()} this product?`,
+                    confirmText: action,
+                    confirmClass: btnClass,
+                    icon: icon,
+                    iconClass: iconClass,
+                    onConfirm: () => form.submit()
+                });
+            }
         }
     </script>
 }

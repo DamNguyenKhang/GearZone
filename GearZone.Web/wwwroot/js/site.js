@@ -1,4 +1,4 @@
-﻿// Global Add to Cart Function
+// Global Add to Cart Function
 async function addToCart(variantId, quantity = 1, buttonElement = null) {
     if (!variantId) {
         window.showToast?.('error', 'Please select a product variant.');
@@ -125,6 +125,61 @@ function showConfirmModal(options = {}) {
 }
 
 window.showConfirmModal = showConfirmModal;
+
+// Custom Reason Modal
+function showReasonModal(options = {}) {
+    const reasonModal = document.getElementById('reason-modal');
+    const btnReasonProceed = document.getElementById('btn-reason-proceed');
+    const btnReasonCancel = document.getElementById('btn-reason-cancel');
+    const reasonText = document.getElementById('reason-text');
+
+    if (!reasonModal || !btnReasonProceed || !btnReasonCancel || !reasonText) return;
+
+    const title = options.title || 'Reason Required';
+    const message = options.message || 'Please provide a reason for this action.';
+    const confirmText = options.confirmText || 'Confirm';
+    const confirmClass = options.confirmClass || 'bg-primary';
+    const icon = options.icon || 'info';
+    const iconClass = options.iconClass || 'bg-amber-100 text-amber-600';
+    const placeholder = options.placeholder || 'Type the reason here...';
+
+    document.getElementById('reason-modal-title').textContent = title;
+    document.getElementById('reason-modal-message').textContent = message;
+    btnReasonProceed.textContent = confirmText;
+    reasonText.placeholder = placeholder;
+    reasonText.value = ''; // Reset
+
+    document.getElementById('reason-modal-icon').textContent = icon;
+    const iconContainer = document.getElementById('reason-modal-icon-container');
+    iconContainer.className = `w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${iconClass}`;
+    btnReasonProceed.className = `flex-1 px-4 py-2.5 text-white font-bold rounded-xl transition-all shadow-lg ${confirmClass}`;
+
+    reasonModal.classList.remove('hidden');
+    reasonModal.classList.add('flex');
+
+    const closeReasonModal = () => {
+        reasonModal.classList.add('hidden');
+        reasonModal.classList.remove('flex');
+    };
+
+    btnReasonProceed.onclick = () => {
+        const val = reasonText.value.trim();
+        if (!val) {
+            reasonText.classList.add('border-red-500');
+            return;
+        }
+        reasonText.classList.remove('border-red-500');
+        if (options.onConfirm) options.onConfirm(val);
+        closeReasonModal();
+    };
+
+    btnReasonCancel.onclick = closeReasonModal;
+    reasonModal.onclick = (e) => {
+        if (e.target === reasonModal) closeReasonModal();
+    };
+}
+
+window.showReasonModal = showReasonModal;
 
 // Global Event Delegation for Grid Buttons
 document.addEventListener('click', (e) => {

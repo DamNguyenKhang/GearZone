@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -47,15 +48,41 @@ namespace GearZone.Web.Pages.Admin.Products
             return RedirectToPage(new { id });
         }
 
-        public async Task<IActionResult> OnPostRejectAsync(Guid id)
+        public async Task<IActionResult> OnPostRejectAsync(Guid id, string? reason = null)
         {
-            var success = await _productService.BulkUpdateStatusAsync(new List<Guid> { id }, ProductStatus.Rejected);
+            var success = await _productService.BulkUpdateStatusAsync(new List<Guid> { id }, ProductStatus.Rejected, reason);
             if (success)
                 TempData["SuccessMessage"] = "Product rejected.";
             else
                 TempData["ErrorMessage"] = "Failed to reject product.";
 
             return RedirectToPage(new { id });
+        }
+
+        public async Task<IActionResult> OnPostSuspendAsync(Guid id, string? reason = null)
+        {
+            var success = await _productService.BulkUpdateStatusAsync(new List<Guid> { id }, ProductStatus.Inactive, reason);
+            if (success)
+                TempData["SuccessMessage"] = "Product suspended.";
+            else
+                TempData["ErrorMessage"] = "Failed to suspend product.";
+
+            return RedirectToPage(new { id });
+        }
+
+        public async Task<IActionResult> OnPostDeleteAsync(Guid id, string reason)
+        {
+            var success = await _productService.DeleteProductAsync(id, reason);
+            if (success)
+            {
+                TempData["SuccessMessage"] = "Product deleted.";
+                return RedirectToPage("Index");
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to delete product.";
+                return RedirectToPage(new { id });
+            }
         }
     }
 }

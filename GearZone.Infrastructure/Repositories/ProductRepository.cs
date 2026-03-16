@@ -8,6 +8,7 @@ using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Catalog.DTOs;
 using GearZone.Domain.Enums;
 using GearZone.Application.Features.Admin.Dtos;
+using GearZone.Application.Features.Chat.Dtos;
 
 namespace GearZone.Infrastructure.Repositories
 {
@@ -15,6 +16,91 @@ namespace GearZone.Infrastructure.Repositories
     {
         public ProductRepository(ApplicationDbContext context) : base(context)
         {
+        }
+
+        public async Task<ChatProductContextDto?> GetChatProductContextBySlugAsync(string slug)
+        {
+            if (string.IsNullOrWhiteSpace(slug))
+            {
+                return null;
+            }
+
+            var normalizedSlug = slug.Trim();
+            return await _context.Products
+                .AsNoTracking()
+                .Where(p => !p.IsDeleted && p.Status == ProductStatus.Active && p.Slug == normalizedSlug)
+                .Select(p => new ChatProductContextDto
+                {
+                    ProductId = p.Id,
+                    StoreId = p.StoreId,
+                    StoreName = p.Store.StoreName,
+                    StoreSlug = p.Store.Slug,
+                    ProductName = p.Name,
+                    ProductSlug = p.Slug,
+                    ProductImageUrl = p.Images
+                        .Where(i => i.IsPrimary)
+                        .Select(i => i.ImageUrl)
+                        .FirstOrDefault() ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault(),
+                    StoreLogoUrl = p.Store.LogoUrl,
+                    Price = p.BasePrice,
+                    IsInStock = p.Variants.Any(v => v.StockQuantity > 0)
+                })
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<CatalogProductDto>> GetCatalogProductsBySlugsAsync(IReadOnlyCollection<string> slugs)
+        {
+            if (slugs == null || slugs.Count == 0)
+            {
+                return new List<CatalogProductDto>();
+            }
+
+            var normalizedSlugs = slugs
+                .Where(slug => !string.IsNullOrWhiteSpace(slug))
+                .Select(slug => slug.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (normalizedSlugs.Count == 0)
+            {
+                return new List<CatalogProductDto>();
+            }
+
+            return await _context.Products
+                .AsNoTracking()
+                .Where(p => normalizedSlugs.Contains(p.Slug)
+                    && !p.IsDeleted
+                    && p.Status == ProductStatus.Active)
+                .Select(p => new CatalogProductDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Slug = p.Slug,
+                    CategoryId = p.CategoryId,
+                    BrandName = p.Brand.Name,
+                    BasePrice = p.BasePrice,
+                    ImageUrl = p.Images
+                        .Where(i => i.IsPrimary)
+                        .Select(i => i.ImageUrl)
+                        .FirstOrDefault() ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? string.Empty,
+                    Rating = p.Reviews.Where(r => !r.IsDeleted).Select(r => (decimal?)r.Rating).Average() ?? 0,
+                    ReviewCount = p.Reviews.Count(r => !r.IsDeleted),
+                    StoreName = p.Store.StoreName,
+                    StoreLogoUrl = p.Store.LogoUrl ?? string.Empty,
+                    IsInStock = p.Variants.Where(v => v.IsActive && !v.IsDeleted).Any(v => v.StockQuantity > 0),
+                    DefaultVariantId = p.Variants
+                        .Where(v => v.IsActive && !v.IsDeleted)
+                        .Select(v => v.Id)
+                        .FirstOrDefault(),
+                    HighlightTags = p.Variants
+                        .Where(v => v.IsActive && !v.IsDeleted)
+                        .SelectMany(v => v.AttributeValues)
+                        .Select(av => av.CategoryAttributeOption.Value)
+                        .Distinct()
+                        .Take(3)
+                        .ToList()
+                })
+                .ToListAsync();
         }
 
         public async Task<PagedResult<CatalogProductDto>> GetFilteredProductsAsync(ProductFilterDto filter)
@@ -108,8 +194,8 @@ namespace GearZone.Infrastructure.Repositories
                     BasePrice = p.BasePrice,
                     ImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault() 
                                ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? "",
-                    Rating = 0, // Placeholder
-                    ReviewCount = 0,
+                    Rating = p.Reviews.Where(r => !r.IsDeleted).Select(r => (decimal?)r.Rating).Average() ?? 0,
+                    ReviewCount = p.Reviews.Count(r => !r.IsDeleted),
                     StoreName = p.Store.StoreName,
                     StoreLogoUrl = p.Store.LogoUrl,
                     IsInStock = p.Variants.Any(v => v.StockQuantity > 0),

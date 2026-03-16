@@ -29,6 +29,7 @@ namespace GearZone.Infrastructure.Configurations
             builder.Property(x => x.CommissionAmount).HasColumnType("decimal(18,2)");
             builder.Property(x => x.NetAmount).HasColumnType("decimal(18,2)");
             builder.Property(x => x.CommissionRateSnapshot).HasColumnType("decimal(5,2)");
+            builder.Property(x => x.DeliveredAt).HasColumnType("datetime2");
 
             builder.HasIndex(x => new { x.StoreId, x.CreatedAt });
             builder.HasIndex(x => x.Status);

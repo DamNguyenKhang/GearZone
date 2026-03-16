@@ -1,17 +1,39 @@
 ﻿@using GearZone.Application.Features.Catalog
 @using GearZone.Application.Abstractions.Services
+@using GearZone.Web.Pages.Shared.Models
+@using System
 @using System.Security.Claims
 @inject ICatalogService CatalogService
 @inject ICartService CartService
+@inject IChatService ChatService
 @{
     var layoutCategories = await CatalogService.GetCategoriesAsync();
     var currentSlug = ViewContext.RouteData.Values["CategorySlug"]?.ToString() ?? "";
+    var currentPath = Context.Request.Path.Value ?? "";
+    var currentTab = Context.Request.Query["tab"].ToString() ?? "";
+    var navLabelOverrides = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Console & Controllers"] = "Console",
+        ["Setup Accessories"] = "Setup",
+        ["Gaming Furniture"] = "Furniture"
+    };
+    string GetCategoryNavLabel(string name)
+        => navLabelOverrides.TryGetValue(name, out var label) ? label : name;
+    var isBuyerMessagesProfile = currentPath.Equals("/Public/User/Profile", StringComparison.OrdinalIgnoreCase)
+        && currentTab.Equals("messages", StringComparison.OrdinalIgnoreCase);
+    var showBuyerChatWidget = !currentPath.Equals("/messages", StringComparison.OrdinalIgnoreCase)
+        && !isBuyerMessagesProfile;
     
     int cartCount = 0;
+    int buyerUnreadCount = 0;
     if (User.Identity?.IsAuthenticated == true)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        cartCount = await CartService.GetCartItemsCountAsync(userId);
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            cartCount = await CartService.GetCartItemsCountAsync(userId);
+            buyerUnreadCount = await ChatService.GetBuyerUnreadCountAsync(userId);
+        }
     }
 }
 <!DOCTYPE html>
@@ -59,8 +81,15 @@
 
     <style type="text/tailwindcss">
         @@layer base {
+            html {
+                overflow-x: hidden;
+                overflow-x: clip;
+            }
+
             body {
                 @@apply font-display antialiased;
+                overflow-x: hidden;
+                overflow-x: clip;
             }
         }
         
@@ -80,6 +109,11 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
     </style>
+    @if (showBuyerChatWidget)
+    {
+        <partial name="/Pages/Shared/_ChatInboxStyles.cshtml" />
+        <partial name="/Pages/Shared/_BuyerChatWidgetStyles.cshtml" />
+    }
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="bg-slate-50 text-text-primary min-h-screen flex flex-col">
@@ -115,13 +149,21 @@
                         <div id="search-results-content" class="max-h-[400px] overflow-y-auto py-2">
                             <!-- Results injected here -->
                         </div>
-                        <a href="#" id="search-view-all" class="block bg-gray-50 hover:bg-gray-100 text-center py-3 text-sm font-bold text-primary border-t border-gray-100 hidden">
+                        <a href="/products" id="search-view-all" class="block bg-gray-50 hover:bg-gray-100 text-center py-3 text-sm font-bold text-primary border-t border-gray-100 hidden">
                             View All Results
                         </a>
                     </div>
                 </div>
                 <!-- Right Actions -->
                 <div class="flex items-center gap-4 flex-shrink-0">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a href="/Public/User/Profile?tab=messages" class="relative p-2 text-gray-500 hover:text-primary transition-colors rounded-full hover:bg-gray-100" id="header-chat-icon">
+                            <span class="material-symbols-outlined">chat</span>
+                            <span class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-orange-500 rounded-full @(buyerUnreadCount > 0 ? "" : "hidden")" data-header-chat-badge>@(buyerUnreadCount > 99 ? "99+" : buyerUnreadCount.ToString())</span>
+                        </a>
+                    }
+
                     <a href="/Cart" class="relative p-2 text-gray-500 hover:text-primary transition-colors rounded-full hover:bg-gray-100" id="header-cart-icon">
                         <span class="material-symbols-outlined">shopping_cart</span>
                         <span class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full @(cartCount > 0 ? "" : "hidden")" id="header-cart-count">@cartCount</span>
@@ -153,13 +195,13 @@
                                         <span class="material-symbols-outlined text-[20px]">account_circle</span>
                                         My Profile
                                     </a>
-                                    <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors">
+                                    <a href="/Public/User/Profile?tab=orders" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors">
                                         <span class="material-symbols-outlined text-[20px]">shopping_bag</span>
                                         My Orders
                                     </a>
-                                    <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors">
-                                        <span class="material-symbols-outlined text-[20px]">settings</span>
-                                        Settings
+                                    <a href="/Public/User/Profile?tab=messages" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors">
+                                        <span class="material-symbols-outlined text-[20px]">chat</span>
+                                        Messages
                                     </a>
                                 </div>
 
@@ -185,8 +227,8 @@
 
     <!-- Secondary Nav -->
     <nav class="bg-white border-b border-gray-200 hidden md:block relative z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center space-x-8 h-12 text-sm font-medium relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-x-auto hide-scrollbar">
+            <div class="flex items-center gap-5 lg:gap-6 h-12 text-[13px] lg:text-sm font-medium relative min-w-max">
                 <a class="category-nav-link flex items-center gap-2 @(string.IsNullOrEmpty(currentSlug) ? "text-primary border-b-2 border-primary" : "text-text-secondary border-b-2 border-transparent") hover:text-primary whitespace-nowrap h-full px-1 transition-colors cursor-pointer" data-category-slug="" asp-page="/Public/Catalog/Browse" asp-route-slug="">
                     <span class="material-symbols-outlined text-[20px]">grid_view</span>
                     All Categories
@@ -198,7 +240,7 @@
                     {
                         <div class="relative group h-full flex items-center">
                             <a class="category-nav-link @(isActive ? "text-primary border-b-2 border-primary" : "text-text-secondary border-b-2 border-transparent") hover:text-primary transition-colors whitespace-nowrap h-full flex items-center px-1 cursor-pointer" data-category-slug="@category.Slug" asp-page="/Public/Catalog/Browse" asp-route-slug="@category.Slug">
-                                @category.Name
+                                @GetCategoryNavLabel(category.Name)
                                 <span class="material-symbols-outlined text-[16px] ml-1">expand_more</span>
                             </a>
                             <div class="absolute left-0 top-full mt-0 w-48 bg-white border border-gray-200 shadow-xl rounded-md py-1 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-50">
@@ -211,19 +253,19 @@
                     }
                     else
                     {
-                        <a class="category-nav-link @(isActive ? "text-primary border-b-2 border-primary" : "text-text-secondary border-b-2 border-transparent") hover:text-primary transition-colors whitespace-nowrap h-full flex items-center px-1 cursor-pointer" data-category-slug="@category.Slug" asp-page="/Public/Catalog/Browse" asp-route-slug="@category.Slug">@category.Name</a>
+                        <a class="category-nav-link @(isActive ? "text-primary border-b-2 border-primary" : "text-text-secondary border-b-2 border-transparent") hover:text-primary transition-colors whitespace-nowrap h-full flex items-center px-1 cursor-pointer" data-category-slug="@category.Slug" asp-page="/Public/Catalog/Browse" asp-route-slug="@category.Slug">@GetCategoryNavLabel(category.Name)</a>
                     }
                 }
-                <a class="text-red-600 hover:text-red-700 font-semibold transition-colors whitespace-nowrap h-full flex items-center px-1 ml-auto" href="#">
+                <a class="text-red-600 hover:text-red-700 font-semibold transition-colors whitespace-nowrap h-full flex items-center px-1" href="/#home-flash-zone">
                     <span class="material-symbols-outlined text-[18px] mr-1">bolt</span>
-                    Flash Deals
+                    Flash
                 </a>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <main class="flex-grow">
+    <main class="flex-grow overflow-x-clip">
         @RenderBody()
     </main>
 
@@ -241,38 +283,38 @@
                         Vietnam's leading marketplace for PC components and high-end electronics. We connect enthusiasts with the best authentic hardware vendors.
                     </p>
                     <div class="flex gap-4">
-                        <a class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center hover:bg-primary transition-colors text-white" href="#">
+                        <span class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white/80 cursor-default">
                             <span class="text-xs font-bold">f</span>
-                        </a>
-                        <a class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center hover:bg-primary transition-colors text-white" href="#">
+                        </span>
+                        <span class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white/80 cursor-default">
                             <span class="text-xs font-bold">t</span>
-                        </a>
-                        <a class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center hover:bg-primary transition-colors text-white" href="#">
+                        </span>
+                        <span class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-white/80 cursor-default">
                             <span class="text-xs font-bold">in</span>
-                        </a>
+                        </span>
                     </div>
                 </div>
                 <!-- Column 2 -->
                 <div>
                     <h4 class="text-white font-bold mb-4">Categories</h4>
                     <ul class="space-y-2 text-sm">
-                        <li><a class="hover:text-primary transition-colors" href="#">Processors (CPU)</a></li>
-                        <li><a class="hover:text-primary transition-colors" href="#">Graphics Cards (GPU)</a></li>
-                        <li><a class="hover:text-primary transition-colors" href="#">Motherboards</a></li>
-                        <li><a class="hover:text-primary transition-colors" href="#">Memory (RAM)</a></li>
-                        <li><a class="hover:text-primary transition-colors" href="#">Storage & SSDs</a></li>
-                        <li><a class="hover:text-primary transition-colors" href="#">Power Supplies</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="/products/cpus">Processors (CPU)</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="/products/gpus">Graphics Cards (GPU)</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="/products/motherboards">Motherboards</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="/products/ram">Memory (RAM)</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="/products/storage">Storage & SSDs</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="/products/power-supplies">Power Supplies</a></li>
                     </ul>
                 </div>
                 <!-- Column 3 -->
                 <div>
                     <h4 class="text-white font-bold mb-4">Customer Support</h4>
                     <ul class="space-y-2 text-sm">
-                        <li><a class="hover:text-primary transition-colors" href="#">Help Center</a></li>
-                        <li><a class="hover:text-primary transition-colors" href="#">Warranty Policy</a></li>
-                        <li><a class="hover:text-primary transition-colors" href="#">Return & Refund</a></li>
-                        <li><a class="hover:text-primary transition-colors" href="#">Shipping Info</a></li>
-                        <li><a class="hover:text-primary transition-colors" href="#">Track Order</a></li>
+                        <li><span class="text-gray-400">Help Center</span></li>
+                        <li><span class="text-gray-400">Warranty Policy</span></li>
+                        <li><span class="text-gray-400">Return & Refund</span></li>
+                        <li><span class="text-gray-400">Shipping Info</span></li>
+                        <li><a class="hover:text-primary transition-colors" href="/Public/User/Profile?tab=orders">Track Order</a></li>
                     </ul>
                 </div>
                 <!-- Column 4 -->
@@ -299,11 +341,23 @@
                 <div class="flex items-center gap-4">
                     <span>Privacy Policy</span>
                     <span>Terms of Service</span>
-                    <span>Sitemap</span>
+                    <a class="hover:text-primary transition-colors" href="/products">Sitemap</a>
                 </div>
             </div>
         </div>
     </footer>
+
+    @if (showBuyerChatWidget)
+    {
+        <partial name="/Pages/Shared/_BuyerChatWidget.cshtml"
+                 model='new BuyerChatWidgetViewModel
+                 {
+                     IsAuthenticated = User.Identity?.IsAuthenticated == true,
+                     TotalUnreadCount = buyerUnreadCount,
+                     BootstrapUrl = "/messages?handler=WidgetBootstrap",
+                     MessagesUrl = "/Public/User/Profile?tab=messages"
+                 }' />
+    }
 
     <!-- Login Redirect Modal -->
     <div id="login-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
@@ -318,7 +372,7 @@
                     <button id="close-login-modal" class="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                         Cancel
                     </button>
-                    <a id="confirm-login-modal" href="#" class="flex-1 px-4 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all text-center">
+                    <a id="confirm-login-modal" href="/Auth/Login" class="flex-1 px-4 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all text-center">
                         Login
                     </a>
                 </div>
@@ -354,6 +408,10 @@
 
     <partial name="_Toast" />
     @await RenderSectionAsync("Scripts", required: false)
+    @if (showBuyerChatWidget)
+    {
+        <partial name="/Pages/Shared/_BuyerChatWidgetScripts.cshtml" />
+    }
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const userMenuButton = document.getElementById('user-menu-button');

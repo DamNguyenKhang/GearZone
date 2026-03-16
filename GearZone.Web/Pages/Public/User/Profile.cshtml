@@ -1,8 +1,34 @@
 @page
 @model GearZone.Web.Pages.Public.User.ProfileModel
 @using GearZone.Domain.Enums
+@using GearZone.Web.Pages.Shared.Models
 @{
     ViewData["Title"] = "My Profile - GearZone";
+    string GetOrderStatusText(OrderStatus status) => status switch
+    {
+        OrderStatus.Pending => "Awaiting Payment",
+        OrderStatus.Approved => "Approved",
+        OrderStatus.Paid => "Paid",
+        OrderStatus.Processing => "Processing",
+        OrderStatus.Delivered => "Delivered",
+        OrderStatus.Cancelled => "Cancelled",
+        OrderStatus.Refunded => "Refunded",
+        OrderStatus.Rejected => "Rejected",
+        _ => status.ToString()
+    };
+
+    string GetOrderStatusBadgeClass(OrderStatus status) => status switch
+    {
+        OrderStatus.Pending => "bg-amber-50 text-amber-700 border border-amber-200",
+        OrderStatus.Approved => "bg-sky-50 text-sky-700 border border-sky-200",
+        OrderStatus.Paid => "bg-indigo-50 text-indigo-700 border border-indigo-200",
+        OrderStatus.Processing => "bg-blue-50 text-blue-700 border border-blue-200",
+        OrderStatus.Delivered => "bg-emerald-50 text-emerald-700 border border-emerald-200",
+        OrderStatus.Cancelled => "bg-rose-50 text-rose-700 border border-rose-200",
+        OrderStatus.Refunded => "bg-orange-50 text-orange-700 border border-orange-200",
+        OrderStatus.Rejected => "bg-red-50 text-red-700 border border-red-200",
+        _ => "bg-gray-50 text-gray-700 border border-gray-200"
+    };
 }
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -79,6 +105,11 @@
                         <span class="material-symbols-outlined text-[20px] @(Model.ActiveTab == "orders" ? "filled" : "")">shopping_bag</span>
                         Orders
                     </a>
+                    <a asp-page="/Public/User/Profile" asp-route-tab="messages"
+                       class="flex items-center gap-3 px-4 py-3 text-sm @(Model.ActiveTab == "messages" ? "font-bold text-primary bg-primary/5 border-l-4 border-primary" : "font-medium text-gray-600 hover:bg-gray-50 hover:text-primary") rounded-xl transition-all">
+                        <span class="material-symbols-outlined text-[20px] @(Model.ActiveTab == "messages" ? "filled" : "")">chat</span>
+                        Messages
+                    </a>
                     <a asp-page="/Public/User/Profile" asp-route-tab="addresses" 
                        class="flex items-center gap-3 px-4 py-3 text-sm @(Model.ActiveTab == "addresses" ? "font-bold text-primary bg-primary/5 border-l-4 border-primary" : "font-medium text-gray-600 hover:bg-gray-50 hover:text-primary") rounded-xl transition-all">
                         <span class="material-symbols-outlined text-[20px] @(Model.ActiveTab == "addresses" ? "filled" : "")">location_on</span>
@@ -105,7 +136,21 @@
         </aside>
 
         <!-- Main Content -->
-        <div class="flex-1 space-y-6">
+        <div class="min-w-0 flex-1 space-y-6">
+            @if (TempData["SuccessMessage"] is string successMessage)
+            {
+                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-medium text-emerald-700">
+                    @successMessage
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] is string errorMessage)
+            {
+                <div class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-700">
+                    @errorMessage
+                </div>
+            }
+
             @if (Model.ActiveTab == "account")
             {
                 <div class="space-y-6">
@@ -138,145 +183,187 @@
             }
             else if (Model.ActiveTab == "orders")
             {
-                <div class="space-y-6">
-                    <div class="flex items-center justify-between flex-wrap gap-4">
-                        <h1 class="text-2xl font-bold text-gray-900">My Orders</h1>
-                        
-                        <!-- Search -->
-                        <div class="relative w-full sm:w-80">
+                <div class="space-y-5">
+                    <div class="flex justify-end">
+                        <form method="get" class="relative w-full sm:w-96">
+                            <input type="hidden" name="tab" value="orders" />
+                            <input type="hidden" name="orderStatus" value="@Model.OrderStatus" />
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <span class="material-symbols-outlined text-gray-400">search</span>
                             </div>
-                            <input type="text" placeholder="Search by Order ID or Product Name" 
-                                   class="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary text-sm transition-all bg-white" />
-                        </div>
+                            <input type="text"
+                                   name="searchTerm"
+                                   value="@Model.SearchTerm"
+                                   placeholder="Search by order code or product name"
+                                   class="block w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary text-sm transition-all bg-white" />
+                        </form>
                     </div>
 
-                    <!-- Filter Tabs -->
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-1 flex overflow-x-auto hide-scrollbar">
-                        <button class="flex-shrink-0 px-6 py-2.5 text-sm font-bold text-primary border-b-2 border-primary">All Orders</button>
-                        <button class="flex-shrink-0 px-6 py-2.5 text-sm font-medium text-gray-500 hover:text-primary transition-colors">To Pay <span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[10px] ml-1">2</span></button>
-                        <button class="flex-shrink-0 px-6 py-2.5 text-sm font-medium text-gray-500 hover:text-primary transition-colors">Processing</button>
-                        <button class="flex-shrink-0 px-6 py-2.5 text-sm font-medium text-gray-500 hover:text-primary transition-colors">Shipping</button>
-                        <button class="flex-shrink-0 px-6 py-2.5 text-sm font-medium text-gray-500 hover:text-primary transition-colors">Received</button>
-                        <button class="flex-shrink-0 px-6 py-2.5 text-sm font-medium text-gray-500 hover:text-primary transition-colors">Cancelled</button>
+                        <a asp-page="/Public/User/Profile" asp-route-tab="orders" asp-route-orderStatus="all"
+                           class="flex-shrink-0 px-5 py-3 text-sm font-semibold rounded-xl transition-colors @(Model.OrderStatus == "all" ? "bg-primary text-white shadow-sm" : "text-gray-600 hover:bg-gray-50")">
+                            All Orders
+                            <span class="ml-2 @(Model.OrderStatus == "all" ? "text-white/80" : "text-gray-400")">@Model.OrderStatusSummary.All</span>
+                        </a>
+                        <a asp-page="/Public/User/Profile" asp-route-tab="orders" asp-route-orderStatus="processing"
+                           class="flex-shrink-0 px-5 py-3 text-sm font-semibold rounded-xl transition-colors @(Model.OrderStatus == "processing" ? "bg-primary text-white shadow-sm" : "text-gray-600 hover:bg-gray-50")">
+                            Processing
+                            <span class="ml-2 @(Model.OrderStatus == "processing" ? "text-white/80" : "text-gray-400")">@Model.OrderStatusSummary.Processing</span>
+                        </a>
+                        <a asp-page="/Public/User/Profile" asp-route-tab="orders" asp-route-orderStatus="delivered"
+                           class="flex-shrink-0 px-5 py-3 text-sm font-semibold rounded-xl transition-colors @(Model.OrderStatus == "delivered" ? "bg-primary text-white shadow-sm" : "text-gray-600 hover:bg-gray-50")">
+                            Delivered
+                            <span class="ml-2 @(Model.OrderStatus == "delivered" ? "text-white/80" : "text-gray-400")">@Model.OrderStatusSummary.Delivered</span>
+                        </a>
+                        <a asp-page="/Public/User/Profile" asp-route-tab="orders" asp-route-orderStatus="to_review"
+                           class="flex-shrink-0 px-5 py-3 text-sm font-semibold rounded-xl transition-colors @(Model.OrderStatus == "to_review" ? "bg-primary text-white shadow-sm" : "text-gray-600 hover:bg-gray-50")">
+                            To Review
+                            <span class="ml-2 @(Model.OrderStatus == "to_review" ? "text-white/80" : "text-gray-400")">@Model.OrderStatusSummary.ToReview</span>
+                        </a>
+                        <a asp-page="/Public/User/Profile" asp-route-tab="orders" asp-route-orderStatus="cancelled"
+                           class="flex-shrink-0 px-5 py-3 text-sm font-semibold rounded-xl transition-colors @(Model.OrderStatus == "cancelled" ? "bg-primary text-white shadow-sm" : "text-gray-600 hover:bg-gray-50")">
+                            Cancelled
+                            <span class="ml-2 @(Model.OrderStatus == "cancelled" ? "text-white/80" : "text-gray-400")">@Model.OrderStatusSummary.Cancelled</span>
+                        </a>
                     </div>
 
-                    <!-- Order List (Mock Data) -->
-                    <div class="space-y-4">
-                        <!-- Order 1 -->
-                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div class="px-6 py-4 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between flex-wrap gap-2 text-sm">
-                                <div class="flex items-center gap-4">
-                                    <div class="flex items-center gap-2">
-                                        <span class="material-symbols-outlined text-primary text-[20px]">store</span>
-                                        <span class="font-bold text-gray-900">TechStore Official</span>
+                    @if (Model.Orders.Items.Any())
+                    {
+                        <div class="space-y-4">
+                            @foreach (var order in Model.Orders.Items)
+                            {
+                                <article class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                    <div class="px-6 py-4 bg-gray-50/70 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3 text-sm">
+                                        <div class="flex items-center gap-4 flex-wrap">
+                                            <a href="/store/@order.StoreSlug" class="flex items-center gap-2 font-bold text-gray-900 hover:text-primary transition-colors">
+                                                <span class="material-symbols-outlined text-primary text-[20px]">store</span>
+                                                @order.StoreName
+                                            </a>
+                                            <span class="text-gray-300 hidden sm:inline">|</span>
+                                            <span class="text-gray-500">Order #@order.OrderCode</span>
+                                        </div>
+                                        <div class="flex items-center gap-3 flex-wrap">
+                                            <span class="text-gray-500">@order.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</span>
+                                            <span class="inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-semibold @GetOrderStatusBadgeClass(order.Status)">
+                                                @GetOrderStatusText(order.Status)
+                                            </span>
+                                        </div>
                                     </div>
-                                    <span class="text-gray-400">|</span>
-                                    <span class="text-gray-500">Order #GZ-99281</span>
-                                </div>
-                                <div class="flex items-center gap-4">
-                                    <span class="text-gray-500">Oct 24, 2023 14:30</span>
-                                    <span class="inline-flex items-center rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">Processing</span>
-                                </div>
-                            </div>
-                            <div class="p-6">
-                                <div class="flex gap-4">
-                                    <div class="w-20 h-20 rounded-xl bg-gray-50 flex-shrink-0 overflow-hidden border border-gray-100">
-                                        <img src="https://m.media-amazon.com/images/I/71u9S9i7qBL._AC_SL1500_.jpg" alt="Product" class="w-full h-full object-contain">
+
+                                    <div class="p-6 space-y-4">
+                                        @foreach (var item in order.Items)
+                                        {
+                                            <div class="flex flex-col md:flex-row gap-4 pb-4 border-b border-gray-50 last:border-0 last:pb-0">
+                                                <a href="/product/@item.ProductSlug" class="w-20 h-20 rounded-xl bg-gray-50 flex-shrink-0 overflow-hidden border border-gray-100">
+                                                    <img src="@(string.IsNullOrWhiteSpace(item.ProductImageUrl) ? "/images/placeholder.png" : item.ProductImageUrl)"
+                                                         alt="@item.ProductName"
+                                                         class="w-full h-full object-contain p-2" />
+                                                </a>
+                                                <div class="flex-1 min-w-0">
+                                                    <a href="/product/@item.ProductSlug" class="font-bold text-gray-900 hover:text-primary line-clamp-2">@item.ProductName</a>
+                                                    <p class="text-sm text-gray-500 mt-1">Variant: @item.VariantName</p>
+                                                    <p class="text-sm font-medium mt-1">Quantity: x@item.Quantity</p>
+
+                                                    @if (item.CanReview || item.CanEditReview)
+                                                    {
+                                                        <div class="mt-3 flex flex-wrap items-center gap-3">
+                                                            <a asp-page="/Public/User/WriteReview"
+                                                               asp-route-orderItemId="@item.OrderItemId"
+                                                               class="review-action-link">
+                                                                <span class="material-symbols-outlined text-[18px]">rate_review</span>
+                                                                @(item.CanEditReview ? "Edit Review" : "Review Product")
+                                                            </a>
+                                                            @if (item.ReviewDeadline.HasValue)
+                                                            {
+                                                                <span class="text-xs text-gray-400">Available until @item.ReviewDeadline.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")</span>
+                                                            }
+                                                        </div>
+                                                    }
+                                                    else if (order.Status == OrderStatus.Delivered && item.ReviewId.HasValue)
+                                                    {
+                                                        <div class="mt-3 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-600 border border-emerald-200">
+                                                            <span class="material-symbols-outlined text-[16px]">task_alt</span>
+                                                            Reviewed
+                                                        </div>
+                                                    }
+                                                </div>
+                                                <div class="text-right md:min-w-[140px]">
+                                                    <p class="font-bold text-gray-900">@item.UnitPrice.ToString("N0") VND</p>
+                                                </div>
+                                            </div>
+                                        }
                                     </div>
-                                    <div class="flex-1">
-                                        <h4 class="font-bold text-gray-900">NVIDIA GeForce RTX 4060 Ti 8GB Graphics Card</h4>
-                                        <p class="text-sm text-gray-500 mt-1">Variant: OC Edition</p>
-                                        <p class="text-sm font-medium mt-1">x1</p>
+
+                                    <div class="px-6 py-4 bg-gray-50/40 border-t border-gray-100 flex items-center justify-between flex-wrap gap-3">
+                                        <div class="space-y-1">
+                                            <p class="text-sm text-gray-500">
+                                                Subtotal:
+                                                <span class="text-lg font-bold text-primary ml-1">@order.Subtotal.ToString("N0") VND</span>
+                                            </p>
+                                            @if (order.DeliveredAt.HasValue)
+                                            {
+                                                <p class="text-xs text-gray-400">Delivered @order.DeliveredAt.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
+                                            }
+                                        </div>
+                                        <div class="flex flex-wrap gap-2">
+                                            <a asp-page="/Public/User/Profile"
+                                               asp-route-tab="messages"
+                                               asp-route-storeSlug="@order.StoreSlug"
+                                               class="px-5 py-2 text-sm font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors">
+                                                Chat Shop
+                                            </a>
+                                            <a href="/store/@order.StoreSlug" class="px-5 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                                Visit Store
+                                            </a>
+                                            @if (order.HasAnyReviewableItem || order.HasAnyEditableReview)
+                                            {
+                                                <a asp-page="/Public/User/Profile"
+                                                   asp-route-tab="orders"
+                                                   asp-route-orderStatus="to_review"
+                                                   class="review-primary-button">
+                                                    Review Queue
+                                                </a>
+                                            }
+                                        </div>
                                     </div>
-                                    <div class="text-right">
-                                        <p class="font-bold text-gray-900">$450.00</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="px-6 py-4 bg-gray-50/30 border-t border-gray-100 flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm text-gray-500">Total Amount: <span class="text-lg font-bold text-primary ml-1">$450.00</span></p>
-                                </div>
-                                <div class="flex gap-2">
-                                    <button class="px-5 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Contact Seller</button>
-                                    <button class="px-5 py-2 text-sm font-bold text-white bg-primary rounded-lg hover:bg-blue-700 transition-all shadow-sm shadow-primary/20">Track Order</button>
-                                </div>
-                            </div>
+                                </article>
+                            }
                         </div>
 
-                        <!-- Order 2 -->
-                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                            <div class="px-6 py-4 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between flex-wrap gap-2 text-sm">
-                                <div class="flex items-center gap-4">
-                                    <div class="flex items-center gap-2">
-                                        <span class="material-symbols-outlined text-primary text-[20px]">store</span>
-                                        <span class="font-bold text-gray-900">AudioPhile Direct</span>
-                                    </div>
-                                    <span class="text-gray-400">|</span>
-                                    <span class="text-gray-500">Order #GZ-88120</span>
-                                </div>
-                                <div class="flex items-center gap-4">
-                                    <span class="text-gray-500">Oct 15, 2023 09:12</span>
-                                    <span class="inline-flex items-center rounded-lg bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">Received</span>
-                                </div>
+                        @if (Model.Orders.TotalPages > 1)
+                        {
+                            <div class="flex justify-center mt-8">
+                                <nav class="flex items-center gap-2 flex-wrap">
+                                    @for (var pageNumber = 1; pageNumber <= Model.Orders.TotalPages; pageNumber++)
+                                    {
+                                        <a asp-page="/Public/User/Profile"
+                                           asp-route-tab="orders"
+                                           asp-route-orderStatus="@Model.OrderStatus"
+                                           asp-route-searchTerm="@Model.SearchTerm"
+                                           asp-route-orderPage="@pageNumber"
+                                           class="w-10 h-10 flex items-center justify-center rounded-lg border text-sm font-semibold transition-colors @(pageNumber == Model.Orders.PageNumber ? "bg-primary border-primary text-white" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50")">
+                                            @pageNumber
+                                        </a>
+                                    }
+                                </nav>
                             </div>
-                            <div class="p-6 space-y-4">
-                                <div class="flex gap-4 pb-4 border-b border-gray-50 last:border-0 last:pb-0">
-                                    <div class="w-20 h-20 rounded-xl bg-gray-50 flex-shrink-0 overflow-hidden border border-gray-100">
-                                        <img src="https://m.media-amazon.com/images/I/61+9Ew2eI6L._AC_SL1500_.jpg" alt="Product" class="w-full h-full object-contain">
-                                    </div>
-                                    <div class="flex-1">
-                                        <h4 class="font-bold text-gray-900">Sony WH-1000XM5 Wireless Noise Cancelling Headphones</h4>
-                                        <p class="text-sm text-gray-500 mt-1">Color: Black</p>
-                                        <p class="text-sm font-medium mt-1">x1</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="font-bold text-gray-900">$348.00</p>
-                                    </div>
-                                </div>
-                                <div class="flex gap-4 pb-4 border-b border-gray-50 last:border-0 last:pb-0">
-                                    <div class="w-20 h-20 rounded-xl bg-gray-50 flex-shrink-0 overflow-hidden border border-gray-100">
-                                        <img src="https://m.media-amazon.com/images/I/51A616K1M8L._AC_SL1200_.jpg" alt="Product" class="w-full h-full object-contain">
-                                    </div>
-                                    <div class="flex-1">
-                                        <h4 class="font-bold text-gray-900">Universal Aluminum Headphone Stand Holder</h4>
-                                        <p class="text-sm text-gray-500 mt-1">Color: Space Grey</p>
-                                        <p class="text-sm font-medium mt-1">x1</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="font-bold text-gray-900">$25.00</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="px-6 py-4 bg-gray-50/30 border-t border-gray-100 flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm text-gray-500">Total Amount: <span class="text-lg font-bold text-primary ml-1">$373.00</span></p>
-                                </div>
-                                <div class="flex gap-2">
-                                    <button class="px-5 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Review</button>
-                                    <button class="px-5 py-2 text-sm font-bold text-primary bg-primary/5 rounded-lg hover:bg-primary/10 transition-all border border-primary/10">Buy Again</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                        }
+                    }
+                    else
+                    {
+                        var emptyOrderMessage = Model.OrderStatus == "to_review"
+                            ? "No delivered items are waiting for review right now."
+                            : "No orders matched this view yet.";
 
-                    <!-- Pagination -->
-                    <div class="flex justify-center mt-8">
-                        <nav class="flex items-center gap-1">
-                            <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50">
-                                <span class="material-symbols-outlined">chevron_left</span>
-                            </button>
-                            <button class="w-10 h-10 flex items-center justify-center rounded-lg bg-primary text-white font-bold">1</button>
-                            <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium">2</button>
-                            <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium">3</button>
-                            <span class="w-10 h-10 flex items-center justify-center text-gray-400">...</span>
-                            <button class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-50">
-                                <span class="material-symbols-outlined">chevron_right</span>
-                            </button>
-                        </nav>
-                    </div>
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex flex-col items-center justify-center text-center py-20">
+                            <div class="w-20 h-20 rounded-full bg-gray-50 flex items-center justify-center text-gray-300 mb-6">
+                                <span class="material-symbols-outlined text-5xl">inventory_2</span>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-900">Nothing to show here</h3>
+                            <p class="text-gray-500 mt-2 max-w-md mx-auto">@emptyOrderMessage</p>
+                            <a href="/Index" class="mt-8 px-8 py-3 bg-primary text-white font-bold rounded-xl hover:bg-blue-700 transition-all">Continue Shopping</a>
+                        </div>
+                    }
                 </div>
             }
             else if (Model.ActiveTab == "addresses")
@@ -326,15 +413,157 @@
             else if (Model.ActiveTab == "reviews")
             {
                 <div class="space-y-6">
-                    <h1 class="text-2xl font-bold text-gray-900">My Reviews</h1>
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex flex-col items-center justify-center text-center py-20">
-                        <div class="w-20 h-20 rounded-full bg-gray-50 flex items-center justify-center text-gray-300 mb-6">
-                            <span class="material-symbols-outlined text-5xl">rate_review</span>
+                    <div class="flex items-center justify-between flex-wrap gap-4">
+                        <div>
+                            <p class="text-sm font-semibold uppercase tracking-[0.22em] text-primary">Review Center</p>
+                            <h1 class="text-2xl font-bold text-gray-900 mt-2">My Reviews</h1>
+                            <p class="text-sm text-gray-500 mt-2">See your verified reviews, seller replies, and edit eligible reviews before the 7-day window closes.</p>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900">No reviews yet</h3>
-                        <p class="text-gray-500 mt-2 max-w-xs mx-auto">You haven't reviewed any products yet. After you receive your orders, you can share your experience with others.</p>
-                        <a href="/Index" class="mt-8 px-8 py-3 bg-primary text-white font-bold rounded-xl hover:bg-blue-700 transition-all">Go Shopping</a>
+                        <a asp-page="/Public/User/Profile"
+                           asp-route-tab="orders"
+                           asp-route-orderStatus="to_review"
+                           class="review-action-link">
+                            <span class="material-symbols-outlined text-[18px]">rate_review</span>
+                            Pending Reviews (@Model.OrderStatusSummary.ToReview)
+                        </a>
                     </div>
+
+                    @if (Model.Reviews.Items.Any())
+                    {
+                        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                            @foreach (var review in Model.Reviews.Items)
+                            {
+                                <article class="review-surface-card overflow-hidden rounded-[26px] border border-slate-100">
+                                    <div class="flex gap-4 border-b border-slate-100 p-5">
+                                        <a href="/product/@review.ProductSlug" class="h-24 w-24 flex-shrink-0 overflow-hidden rounded-3xl border border-slate-100 bg-slate-50">
+                                            <img src="@(string.IsNullOrWhiteSpace(review.ProductImageUrl) ? "/images/placeholder.png" : review.ProductImageUrl)"
+                                                 alt="@review.ProductName"
+                                                 class="w-full h-full object-contain p-2" />
+                                        </a>
+                                        <div class="min-w-0 flex-1">
+                                            <p class="review-label">@review.StoreName</p>
+                                            <a href="/product/@review.ProductSlug" class="mt-2 block line-clamp-2 text-lg font-black tracking-[-0.03em] text-gray-900 hover:text-primary">@review.ProductName</a>
+                                            <p class="mt-2 text-sm text-gray-500">Variant: @review.VariantName</p>
+                                            <div class="mt-3 flex items-center gap-2">
+                                                <partial name="/Pages/Shared/_ReviewStars.cshtml"
+                                                         model='new ReviewStarsViewModel
+                                                         {
+                                                             Rating = review.Rating,
+                                                             SizePx = 16,
+                                                             AriaLabel = $"{review.Rating} out of 5 stars"
+                                                         }' />
+                                                <span class="text-sm font-semibold text-gray-700">@review.Rating/5</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-5 space-y-4">
+                                        <div class="flex items-center justify-between gap-3 text-sm">
+                                            <div class="text-gray-500">
+                                                Reviewed @review.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+                                            </div>
+                                            @if (review.UpdatedAt.HasValue)
+                                            {
+                                                <span class="text-xs font-semibold text-gray-400">Updated @review.UpdatedAt.Value.ToLocalTime().ToString("dd MMM yyyy")</span>
+                                            }
+                                        </div>
+
+                                        @if (!string.IsNullOrWhiteSpace(review.Comment))
+                                        {
+                                            <p class="text-sm leading-6 text-gray-600">@review.Comment</p>
+                                        }
+                                        else
+                                        {
+                                            <p class="text-sm italic text-gray-400">You left a star rating without a written comment.</p>
+                                        }
+
+                                        <div class="review-summary-shell rounded-[22px] px-4 py-3 text-sm">
+                                            <div class="flex items-center justify-between gap-3">
+                                                <span class="font-semibold text-gray-600">Delivered</span>
+                                                <span class="font-semibold text-gray-900">@review.DeliveredAt.ToLocalTime().ToString("dd MMM yyyy")</span>
+                                            </div>
+                                            <div class="mt-2 flex items-center justify-between gap-3">
+                                                <span class="font-semibold text-gray-600">Edit window</span>
+                                                <span class="@(review.CanEdit ? "text-orange-600" : "text-gray-400") font-semibold">
+                                                    @review.ReviewDeadline.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        @if (!string.IsNullOrWhiteSpace(review.SellerReplyContent))
+                                        {
+                                            <div class="review-reply-card rounded-[22px] p-4">
+                                                <div class="flex items-center gap-2 text-orange-700">
+                                                    <span class="material-symbols-outlined text-[18px]">campaign</span>
+                                                    <p class="text-sm font-bold">Seller reply</p>
+                                                </div>
+                                                <p class="mt-2 text-sm leading-6 text-gray-700">@review.SellerReplyContent</p>
+                                                @if (review.SellerReplyAt.HasValue)
+                                                {
+                                                    <p class="mt-2 text-xs text-gray-400">Replied @review.SellerReplyAt.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
+                                                }
+                                            </div>
+                                        }
+
+                                        <div class="flex flex-wrap items-center gap-3 pt-1">
+                                            <a href="/product/@review.ProductSlug" class="review-ghost-button">
+                                                <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                                View Product
+                                            </a>
+                                            @if (review.CanEdit)
+                                            {
+                                                <a asp-page="/Public/User/WriteReview"
+                                                   asp-route-orderItemId="@review.OrderItemId"
+                                                   class="review-primary-button">
+                                                    <span class="material-symbols-outlined text-[18px]">edit_square</span>
+                                                    Edit Review
+                                                </a>
+                                            }
+                                        </div>
+                                    </div>
+                                </article>
+                            }
+                        </div>
+
+                        @if (Model.Reviews.TotalPages > 1)
+                        {
+                            <div class="flex justify-center mt-8">
+                                <nav class="flex items-center gap-2 flex-wrap">
+                                    @for (var pageNumber = 1; pageNumber <= Model.Reviews.TotalPages; pageNumber++)
+                                    {
+                                        <a asp-page="/Public/User/Profile"
+                                           asp-route-tab="reviews"
+                                           asp-route-reviewPage="@pageNumber"
+                                           class="review-page-link @(pageNumber == Model.Reviews.PageNumber ? "is-active" : string.Empty)">
+                                            @pageNumber
+                                        </a>
+                                    }
+                                </nav>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex flex-col items-center justify-center text-center py-20">
+                            <div class="w-20 h-20 rounded-full bg-gray-50 flex items-center justify-center text-gray-300 mb-6">
+                                <span class="material-symbols-outlined text-5xl">rate_review</span>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-900">No reviews yet</h3>
+                            <p class="text-gray-500 mt-2 max-w-md mx-auto">Your verified reviews will appear here after you rate delivered products. Start with the items waiting in your review queue.</p>
+                            <a asp-page="/Public/User/Profile"
+                               asp-route-tab="orders"
+                               asp-route-orderStatus="to_review"
+                               class="review-primary-button mt-8">
+                                Review Delivered Items
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+            else if (Model.ActiveTab == "messages")
+            {
+                <div class="min-w-0">
+                    <partial name="/Pages/Shared/_ChatInboxLayout.cshtml" model="Model.MessagesInbox" />
                 </div>
             }
             else if (Model.ActiveTab == "password")
@@ -366,8 +595,17 @@
     </div>
 </div>
 
-<style>
-    .material-symbols-outlined.filled {
-        font-variation-settings: 'FILL' 1;
+@section Styles {
+    <partial name="/Pages/Shared/_ReviewUiStyles.cshtml" />
+    @if (Model.ActiveTab == "messages")
+    {
+        <partial name="/Pages/Shared/_ChatInboxStyles.cshtml" />
     }
-</style>
+}
+
+@section Scripts {
+    @if (Model.ActiveTab == "messages")
+    {
+        <partial name="/Pages/Shared/_ChatInboxScripts.cshtml" />
+    }
+}

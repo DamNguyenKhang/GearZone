@@ -611,6 +611,9 @@ namespace GearZone.Infrastructure.Migrations
                     b.Property<bool>("IsRead")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("SenderUserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -625,6 +628,10 @@ namespace GearZone.Infrastructure.Migrations
                     b.HasIndex("SenderUserId");
 
                     b.HasIndex("SentAt");
+
+                    b.HasIndex("ConversationId", "SentAt");
+
+                    b.HasIndex("ConversationId", "IsRead", "SentAt");
 
                     b.ToTable("ChatMessages", (string)null);
                 });
@@ -1207,6 +1214,71 @@ namespace GearZone.Infrastructure.Migrations
                     b.ToTable("ProductImages", (string)null);
                 });
 
+            modelBuilder.Entity("GearZone.Domain.Entities.ProductReview", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BuyerUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<Guid>("OrderItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("SellerReplyAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SellerReplyContent")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("SellerReplyUpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderItemId")
+                        .IsUnique();
+
+                    b.HasIndex("BuyerUserId", "CreatedAt");
+
+                    b.HasIndex("ProductId", "CreatedAt");
+
+                    b.HasIndex("StoreId", "CreatedAt");
+
+                    b.ToTable("ProductReviews", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ProductReviews_Rating", "[Rating] >= 1 AND [Rating] <= 5");
+                        });
+                });
+
             modelBuilder.Entity("GearZone.Domain.Entities.ProductVariant", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1419,6 +1491,9 @@ namespace GearZone.Infrastructure.Migrations
                         .HasColumnType("decimal(5,2)");
 
                     b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeliveredAt")
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("NetAmount")
@@ -2296,6 +2371,41 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("GearZone.Domain.Entities.ProductReview", b =>
+                {
+                    b.HasOne("GearZone.Domain.Entities.ApplicationUser", "BuyerUser")
+                        .WithMany("Reviews")
+                        .HasForeignKey("BuyerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GearZone.Domain.Entities.OrderItem", "OrderItem")
+                        .WithOne("Review")
+                        .HasForeignKey("GearZone.Domain.Entities.ProductReview", "OrderItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GearZone.Domain.Entities.Product", "Product")
+                        .WithMany("Reviews")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GearZone.Domain.Entities.Store", "Store")
+                        .WithMany()
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BuyerUser");
+
+                    b.Navigation("OrderItem");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Store");
+                });
+
             modelBuilder.Entity("GearZone.Domain.Entities.ProductVariant", b =>
                 {
                     b.HasOne("GearZone.Domain.Entities.Product", "Product")
@@ -2512,6 +2622,8 @@ namespace GearZone.Infrastructure.Migrations
 
                     b.Navigation("OwnedStores");
 
+                    b.Navigation("Reviews");
+
                     b.Navigation("StoreFollows");
                 });
 
@@ -2558,6 +2670,11 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("SubOrders");
                 });
 
+            modelBuilder.Entity("GearZone.Domain.Entities.OrderItem", b =>
+                {
+                    b.Navigation("Review");
+                });
+
             modelBuilder.Entity("GearZone.Domain.Entities.PayoutBatch", b =>
                 {
                     b.Navigation("Transactions");
@@ -2573,6 +2690,8 @@ namespace GearZone.Infrastructure.Migrations
                     b.Navigation("AttributeValues");
 
                     b.Navigation("Images");
+
+                    b.Navigation("Reviews");
 
                     b.Navigation("Variants");
                 });

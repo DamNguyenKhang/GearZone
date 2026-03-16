@@ -19,6 +19,7 @@ namespace GearZone.Domain.Entities
         public decimal NetAmount { get; set; }
 
         public DateTime CreatedAt { get; set; }
+        public DateTime? DeliveredAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 
         // Navigation

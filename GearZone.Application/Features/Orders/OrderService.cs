@@ -45,7 +45,14 @@ namespace GearZone.Application.Features.Orders
             List<CartItem> cartItems,
             CancellationToken ct = default)
         {
-            var shippingAddressStr = request.ShippingInfo.Address;
+            var addressParts = new List<string?> 
+            { 
+                request.ShippingInfo.Address, 
+                request.ShippingInfo.Ward, 
+                request.ShippingInfo.District, 
+                request.ShippingInfo.Province 
+            };
+            var shippingAddressStr = string.Join(", ", addressParts.Where(s => !string.IsNullOrWhiteSpace(s)));
 
             var storeGroups = cartItems.GroupBy(ci => ci.Variant.Product.StoreId).ToList();
 

@@ -35,6 +35,8 @@ namespace GearZone.Web.Pages.Checkout
         }
 
         public string? GoongApiKey => _configuration["GOONG_API_KEY"];
+        public string? GoongMapKey => _configuration["GOONG_MAP_KEY"];
+        public string? MapBoxStyle => _configuration["MAPBOX_STYLE"]; // Fallback if needed
 
         [BindProperty(SupportsGet = true)]
         public List<Guid> SelectedCartItemIds { get; set; } = new();
@@ -79,7 +81,12 @@ namespace GearZone.Web.Pages.Checkout
                 FullName = defaultAddress?.FullName ?? CurrentUser.FullName ?? string.Empty,
                 PhoneNumber = defaultAddress?.PhoneNumber ?? CurrentUser.PhoneNumber ?? string.Empty,
                 EmailAddress = CurrentUser.Email ?? string.Empty,
-                Address = defaultAddress?.AddressLine ?? string.Empty
+                Address = defaultAddress?.AddressLine ?? string.Empty,
+                Ward = defaultAddress?.Ward,
+                District = defaultAddress?.District,
+                Province = defaultAddress?.Province,
+                Latitude = defaultAddress?.Latitude ?? 0,
+                Longitude = defaultAddress?.Longitude ?? 0
             };
             CheckoutRequest.CartItemIds = SelectedCartItemIds;
 
@@ -122,6 +129,35 @@ namespace GearZone.Web.Pages.Checkout
 
             // If COD: redirect to success page
             return RedirectToPage("./Success", new { orderId = result.OrderId });
+        }
+
+        public async Task<IActionResult> OnPostAddNewAddressAsync([FromBody] CreateUserAddressDto request)
+        {
+            Console.WriteLine("DEBUG: OnPostAddNewAddressAsync called");
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+
+            // Clear page-level validation errors for the AJAX call
+            ModelState.Clear();
+            if (!TryValidateModel(request))
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                Console.WriteLine($"DEBUG: ModelState Invalid: {string.Join(", ", errors)}");
+                return BadRequest(new { errors = errors });
+            }
+
+            try 
+            {
+                var addressId = await _userService.AddAddressAsync(userId, request);
+                var address = await _userService.GetAddressByIdAsync(addressId, userId);
+                Console.WriteLine("DEBUG: Address saved successfully");
+                return new JsonResult(new { success = true, address = address });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"DEBUG: Exception saving address: {ex.Message}");
+                return StatusCode(500, new { message = "Error saving to database", detail = ex.Message });
+            }
         }
     }
 }

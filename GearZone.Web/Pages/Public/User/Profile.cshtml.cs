@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using System.Security.Claims;
+using GearZone.Application.Features.User.Dtos;
 
 namespace GearZone.Web.Pages.Public.User
 {
@@ -21,19 +22,28 @@ namespace GearZone.Web.Pages.Public.User
         private readonly IOrderService _orderService;
         private readonly IProductReviewService _productReviewService;
         private readonly BuyerInboxComposer _buyerInboxComposer;
+        private readonly IUserService _userService;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<ProfileModel> _logger;
 
         public ProfileModel(
             IAuthService authService,
             ISellerStoreService sellerStoreService,
             IOrderService orderService,
             IProductReviewService productReviewService,
-            BuyerInboxComposer buyerInboxComposer)
+            BuyerInboxComposer buyerInboxComposer,
+            IUserService userService,
+            IConfiguration configuration,
+            ILogger<ProfileModel> logger)
         {
             _authService = authService;
             _sellerStoreService = sellerStoreService;
             _orderService = orderService;
             _productReviewService = productReviewService;
             _buyerInboxComposer = buyerInboxComposer;
+            _userService = userService;
+            _configuration = configuration;
+            _logger = logger;
         }
 
         public UserDto? CurrentUser { get; set; }
@@ -43,6 +53,15 @@ namespace GearZone.Web.Pages.Public.User
         public UserOrderStatusSummaryDto OrderStatusSummary { get; set; } = new();
         public PagedResult<MyReviewDto> Reviews { get; set; } = new();
         public ChatInboxPageViewModel MessagesInbox { get; set; } = new();
+        public IEnumerable<UserAddressDto> UserAddresses { get; set; } = new List<UserAddressDto>();
+
+        [BindProperty]
+        public CreateUserAddressDto AddressInput { get; set; } = new();
+
+        [BindProperty]
+        public Guid? EditingAddressId { get; set; }
+
+        public string GoongMapKey => _configuration["GOONG_MAP_KEY"] ?? "";
 
         [BindProperty(SupportsGet = true)]
         public string OrderStatus { get; set; } = "all";
@@ -98,6 +117,10 @@ namespace GearZone.Web.Pages.Public.User
             {
                 OrderStatusSummary = await _orderService.GetUserOrderStatusSummaryAsync(CurrentUser.Id);
                 Reviews = await _productReviewService.GetMyReviewsAsync(CurrentUser.Id, ReviewPage, 6);
+            }
+            else if (ActiveTab == "addresses")
+            {
+                UserAddresses = await _userService.GetUserAddressesAsync(CurrentUser.Id);
             }
             else if (ActiveTab == "messages")
             {
@@ -180,6 +203,98 @@ namespace GearZone.Web.Pages.Public.User
                 ViewName = "/Pages/Shared/_ChatThreadPane.cshtml",
                 ViewData = new ViewDataDictionary<ChatThreadPaneViewModel>(ViewData, _buyerInboxComposer.BuildThreadPaneViewModel(userId, thread, false, true))
             };
+        }
+
+        public async Task<IActionResult> OnPostAddUpdateAddressAsync()
+        {
+            CurrentUser = await _authService.GetUserAsync(User);
+            if (CurrentUser == null) return Unauthorized();
+
+            try
+            {
+                // Ensure FullName and PhoneNumber are not empty (required by DB)
+                if (string.IsNullOrWhiteSpace(AddressInput.FullName))
+                    AddressInput.FullName = CurrentUser.FullName ?? CurrentUser.UserName ?? "User";
+                if (string.IsNullOrWhiteSpace(AddressInput.PhoneNumber))
+                    AddressInput.PhoneNumber = CurrentUser.PhoneNumber ?? "0000000000";
+
+                if (EditingAddressId.HasValue && EditingAddressId != Guid.Empty)
+                {
+                    await _userService.UpdateAddressAsync(CurrentUser.Id, new UpdateUserAddressDto
+                    {
+                        Id = EditingAddressId.Value,
+                        FullName = AddressInput.FullName,
+                        PhoneNumber = AddressInput.PhoneNumber,
+                        AddressLine = AddressInput.AddressLine,
+                        Ward = AddressInput.Ward,
+                        District = AddressInput.District,
+                        Province = AddressInput.Province,
+                        Latitude = AddressInput.Latitude,
+                        Longitude = AddressInput.Longitude,
+                        AddressType = AddressInput.AddressType,
+                        IsDefault = AddressInput.IsDefault
+                    });
+                    TempData["SuccessMessage"] = "Address updated successfully.";
+                }
+                else
+                {
+                    await _userService.AddAddressAsync(CurrentUser.Id, AddressInput);
+                    TempData["SuccessMessage"] = "Address added successfully.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
+            return RedirectToPage(new { tab = "addresses" });
+        }
+
+        public async Task<IActionResult> OnPostDeleteAddressAsync(Guid addressId)
+        {
+            CurrentUser = await _authService.GetUserAsync(User);
+            if (CurrentUser == null) return Unauthorized();
+
+            try
+            {
+                await _userService.DeleteAddressAsync(addressId, CurrentUser.Id);
+                TempData["SuccessMessage"] = "Address deleted successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
+            return RedirectToPage(new { tab = "addresses" });
+        }
+
+        public async Task<IActionResult> OnPostSetDefaultAddressAsync(Guid addressId)
+        {
+            CurrentUser = await _authService.GetUserAsync(User);
+            if (CurrentUser == null) return Unauthorized();
+
+            try
+            {
+                await _userService.SetDefaultAddressAsync(addressId, CurrentUser.Id);
+                TempData["SuccessMessage"] = "Default address updated.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
+            return RedirectToPage(new { tab = "addresses" });
+        }
+
+        public async Task<IActionResult> OnGetAddressJsonAsync(Guid addressId)
+        {
+            CurrentUser = await _authService.GetUserAsync(User);
+            if (CurrentUser == null) return Unauthorized();
+
+            var address = await _userService.GetAddressByIdAsync(addressId, CurrentUser.Id);
+            if (address == null) return NotFound();
+
+            return new JsonResult(address);
         }
 
         private string GetMessagesBasePath()

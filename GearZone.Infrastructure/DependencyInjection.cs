@@ -1,3 +1,4 @@
+using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Abstractions.External;
 using GearZone.Application.Abstractions.Persistence;
 using GearZone.Infrastructure.External;
@@ -38,6 +39,7 @@ namespace GearZone.Infrastructure
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IFileStorageService, CloudinaryStorageService>();
             services.AddScoped<IEmailService, SmtpEmailService>();
+            services.AddHttpClient<IGoongService, GoongService>();
             services.AddScoped<IPaymentStrategy, PayOSPaymentStrategy>();
             services.AddScoped<IBrandRepository, BrandRepository>();
             services.AddScoped<ICategoryAttributeRepository, CategoryAttributeRepository>();
@@ -68,6 +70,7 @@ namespace GearZone.Infrastructure
             services.AddScoped<IWalletTransactionRepository, WalletTransactionRepository>();
             services.AddScoped<IPlatformTransactionRepository, PlatformTransactionRepository>();
             services.AddScoped<IVoucherRepository, VoucherRepository>();
+            services.AddScoped<IUserAddressRepository, UserAddressRepository>();
 
             // Jobs
             services.AddScoped<PayoutBatchJob>();

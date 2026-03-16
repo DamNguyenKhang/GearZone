@@ -111,14 +111,33 @@
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Địa chỉ <span class="text-red-500">*</span></label>
-                    <input asp-for="Step1Input.AddressLine" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all" required placeholder="Số nhà, tên đường, phường/xã" />
+                <div class="relative">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Địa chỉ đầy đủ <span class="text-red-500">*</span></label>
+                    <input asp-for="Step1Input.AddressLine" id="addressInput" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all" required placeholder="Số nhà, tên đường, phường/xã, quận/huyện" autocomplete="off" />
+                    <!-- Autocomplete Suggestions -->
+                    <div id="autocomplete-results" class="absolute z-[1000] left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-xl hidden max-h-60 overflow-y-auto">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Phường / Xã</label>
+                        <input id="wardInput" class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none transition-all" readonly placeholder="Phường/Xã" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Quận / Huyện</label>
+                        <input id="districtInput" class="block w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none transition-all" readonly placeholder="Quận/Huyện" />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1.5">Tỉnh / Thành phố <span class="text-red-500">*</span></label>
+                        <input asp-for="Step1Input.Province" id="provinceInput" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all" required placeholder="Tỉnh/Thành phố" />
+                    </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Tỉnh / Thành phố <span class="text-red-500">*</span></label>
-                    <input asp-for="Step1Input.Province" class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all" required placeholder="VD: Hồ Chí Minh" />
+                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Bản đồ vị trí</label>
+                    <div id="map" class="w-full h-[300px] rounded-xl border border-gray-200 shadow-inner"></div>
+                    <p class="text-[10px] text-gray-400 mt-1 italic">* Di chuyển bản đồ hoặc chọn địa chỉ từ gợi ý để ghim vị trí chính xác.</p>
                 </div>
 
                 <div class="flex justify-end pt-4 border-t border-gray-100">
@@ -390,87 +409,163 @@
 </div>
 
 @section Scripts {
+    <link href="https://cdn.jsdelivr.net/npm/@@goongmaps/goong-js/dist/goong-js.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@@goongmaps/goong-js/dist/goong-js.js"></script>
     <script>
+        // Goong Map Initialization
+        let map, marker;
+        const mapKey = '@Model.GoongMapKey';
+        const addressInput = document.getElementById('addressInput');
+        const wardInput = document.getElementById('wardInput');
+        const districtInput = document.getElementById('districtInput');
+        const provinceInput = document.getElementById('provinceInput');
+        const autocompleteResults = document.getElementById('autocomplete-results');
+
+        const initMap = () => {
+            if (!document.getElementById('map')) return;
+
+            goongjs.accessToken = mapKey;
+            map = new goongjs.Map({
+                container: 'map',
+                style: 'https://tiles.goong.io/assets/goong_map_web.json',
+                center: [105.83991, 21.02800], // Default: Hanoi
+                zoom: 13
+            });
+
+            marker = new goongjs.Marker()
+                .setLngLat([105.83991, 21.02800])
+                .addTo(map);
+
+            map.on('click', (e) => {
+                const { lng, lat } = e.lngLat;
+                marker.setLngLat([lng, lat]);
+            });
+        };
+
+        // Autocomplete Logic
+        let debounceTimer;
+        if (addressInput) {
+            addressInput.addEventListener('input', () => {
+                clearTimeout(debounceTimer);
+                const query = addressInput.value.trim();
+                
+                if (query.length < 2) {
+                    autocompleteResults.classList.add('hidden');
+                    return;
+                }
+
+                debounceTimer = setTimeout(async () => {
+                    try {
+                        const response = await fetch(`/api/maps/autocomplete?input=${encodeURIComponent(query)}`);
+                        const data = await response.json();
+
+                        if (data && data.predictions && data.predictions.length > 0) {
+                            renderSuggestions(data.predictions);
+                        } else {
+                            autocompleteResults.classList.add('hidden');
+                        }
+                    } catch (err) {
+                        console.error('Autocomplete error:', err);
+                    }
+                }, 300);
+            });
+        }
+
+        const renderSuggestions = (predictions) => {
+            autocompleteResults.innerHTML = '';
+            predictions.forEach(p => {
+                const div = document.createElement('div');
+                div.className = 'px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0 transition-colors';
+                div.innerHTML = `
+                    <div class="font-semibold text-sm text-gray-800">${p.structured_formatting.main_text}</div>
+                    <div class="text-xs text-gray-500">${p.structured_formatting.secondary_text}</div>
+                `;
+                div.onclick = () => selectSuggestion(p);
+                autocompleteResults.appendChild(div);
+            });
+            autocompleteResults.classList.remove('hidden');
+        };
+
+        const selectSuggestion = async (prediction) => {
+            autocompleteResults.classList.add('hidden');
+
+            try {
+                const response = await fetch(`/api/maps/place-detail?placeId=${prediction.place_id}`);
+                const data = await response.json();
+
+                if (data) {
+                    // Update Map
+                    map.flyTo({ center: [data.lng, data.lat], zoom: 16 });
+                    marker.setLngLat([data.lng, data.lat]);
+
+                    const addrInput = document.getElementById('addressInput');
+                    const wInput = document.getElementById('wardInput');
+                    const dInput = document.getElementById('districtInput');
+                    const pInput = document.getElementById('provinceInput');
+
+                    if (addrInput) addrInput.value = data.fullAddress;
+                    if (wInput) wInput.value = data.ward || '';
+                    if (dInput) dInput.value = data.district || '';
+                    if (pInput) pInput.value = data.province || '';
+
+                    console.log('Filled data from backend unit:', data);
+                }
+            } catch (err) {
+                console.error('Place detail error:', err);
+            }
+        };
+
+        // Close suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (autocompleteResults && !autocompleteResults.contains(e.target) && e.target !== addressInput) {
+                autocompleteResults.classList.add('hidden');
+            }
+        });
+
+        // Existing Bank Logic
         const bankSelect = document.getElementById('bankSelect');
         const bankBinInput = document.getElementById('bankBinInput');
 
         const syncBankBin = () => {
-            if (!bankSelect || !bankBinInput) {
-                return;
-            }
-
+            if (!bankSelect || !bankBinInput) return;
             const selectedOption = bankSelect.options[bankSelect.selectedIndex];
             bankBinInput.value = selectedOption?.dataset?.bin ?? '';
         };
 
         const loadBanks = async () => {
-            if (!bankSelect) {
-                return;
-            }
-
+            if (!bankSelect) return;
             const selectedBank = bankSelect.value;
-
             try {
-                const response = await fetch('/api/banks', {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Unable to load banks');
-                }
-
+                const response = await fetch('/api/banks');
                 const banks = await response.json();
-                if (!Array.isArray(banks)) {
-                    throw new Error('Invalid bank payload');
-                }
-
-                bankSelect.innerHTML = '';
-
-                const placeholder = document.createElement('option');
-                placeholder.value = '';
-                placeholder.textContent = '— Chọn ngân hàng —';
-                bankSelect.appendChild(placeholder);
-
-                for (const bank of banks) {
-                    if (!bank?.name) {
-                        continue;
-                    }
-
+                bankSelect.innerHTML = '<option value="">— Chọn ngân hàng —</option>';
+                banks.forEach(bank => {
                     const option = document.createElement('option');
                     option.value = bank.name;
-
-                    const shortName = typeof bank.shortName === 'string' ? bank.shortName.trim() : '';
-                    option.textContent = shortName && shortName !== bank.name
-                        ? `${bank.name} (${shortName})`
-                        : bank.name;
-
+                    option.textContent = bank.shortName ? `${bank.name} (${bank.shortName})` : bank.name;
                     option.dataset.bin = bank.bin ?? '';
                     bankSelect.appendChild(option);
-                }
-
-                if (selectedBank) {
-                    bankSelect.value = selectedBank;
-                }
-            } catch {
-                // Keep fallback options if API call fails.
-            }
-
+                });
+                if (selectedBank) bankSelect.value = selectedBank;
+            } catch {}
             syncBankBin();
         };
 
-        if (bankSelect && bankBinInput) {
-            bankSelect.addEventListener('change', syncBankBin);
-            loadBanks();
-        }
+        const init = () => {
+            initMap();
+            if (bankSelect) {
+                bankSelect.addEventListener('change', syncBankBin);
+                loadBanks();
+            }
+            const checkbox = document.getElementById('agreeTerms');
+            const submitBtn = document.getElementById('submitBtn');
+            if (checkbox && submitBtn) {
+                checkbox.addEventListener('change', function () {
+                    submitBtn.disabled = !this.checked;
+                });
+            }
+        };
 
-        // Enable/disable submit button based on checkbox
-        const checkbox = document.getElementById('agreeTerms');
-        const submitBtn = document.getElementById('submitBtn');
-        if (checkbox && submitBtn) {
-            checkbox.addEventListener('change', function () {
-                submitBtn.disabled = !this.checked;
-            });
-        }
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 }

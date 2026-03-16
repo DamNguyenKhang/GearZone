@@ -393,12 +393,12 @@
                                         
                                         @if (product.Status == "Pending")
                                         {
-                                            <form method="post" asp-page-handler="Approve" asp-route-id="@product.Id" class="inline">
+                                            <form method="post" asp-page-handler="Approve" asp-route-id="@product.Id" class="inline" onsubmit="event.preventDefault(); confirmAction(this, 'Approve', 'check_circle', 'bg-emerald-100 text-emerald-600', 'bg-emerald-600')">
                                                 <button type="submit" class="text-slate-400 hover:text-green-600 transition-colors p-1.5 rounded-lg hover:bg-green-50" title="Approve Product">
                                                     <span class="material-symbols-outlined text-[20px]">check_circle</span>
                                                 </button>
                                             </form>
-                                            <form method="post" asp-page-handler="Reject" asp-route-id="@product.Id" class="inline" onsubmit="return confirm('Reject this product?')">
+                                            <form method="post" asp-page-handler="Reject" asp-route-id="@product.Id" class="inline" onsubmit="event.preventDefault(); confirmAction(this, 'Reject', 'cancel', 'bg-red-100 text-red-600', 'bg-red-600')">
                                                 <button type="submit" class="text-slate-400 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50" title="Reject Product">
                                                     <span class="material-symbols-outlined text-[20px]">cancel</span>
                                                 </button>
@@ -745,22 +745,45 @@
 
             // Expose a function to handle bulk actions
             window.handleBulkAction = function(action) {
-                if (!confirm(`Are you sure you want to ${action} the selected products?`)) return;
+                const actionTitle = action.charAt(0).toUpperCase() + action.slice(1);
+                const isNasty = action === 'Reject' || action === 'inactive';
                 
-                bulkActionType.value = action;
-                bulkActionInputs.innerHTML = '';
-                
-                const checkedBoxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
-                checkedBoxes.forEach(cb => {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'productIds';
-                    input.value = cb.value;
-                    bulkActionInputs.appendChild(input);
+                window.showConfirmModal({
+                    title: `${actionTitle} Selected?`,
+                    message: `Are you sure you want to ${action.toLowerCase()} the selected products?`,
+                    confirmText: actionTitle,
+                    confirmClass: isNasty ? 'bg-red-600' : 'bg-emerald-600',
+                    icon: action === 'Approve' ? 'check_circle' : (action === 'Reject' ? 'cancel' : 'block'),
+                    iconClass: isNasty ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600',
+                    onConfirm: () => {
+                        bulkActionType.value = action;
+                        bulkActionInputs.innerHTML = '';
+                        
+                        const checkedBoxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
+                        checkedBoxes.forEach(cb => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'productIds';
+                            input.value = cb.value;
+                            bulkActionInputs.appendChild(input);
+                        });
+                        
+                        bulkActionForm.submit();
+                    }
                 });
-                
-                bulkActionForm.submit();
             };
+
+            window.confirmAction = function(form, action, icon, iconClass, btnClass) {
+                window.showConfirmModal({
+                    title: `${action} Product?`,
+                    message: `Are you sure you want to ${action.toLowerCase()} this product?`,
+                    confirmText: action,
+                    confirmClass: btnClass,
+                    icon: icon,
+                    iconClass: iconClass,
+                    onConfirm: () => form.submit()
+                });
+            }
 
             function updateSelection() {
                 const checkedBoxes = Array.from(rowCheckboxes).filter(cb => cb.checked);

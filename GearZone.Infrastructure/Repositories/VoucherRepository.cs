@@ -63,7 +63,8 @@ namespace GearZone.Infrastructure.Repositories
 
             if (query.EndDate.HasValue)
             {
-                baseQuery = baseQuery.Where(v => v.EndAt <= query.EndDate.Value);
+                var endOfDay = query.EndDate.Value.Date.AddDays(1).AddTicks(-1);
+                baseQuery = baseQuery.Where(v => v.EndAt <= endOfDay);
             }
 
             var totalCount = await baseQuery.CountAsync();
@@ -149,7 +150,8 @@ namespace GearZone.Infrastructure.Repositories
 
             if (query.EndDate.HasValue)
             {
-                baseQuery = baseQuery.Where(v => v.EndAt <= query.EndDate.Value);
+                var endOfDay = query.EndDate.Value.Date.AddDays(1).AddTicks(-1);
+                baseQuery = baseQuery.Where(v => v.EndAt <= endOfDay);
             }
 
             var totalCount = await baseQuery.CountAsync();

@@ -175,5 +175,27 @@ namespace GearZone.Web.Pages.Admin.Products
 
             return RedirectToPage(new { Query.SearchTerm, Query.Status, Query.CategoryId, Query.BrandId, Query.StoreId, Query.PageNumber, DateRangeShortcut, DateRange });
         }
+
+        public async Task<IActionResult> OnPostApproveAsync(Guid id)
+        {
+            var success = await _productService.BulkUpdateStatusAsync(new List<Guid> { id }, ProductStatus.Active);
+            if (success)
+                TempData["SuccessMessage"] = "Product approved successfully.";
+            else
+                TempData["ErrorMessage"] = "Failed to approve product.";
+
+            return RedirectToPage(new { Query.SearchTerm, Query.Status, Query.CategoryId, Query.BrandId, Query.StoreId, Query.PageNumber, DateRangeShortcut, DateRange });
+        }
+
+        public async Task<IActionResult> OnPostRejectAsync(Guid id)
+        {
+            var success = await _productService.BulkUpdateStatusAsync(new List<Guid> { id }, ProductStatus.Rejected);
+            if (success)
+                TempData["SuccessMessage"] = "Product rejected.";
+            else
+                TempData["ErrorMessage"] = "Failed to reject product.";
+
+            return RedirectToPage(new { Query.SearchTerm, Query.Status, Query.CategoryId, Query.BrandId, Query.StoreId, Query.PageNumber, DateRangeShortcut, DateRange });
+        }
     }
 }

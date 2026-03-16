@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Admin.Dtos;
+using GearZone.Domain.Enums;
 
 namespace GearZone.Web.Pages.Admin.Products
 {
@@ -33,6 +34,28 @@ namespace GearZone.Web.Pages.Admin.Products
 
             Product = product;
             return Page();
+        }
+
+        public async Task<IActionResult> OnPostApproveAsync(Guid id)
+        {
+            var success = await _productService.BulkUpdateStatusAsync(new List<Guid> { id }, ProductStatus.Active);
+            if (success)
+                TempData["SuccessMessage"] = "Product approved successfully.";
+            else
+                TempData["ErrorMessage"] = "Failed to approve product.";
+
+            return RedirectToPage(new { id });
+        }
+
+        public async Task<IActionResult> OnPostRejectAsync(Guid id)
+        {
+            var success = await _productService.BulkUpdateStatusAsync(new List<Guid> { id }, ProductStatus.Rejected);
+            if (success)
+                TempData["SuccessMessage"] = "Product rejected.";
+            else
+                TempData["ErrorMessage"] = "Failed to reject product.";
+
+            return RedirectToPage(new { id });
         }
     }
 }

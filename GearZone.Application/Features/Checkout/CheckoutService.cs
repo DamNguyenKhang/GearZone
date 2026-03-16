@@ -1,7 +1,6 @@
 using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Checkout.Dtos;
-<<<<<<< HEAD
 using GearZone.Application.Features.Payment;
 using GearZone.Domain.Entities;
 using GearZone.Domain.Enums;
@@ -9,11 +8,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-=======
-using GearZone.Domain.Entities;
-using Microsoft.AspNetCore.Identity;
-using System;
->>>>>>> b1f554fccf634aaff47f8754e83cb1481130efe5
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,11 +22,8 @@ namespace GearZone.Application.Features.Checkout
         private readonly ICartService _cartService;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUnitOfWork _unitOfWork;
-<<<<<<< HEAD
         private readonly PaymentStrategyFactory _paymentStrategyFactory;
         private readonly IBackgroundJobService _backgroundJobService;
-=======
->>>>>>> b1f554fccf634aaff47f8754e83cb1481130efe5
 
         public CheckoutService(
             ICartItemRepository cartItemRepository,
@@ -40,13 +31,9 @@ namespace GearZone.Application.Features.Checkout
             IOrderService orderService,
             ICartService cartService,
             UserManager<ApplicationUser> userManager,
-<<<<<<< HEAD
             IUnitOfWork unitOfWork,
             PaymentStrategyFactory paymentStrategyFactory,
             IBackgroundJobService backgroundJobService)
-=======
-            IUnitOfWork unitOfWork)
->>>>>>> b1f554fccf634aaff47f8754e83cb1481130efe5
         {
             _cartItemRepository = cartItemRepository;
             _productVariantRepository = productVariantRepository;
@@ -54,11 +41,8 @@ namespace GearZone.Application.Features.Checkout
             _cartService = cartService;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
-<<<<<<< HEAD
             _paymentStrategyFactory = paymentStrategyFactory;
             _backgroundJobService = backgroundJobService;
-=======
->>>>>>> b1f554fccf634aaff47f8754e83cb1481130efe5
         }
 
         public async Task<CheckoutResponseDto> ProcessCheckoutAsync(
@@ -74,22 +58,14 @@ namespace GearZone.Application.Features.Checkout
             if (user == null)
                 return new CheckoutResponseDto { Success = false, ErrorMessage = "User not found." };
 
-<<<<<<< HEAD
             // 2. Fetch cart items
-=======
-            // 2. Lấy cart items (EF query nằm hoàn toàn trong repository)
->>>>>>> b1f554fccf634aaff47f8754e83cb1481130efe5
             var cartItems = await _cartItemRepository.GetCartItemsForCheckoutAsync(
                 request.CartItemIds, userId, ct);
 
             if (cartItems.Count != request.CartItemIds.Count)
                 return new CheckoutResponseDto { Success = false, ErrorMessage = "One or more invalid cart items selected." };
 
-<<<<<<< HEAD
             // 3. Validate stock & deduct
-=======
-            // 3. Kiểm tra và trừ tồn kho
->>>>>>> b1f554fccf634aaff47f8754e83cb1481130efe5
             foreach (var cartItem in cartItems)
             {
                 if (cartItem.Variant.StockQuantity < cartItem.Quantity)
@@ -103,7 +79,6 @@ namespace GearZone.Application.Features.Checkout
                 await _productVariantRepository.UpdateAsync(cartItem.Variant);
             }
 
-<<<<<<< HEAD
             // 4. Create order (status depends on payment method)
             var order = await _orderService.CreateOrderAsync(userId, request, cartItems, ct);
 
@@ -124,15 +99,6 @@ namespace GearZone.Application.Features.Checkout
             await _cartService.ClearCartItemsAsync(request.CartItemIds, ct);
 
             // 7. Save address if requested
-=======
-            // 4. Tạo order (logic nằm trong OrderService)
-            var order = await _orderService.CreateOrderAsync(userId, request, cartItems, ct);
-
-            // 5. Xóa các cart items đã checkout (logic nằm trong CartService)
-            await _cartService.ClearCartItemsAsync(request.CartItemIds, ct);
-
-            // 6. Lưu địa chỉ nếu người dùng yêu cầu
->>>>>>> b1f554fccf634aaff47f8754e83cb1481130efe5
             if (request.SaveAddress)
             {
                 user.FullName = request.ShippingInfo.FullName;
@@ -141,7 +107,6 @@ namespace GearZone.Application.Features.Checkout
                 await _userManager.UpdateAsync(user);
             }
 
-<<<<<<< HEAD
             // 8. Persist all changes
             await _unitOfWork.SaveChangesAsync(ct);
 
@@ -151,16 +116,10 @@ namespace GearZone.Application.Features.Checkout
                 _backgroundJobService.SchedulePaymentTimeout(order.Id, TimeSpan.FromMinutes(15));
             }
 
-=======
-            // 7. Persist toàn bộ thay đổi trong một transaction
-            await _unitOfWork.SaveChangesAsync(ct);
-
->>>>>>> b1f554fccf634aaff47f8754e83cb1481130efe5
             return new CheckoutResponseDto
             {
                 Success = true,
                 OrderId = order.Id,
-<<<<<<< HEAD
                 OrderCode = order.OrderCode.ToString(),
                 CheckoutUrl = paymentResult.CheckoutUrl  // null for COD, URL for PayOS
             };
@@ -181,10 +140,5 @@ namespace GearZone.Application.Features.Checkout
                 .Where(ci => cartItemIds.Contains(ci.Id) && ci.Cart.UserId == userId)
                 .ToListAsync(ct);
         }
-=======
-                OrderCode = order.OrderCode.ToString()
-            };
-        }
->>>>>>> b1f554fccf634aaff47f8754e83cb1481130efe5
     }
 }

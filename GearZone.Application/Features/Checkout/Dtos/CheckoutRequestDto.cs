@@ -10,6 +10,7 @@ namespace GearZone.Application.Features.Checkout.Dtos
         public ShippingInfoDto ShippingInfo { get; set; } = null!;
         public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.COD;
         public bool SaveAddress { get; set; }
+        public bool IsDefaultAddress { get; set; }
     }
 
     public class ShippingInfoDto
@@ -18,6 +19,12 @@ namespace GearZone.Application.Features.Checkout.Dtos
         public string PhoneNumber { get; set; } = null!;
         public string EmailAddress { get; set; } = null!;
         public string Address { get; set; } = null!;
+        public string? Ward { get; set; }
+        public string? District { get; set; }
+        public string? Province { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+        public AddressType AddressType { get; set; } = AddressType.Home;
     }
 
     public class CheckoutResponseDto

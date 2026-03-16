@@ -150,14 +150,15 @@ namespace GearZone.Web.Pages.Public.User
                     ProductSlug = ProductSlug,
                     SelectedConversationId = ConversationId,
                     IncludeThread = true,
-                    IsAccountCenterSurface = true
+                    IsAccountCenterSurface = true,
+                    LoadedConversationPageCount = 1
                 });
             }
 
             return Page();
         }
 
-        public async Task<IActionResult> OnGetConversationListAsync(Guid? conversationId)
+        public async Task<IActionResult> OnGetConversationListAsync(Guid? conversationId, int loadedConversationPageCount = 1)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrWhiteSpace(userId))
@@ -174,7 +175,8 @@ namespace GearZone.Web.Pages.Public.User
                 ProductSlug = ProductSlug,
                 SelectedConversationId = conversationId,
                 IncludeThread = false,
-                IsAccountCenterSurface = true
+                IsAccountCenterSurface = true,
+                LoadedConversationPageCount = loadedConversationPageCount
             });
 
             return new PartialViewResult

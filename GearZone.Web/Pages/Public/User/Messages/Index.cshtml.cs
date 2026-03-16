@@ -102,7 +102,7 @@ namespace GearZone.Web.Pages.Public.User.Messages
             };
         }
 
-        public async Task<IActionResult> OnGetConversationListAsync(Guid? conversationId, string surface = "page")
+        public async Task<IActionResult> OnGetConversationListAsync(Guid? conversationId, string surface = "page", int loadedConversationPageCount = 1)
         {
             var userId = _userManager.GetUserId(User);
             if (string.IsNullOrWhiteSpace(userId))
@@ -120,7 +120,8 @@ namespace GearZone.Web.Pages.Public.User.Messages
                 ProductSlug = ProductSlug,
                 SelectedConversationId = conversationId,
                 IncludeThread = false,
-                IsWidgetSurface = isWidgetSurface
+                IsWidgetSurface = isWidgetSurface,
+                LoadedConversationPageCount = loadedConversationPageCount
             });
             return new PartialViewResult
             {

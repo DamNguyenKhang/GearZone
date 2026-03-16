@@ -29,6 +29,8 @@
                     counterpartScopeKey: parsed.counterpartScopeKey || '',
                     productSlug: parsed.productSlug || '',
                     launchStoreSlug: parsed.launchStoreSlug || '',
+                    loadedConversationPageCount: Number.parseInt(parsed.loadedConversationPageCount || '1', 10) || 1,
+                    loadedThreadPageCount: Number.parseInt(parsed.loadedThreadPageCount || '1', 10) || 1,
                     mobileView: parsed.mobileView || 'list'
                 };
             } catch (error) {
@@ -41,6 +43,8 @@
                     counterpartScopeKey: '',
                     productSlug: '',
                     launchStoreSlug: '',
+                    loadedConversationPageCount: 1,
+                    loadedThreadPageCount: 1,
                     mobileView: 'list'
                 };
             }
@@ -118,7 +122,11 @@
             drawer.setAttribute('aria-hidden', 'false');
             requestAnimationFrame(() => {
                 host.classList.add('is-open');
+                controller?.scrollActiveThreadToLatest?.();
             });
+            window.setTimeout(() => {
+                controller?.scrollActiveThreadToLatest?.();
+            }, animationDurationMs + 40);
             writeState({ status: 'open' });
         }
 
@@ -235,8 +243,9 @@
                     onUnreadCountChange: setWidgetBadges
                 });
 
-                await controller.init();
                 openDrawer();
+                await controller.init();
+                await controller.scrollActiveThreadToLatest?.();
                 const state = controller.getState();
                 writeState({
                     ...state,
@@ -266,6 +275,7 @@
             }
 
             openDrawer();
+            await controller?.scrollActiveThreadToLatest?.();
             return true;
         }
 

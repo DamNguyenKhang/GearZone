@@ -1,4 +1,4 @@
-@using System.Linq
+﻿@using System.Linq
 @using GearZone.Web.Pages.Shared.Models
 @model ChatThreadPaneViewModel
 @{
@@ -9,6 +9,7 @@
 <div class="chat-thread-panel flex h-full min-h-0 min-w-0 flex-col @(isWidget || Model.IsFullCanvasPage || Model.IsAccountCenterSurface ? "bg-white" : "overflow-hidden rounded-sm border border-[#e8e8e8] bg-white") @(Model.IsFullCanvasPage ? "chat-thread-panel--seller-canvas" : string.Empty) @(Model.IsAccountCenterSurface ? "chat-thread-panel--account" : string.Empty)"
      data-chat-thread-pane
      data-loaded-page-count="@(thread?.LoadedPageCount ?? 1)"
+     data-has-older-messages="@(thread?.HasOlderMessages == true ? "true" : "false")"
      data-conversation-id="@(thread?.ConversationId ?? Guid.Empty)">
     @if (thread == null)
     {
@@ -47,7 +48,7 @@
 
                     <div class="min-w-0">
                         <p class="truncate text-[14px] font-medium text-[#333]">@thread.CounterpartName</p>
-                        <p class="truncate text-[12px] text-[#999]">@(thread.IsSellerView ? "Người mua" : "Đang hoạt động")</p>
+                        <p class="truncate text-[12px] text-[#999]">@(thread.IsSellerView ? "Buyer" : "Active now")</p>
                     </div>
                 </div>
 
@@ -55,7 +56,7 @@
                 {
                     <a href="/store/@thread.StoreSlug"
                        class="inline-flex h-8 items-center justify-center rounded-md border border-[#e5e5e5] px-3 text-[12px] font-medium text-[#666] transition hover:border-[#ee4d2d] hover:text-[#ee4d2d]">
-                        Xem shop
+                        View store
                     </a>
                 }
             </div>
@@ -73,7 +74,7 @@
                     </div>
                     <div class="min-w-0 flex-1">
                         <p class="line-clamp-1 text-[12px] font-medium text-[#333]">@product.ProductName</p>
-                        <p class="mt-0.5 text-[12px] text-[#ee4d2d]">@product.Price.ToString("N0") đ</p>
+                        <p class="mt-0.5 text-[12px] text-[#ee4d2d]">@product.Price.ToString("N0") VND</p>
                     </div>
                 </a>
             </div>
@@ -83,28 +84,16 @@
         {
             <div class="border-b border-[#f2f2f2] bg-[#fafafa] px-4 py-2.5">
                 <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-[11px] font-medium uppercase tracking-[0.08em] text-[#999]">Đơn gần đây</span>
+                    <span class="text-[11px] font-medium uppercase tracking-[0.08em] text-[#999]">Recent orders</span>
                     @foreach (var order in thread.RecentOrders.Take(2))
                     {
                         <span class="inline-flex items-center gap-2 rounded-md border border-[#ececec] bg-white px-2.5 py-1.5 text-[12px] text-[#666]">
                             <span class="font-medium text-[#333]">#@order.OrderCode</span>
                             <span>@order.Status</span>
-                            <span class="font-medium text-[#ee4d2d]">@order.Subtotal.ToString("N0") đ</span>
+                            <span class="font-medium text-[#ee4d2d]">@order.Subtotal.ToString("N0") VND</span>
                         </span>
                     }
                 </div>
-            </div>
-        }
-
-        @if (thread.HasOlderMessages)
-        {
-            <div class="border-b border-[#f2f2f2] bg-white px-4 py-2 text-center">
-                <button type="button"
-                        class="text-[12px] font-medium text-[#ee4d2d] transition hover:opacity-80"
-                        data-chat-load-older
-                        data-next-page-count="@(thread.LoadedPageCount + 1)">
-                    Xem tin nhắn cũ hơn
-                </button>
             </div>
         }
 
@@ -112,8 +101,8 @@
             @if (thread.Messages.Count == 0)
             {
                 <div class="mx-auto mt-10 max-w-sm rounded-md border border-[#ececec] bg-white px-5 py-6 text-center">
-                    <p class="text-[14px] font-medium text-[#333]">Chào mừng bạn đến với GearZone Chat</p>
-                    <p class="mt-2 text-[13px] leading-6 text-[#999]">Gửi tin nhắn đầu tiên để bắt đầu trao đổi với @(thread.IsSellerView ? "người mua" : "shop").</p>
+                    <p class="text-[14px] font-medium text-[#333]">Welcome to GearZone Chat</p>
+                    <p class="mt-2 text-[13px] leading-6 text-[#999]">Send the first message to start chatting with @(thread.IsSellerView ? "the buyer" : "the shop").</p>
                 </div>
             }
             else
@@ -144,7 +133,7 @@
                                 <span>@message.SentAt.ToLocalTime().ToString("HH:mm")</span>
                                 @if (isOwn && message.IsRead)
                                 {
-                                    <span class="font-medium text-[#ee4d2d]">Đã xem</span>
+                                    <span class="font-medium text-[#ee4d2d]">Seen</span>
                                 }
                             </div>
                         </div>
@@ -156,11 +145,11 @@
         <div class="border-t border-[#efefef] bg-white px-4 py-2.5">
             <form class="flex items-end gap-3" data-chat-composer>
                 <div class="flex-1 overflow-hidden rounded-md border border-[#e5e5e5] bg-white">
-                    <label class="sr-only" for="chatComposerInput">Nhập nội dung tin nhắn</label>
+                    <label class="sr-only" for="chatComposerInput">Type your message</label>
                     <textarea id="chatComposerInput"
                               rows="1"
                               maxlength="2000"
-                              placeholder="Nhập nội dung tin nhắn"
+                              placeholder="Type your message"
                               class="chat-composer-input min-h-[2.75rem] max-h-[7.5rem] w-full resize-none overflow-y-auto border-0 px-3 py-2.5 text-[13px] text-[#333] outline-none focus:ring-0"
                               data-chat-input></textarea>
                     <div class="flex items-center justify-between border-t border-[#f3f3f3] px-2.5 py-1.5">
@@ -184,3 +173,4 @@
         </div>
     }
 </div>
+

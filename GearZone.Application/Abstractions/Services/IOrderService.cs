@@ -1,3 +1,5 @@
+using System;
+using GearZone.Domain.Enums;
 using GearZone.Application.Features.Checkout.Dtos;
 using GearZone.Domain.Entities;
 using System.Collections.Generic;
@@ -14,5 +16,10 @@ namespace GearZone.Application.Abstractions.Services
             CheckoutRequestDto request,
             List<CartItem> cartItems,
             CancellationToken ct = default);
+
+        Task<bool> CancelOrderAsync(Guid orderId, string? userId = null, CancellationToken ct = default);
+        Task<Order?> GetOrderByIdAsync(Guid orderId, CancellationToken ct = default);
+        Task<Order?> GetOrderByOrderCodeAsync(long orderCode, CancellationToken ct = default);
+        Task<List<Order>> GetOrdersByStatusAndTimeoutAsync(OrderStatus status, DateTime cutoffTime, CancellationToken ct = default);
     }
 }

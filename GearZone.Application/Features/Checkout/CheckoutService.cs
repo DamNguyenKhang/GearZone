@@ -1,9 +1,13 @@
 using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Checkout.Dtos;
+using GearZone.Application.Features.Payment;
 using GearZone.Domain.Entities;
+using GearZone.Domain.Enums;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,6 +22,8 @@ namespace GearZone.Application.Features.Checkout
         private readonly ICartService _cartService;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly PaymentStrategyFactory _paymentStrategyFactory;
+        private readonly IBackgroundJobService _backgroundJobService;
 
         public CheckoutService(
             ICartItemRepository cartItemRepository,
@@ -25,7 +31,9 @@ namespace GearZone.Application.Features.Checkout
             IOrderService orderService,
             ICartService cartService,
             UserManager<ApplicationUser> userManager,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            PaymentStrategyFactory paymentStrategyFactory,
+            IBackgroundJobService backgroundJobService)
         {
             _cartItemRepository = cartItemRepository;
             _productVariantRepository = productVariantRepository;
@@ -33,6 +41,8 @@ namespace GearZone.Application.Features.Checkout
             _cartService = cartService;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
+            _paymentStrategyFactory = paymentStrategyFactory;
+            _backgroundJobService = backgroundJobService;
         }
 
         public async Task<CheckoutResponseDto> ProcessCheckoutAsync(
@@ -48,14 +58,14 @@ namespace GearZone.Application.Features.Checkout
             if (user == null)
                 return new CheckoutResponseDto { Success = false, ErrorMessage = "User not found." };
 
-            // 2. Lấy cart items (EF query nằm hoàn toàn trong repository)
+            // 2. Fetch cart items
             var cartItems = await _cartItemRepository.GetCartItemsForCheckoutAsync(
                 request.CartItemIds, userId, ct);
 
             if (cartItems.Count != request.CartItemIds.Count)
                 return new CheckoutResponseDto { Success = false, ErrorMessage = "One or more invalid cart items selected." };
 
-            // 3. Kiểm tra và trừ tồn kho
+            // 3. Validate stock & deduct
             foreach (var cartItem in cartItems)
             {
                 if (cartItem.Variant.StockQuantity < cartItem.Quantity)
@@ -69,13 +79,26 @@ namespace GearZone.Application.Features.Checkout
                 await _productVariantRepository.UpdateAsync(cartItem.Variant);
             }
 
-            // 4. Tạo order (logic nằm trong OrderService)
+            // 4. Create order (status depends on payment method)
             var order = await _orderService.CreateOrderAsync(userId, request, cartItems, ct);
 
-            // 5. Xóa các cart items đã checkout (logic nằm trong CartService)
+            // 5. Process payment via Strategy Pattern
+            var strategy = _paymentStrategyFactory.GetStrategy(request.PaymentMethod);
+            var paymentResult = await strategy.ProcessPaymentAsync(order);
+
+            if (!paymentResult.Success)
+            {
+                return new CheckoutResponseDto
+                {
+                    Success = false,
+                    ErrorMessage = paymentResult.ErrorMessage ?? "Payment processing failed."
+                };
+            }
+
+            // 6. Clear cart items
             await _cartService.ClearCartItemsAsync(request.CartItemIds, ct);
 
-            // 6. Lưu địa chỉ nếu người dùng yêu cầu
+            // 7. Save address if requested
             if (request.SaveAddress)
             {
                 user.FullName = request.ShippingInfo.FullName;
@@ -84,15 +107,38 @@ namespace GearZone.Application.Features.Checkout
                 await _userManager.UpdateAsync(user);
             }
 
-            // 7. Persist toàn bộ thay đổi trong một transaction
+            // 8. Persist all changes
             await _unitOfWork.SaveChangesAsync(ct);
+
+            // 9. Schedule real-time timeout job if PayOS
+            if (request.PaymentMethod == PaymentMethod.PayOS)
+            {
+                _backgroundJobService.SchedulePaymentTimeout(order.Id, TimeSpan.FromMinutes(15));
+            }
 
             return new CheckoutResponseDto
             {
                 Success = true,
                 OrderId = order.Id,
-                OrderCode = order.OrderCode.ToString()
+                OrderCode = order.OrderCode.ToString(),
+                CheckoutUrl = paymentResult.CheckoutUrl  // null for COD, URL for PayOS
             };
+        }
+
+        public async Task<List<CartItem>> GetCheckoutItemsAsync(string userId, List<Guid> cartItemIds, CancellationToken ct = default)
+        {
+            return await _cartItemRepository.Query()
+                .Include(ci => ci.Variant)
+                    .ThenInclude(v => v.Product)
+                        .ThenInclude(p => p.Store)
+                .Include(ci => ci.Variant)
+                    .ThenInclude(v => v.Product)
+                        .ThenInclude(p => p.Images)
+                .Include(ci => ci.Variant)
+                    .ThenInclude(v => v.AttributeValues)
+                        .ThenInclude(av => av.CategoryAttributeOption)
+                .Where(ci => cartItemIds.Contains(ci.Id) && ci.Cart.UserId == userId)
+                .ToListAsync(ct);
         }
     }
 }

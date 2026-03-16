@@ -3,6 +3,7 @@ using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Checkout.Dtos;
 using GearZone.Domain.Entities;
 using GearZone.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,31 +15,47 @@ namespace GearZone.Application.Features.Orders
     public class OrderService : IOrderService
     {
         private readonly IOrderRepository _orderRepository;
+        private readonly ISubOrderRepository _subOrderRepository;
+        private readonly IPaymentRepository _paymentRepository;
+        private readonly IProductVariantRepository _productVariantRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public OrderService(IOrderRepository orderRepository)
+        public OrderService(
+            IOrderRepository orderRepository,
+            ISubOrderRepository subOrderRepository,
+            IPaymentRepository paymentRepository,
+            IProductVariantRepository productVariantRepository,
+            IUnitOfWork unitOfWork)
         {
             _orderRepository = orderRepository;
+            _subOrderRepository = subOrderRepository;
+            _paymentRepository = paymentRepository;
+            _productVariantRepository = productVariantRepository;
+            _unitOfWork = unitOfWork;
         }
 
-        public async Task<GearZone.Domain.Entities.Order> CreateOrderAsync(
+        public async Task<Order> CreateOrderAsync(
             string userId,
             CheckoutRequestDto request,
             List<CartItem> cartItems,
             CancellationToken ct = default)
         {
-            // Sử dụng địa chỉ từ request trực tiếp
             var shippingAddressStr = request.ShippingInfo.Address;
 
-            // Group cart items theo Store để tạo SubOrder
             var storeGroups = cartItems.GroupBy(ci => ci.Variant.Product.StoreId).ToList();
 
             long orderCode = long.Parse(
                 DateTime.UtcNow.ToString("yyMMddHHmmss") + new Random().Next(10, 99).ToString());
 
-            decimal totalShippingFee = 0m; // Free shipping hiện tại
+            decimal totalShippingFee = 0m; // Free shipping
             decimal grandTotal = 0m;
 
-            var order = new GearZone.Domain.Entities.Order
+            // Determine initial order status based on payment method
+            var initialStatus = request.PaymentMethod == PaymentMethod.PayOS
+                ? OrderStatus.AwaitingPayment
+                : OrderStatus.Pending;
+
+            var order = new Order
             {
                 Id = Guid.NewGuid(),
                 OrderCode = orderCode,
@@ -52,7 +69,7 @@ namespace GearZone.Application.Features.Orders
                 {
                     new OrderStatusHistory
                     {
-                        NewStatus = OrderStatus.Pending,
+                        NewStatus = initialStatus,
                         ChangedAt = DateTime.UtcNow,
                         ChangedByUserId = userId
                     }
@@ -63,7 +80,7 @@ namespace GearZone.Application.Features.Orders
             {
                 var storeId = group.Key;
                 decimal subtotal = group.Sum(ci => ci.Quantity * ci.Variant.Price);
-                decimal commissionRate = 0.05m; // 5% commission mặc định
+                decimal commissionRate = 0.05m;
                 decimal commissionAmount = subtotal * commissionRate;
                 decimal netAmount = subtotal - commissionAmount;
 
@@ -72,7 +89,7 @@ namespace GearZone.Application.Features.Orders
                     Id = Guid.NewGuid(),
                     OrderId = order.Id,
                     StoreId = storeId,
-                    Status = OrderStatus.Pending,
+                    Status = initialStatus,
                     PayoutStatus = PayoutStatus.Unpaid,
                     Subtotal = subtotal,
                     CommissionRateSnapshot = commissionRate,
@@ -104,6 +121,88 @@ namespace GearZone.Application.Features.Orders
             await _orderRepository.AddAsync(order, ct);
 
             return order;
+        }
+
+        public async Task<bool> CancelOrderAsync(Guid orderId, string? userId = null, CancellationToken ct = default)
+        {
+            var order = await _orderRepository.Query()
+                .Include(o => o.SubOrders)
+                    .ThenInclude(so => so.Items)
+                        .ThenInclude(oi => oi.Variant)
+                .Include(o => o.Payments)
+                .Include(o => o.StatusHistories)
+                .FirstOrDefaultAsync(o => o.Id == orderId, ct);
+
+            if (order == null) return false;
+
+            // Security check: if userId is provided, ensure order belongs to them
+            if (userId != null && order.UserId != userId) return false;
+
+            // Check if already cancelled or paid
+            if (order.StatusHistories.Any(sh => sh.NewStatus == OrderStatus.Cancelled || sh.NewStatus == OrderStatus.Paid))
+                return true; // Already processed
+
+            // 1. Restore stock & update SubOrders
+            foreach (var subOrder in order.SubOrders)
+            {
+                foreach (var item in subOrder.Items)
+                {
+                    if (item.Variant != null)
+                    {
+                        item.Variant.StockQuantity += item.Quantity;
+                        await _productVariantRepository.UpdateAsync(item.Variant);
+                    }
+                }
+                subOrder.Status = OrderStatus.Cancelled;
+                subOrder.UpdatedAt = DateTime.UtcNow;
+                await _subOrderRepository.UpdateAsync(subOrder);
+            }
+
+            // 2. Update Pending Payments
+            foreach (var payment in order.Payments.Where(p => p.Status == PaymentStatus.Pending))
+            {
+                payment.Status = PaymentStatus.Cancelled;
+                payment.UpdatedAt = DateTime.UtcNow;
+                await _paymentRepository.UpdateAsync(payment);
+            }
+
+            // 3. Add Status History
+            order.StatusHistories.Add(new OrderStatusHistory
+            {
+                NewStatus = OrderStatus.Cancelled,
+                ChangedAt = DateTime.UtcNow,
+                ChangedByUserId = userId,
+                Note = userId == null 
+                    ? "Order auto-cancelled by system (payment timeout)" 
+                    : "Order cancelled by user"
+            });
+
+            order.UpdatedAt = DateTime.UtcNow;
+            await _orderRepository.UpdateAsync(order);
+
+            await _unitOfWork.SaveChangesAsync(ct);
+            return true;
+        }
+
+        public async Task<Order?> GetOrderByIdAsync(Guid orderId, CancellationToken ct = default)
+        {
+            return await _orderRepository.Query()
+                .Include(o => o.SubOrders)
+                .FirstOrDefaultAsync(o => o.Id == orderId, ct);
+        }
+
+        public async Task<Order?> GetOrderByOrderCodeAsync(long orderCode, CancellationToken ct = default)
+        {
+            return await _orderRepository.Query()
+                .FirstOrDefaultAsync(o => o.OrderCode == orderCode, ct);
+        }
+
+        public async Task<List<Order>> GetOrdersByStatusAndTimeoutAsync(OrderStatus status, DateTime cutoffTime, CancellationToken ct = default)
+        {
+            return await _orderRepository.Query()
+                .Include(o => o.SubOrders)
+                .Where(o => o.SubOrders.Any(so => so.Status == status) && o.CreatedAt <= cutoffTime)
+                .ToListAsync(ct);
         }
     }
 }

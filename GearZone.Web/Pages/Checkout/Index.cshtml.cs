@@ -1,4 +1,3 @@
-using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Checkout.Dtos;
 using GearZone.Domain.Entities;
@@ -7,7 +6,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace GearZone.Web.Pages.Checkout
@@ -15,19 +13,19 @@ namespace GearZone.Web.Pages.Checkout
     [Authorize]
     public class IndexModel : PageModel
     {
-        private readonly ICartItemRepository _cartItemRepository;
         private readonly ICheckoutService _checkoutService;
+        private readonly IOrderService _orderService;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
 
         public IndexModel(
-            ICartItemRepository cartItemRepository,
             ICheckoutService checkoutService,
+            IOrderService orderService,
             UserManager<ApplicationUser> userManager,
             IConfiguration configuration)
         {
-            _cartItemRepository = cartItemRepository;
             _checkoutService = checkoutService;
+            _orderService = orderService;
             _userManager = userManager;
             _configuration = configuration;
         }
@@ -56,8 +54,8 @@ namespace GearZone.Web.Pages.Checkout
                 return RedirectToPage("/Cart/Index");
             }
 
-            // Load selected cart items to display
-            SelectedItems = await GetSelectedItemsWithDetails(userId, SelectedCartItemIds);
+            // Load selected cart items to display via Service
+            SelectedItems = await _checkoutService.GetCheckoutItemsAsync(userId, SelectedCartItemIds);
 
             if (!SelectedItems.Any())
             {
@@ -84,48 +82,35 @@ namespace GearZone.Web.Pages.Checkout
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return RedirectToPage("/Public/Auth/Login");
 
+            // We MUST capture the items before they potentially get cleared from the cart
+            SelectedItems = await _checkoutService.GetCheckoutItemsAsync(userId, CheckoutRequest.CartItemIds);
+            GrandTotal = SelectedItems.Sum(ci => ci.Quantity * ci.Variant.Price);
+
             if (!ModelState.IsValid)
             {
-                // Reload items on validation fail
                 CurrentUser = await _userManager.FindByIdAsync(userId);
-                SelectedItems = await GetSelectedItemsWithDetails(userId, CheckoutRequest.CartItemIds);
-                GrandTotal = SelectedItems.Sum(ci => ci.Quantity * ci.Variant.Price);
                 SelectedCartItemIds = CheckoutRequest.CartItemIds;
                 return Page();
             }
 
-            // Since Payment Integration is skipped, we default to COD
-            CheckoutRequest.PaymentMethod = PaymentMethod.COD;
-
+            // Use the user's selected payment method
             var result = await _checkoutService.ProcessCheckoutAsync(userId, CheckoutRequest);
-            
+
             if (!result.Success)
             {
                 ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Checkout failed.");
                 CurrentUser = await _userManager.FindByIdAsync(userId);
-                SelectedItems = await GetSelectedItemsWithDetails(userId, CheckoutRequest.CartItemIds);
-                GrandTotal = SelectedItems.Sum(ci => ci.Quantity * ci.Variant.Price);
                 return Page();
             }
 
-            // Redirect to success page
-            return RedirectToPage("./Success", new { orderId = result.OrderId });
-        }
+            // If PayOS: Redirect user directly to the PayOS payment page
+            if (!string.IsNullOrEmpty(result.CheckoutUrl))
+            {
+                return Redirect(result.CheckoutUrl);
+            }
 
-        private async Task<List<CartItem>> GetSelectedItemsWithDetails(string userId, List<Guid> cartItemIds)
-        {
-            return await _cartItemRepository.Query()
-                .Include(ci => ci.Variant)
-                    .ThenInclude(v => v.Product)
-                        .ThenInclude(p => p.Store)
-                .Include(ci => ci.Variant)
-                    .ThenInclude(v => v.Product)
-                        .ThenInclude(p => p.Images)
-                .Include(ci => ci.Variant)
-                    .ThenInclude(v => v.AttributeValues)
-                        .ThenInclude(av => av.CategoryAttributeOption)
-                .Where(ci => cartItemIds.Contains(ci.Id) && ci.Cart.UserId == userId)
-                .ToListAsync();
+            // If COD: redirect to success page
+            return RedirectToPage("./Success", new { orderId = result.OrderId });
         }
     }
 }

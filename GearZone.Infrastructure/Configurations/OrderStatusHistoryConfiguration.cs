@@ -1,4 +1,4 @@
-﻿using GearZone.Domain.Entities;
+using GearZone.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -28,10 +28,17 @@ namespace GearZone.Infrastructure.Configurations
 
             builder.HasIndex(x => new { x.OrderId, x.ChangedAt });
             builder.HasIndex(x => x.ChangedByUserId);
+            builder.Property(x => x.ChangedByUserId).IsRequired(false);
 
             builder.HasOne(x => x.Order)
                    .WithMany(x => x.StatusHistories)
                    .HasForeignKey(x => x.OrderId);
+
+            builder.HasOne(x => x.ChangedByUser)
+                   .WithMany()
+                   .HasForeignKey(x => x.ChangedByUserId)
+                   .IsRequired(false)
+                   .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

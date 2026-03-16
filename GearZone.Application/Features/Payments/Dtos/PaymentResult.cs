@@ -1,4 +1,4 @@
-﻿namespace GearZone.Application.Features.Payment.Dtos
+namespace GearZone.Application.Features.Payment.Dtos
 {
     public class PaymentResult
     {
@@ -14,5 +14,24 @@
             PaymentLinkId = paymentLinkId;
             ErrorMessage = errorMessage;
         }
+    }
+
+    public class PaymentVerificationResult
+    {
+        public bool Success { get; set; }
+        public System.Guid? OrderId { get; set; }
+        public string? ErrorMessage { get; set; }
+
+        public static PaymentVerificationResult Ok(System.Guid orderId) => new()
+        {
+            Success = true,
+            OrderId = orderId
+        };
+
+        public static PaymentVerificationResult Fail(string error) => new()
+        {
+            Success = false,
+            ErrorMessage = error
+        };
     }
 }

@@ -25,6 +25,7 @@ namespace GearZone.Application.Features.Checkout.Dtos
         public bool Success { get; set; }
         public Guid? OrderId { get; set; }
         public string? OrderCode { get; set; }
+        public string? CheckoutUrl { get; set; }
         public string? ErrorMessage { get; set; }
     }
 }

@@ -12,6 +12,8 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using GearZone.Application.Common.Models;
+using GearZone.Application.Features.Orders.Dtos;
 
 namespace GearZone.Application.Features.Orders
 {
@@ -206,6 +208,19 @@ namespace GearZone.Application.Features.Orders
                 .Include(o => o.SubOrders)
                 .Where(o => o.SubOrders.Any(so => so.Status == status) && o.CreatedAt <= cutoffTime)
                 .ToListAsync(ct);
+        }
+
+        public async Task<PagedResult<UserOrderDto>> GetUserOrdersAsync(string userId, UserOrderQueryDto query)
+        {
+            query.PageNumber = query.PageNumber < 1 ? 1 : query.PageNumber;
+            query.PageSize = query.PageSize < 1 ? 10 : query.PageSize;
+
+            return await _subOrderRepository.GetUserOrdersAsync(userId, query, DateTime.UtcNow);
+        }
+
+        public async Task<UserOrderStatusSummaryDto> GetUserOrderStatusSummaryAsync(string userId)
+        {
+            return await _subOrderRepository.GetUserOrderStatusSummaryAsync(userId, DateTime.UtcNow);
         }
     }
 }

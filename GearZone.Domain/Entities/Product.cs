@@ -29,6 +29,7 @@ namespace GearZone.Domain.Entities
         public ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
         public ICollection<ProductVariant> Variants { get; set; } = new List<ProductVariant>();
         public ICollection<ProductAttributeValue> AttributeValues { get; set; } = new List<ProductAttributeValue>();
+        public ICollection<ProductReview> Reviews { get; set; } = new List<ProductReview>();
     }
 
 }

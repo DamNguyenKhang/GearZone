@@ -24,6 +24,7 @@ namespace GearZone.Application.Features.Checkout
         private readonly IUnitOfWork _unitOfWork;
         private readonly PaymentStrategyFactory _paymentStrategyFactory;
         private readonly IBackgroundJobService _backgroundJobService;
+        private readonly IUserService _userService;
 
         public CheckoutService(
             ICartItemRepository cartItemRepository,
@@ -33,7 +34,8 @@ namespace GearZone.Application.Features.Checkout
             UserManager<ApplicationUser> userManager,
             IUnitOfWork unitOfWork,
             PaymentStrategyFactory paymentStrategyFactory,
-            IBackgroundJobService backgroundJobService)
+            IBackgroundJobService backgroundJobService,
+            IUserService userService)
         {
             _cartItemRepository = cartItemRepository;
             _productVariantRepository = productVariantRepository;
@@ -43,6 +45,7 @@ namespace GearZone.Application.Features.Checkout
             _unitOfWork = unitOfWork;
             _paymentStrategyFactory = paymentStrategyFactory;
             _backgroundJobService = backgroundJobService;
+            _userService = userService;
         }
 
         public async Task<CheckoutResponseDto> ProcessCheckoutAsync(
@@ -101,10 +104,13 @@ namespace GearZone.Application.Features.Checkout
             // 7. Save address if requested
             if (request.SaveAddress)
             {
-                user.FullName = request.ShippingInfo.FullName;
-                user.Address = request.ShippingInfo.Address;
-                user.PhoneNumber = request.ShippingInfo.PhoneNumber;
-                await _userManager.UpdateAsync(user);
+                await _userService.AddAddressAsync(userId, new Features.User.Dtos.CreateUserAddressDto
+                {
+                    FullName = request.ShippingInfo.FullName,
+                    PhoneNumber = request.ShippingInfo.PhoneNumber,
+                    AddressLine = request.ShippingInfo.Address,
+                    IsDefault = true // Make it default as requested by UI label
+                });
             }
 
             // 8. Persist all changes

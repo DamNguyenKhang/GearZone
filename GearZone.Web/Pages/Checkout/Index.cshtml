@@ -41,6 +41,42 @@
                 </div>
                 
                 <div class="p-6 space-y-5">
+                    @if (Model.UserAddresses.Any())
+                    {
+                        <div class="mb-6">
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Saved Addresses</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                @foreach (var addr in Model.UserAddresses)
+                                {
+                                    <div class="address-card p-3 border-2 @(addr.IsDefault ? "border-primary bg-primary/5" : "border-slate-100 dark:border-slate-800") rounded-xl cursor-pointer hover:border-primary/50 transition-all relative group"
+                                         data-name="@addr.FullName" 
+                                         data-phone="@addr.PhoneNumber" 
+                                         data-address="@addr.AddressLine">
+                                        <div class="flex justify-between items-start mb-1">
+                                            <span class="text-sm font-bold text-slate-900 dark:text-white">@addr.FullName</span>
+                                            @if (addr.IsDefault)
+                                            {
+                                                <span class="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold uppercase">Default</span>
+                                            }
+                                        </div>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 mb-1">@addr.PhoneNumber</p>
+                                        <p class="text-xs text-slate-600 dark:text-slate-300 line-clamp-2">@addr.AddressLine</p>
+                                        
+                                        <div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
+                                            <span class="text-xs font-bold text-primary">Use this address</span>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="relative flex py-2 items-center">
+                            <div class="flex-grow border-t border-slate-100 dark:border-slate-800"></div>
+                            <span class="flex- Johnston mx-4 text-xs text-slate-400 uppercase font-bold tracking-wider">Or New Address</span>
+                            <div class="flex-grow border-t border-slate-100 dark:border-slate-800"></div>
+                        </div>
+                    }
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div class="space-y-2">
                             <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Full Name</label>
@@ -267,6 +303,34 @@
             });
 
             updateMethodStyles();
+
+            // ─── Address Selection ────────────────────────
+            const addressCards = document.querySelectorAll('.address-card');
+            const nameInput = document.querySelector('input[name="CheckoutRequest.ShippingInfo.FullName"]');
+            const phoneInput = document.querySelector('input[name="CheckoutRequest.ShippingInfo.PhoneNumber"]');
+            const addressInput = document.getElementById('shipping-address-input');
+
+            addressCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    // Update highlight
+                    addressCards.forEach(c => {
+                        c.classList.remove('border-primary', 'bg-primary/5');
+                        c.classList.add('border-slate-100', 'dark:border-slate-800');
+                    });
+                    card.classList.add('border-primary', 'bg-primary/5');
+                    card.classList.remove('border-slate-100', 'dark:border-slate-800');
+
+                    // Fill inputs
+                    if (nameInput) nameInput.value = card.dataset.name;
+                    if (phoneInput) phoneInput.value = card.dataset.phone;
+                    if (addressInput) addressInput.value = card.dataset.address;
+
+                    // Trigger validation if any
+                    [nameInput, phoneInput, addressInput].forEach(input => {
+                        if (input) input.dispatchEvent(new Event('change'));
+                    });
+                });
+            });
         });
     </script>
 }

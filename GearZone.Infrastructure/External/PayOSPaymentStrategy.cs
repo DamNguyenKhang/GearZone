@@ -51,6 +51,7 @@ namespace GearZone.Infrastructure.External
                     CancelUrl = _settings.CancelUrl,
 
                     BuyerName = order.ReceiverName,
+                    BuyerEmail = order.User?.Email,
                     BuyerPhone = order.ReceiverPhone,
                     BuyerAddress = order.ShippingAddress,
 

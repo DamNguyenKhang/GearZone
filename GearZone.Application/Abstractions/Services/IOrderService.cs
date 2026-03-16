@@ -1,3 +1,5 @@
+using GearZone.Application.Common.Models;
+using GearZone.Application.Features.Orders.Dtos;
 using System;
 using GearZone.Domain.Enums;
 using GearZone.Application.Features.Checkout.Dtos;
@@ -10,6 +12,8 @@ namespace GearZone.Application.Abstractions.Services
 {
     public interface IOrderService
     {
+        Task<PagedResult<UserOrderDto>> GetUserOrdersAsync(string userId, UserOrderQueryDto query);
+        Task<UserOrderStatusSummaryDto> GetUserOrderStatusSummaryAsync(string userId);
 
         Task<Order> CreateOrderAsync(
             string userId,

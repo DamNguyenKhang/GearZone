@@ -14,6 +14,8 @@ namespace GearZone.Infrastructure.Configurations
             builder.Property(x => x.Content).HasMaxLength(2000).IsRequired();
             builder.HasIndex(x => x.ConversationId);
             builder.HasIndex(x => x.SentAt);
+            builder.HasIndex(x => new { x.ConversationId, x.SentAt });
+            builder.HasIndex(x => new { x.ConversationId, x.IsRead, x.SentAt });
 
             builder.HasOne(x => x.Conversation)
                    .WithMany(x => x.Messages)

@@ -15,6 +15,7 @@ namespace GearZone.Infrastructure
         public DbSet<CategoryAttributeOption> CategoryAttributeOptions { get; set; }
 
         public DbSet<Product> Products { get; set; }
+        public DbSet<ProductReview> ProductReviews { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<ProductVariant> ProductVariants { get; set; }
         public DbSet<VariantAttributeValue> VariantAttributeValues { get; set; }
@@ -43,6 +44,7 @@ namespace GearZone.Infrastructure
         
         public DbSet<Voucher> Vouchers { get; set; }
         public DbSet<VoucherUsage> VoucherUsages { get; set; }
+        public DbSet<UserAddress> UserAddresses { get; set; }
         
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 

@@ -4,14 +4,15 @@ using GearZone.Application.Features.Admin;
 using GearZone.Application.Features.Auth;
 using GearZone.Application.Features.Cart;
 using GearZone.Application.Features.Catalog;
+using GearZone.Application.Features.Chat;
+using GearZone.Application.Features.Orders;
 using GearZone.Application.Features.Payment;
 using GearZone.Application.Features.Payout;
 using GearZone.Application.Features.Payment;
+using GearZone.Application.Features.Reviews;
 using GearZone.Application.Features.Seller;
-using GearZone.Application.Features.Checkout;
-using GearZone.Application.Features.Orders;
-using GearZone.Application.Features.Checkout;
-using GearZone.Application.Features.Orders;
+using GearZone.Application.Features.User;
+using GearZone.Application.Features.Map;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GearZone.Application
@@ -31,20 +32,21 @@ namespace GearZone.Application
             services.AddScoped<IAdminBrandService, AdminBrandService>();
             services.AddScoped<IAdminPayoutService, AdminPayoutService>();
             services.AddScoped<ICatalogService, CatalogService>();
+            services.AddScoped<IChatService, ChatService>();
             services.AddScoped<ISellerStoreService, SellerStoreService>();
             services.AddScoped<IBankCatalogService, BankCatalogService>();
             services.AddScoped<ISellerProductService, SellerProductService>();
             services.AddScoped<ICartService, CartService>();
             services.AddScoped<IOrderService, OrderService>();
-            services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IPayoutService, PayoutService>();
-            services.AddScoped<ICheckoutService, CheckoutService>();
-            services.AddScoped<IPaymentService, PaymentService>();
+            services.AddScoped<IProductReviewService, ProductReviewService>();
             services.AddScoped<PaymentStrategyFactory>();
             services.AddScoped<IAdminWalletService, AdminWalletService>();
             services.AddScoped<IAdminPlatformService, AdminPlatformService>();
             services.AddScoped<IAdminDashboardService, AdminDashboardService>();
             services.AddScoped<IAdminVoucherService, AdminVoucherService>();
+            services.AddScoped<IMapService, MapService>();
+            services.AddScoped<IUserService, UserService>();
 
             return services;
         }

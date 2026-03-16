@@ -84,44 +84,5 @@ namespace GearZone.Web.Pages.Public.StoreProfile
             return new JsonResult(new { success = true, isFollowing, followerCount });
         }
 
-        // AJAX: Send Message
-        public async Task<IActionResult> OnPostSendMessageAsync(string slug, [FromBody] SendMessageRequest request)
-        {
-            var userId = _userManager.GetUserId(User);
-            if (string.IsNullOrEmpty(userId))
-                return new JsonResult(new { success = false, message = "Please login first" }) { StatusCode = 401 };
-
-            if (string.IsNullOrWhiteSpace(request?.Content))
-                return new JsonResult(new { success = false, message = "Message cannot be empty" }) { StatusCode = 400 };
-
-            var store = await _catalogService.GetStoreProfileAsync(slug);
-            if (store == null)
-                return new JsonResult(new { success = false, message = "Store not found" }) { StatusCode = 404 };
-
-            var message = await _catalogService.SendMessageAsync(userId, store.Id, request.Content.Trim());
-
-            return new JsonResult(new { success = true, message });
-        }
-
-        // AJAX: Get Messages
-        public async Task<IActionResult> OnGetMessagesAsync(string slug)
-        {
-            var userId = _userManager.GetUserId(User);
-            if (string.IsNullOrEmpty(userId))
-                return new JsonResult(new { success = false, messages = new List<ChatMessageDto>() });
-
-            var store = await _catalogService.GetStoreProfileAsync(slug);
-            if (store == null)
-                return new JsonResult(new { success = false, messages = new List<ChatMessageDto>() });
-
-            var messages = await _catalogService.GetMessagesAsync(userId, store.Id);
-
-            return new JsonResult(new { success = true, messages });
-        }
-    }
-
-    public class SendMessageRequest
-    {
-        public string Content { get; set; } = string.Empty;
     }
 }

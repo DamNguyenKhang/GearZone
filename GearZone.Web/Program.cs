@@ -3,6 +3,8 @@ using GearZone.Domain.Entities;
 using GearZone.Infrastructure;
 using GearZone.Infrastructure.Jobs;
 using GearZone.Infrastructure.Seed;
+using GearZone.Web.Hubs;
+using GearZone.Web.Pages.Public.User.Messages;
 using Hangfire;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
@@ -19,6 +21,8 @@ var connectionString = builder.Configuration["DB_CONNECTION_STRING"] ?? builder.
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
+builder.Services.AddScoped<BuyerInboxComposer>();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -80,11 +84,10 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
 
+    var dbContext = services.GetRequiredService<ApplicationDbContext>();
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var configuration = services.GetRequiredService<IConfiguration>();
-    var dbContext = services.GetRequiredService<ApplicationDbContext>();
-
     await IdentitySeeder.SeedAsync(userManager, roleManager, configuration);
     await CatalogSeeder.SeedAsync(dbContext);
 }
@@ -130,6 +133,7 @@ using (var scope = app.Services.CreateScope())
 app.UseStaticFiles();
 app.MapStaticAssets();
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
 app.MapRazorPages()
    .WithStaticAssets();
 

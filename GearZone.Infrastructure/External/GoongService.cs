@@ -1,0 +1,71 @@
+using GearZone.Application.Abstractions.Services;
+using GearZone.Application.Common.Dtos;
+using Microsoft.Extensions.Configuration;
+using System;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
+
+namespace GearZone.Infrastructure.External
+{
+    public class GoongService : IGoongService
+    {
+        private readonly HttpClient _httpClient;
+        private readonly string _apiKey;
+
+        public GoongService(HttpClient httpClient, IConfiguration configuration)
+        {
+            _httpClient = httpClient;
+            _apiKey = configuration["GOONG_API_KEY"] ?? throw new InvalidOperationException("GOONG_API_KEY not found in configuration.");
+        }
+
+        public async Task<GoongAutocompleteResponse?> GetAutocompleteAsync(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return null;
+
+            var url = $"https://rsapi.goong.io/Place/AutoComplete?api_key={_apiKey}&input={Uri.EscapeDataString(input)}";
+            
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<GoongAutocompleteResponse>(url);
+                return response;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public async Task<GoongPlaceDetailResponse?> GetPlaceDetailAsync(string placeId)
+        {
+            if (string.IsNullOrWhiteSpace(placeId)) return null;
+
+            var url = $"https://rsapi.goong.io/Place/Detail?api_key={_apiKey}&place_id={placeId}";
+
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<GoongPlaceDetailResponse>(url);
+                return response;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public async Task<GoongGeocodeResponse?> GetReverseGeocodeAsync(double lat, double lng)
+        {
+            var url = $"https://rsapi.goong.io/Geocode?api_key={_apiKey}&latlng={lat},{lng}";
+
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<GoongGeocodeResponse>(url);
+                return response;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+    }
+}

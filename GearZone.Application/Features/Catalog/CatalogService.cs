@@ -8,6 +8,7 @@ using GearZone.Application.Common.ProductSpecifications;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Catalog.DTOs;
+using GearZone.Application.Features.Reviews.Dtos;
 using GearZone.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,9 +22,44 @@ namespace GearZone.Application.Features.Catalog
         private readonly ICategoryAttributeRepository _categoryAttributeRepository;
         private readonly IStoreRepository _storeRepository;
         private readonly IStoreFollowRepository _storeFollowRepository;
-        private readonly IConversationRepository _conversationRepository;
-        private readonly IChatMessageRepository _chatMessageRepository;
+        private readonly IProductReviewRepository _productReviewRepository;
         private readonly IUnitOfWork _unitOfWork;
+
+        private static readonly string[] HomeCategorySlugs =
+        {
+            "cpus",
+            "gpus",
+            "motherboards",
+            "gaming-monitors",
+            "mechanical-keyboards",
+            "gaming-headsets"
+        };
+
+        private static readonly string[] HomeStoreSlugs =
+        {
+            "gearzone-official"
+        };
+
+        private static readonly string[] FlashDealSlugs =
+        {
+            "asus-dual-rtx-4060-ti",
+            "amd-ryzen-7-7800x3d",
+            "akko-asa-pbt-keycaps",
+            "lg-27gp850-b",
+            "samsung-980-pro-nvme-1tb"
+        };
+
+        private static readonly string[] RecommendedSlugs =
+        {
+            "logitech-gpro-x-superlight2",
+            "keychron-q2-pro-65",
+            "corsair-virtuoso-rgb-xt",
+            "corsair-vengeance-ddr5-5600",
+            "msi-pro-b650m-a-wifi"
+        };
+
+        private const string HeroProductSlug = "asus-rog-swift-oled-pg27aqdm";
+        private const string PromoProductSlug = "corsair-4000d-airflow";
 
         public CatalogService(
             IProductRepository productRepository, 
@@ -32,8 +68,7 @@ namespace GearZone.Application.Features.Catalog
             ICategoryAttributeRepository categoryAttributeRepository,
             IStoreRepository storeRepository,
             IStoreFollowRepository storeFollowRepository,
-            IConversationRepository conversationRepository,
-            IChatMessageRepository chatMessageRepository,
+            IProductReviewRepository productReviewRepository,
             IUnitOfWork unitOfWork)
         {
             _productRepository = productRepository;
@@ -42,9 +77,103 @@ namespace GearZone.Application.Features.Catalog
             _categoryAttributeRepository = categoryAttributeRepository;
             _storeRepository = storeRepository;
             _storeFollowRepository = storeFollowRepository;
-            _conversationRepository = conversationRepository;
-            _chatMessageRepository = chatMessageRepository;
+            _productReviewRepository = productReviewRepository;
             _unitOfWork = unitOfWork;
+        }
+
+        public async Task<HomePageDto> GetHomePageAsync(string? currentUserId)
+        {
+            var curatedProductSlugs = new[]
+            {
+                HeroProductSlug,
+                PromoProductSlug
+            }
+            .Concat(FlashDealSlugs)
+            .Concat(RecommendedSlugs)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+            var curatedProducts = await _productRepository.GetCatalogProductsBySlugsAsync(curatedProductSlugs);
+            var productsBySlug = curatedProducts.ToDictionary(p => p.Slug, StringComparer.OrdinalIgnoreCase);
+
+            var categories = await _categoryRepository.GetHomeCategoriesBySlugsAsync(HomeCategorySlugs);
+            var stores = await _storeRepository.GetHomeStoresBySlugsAsync(HomeStoreSlugs);
+
+            productsBySlug.TryGetValue(HeroProductSlug, out var heroProduct);
+            productsBySlug.TryGetValue(PromoProductSlug, out var promoProduct);
+            var featuredStore = stores.FirstOrDefault();
+
+            return new HomePageDto
+            {
+                Hero = new HomeHeroDto
+                {
+                    Eyebrow = "Premium marketplace picks",
+                    Title = "Build a cleaner,",
+                    AccentTitle = "faster setup.",
+                    Description = "Browse curated PC hardware with calmer spacing, cleaner routing, and real catalog data behind every card.",
+                    PrimaryLabel = "Shop now",
+                    PrimaryHref = "/products",
+                    SecondaryLabel = "Explore featured gear",
+                    SecondaryHref = heroProduct != null ? $"/product/{heroProduct.Slug}" : "/products",
+                    ImageUrl = heroProduct?.ImageUrl ?? string.Empty,
+                    ProductSlug = heroProduct?.Slug,
+                    ProductName = heroProduct?.Name,
+                    StoreName = featuredStore?.StoreName,
+                    StoreHref = featuredStore?.Href,
+                    Highlights = new List<string>
+                    {
+                        "Verified catalog",
+                        "Real store routes",
+                        "Quick support"
+                    }
+                },
+                PromoCard = new HomePromoCardDto
+                {
+                    Eyebrow = "Setup comfort",
+                    Title = "Compact promos, calmer spacing.",
+                    Description = "A focused side card keeps the fold balanced while still taking buyers to a real product page.",
+                    LinkLabel = "Open featured case",
+                    Href = promoProduct != null ? $"/product/{promoProduct.Slug}" : "/products",
+                    ImageUrl = promoProduct?.ImageUrl ?? string.Empty
+                },
+                QuickActions = new List<HomeQuickActionDto>
+                {
+                    new HomeQuickActionDto { Title = "Fast shipping", Subtitle = "Nationwide coverage", Icon = "local_shipping", Href = "/products", Tone = "blue" },
+                    new HomeQuickActionDto { Title = "Verified store", Subtitle = "Official GearZone desk", Icon = "verified", Href = featuredStore?.Href ?? "/products", Tone = "orange" },
+                    new HomeQuickActionDto { Title = "Daily deals", Subtitle = "Curated flash picks", Icon = "bolt", Href = "/products?sort=popular", Tone = "violet" },
+                    new HomeQuickActionDto { Title = "Quick chat", Subtitle = "Talk to shops fast", Icon = "forum", Href = "/Public/User/Profile?tab=messages", Tone = "sky" }
+                },
+                Categories = OrderBySlug(categories, HomeCategorySlugs)
+                    .Select(category =>
+                    {
+                        var presentation = GetCategoryPresentation(category.Slug, category.Name, category.ProductCount);
+                        category.Subtitle = presentation.Subtitle;
+                        category.Icon = presentation.Icon;
+                        category.Href = $"/products/{category.Slug}";
+                        category.Tone = presentation.Tone;
+                        return category;
+                    })
+                    .ToList(),
+                FlashRail = new HomeProductRailDto
+                {
+                    Eyebrow = "Flash zone",
+                    Title = "Compact flash sale picks",
+                    Description = "Curated best-value hardware already in the demo catalog.",
+                    ViewAllLabel = "See all deals",
+                    ViewAllHref = "/products?sort=popular",
+                    Products = OrderBySlug(curatedProducts, FlashDealSlugs)
+                },
+                Stores = OrderBySlug(stores, HomeStoreSlugs),
+                RecommendedRail = new HomeProductRailDto
+                {
+                    Eyebrow = "Recommended",
+                    Title = "Popular picks for a cleaner setup",
+                    Description = "Smaller cards, better rhythm, and direct routes into real product pages.",
+                    ViewAllLabel = "Browse catalog",
+                    ViewAllHref = "/products",
+                    Products = OrderBySlug(curatedProducts, RecommendedSlugs)
+                }
+            };
         }
 
         public async Task<PagedResult<CatalogProductDto>> GetProductsAsync(ProductFilterDto filter)
@@ -68,6 +197,7 @@ namespace GearZone.Application.Features.Catalog
             var followerCount = await _storeFollowRepository.GetFollowerCountAsync(store.Id);
             var isFollowing = !string.IsNullOrEmpty(currentUserId) 
                 && await _storeFollowRepository.ExistsAsync(currentUserId, store.Id);
+            var reviewSnapshot = await _productReviewRepository.GetStoreReviewSnapshotAsync(store.Id);
 
             return new StoreProfileDto
             {
@@ -79,11 +209,12 @@ namespace GearZone.Application.Features.Catalog
                 Province = store.Province,
                 ProductCount = productCount,
                 TotalSold = totalSold,
-                Rating = 0,
-                ReviewCount = 0,
+                Rating = reviewSnapshot.AverageRating,
+                ReviewCount = reviewSnapshot.TotalReviews,
                 FollowerCount = followerCount,
                 IsFollowing = isFollowing,
-                CreatedAt = store.CreatedAt
+                CreatedAt = store.CreatedAt,
+                ReviewSummary = reviewSnapshot
             };
         }
 
@@ -119,75 +250,6 @@ namespace GearZone.Application.Features.Catalog
         public async Task<int> GetFollowerCountAsync(Guid storeId)
         {
             return await _storeFollowRepository.GetFollowerCountAsync(storeId);
-        }
-
-        // ===== CHAT =====
-
-        public async Task<ChatMessageDto> SendMessageAsync(string userId, Guid storeId, string content)
-        {
-            var conversation = await _conversationRepository.GetByBuyerAndStoreAsync(userId, storeId);
-            if (conversation == null)
-            {
-                conversation = new Conversation
-                {
-                    Id = Guid.NewGuid(),
-                    BuyerUserId = userId,
-                    StoreId = storeId,
-                    CreatedAt = DateTime.UtcNow,
-                    LastMessageAt = DateTime.UtcNow
-                };
-                await _conversationRepository.AddAsync(conversation);
-            }
-            else
-            {
-                conversation.LastMessageAt = DateTime.UtcNow;
-                await _conversationRepository.UpdateAsync(conversation);
-            }
-
-            var message = new ChatMessage
-            {
-                Id = Guid.NewGuid(),
-                ConversationId = conversation.Id,
-                SenderUserId = userId,
-                Content = content,
-                SentAt = DateTime.UtcNow,
-                IsRead = false
-            };
-            await _chatMessageRepository.AddAsync(message);
-            await _unitOfWork.SaveChangesAsync();
-
-            return new ChatMessageDto
-            {
-                Id = message.Id,
-                SenderUserId = message.SenderUserId,
-                SenderName = "You",
-                Content = message.Content,
-                SentAt = message.SentAt,
-                IsFromStore = false
-            };
-        }
-
-        public async Task<List<ChatMessageDto>> GetMessagesAsync(string userId, Guid storeId, int page = 1, int pageSize = 50)
-        {
-            var conversation = await _conversationRepository.GetByBuyerAndStoreAsync(userId, storeId);
-            if (conversation == null) return new List<ChatMessageDto>();
-
-            // Get store owner to determine which messages are from store
-            var store = await _storeRepository.GetByIdAsync(storeId);
-            var storeOwnerId = store?.OwnerUserId;
-
-            var messages = await _chatMessageRepository.GetMessagesAsync(conversation.Id, page, pageSize);
-            
-            return messages.Select(m => new ChatMessageDto
-            {
-                Id = m.Id,
-                SenderUserId = m.SenderUserId,
-                SenderName = m.SenderUser?.FullName ?? "User",
-                SenderAvatar = m.SenderUser?.AvatarUrl,
-                Content = m.Content,
-                SentAt = m.SentAt,
-                IsFromStore = m.SenderUserId == storeOwnerId
-            }).ToList();
         }
 
         // ===== CATEGORIES & FILTERS =====
@@ -311,6 +373,42 @@ namespace GearZone.Application.Features.Catalog
             return result;
         }
 
+        private static List<T> OrderBySlug<T>(IEnumerable<T> items, IReadOnlyList<string> slugs) where T : class
+        {
+            var order = slugs
+                .Select((slug, index) => new { slug, index })
+                .ToDictionary(item => item.slug, item => item.index, StringComparer.OrdinalIgnoreCase);
+
+            return items
+                .OrderBy(item =>
+                {
+                    var slug = item switch
+                    {
+                        CatalogProductDto product => product.Slug,
+                        HomeCategoryTileDto category => category.Slug,
+                        HomeStoreCardDto store => store.Slug,
+                        _ => string.Empty
+                    };
+
+                    return order.TryGetValue(slug, out var index) ? index : int.MaxValue;
+                })
+                .ToList();
+        }
+
+        private static (string Subtitle, string Icon, string Tone) GetCategoryPresentation(string slug, string fallbackName, int productCount)
+        {
+            return slug.ToLowerInvariant() switch
+            {
+                "cpus" => ("Desktop & gaming", "memory", "blue"),
+                "gpus" => ("RTX & Radeon", "developer_board", "violet"),
+                "motherboards" => ("ATX & compact", "dashboard_customize", "emerald"),
+                "gaming-monitors" => ("High refresh", "monitor", "sky"),
+                "mechanical-keyboards" => ("Mechanical picks", "keyboard", "orange"),
+                "gaming-headsets" => ("Work & play", "headphones", "slate"),
+                _ => ($"{productCount:N0} live products", "inventory_2", "blue")
+            };
+        }
+
         public async Task<ProductDetailDto?> GetProductDetailBySlugAsync(string slug)
         {
             var product = await _productRepository.Query()
@@ -363,6 +461,10 @@ namespace GearZone.Application.Features.Catalog
                 StoreSlug = product.Store.Slug,
                 ImageUrls = product.Images.OrderByDescending(i => i.IsPrimary).Select(i => i.ImageUrl).ToList(),
             };
+
+            dto.ReviewSummary = await _productReviewRepository.GetProductReviewSummaryAsync(product.Id);
+            dto.Rating = dto.ReviewSummary.AverageRating;
+            dto.ReviewCount = dto.ReviewSummary.TotalReviews;
 
             var allAttributeValues = product.Variants.SelectMany(v => v.AttributeValues).ToList();
 
@@ -480,8 +582,8 @@ namespace GearZone.Application.Features.Catalog
                     BasePrice = p.BasePrice,
                     ImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => i.ImageUrl).FirstOrDefault() 
                                ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? "",
-                    Rating = 0, // Placeholder
-                    ReviewCount = 0,
+                    Rating = p.Reviews.Where(r => !r.IsDeleted).Select(r => (decimal?)r.Rating).Average() ?? 0,
+                    ReviewCount = p.Reviews.Count(r => !r.IsDeleted),
                     StoreName = p.Store.StoreName,
                     StoreLogoUrl = p.Store.LogoUrl ?? string.Empty,
                     IsInStock = p.Variants.Where(v => v.IsActive && !v.IsDeleted).Any(v => v.StockQuantity > 0),

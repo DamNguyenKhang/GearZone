@@ -1,8 +1,10 @@
 using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Admin.Dtos;
+using GearZone.Application.Features.Catalog.DTOs;
 using GearZone.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -103,6 +105,32 @@ namespace GearZone.Infrastructure.Repositories
             }).ToList();
 
             return result;
+        }
+
+        public async Task<List<HomeCategoryTileDto>> GetHomeCategoriesBySlugsAsync(IReadOnlyCollection<string> slugs)
+        {
+            if (slugs == null || slugs.Count == 0)
+            {
+                return new List<HomeCategoryTileDto>();
+            }
+
+            var normalizedSlugs = slugs
+                .Where(slug => !string.IsNullOrWhiteSpace(slug))
+                .Select(slug => slug.Trim())
+                .Distinct()
+                .ToList();
+
+            return await _dbSet
+                .AsNoTracking()
+                .Where(c => normalizedSlugs.Contains(c.Slug) && c.IsActive && !c.IsDeleted)
+                .Select(c => new HomeCategoryTileDto
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    Slug = c.Slug,
+                    ProductCount = c.Products.Count(p => !p.IsDeleted && p.Status == GearZone.Domain.Enums.ProductStatus.Active)
+                })
+                .ToListAsync();
         }
 
         private static CategoryDto MapToCategoryDto(Category c, int? parentId, string? parentName)

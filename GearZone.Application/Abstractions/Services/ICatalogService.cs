@@ -1,5 +1,6 @@
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Catalog.DTOs;
+using GearZone.Application.Features.Reviews.Dtos;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -7,6 +8,7 @@ namespace GearZone.Application.Abstractions.Services
 {
     public interface ICatalogService
     {
+        Task<HomePageDto> GetHomePageAsync(string? currentUserId);
         Task<PagedResult<CatalogProductDto>> GetProductsAsync(ProductFilterDto filter);
         Task<CatalogFilterSidebarDto> GetFiltersForCategoryAsync(string categorySlug);
         Task<List<CatalogCategoryDto>> GetCategoriesAsync();
@@ -16,10 +18,6 @@ namespace GearZone.Application.Abstractions.Services
         Task<bool> ToggleFollowAsync(string userId, Guid storeId);
         Task<bool> IsFollowingAsync(string userId, Guid storeId);
         Task<int> GetFollowerCountAsync(Guid storeId);
-
-        // Chat
-        Task<ChatMessageDto> SendMessageAsync(string userId, Guid storeId, string content);
-        Task<List<ChatMessageDto>> GetMessagesAsync(string userId, Guid storeId, int page = 1, int pageSize = 50);
 
         Task<ProductDetailDto?> GetProductDetailBySlugAsync(string slug);
         Task<List<CatalogProductDto>> GetRelatedProductsAsync(int categoryId, Guid currentProductId, int limit = 5);
@@ -37,23 +35,12 @@ namespace GearZone.Application.Abstractions.Services
         public string Province { get; set; } = string.Empty;
         public int ProductCount { get; set; }
         public int TotalSold { get; set; }
-        public double Rating { get; set; }
+        public decimal Rating { get; set; }
         public int ReviewCount { get; set; }
         public int FollowerCount { get; set; }
         public bool IsFollowing { get; set; }
         public DateTime CreatedAt { get; set; }
-    }
-
-    public class ChatMessageDto
-    {
-        public Guid Id { get; set; }
-        public string SenderUserId { get; set; } = string.Empty;
-        public string SenderName { get; set; } = string.Empty;
-        public string? SenderAvatar { get; set; }
-        public string Content { get; set; } = string.Empty;
-        public DateTime SentAt { get; set; }
-        public bool IsFromStore { get; set; }
-        
+        public StoreReviewSnapshotDto ReviewSummary { get; set; } = new();
     }
 
     public class CatalogCategoryDto

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GearZone.Application.Features.Reviews.Dtos;
 
 namespace GearZone.Application.Features.Catalog.DTOs
 {
@@ -12,6 +13,8 @@ namespace GearZone.Application.Features.Catalog.DTOs
         public string Description { get; set; } = string.Empty;
         public decimal BasePrice { get; set; }
         public int SoldCount { get; set; }
+        public decimal Rating { get; set; }
+        public int ReviewCount { get; set; }
         
         // Brand & Category Info
         public string BrandName { get; set; } = string.Empty;
@@ -35,6 +38,8 @@ namespace GearZone.Application.Features.Catalog.DTOs
 
         // Aggregated Specifications
         public List<SpecificationDto> Specifications { get; set; } = new();
+        public ProductReviewSummaryDto ReviewSummary { get; set; } = new();
+        public EligibleReviewItemDto? EligibleReview { get; set; }
     }
 
     public class AttributeSelectionDto

@@ -1,4 +1,5 @@
 @page "/product/{slug}"
+@using GearZone.Web.Pages.Shared.Models
 @model GearZone.Web.Pages.Public.Catalog.ProductDetailModel
 @{
     ViewData["Title"] = $"{Model.Product.Name} - GearZone";
@@ -60,10 +61,38 @@
                         <span class="material-symbols-outlined text-[14px]">storefront</span>
                         @Model.Product.StoreName
                     </a>
-                    <div class="flex items-center gap-1 text-secondary">
-                        <span class="material-symbols-outlined text-[16px] fill-current">star</span>
-                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300">4.8 (126)</span>
-                    </div>
+                    <a href="/Public/User/Profile?tab=messages&storeSlug=@Model.Product.StoreSlug&productSlug=@Model.Product.Slug"
+                       class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-orange-600 transition hover:-translate-y-0.5 hover:bg-orange-100">
+                        <span class="material-symbols-outlined text-[14px]">chat</span>
+                        Chat Now
+                    </a>
+                    @if (Model.Product.ReviewCount > 0)
+                    {
+                        <div class="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1">
+                            <partial name="/Pages/Shared/_ReviewStars.cshtml"
+                                     model='new ReviewStarsViewModel
+                                     {
+                                         Rating = Model.Product.Rating,
+                                         SizePx = 14,
+                                         AriaLabel = $"{Model.Product.Rating:0.0} out of 5 stars"
+                                     }' />
+                            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">@Model.Product.Rating.ToString("0.0")</span>
+                            <span class="text-xs text-slate-400">(@Model.Product.ReviewCount)</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="flex items-center gap-1 text-slate-400 dark:text-slate-500">
+                            <partial name="/Pages/Shared/_ReviewStars.cshtml"
+                                     model='new ReviewStarsViewModel
+                                     {
+                                         Rating = 0,
+                                         SizePx = 14,
+                                         AriaLabel = "No reviews yet"
+                                     }' />
+                            <span class="text-xs font-bold">No reviews yet</span>
+                        </div>
+                    }
                 </div>
                 <h1 class="text-3xl font-bold text-slate-900 dark:text-white leading-tight mb-2">@Model.Product.Name</h1>
                 <div class="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
@@ -184,120 +213,66 @@
         </div>
     </div>
 
-    <!-- Below Fold: Tabs & Specs -->
-    <div class="mt-16">
-        <div class="mb-8 sticky top-0 bg-slate-50 dark:bg-background-dark z-10 pt-4">
-            <nav aria-label="Tabs" class="flex gap-8 overflow-x-auto no-scrollbar">
-                <button class="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap">
-                    Description
-                </button>
-                <button aria-current="page" class="border-b-2 border-primary py-4 px-1 text-sm font-bold text-primary whitespace-nowrap">
-                    Specifications
-                </button>
-                <button class="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap">
-                    Reviews (126)
-                </button>
+    <!-- Below Fold: Specs, Description & Reviews -->
+    <div class="mt-16 space-y-10">
+        <div class="sticky top-0 z-10 bg-slate-50 pt-4 dark:bg-background-dark">
+            <nav aria-label="Tabs" class="flex gap-8 overflow-x-auto no-scrollbar border-b border-slate-200 dark:border-slate-700">
+                @if (!string.IsNullOrWhiteSpace(Model.Product.Description))
+                {
+                    <a href="#product-description" class="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap">
+                        Description
+                    </a>
+                }
+                @if (Model.Product.Specifications.Any())
+                {
+                    <a href="#product-specifications" class="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap">
+                        Specifications
+                    </a>
+                }
+                <a href="#product-reviews" class="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap">
+                    Reviews (@Model.Product.ReviewCount)
+                </a>
             </nav>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            <!-- Main Content (Specs + Desc) -->
-            <div class="lg:col-span-2 space-y-10">
-                @if (Model.Product.Specifications.Any())
-                {
-                    <section>
-                        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-6">Technical Specifications</h3>
-                        <div class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
-                            <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-                                <tbody class="divide-y divide-slate-200 dark:divide-slate-700 bg-white dark:bg-surface-dark">
-                                    @foreach (var spec in Model.Product.Specifications)
-                                    {
-                                        <tr>
-                                            <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-slate-500 dark:text-slate-400 w-1/3 sm:pl-6 bg-slate-50/50 dark:bg-slate-800/30">
-                                                @spec.Name
-                                            </td>
-                                            <td class="whitespace-nowrap px-3 py-4 text-sm text-slate-900 dark:text-white font-mono break-words whitespace-normal">
-                                                @spec.Value
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
-                }
-
-                @if (!string.IsNullOrWhiteSpace(Model.Product.Description))
-                {
-                    <section>
-                         <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-6">Description</h3>
-                         <div class="prose dark:prose-invert max-w-none text-slate-600 dark:text-slate-300">
-                             @Html.Raw(Model.Product.Description)
-                         </div>
-                    </section>
-                }
-            </div>
-
-            <!-- Reviews Sidebar -->
-            <div class="lg:col-span-1">
-                <div class="bg-white dark:bg-surface-dark rounded-xl p-6 border border-slate-200 dark:border-slate-700 sticky top-24">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-bold text-slate-900 dark:text-white">Reviews Summary</h3>
-                        <a href="#" class="text-sm text-primary font-medium hover:underline">View all</a>
+        <div class="space-y-10">
+            @if (Model.Product.Specifications.Any())
+            {
+                <section id="product-specifications">
+                    <h3 class="mb-6 text-xl font-bold text-slate-900 dark:text-white">Technical Specifications</h3>
+                    <div class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
+                        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                            <tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-surface-dark">
+                                @foreach (var spec in Model.Product.Specifications)
+                                {
+                                    <tr>
+                                        <td class="w-1/3 whitespace-nowrap bg-slate-50/50 py-4 pl-4 pr-3 text-sm font-medium text-slate-500 dark:bg-slate-800/30 dark:text-slate-400 sm:pl-6">
+                                            @spec.Name
+                                        </td>
+                                        <td class="break-words whitespace-normal px-3 py-4 font-mono text-sm text-slate-900 dark:text-white">
+                                            @spec.Value
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="flex flex-col items-center mb-6 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4">
-                        <span class="text-5xl font-black text-slate-900 dark:text-white mb-1">4.8</span>
-                        <div class="flex gap-0.5 text-secondary mb-1">
-                            <span class="material-symbols-outlined fill-current text-xl">star</span>
-                            <span class="material-symbols-outlined fill-current text-xl">star</span>
-                            <span class="material-symbols-outlined fill-current text-xl">star</span>
-                            <span class="material-symbols-outlined fill-current text-xl">star</span>
-                            <span class="material-symbols-outlined fill-current text-xl">star_half</span>
-                        </div>
-                        <span class="text-sm text-slate-500">Based on 126 reviews</span>
-                    </div>
+                </section>
+            }
 
-                    <div class="space-y-4">
-                        <!-- Review Card 1 -->
-                        <div class="border-b border-slate-100 dark:border-slate-700 pb-4 last:border-0">
-                            <div class="flex items-center gap-2 mb-2">
-                                <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-slate-200">MH</div>
-                                <div class="flex flex-col">
-                                    <span class="text-sm font-bold text-slate-900 dark:text-white">Minh Hoang</span>
-                                    <span class="text-xs text-slate-500">2 days ago</span>
-                                </div>
-                            </div>
-                            <div class="flex text-secondary text-xs mb-1">
-                                <span class="material-symbols-outlined text-[14px] fill-current">star</span>
-                                <span class="material-symbols-outlined text-[14px] fill-current">star</span>
-                                <span class="material-symbols-outlined text-[14px] fill-current">star</span>
-                                <span class="material-symbols-outlined text-[14px] fill-current">star</span>
-                                <span class="material-symbols-outlined text-[14px] fill-current">star</span>
-                            </div>
-                            <p class="text-sm text-slate-600 dark:text-slate-300">Fantastic performance at 1440p. Runs cool and quiet even under load. The RGB looks amazing in my build.</p>
-                        </div>
-                        
-                        <!-- Review Card 2 -->
-                        <div class="border-b border-slate-100 dark:border-slate-700 pb-4 last:border-0">
-                            <div class="flex items-center gap-2 mb-2">
-                                <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">TN</div>
-                                <div class="flex flex-col">
-                                    <span class="text-sm font-bold text-slate-900 dark:text-white">Tran Nam</span>
-                                    <span class="text-xs text-slate-500">1 week ago</span>
-                                </div>
-                            </div>
-                            <div class="flex text-secondary text-xs mb-1">
-                                <span class="material-symbols-outlined text-[14px] fill-current">star</span>
-                                <span class="material-symbols-outlined text-[14px] fill-current">star</span>
-                                <span class="material-symbols-outlined text-[14px] fill-current">star</span>
-                                <span class="material-symbols-outlined text-[14px] fill-current">star</span>
-                                <span class="material-symbols-outlined text-[14px] text-slate-300">star</span>
-                            </div>
-                            <p class="text-sm text-slate-600 dark:text-slate-300">Great card but the price is a bit steep. Delivery was super fast though, thanks GearZone!</p>
-                        </div>
+            @if (!string.IsNullOrWhiteSpace(Model.Product.Description))
+            {
+                <section id="product-description">
+                    <h3 class="mb-6 text-xl font-bold text-slate-900 dark:text-white">Description</h3>
+                    <div class="prose max-w-none text-slate-600 dark:prose-invert dark:text-slate-300">
+                        @Html.Raw(Model.Product.Description)
                     </div>
-                </div>
-            </div>
+                </section>
+            }
+
+            <section id="product-reviews">
+                <partial name="/Pages/Public/Catalog/Partials/_ProductReviewPanel.cshtml" model="Model.ReviewPanel" />
+            </section>
         </div>
     </div>
     
@@ -322,14 +297,33 @@
                             }
                         </div>
                         <h4 class="text-sm font-semibold text-slate-900 dark:text-white mb-2 line-clamp-2 h-10">@p.Name</h4>
-                        <div class="flex items-center gap-1 text-secondary mb-3">
-                            <span class="material-symbols-outlined text-sm fill-current">star</span>
-                            <span class="material-symbols-outlined text-sm fill-current">star</span>
-                            <span class="material-symbols-outlined text-sm fill-current">star</span>
-                            <span class="material-symbols-outlined text-sm fill-current">star</span>
-                            <span class="material-symbols-outlined text-sm fill-current">star</span>
-                            <span class="text-xs font-bold text-slate-500 ml-1">(@p.ReviewCount)</span>
-                        </div>
+                        @if (p.ReviewCount > 0)
+                        {
+                            <div class="mb-3 inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1">
+                                <partial name="/Pages/Shared/_ReviewStars.cshtml"
+                                         model='new ReviewStarsViewModel
+                                         {
+                                             Rating = p.Rating,
+                                             SizePx = 13,
+                                             AriaLabel = $"{p.Rating:0.0} out of 5 stars"
+                                         }' />
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-300">@p.Rating.ToString("0.0")</span>
+                                <span class="text-xs text-slate-500">(@p.ReviewCount)</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="flex items-center gap-1 text-slate-400 mb-3">
+                                <partial name="/Pages/Shared/_ReviewStars.cshtml"
+                                         model='new ReviewStarsViewModel
+                                         {
+                                             Rating = 0,
+                                             SizePx = 13,
+                                             AriaLabel = "No reviews yet"
+                                         }' />
+                                <span class="text-xs font-medium">No reviews</span>
+                            </div>
+                        }
                         <div class="mt-auto">
                             <div class="flex flex-wrap items-baseline gap-2 mb-4">
                                 <span class="text-lg font-bold text-secondary">@p.BasePrice.ToString("N0") VND</span>
@@ -346,6 +340,10 @@
         </div>
     }
 </div>
+
+@section Styles {
+    <partial name="/Pages/Shared/_ReviewUiStyles.cshtml" />
+}
 
 @section Scripts {
     <script>
@@ -624,6 +622,98 @@
             
             input.value = val;
         }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let reviewPanelController = null;
+
+            async function loadReviewPanel(targetUrl, pushState) {
+                const currentPanel = document.querySelector('[data-review-panel]');
+                if (!currentPanel) {
+                    return;
+                }
+
+                const browserUrl = new URL(targetUrl, window.location.origin);
+                const requestUrl = new URL(browserUrl.toString());
+                requestUrl.searchParams.set('handler', 'ReviewPanel');
+
+                if (reviewPanelController) {
+                    reviewPanelController.abort();
+                }
+
+                const controller = new AbortController();
+                reviewPanelController = controller;
+                const preservedHeight = currentPanel.offsetHeight;
+                currentPanel.style.minHeight = `${preservedHeight}px`;
+                currentPanel.classList.add('is-review-loading');
+
+                try {
+                    const response = await fetch(requestUrl.toString(), {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        signal: controller.signal
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Review panel request failed with ${response.status}`);
+                    }
+
+                    const html = await response.text();
+                    const fragment = document.createRange().createContextualFragment(html.trim());
+                    const nextPanel = fragment.firstElementChild;
+                    if (!nextPanel) {
+                        throw new Error('Review panel response did not contain a root element');
+                    }
+
+                    nextPanel.classList.add('review-panel-enter');
+                    nextPanel.style.minHeight = `${preservedHeight}px`;
+                    currentPanel.replaceWith(nextPanel);
+
+                    requestAnimationFrame(() => {
+                        nextPanel.classList.add('review-panel-enter-active');
+                        nextPanel.style.minHeight = '';
+                    });
+
+                    window.setTimeout(() => {
+                        nextPanel.classList.remove('review-panel-enter', 'review-panel-enter-active');
+                    }, 220);
+
+                    if (pushState) {
+                        window.history.pushState({ reviewPanel: true }, '', browserUrl);
+                    }
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        return;
+                    }
+
+                    console.error('Review panel update failed', error);
+                    window.location.href = browserUrl.toString();
+                } finally {
+                    if (reviewPanelController === controller) {
+                        reviewPanelController = null;
+                    }
+                }
+            }
+
+            document.addEventListener('click', (event) => {
+                const reviewLink = event.target.closest('[data-review-link]');
+                if (!reviewLink) {
+                    return;
+                }
+
+                if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) {
+                    return;
+                }
+
+                event.preventDefault();
+                loadReviewPanel(reviewLink.href, true);
+            });
+
+            window.addEventListener('popstate', () => {
+                if (document.querySelector('[data-review-panel]')) {
+                    loadReviewPanel(window.location.href, false);
+                }
+            });
+        });
     </script>
 }
 

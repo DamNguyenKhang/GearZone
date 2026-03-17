@@ -203,7 +203,7 @@
                                 <p class="text-xl font-black text-slate-900">@subOrder.Subtotal.ToString("N0") <span class="text-xs font-medium italic">₫</span></p>
                             </div>
                             <div class="p-5 rounded-2xl bg-amber-50/30 border border-amber-100/50 shadow-sm flex flex-col gap-1">
-                                <p class="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Platform Fee (15%)</p>
+                                <p class="text-[10px] font-bold text-amber-600 uppercase tracking-wider">Platform Fee (@((subOrder.CommissionRate * 100).ToString("N0"))%)</p>
                                 <p class="text-xl font-black text-amber-700">- @subOrder.CommissionAmount.ToString("N0") <span class="text-xs font-medium italic">₫</span></p>
                             </div>
                             <div class="p-5 rounded-2xl bg-emerald-50/30 border border-emerald-100/50 shadow-sm flex flex-col gap-1">

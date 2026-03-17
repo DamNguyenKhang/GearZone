@@ -25,7 +25,8 @@ namespace GearZone.Application.Features.Admin.Mappings
 
             CreateMap<SubOrder, AdminSubOrderDto>()
                 .ForMember(dest => dest.StoreName, opt => opt.MapFrom(src => src.Store != null ? src.Store.StoreName : string.Empty))
-                .ForMember(dest => dest.StoreEmail, opt => opt.MapFrom(src => src.Store != null ? src.Store.Email : string.Empty));
+                .ForMember(dest => dest.StoreEmail, opt => opt.MapFrom(src => src.Store != null ? src.Store.Email : string.Empty))
+                .ForMember(dest => dest.CommissionRate, opt => opt.MapFrom(src => src.CommissionRateSnapshot));
 
             CreateMap<OrderItem, AdminOrderItemDto>()
                 .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.ProductNameSnapshot))

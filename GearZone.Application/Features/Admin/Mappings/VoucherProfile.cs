@@ -17,7 +17,7 @@ namespace GearZone.Application.Features.Admin.Mappings
                 .ForMember(dest => dest.Code, opt => opt.MapFrom(src => src.Code.ToUpper().Trim()))
                 .ForMember(dest => dest.Scope, opt => opt.MapFrom(_ => VoucherScope.Platform))
                 .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsVisible))
-                .ForMember(dest => dest.MaxUsagePerUser, opt => opt.MapFrom(_ => 1));
+                .ForMember(dest => dest.MaxUsagePerUser, opt => opt.MapFrom(src => src.MaxUsagePerUser));
 
             CreateMap<UpdateVoucherDto, Voucher>()
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src =>
@@ -27,7 +27,7 @@ namespace GearZone.Application.Features.Admin.Mappings
                 .ForMember(dest => dest.Code, opt => opt.MapFrom(src => src.Code.ToUpper().Trim()))
                 .ForMember(dest => dest.Scope, opt => opt.MapFrom(_ => VoucherScope.Platform))
                 .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsVisible))
-                .ForMember(dest => dest.MaxUsagePerUser, opt => opt.MapFrom(_ => 1));
+                .ForMember(dest => dest.MaxUsagePerUser, opt => opt.MapFrom(src => src.MaxUsagePerUser));
 
             CreateMap<Voucher, AdminVoucherDto>()
                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : "General"))

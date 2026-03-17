@@ -25,7 +25,18 @@ namespace GearZone.Infrastructure.Configurations
                    .HasForeignKey(x => x.UserId)
                    .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Property(x => x.OrderDiscountAmount).HasColumnType("decimal(18,2)");
+            builder.Property(x => x.ShippingDiscountAmount).HasColumnType("decimal(18,2)");
 
+            builder.HasOne(x => x.OrderVoucher)
+                   .WithMany()
+                   .HasForeignKey(x => x.OrderVoucherId)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.ShippingVoucher)
+                   .WithMany()
+                   .HasForeignKey(x => x.ShippingVoucherId)
+                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

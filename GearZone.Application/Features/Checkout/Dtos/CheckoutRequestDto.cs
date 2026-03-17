@@ -11,6 +11,8 @@ namespace GearZone.Application.Features.Checkout.Dtos
         public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.COD;
         public bool SaveAddress { get; set; }
         public bool IsDefaultAddress { get; set; }
+        public string? OrderVoucherCode { get; set; }
+        public string? ShippingVoucherCode { get; set; }
     }
 
     public class ShippingInfoDto

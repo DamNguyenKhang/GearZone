@@ -38,6 +38,7 @@ namespace GearZone.Application.Features.Admin.Dtos
         public string StoreEmail { get; set; } = string.Empty;
         public OrderStatus Status { get; set; }
         public decimal Subtotal { get; set; }
+        public decimal CommissionRate { get; set; }
         public decimal CommissionAmount { get; set; }
         public decimal NetAmount { get; set; }
         public List<AdminOrderItemDto> Items { get; set; } = new();

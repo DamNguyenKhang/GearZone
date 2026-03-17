@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -16,6 +16,7 @@ namespace GearZone.Domain.Entities
         public string Description { get; set; } = string.Empty;
         public string SpecsJson { get; set; } = "{}";
         public ProductStatus Status { get; set; } = ProductStatus.Draft;
+        public string? StatusReason { get; set; }
         public decimal BasePrice { get; set; }
         public int SoldCount { get; set; }
         public bool IsDeleted { get; set; }

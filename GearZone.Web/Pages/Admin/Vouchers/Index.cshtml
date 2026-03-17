@@ -387,9 +387,9 @@
                                 <a href="/admin/vouchers/edit/@voucher.Id" class="p-2 text-slate-400 hover:text-primary hover:bg-blue-50 rounded-lg transition-all" title="Edit">
                                     <span class="material-symbols-outlined text-xl">edit</span>
                                 </a>
-                                <button class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all" title="Duplicate">
+                                <a asp-page="/Admin/Vouchers/Create" asp-route-copyFromId="@voucher.Id" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all" title="Duplicate">
                                     <span class="material-symbols-outlined text-xl">content_copy</span>
-                                </button>
+                                </a>
                                 <button type="button" 
                                         onclick="toggleVoucherStatus('@voucher.Id')"
                                         class="p-2 @(voucher.Status == VoucherStatus.Disabled ? "text-emerald-500 hover:bg-emerald-50" : "text-red-400 hover:text-red-500 hover:bg-red-50") rounded-lg transition-all" 

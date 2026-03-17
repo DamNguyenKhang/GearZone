@@ -414,6 +414,10 @@ namespace GearZone.Infrastructure.Repositories
 
         public async Task<PagedResult<SellerChatOrderListItemDto>> GetSellerChatOrdersAsync(string ownerUserId, SellerChatOrderQueryDto queryDto, CancellationToken ct = default)
         {
+            queryDto ??= new SellerChatOrderQueryDto();
+            queryDto.PageNumber = queryDto.PageNumber < 1 ? 1 : queryDto.PageNumber;
+            queryDto.PageSize = queryDto.PageSize < 1 ? 10 : queryDto.PageSize;
+
             var query = _dbSet
                 .AsNoTracking()
                 .Where(x => x.Store.OwnerUserId == ownerUserId);
@@ -429,9 +433,47 @@ namespace GearZone.Infrastructure.Repositories
                     x.Items.Any(item => item.ProductNameSnapshot.ToLower().Contains(search)));
             }
 
+            if (queryDto.Status.HasValue)
+            {
+                query = query.Where(x => x.Status == queryDto.Status.Value);
+            }
+
+            if (queryDto.MinSubtotal.HasValue)
+            {
+                query = query.Where(x => x.Subtotal >= queryDto.MinSubtotal.Value);
+            }
+
+            if (queryDto.MaxSubtotal.HasValue)
+            {
+                query = query.Where(x => x.Subtotal <= queryDto.MaxSubtotal.Value);
+            }
+
+            if (queryDto.StartDate.HasValue)
+            {
+                query = query.Where(x => x.CreatedAt >= queryDto.StartDate.Value);
+            }
+
+            if (queryDto.EndDate.HasValue)
+            {
+                var endOfDay = queryDto.EndDate.Value.Date.AddDays(1).AddTicks(-1);
+                query = query.Where(x => x.CreatedAt <= endOfDay);
+            }
+
+            var sortBy = (queryDto.SortBy ?? "createdAt").Trim().ToLowerInvariant();
+            var sortDirection = (queryDto.SortDirection ?? "desc").Trim().ToLowerInvariant();
+            var isAsc = sortDirection == "asc";
+
+            query = sortBy switch
+            {
+                "ordercode" => isAsc ? query.OrderBy(x => x.Order.OrderCode) : query.OrderByDescending(x => x.Order.OrderCode),
+                "buyer" => isAsc ? query.OrderBy(x => x.Order.User.FullName ?? x.Order.User.UserName ?? x.Order.User.Email) : query.OrderByDescending(x => x.Order.User.FullName ?? x.Order.User.UserName ?? x.Order.User.Email),
+                "subtotal" => isAsc ? query.OrderBy(x => x.Subtotal) : query.OrderByDescending(x => x.Subtotal),
+                "status" => isAsc ? query.OrderBy(x => x.Status) : query.OrderByDescending(x => x.Status),
+                _ => isAsc ? query.OrderBy(x => x.CreatedAt) : query.OrderByDescending(x => x.CreatedAt)
+            };
+
             var totalCount = await query.CountAsync(ct);
             var items = await query
-                .OrderByDescending(x => x.CreatedAt)
                 .Skip((queryDto.PageNumber - 1) * queryDto.PageSize)
                 .Take(queryDto.PageSize)
                 .Select(x => new SellerChatOrderListItemDto
@@ -465,6 +507,79 @@ namespace GearZone.Infrastructure.Repositories
                 .Include(x => x.Order.User)
                 .Include(x => x.Store)
                 .FirstOrDefaultAsync(x => x.Id == subOrderId && x.Store.OwnerUserId == ownerUserId, ct);
+        }
+
+        public async Task<SellerChatOrderDetailDto?> GetSellerChatOrderDetailAsync(string ownerUserId, Guid subOrderId, CancellationToken ct = default)
+        {
+            var subOrder = await _dbSet
+                .AsNoTracking()
+                .Include(x => x.Order)
+                .ThenInclude(o => o.User)
+                .Include(x => x.Store)
+                .Include(x => x.Items)
+                .FirstOrDefaultAsync(x => x.Id == subOrderId && x.Store.OwnerUserId == ownerUserId, ct);
+
+            if (subOrder == null)
+            {
+                return null;
+            }
+
+            var statusHistory = await _context.OrderStatusHistories
+                .AsNoTracking()
+                .Where(x => x.OrderId == subOrder.OrderId)
+                .OrderByDescending(x => x.ChangedAt)
+                .Select(x => new SellerChatOrderStatusHistoryDto
+                {
+                    ChangedAt = x.ChangedAt,
+                    OldStatus = x.OldStatus,
+                    NewStatus = x.NewStatus,
+                    ChangedByDisplayName = x.ChangedByUser.FullName ?? x.ChangedByUser.UserName ?? x.ChangedByUser.Email ?? "System",
+                    Note = x.Note
+                })
+                .ToListAsync(ct);
+
+            return new SellerChatOrderDetailDto
+            {
+                SubOrderId = subOrder.Id,
+                OrderCode = subOrder.Order.OrderCode,
+                StoreId = subOrder.StoreId,
+                StoreName = subOrder.Store.StoreName,
+                BuyerUserId = subOrder.Order.UserId,
+                BuyerDisplayName = subOrder.Order.User.FullName ?? subOrder.Order.User.UserName ?? subOrder.Order.User.Email ?? "Buyer",
+                BuyerAvatarUrl = subOrder.Order.User.AvatarUrl,
+                BuyerEmail = subOrder.Order.User.Email,
+                CreatedAt = subOrder.CreatedAt,
+                DeliveredAt = subOrder.DeliveredAt,
+                UpdatedAt = subOrder.UpdatedAt,
+                Status = subOrder.Status,
+                Subtotal = subOrder.Subtotal,
+                ShippingFee = subOrder.Order.ShippingFee,
+                GrandTotal = subOrder.Order.GrandTotal,
+                CommissionRateSnapshot = subOrder.CommissionRateSnapshot,
+                CommissionAmount = subOrder.CommissionAmount,
+                NetAmount = subOrder.NetAmount,
+                ReceiverName = subOrder.Order.ReceiverName,
+                ReceiverPhone = subOrder.Order.ReceiverPhone,
+                ShippingAddress = subOrder.Order.ShippingAddress,
+                ShippingProvider = subOrder.Order.ShippingProvider,
+                TrackingNumber = subOrder.Order.TrackingNumber,
+                Items = subOrder.Items
+                    .OrderBy(x => x.ProductNameSnapshot)
+                    .ThenBy(x => x.SkuSnapshot)
+                    .Select(x => new SellerChatOrderItemDetailDto
+                    {
+                        OrderItemId = x.Id,
+                        VariantId = x.VariantId,
+                        ProductName = x.ProductNameSnapshot,
+                        VariantName = x.VariantNameSnapshot,
+                        Sku = x.SkuSnapshot,
+                        Quantity = x.Quantity,
+                        UnitPrice = x.UnitPriceSnapshot,
+                        LineTotal = x.LineTotal
+                    })
+                    .ToList(),
+                StatusHistory = statusHistory
+            };
         }
 
         public async Task<List<ChatContextOrderDto>> GetConversationOrderContextAsync(string buyerUserId, Guid storeId, int take, CancellationToken ct = default)

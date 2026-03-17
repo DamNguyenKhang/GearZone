@@ -10,6 +10,7 @@ namespace GearZone.Application.Abstractions.Persistence
     public interface IOrderRepository : IRepository<Order, Guid>
     {
         Task<PagedResult<Order>> GetAdminOrdersAsync(AdminOrderQueryDto queryDto);
+        Task<Order?> GetAdminOrderDetailAsync(Guid id);
         Task<AdminOrderStatsDto> GetAdminOrderStatsAsync();
     }
 }

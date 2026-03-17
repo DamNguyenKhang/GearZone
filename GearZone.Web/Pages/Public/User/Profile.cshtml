@@ -32,10 +32,10 @@
 }
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-    <div class="flex flex-col lg:flex-row gap-8">
+    <div class="flex flex-col lg:flex-row gap-8" data-profile-layout-shell>
         <!-- Sidebar -->
         <aside class="w-full lg:w-72 flex-shrink-0">
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden" data-profile-sidebar-card>
                 <!-- User Header -->
                 <div class="p-6 text-center border-b border-gray-50 bg-gray-50/50">
                     <div class="relative inline-block mb-3">
@@ -306,6 +306,11 @@
                                             }
                                         </div>
                                         <div class="flex flex-wrap gap-2">
+                                            <a asp-page="/Public/User/Orders/Track"
+                                               asp-route-subOrderId="@order.SubOrderId"
+                                               class="px-5 py-2 text-sm font-bold text-primary bg-primary/10 border border-primary/20 rounded-lg hover:bg-primary/15 transition-colors">
+                                                Track Order
+                                            </a>
                                             <a asp-page="/Public/User/Profile"
                                                asp-route-tab="messages"
                                                asp-route-storeSlug="@order.StoreSlug"
@@ -733,7 +738,7 @@
             }
             else if (Model.ActiveTab == "messages")
             {
-                <div class="min-w-0">
+                <div class="min-w-0" data-profile-messages-host>
                     <partial name="/Pages/Shared/_ChatInboxLayout.cshtml" model="Model.MessagesInbox" />
                 </div>
             }

@@ -6,14 +6,62 @@ using GearZone.Infrastructure.Seed;
 using GearZone.Web.Hubs;
 using GearZone.Web.Pages.Public.User.Messages;
 using Hangfire;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Rewrite;
 
 var builder = WebApplication.CreateBuilder(args);
 
-DotNetEnv.Env.Load();
+var envCandidates = new[]
+{
+    System.IO.Path.Combine(builder.Environment.ContentRootPath, ".env"),
+    System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), ".env"),
+    System.IO.Path.GetFullPath(System.IO.Path.Combine(builder.Environment.ContentRootPath, "..", ".env"))
+}
+.Distinct(StringComparer.OrdinalIgnoreCase);
+
+foreach (var envPath in envCandidates)
+{
+    if (!System.IO.File.Exists(envPath))
+    {
+        continue;
+    }
+
+    DotNetEnv.Env.Load(envPath);
+    Console.WriteLine($"Environment: loaded {envPath}");
+}
+
+static void EnsureEnvAlias(string targetKey, string sourceKey)
+{
+    var targetValue = Environment.GetEnvironmentVariable(targetKey);
+    if (!string.IsNullOrWhiteSpace(targetValue))
+    {
+        return;
+    }
+
+    var sourceValue = Environment.GetEnvironmentVariable(sourceKey);
+    if (!string.IsNullOrWhiteSpace(sourceValue))
+    {
+        Environment.SetEnvironmentVariable(targetKey, sourceValue.Trim());
+    }
+}
+
+// Backward-compatible PayOS env aliases so both legacy PAYOS_* and new PAYOS_PAYIN_* keys work.
+EnsureEnvAlias("PAYOS_CLIENT_ID", "PAYOS_PAYIN_CLIENT_ID");
+EnsureEnvAlias("PAYOS_API_KEY", "PAYOS_PAYIN_API_KEY");
+EnsureEnvAlias("PAYOS_CHECKSUM_KEY", "PAYOS_PAYIN_CHECKSUM_KEY");
+EnsureEnvAlias("PAYOS_RETURN_URL", "PAYOS_PAYIN_RETURN_URL");
+EnsureEnvAlias("PAYOS_CANCEL_URL", "PAYOS_PAYIN_CANCEL_URL");
+EnsureEnvAlias("PAYOS_PAYIN_CLIENT_ID", "PAYOS_CLIENT_ID");
+EnsureEnvAlias("PAYOS_PAYIN_API_KEY", "PAYOS_API_KEY");
+EnsureEnvAlias("PAYOS_PAYIN_CHECKSUM_KEY", "PAYOS_CHECKSUM_KEY");
+EnsureEnvAlias("PAYOS_PAYIN_RETURN_URL", "PAYOS_RETURN_URL");
+EnsureEnvAlias("PAYOS_PAYIN_CANCEL_URL", "PAYOS_CANCEL_URL");
+
 builder.Configuration.AddEnvironmentVariables();
 
 var connectionString = builder.Configuration["DB_CONNECTION_STRING"] ?? builder.Configuration.GetConnectionString("DefaultConnection");
@@ -23,6 +71,12 @@ builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<BuyerInboxComposer>();
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 builder.Services.AddAuthentication(options =>
 {
@@ -34,6 +88,25 @@ builder.Services.AddAuthentication(options =>
 {
     options.ClientId = builder.Configuration["GOOGLE_CLIENT_ID"] ?? "";
     options.ClientSecret = builder.Configuration["GOOGLE_CLIENT_SECRET"] ?? "";
+    options.CallbackPath = "/signin-google";
+    options.SaveTokens = true;
+
+    // Reduce local/dev correlation-cookie drop issues during Google callback.
+    options.CorrelationCookie.SameSite = SameSiteMode.Lax;
+    options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.CorrelationCookie.HttpOnly = true;
+    options.CorrelationCookie.IsEssential = true;
+
+    options.Events = new OAuthEvents
+    {
+        OnRemoteFailure = context =>
+        {
+            context.HandleResponse();
+            var message = Uri.EscapeDataString(context.Failure?.Message ?? "External login failed.");
+            context.Response.Redirect($"/Auth/Login?remoteError={message}");
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(GearZone.Application.Abstractions.Services.IAuthService).Assembly);
@@ -52,6 +125,10 @@ builder.Services.ConfigureApplicationCookie(opt =>
     opt.AccessDeniedPath = "/Auth/Login";
     opt.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     opt.SlidingExpiration = true;
+    opt.Cookie.SameSite = SameSiteMode.Lax;
+    opt.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    opt.Cookie.HttpOnly = true;
+    opt.Cookie.IsEssential = true;
 });
 
 builder.Services
@@ -71,6 +148,7 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -88,8 +166,26 @@ using (var scope = app.Services.CreateScope())
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var configuration = services.GetRequiredService<IConfiguration>();
-    await IdentitySeeder.SeedAsync(userManager, roleManager, configuration);
-    await CatalogSeeder.SeedAsync(dbContext);
+
+    try
+    {
+        await IdentitySeeder.SeedAsync(userManager, roleManager, configuration);
+        Console.WriteLine("Seed[Identity]: completed.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Seed[Identity]: {ex}");
+    }
+
+    try
+    {
+        await CatalogSeeder.SeedAsync(dbContext);
+        Console.WriteLine("Seed[Catalog]: completed.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Seed[Catalog]: {ex}");
+    }
 }
 
 app.UseHttpsRedirection();

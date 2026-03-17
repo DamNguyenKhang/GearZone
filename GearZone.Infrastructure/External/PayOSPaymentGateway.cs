@@ -1,25 +1,42 @@
 using GearZone.Application.Abstractions.External;
-using Microsoft.Extensions.DependencyInjection;
+using GearZone.Infrastructure.Settings;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using PayOS;
 
 namespace GearZone.Infrastructure.External
 {
     public class PayOSPaymentGateway : IPaymentGateway
     {
-        private readonly PayOSClient _client;
+        private readonly PayOSClient? _client;
+        private readonly string? _initError;
         private readonly ILogger<PayOSPaymentGateway> _logger;
 
         public PayOSPaymentGateway(
-            [FromKeyedServices("OrderClient")] PayOSClient client,
+            IOptions<PayOSSettings> settings,
             ILogger<PayOSPaymentGateway> logger)
         {
-            _client = client;
             _logger = logger;
+
+            try
+            {
+                var cfg = settings.Value;
+                _client = PayOSClientFactory.Create(cfg.ClientId, cfg.ApiKey, cfg.ChecksumKey);
+            }
+            catch (Exception ex)
+            {
+                _initError = ex.Message;
+                _logger.LogError(ex, "Could not initialize PayOS payment gateway client.");
+            }
         }
 
         public async Task<PaymentGatewayResult> GetPaymentStatusAsync(long orderCode)
         {
+            if (_client == null)
+            {
+                return PaymentGatewayResult.Error(_initError ?? "PayOS client is not initialized.");
+            }
+
             try
             {
                 var paymentInfo = await _client.PaymentRequests.GetAsync(orderCode);

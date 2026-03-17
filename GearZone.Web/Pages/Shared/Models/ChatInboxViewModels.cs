@@ -17,6 +17,7 @@ namespace GearZone.Web.Pages.Shared.Models
         public string? ProductSlug { get; set; }
         public Guid? ActiveConversationId { get; set; }
         public int TotalUnreadCount { get; set; }
+        public int LoadedConversationPageCount { get; set; } = 1;
         public string EmptyInboxTitle { get; set; } = string.Empty;
         public string EmptyInboxDescription { get; set; } = string.Empty;
         public List<ChatCounterpartScopeOptionDto> CounterpartScopeOptions { get; set; } = new();
@@ -37,6 +38,7 @@ namespace GearZone.Web.Pages.Shared.Models
         public string? CounterpartScopeKey { get; set; }
         public Guid? ActiveConversationId { get; set; }
         public int TotalUnreadCount { get; set; }
+        public int LoadedConversationPageCount { get; set; } = 1;
         public string EmptyInboxTitle { get; set; } = string.Empty;
         public string EmptyInboxDescription { get; set; } = string.Empty;
         public List<ChatCounterpartScopeOptionDto> CounterpartScopeOptions { get; set; } = new();

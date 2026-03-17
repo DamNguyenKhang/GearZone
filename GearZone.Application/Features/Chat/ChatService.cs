@@ -3,6 +3,7 @@ using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Chat.Dtos;
 using GearZone.Domain.Entities;
+using GearZone.Domain.Enums;
 
 namespace GearZone.Application.Features.Chat
 {
@@ -13,6 +14,7 @@ namespace GearZone.Application.Features.Chat
         private readonly IProductRepository _productRepository;
         private readonly IStoreRepository _storeRepository;
         private readonly ISubOrderRepository _subOrderRepository;
+        private readonly IOrderStatusHistoryRepository _orderStatusHistoryRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public ChatService(
@@ -21,6 +23,7 @@ namespace GearZone.Application.Features.Chat
             IProductRepository productRepository,
             IStoreRepository storeRepository,
             ISubOrderRepository subOrderRepository,
+            IOrderStatusHistoryRepository orderStatusHistoryRepository,
             IUnitOfWork unitOfWork)
         {
             _conversationRepository = conversationRepository;
@@ -28,6 +31,7 @@ namespace GearZone.Application.Features.Chat
             _productRepository = productRepository;
             _storeRepository = storeRepository;
             _subOrderRepository = subOrderRepository;
+            _orderStatusHistoryRepository = orderStatusHistoryRepository;
             _unitOfWork = unitOfWork;
         }
 
@@ -362,6 +366,52 @@ namespace GearZone.Application.Features.Chat
             return await _subOrderRepository.GetSellerChatOrdersAsync(ownerUserId, query);
         }
 
+        public async Task<SellerChatOrderDetailDto?> GetSellerChatOrderDetailAsync(string ownerUserId, Guid subOrderId)
+        {
+            if (string.IsNullOrWhiteSpace(ownerUserId) || subOrderId == Guid.Empty)
+            {
+                return null;
+            }
+
+            return await _subOrderRepository.GetSellerChatOrderDetailAsync(ownerUserId, subOrderId);
+        }
+
+        public Task<bool> ApproveSellerOrderAsync(string ownerUserId, Guid subOrderId)
+        {
+            return ChangeSellerOrderStatusAsync(
+                ownerUserId,
+                subOrderId,
+                OrderStatus.Approved,
+                "Approved by store owner");
+        }
+
+        public Task<bool> RejectSellerOrderAsync(string ownerUserId, Guid subOrderId)
+        {
+            return ChangeSellerOrderStatusAsync(
+                ownerUserId,
+                subOrderId,
+                OrderStatus.Rejected,
+                "Rejected by store owner");
+        }
+
+        public Task<bool> MarkSellerOrderProcessingAsync(string ownerUserId, Guid subOrderId)
+        {
+            return ChangeSellerOrderStatusAsync(
+                ownerUserId,
+                subOrderId,
+                OrderStatus.Processing,
+                "Marked as processing by store owner");
+        }
+
+        public Task<bool> MarkSellerOrderDeliveredAsync(string ownerUserId, Guid subOrderId)
+        {
+            return ChangeSellerOrderStatusAsync(
+                ownerUserId,
+                subOrderId,
+                OrderStatus.Delivered,
+                "Marked as delivered by store owner");
+        }
+
         public async Task<ChatConversationUpdateDto?> GetConversationUpdateForBuyerAsync(string buyerUserId, Guid conversationId)
         {
             if (string.IsNullOrWhiteSpace(buyerUserId))
@@ -540,6 +590,62 @@ namespace GearZone.Application.Features.Chat
             query.ProductSlug = string.IsNullOrWhiteSpace(query.ProductSlug)
                 ? null
                 : query.ProductSlug.Trim();
+        }
+
+        private async Task<bool> ChangeSellerOrderStatusAsync(
+            string ownerUserId,
+            Guid subOrderId,
+            OrderStatus targetStatus,
+            string note)
+        {
+            if (string.IsNullOrWhiteSpace(ownerUserId) || subOrderId == Guid.Empty)
+            {
+                return false;
+            }
+
+            var subOrder = await _subOrderRepository.GetSellerChatSubOrderAsync(ownerUserId, subOrderId);
+            if (subOrder == null)
+            {
+                return false;
+            }
+
+            var oldStatus = subOrder.Status;
+            if (oldStatus == targetStatus)
+            {
+                return true;
+            }
+
+            var isValidTransition =
+                (oldStatus == OrderStatus.Pending && (targetStatus == OrderStatus.Approved || targetStatus == OrderStatus.Rejected)) ||
+                ((oldStatus == OrderStatus.Approved || oldStatus == OrderStatus.Paid) && targetStatus == OrderStatus.Processing) ||
+                (oldStatus == OrderStatus.Processing && targetStatus == OrderStatus.Delivered);
+
+            if (!isValidTransition)
+            {
+                return false;
+            }
+
+            subOrder.Status = targetStatus;
+            subOrder.UpdatedAt = DateTime.UtcNow;
+            if (targetStatus == OrderStatus.Delivered)
+            {
+                subOrder.DeliveredAt = DateTime.UtcNow;
+            }
+
+            await _subOrderRepository.UpdateAsync(subOrder);
+            await _orderStatusHistoryRepository.AddAsync(new OrderStatusHistory
+            {
+                Id = Guid.NewGuid(),
+                OrderId = subOrder.OrderId,
+                OldStatus = oldStatus,
+                NewStatus = targetStatus,
+                ChangedAt = DateTime.UtcNow,
+                ChangedByUserId = ownerUserId,
+                Note = note
+            });
+
+            await _unitOfWork.SaveChangesAsync();
+            return true;
         }
     }
 }

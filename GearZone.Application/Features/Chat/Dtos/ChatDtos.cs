@@ -35,6 +35,13 @@ namespace GearZone.Application.Features.Chat.Dtos
     public class SellerChatOrderQueryDto
     {
         public string? SearchTerm { get; set; }
+        public OrderStatus? Status { get; set; }
+        public decimal? MinSubtotal { get; set; }
+        public decimal? MaxSubtotal { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public string? SortBy { get; set; } = "createdAt";
+        public string? SortDirection { get; set; } = "desc";
         public int PageNumber { get; set; } = 1;
         public int PageSize { get; set; } = 10;
     }
@@ -127,6 +134,56 @@ namespace GearZone.Application.Features.Chat.Dtos
         public decimal Subtotal { get; set; }
         public int ItemCount { get; set; }
         public string ProductPreview { get; set; } = string.Empty;
+    }
+
+    public class SellerChatOrderDetailDto
+    {
+        public Guid SubOrderId { get; set; }
+        public long OrderCode { get; set; }
+        public Guid StoreId { get; set; }
+        public string StoreName { get; set; } = string.Empty;
+        public string BuyerUserId { get; set; } = string.Empty;
+        public string BuyerDisplayName { get; set; } = string.Empty;
+        public string? BuyerAvatarUrl { get; set; }
+        public string? BuyerEmail { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? DeliveredAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public OrderStatus Status { get; set; }
+        public decimal Subtotal { get; set; }
+        public decimal ShippingFee { get; set; }
+        public decimal GrandTotal { get; set; }
+        public decimal CommissionRateSnapshot { get; set; }
+        public decimal CommissionAmount { get; set; }
+        public decimal NetAmount { get; set; }
+        public string ReceiverName { get; set; } = string.Empty;
+        public string ReceiverPhone { get; set; } = string.Empty;
+        public string ShippingAddress { get; set; } = string.Empty;
+        public string? ShippingProvider { get; set; }
+        public string? TrackingNumber { get; set; }
+        public List<SellerChatOrderItemDetailDto> Items { get; set; } = new();
+        public List<SellerChatOrderStatusHistoryDto> StatusHistory { get; set; } = new();
+    }
+
+    public class SellerChatOrderItemDetailDto
+    {
+        public Guid OrderItemId { get; set; }
+        public Guid VariantId { get; set; }
+        public string ProductName { get; set; } = string.Empty;
+        public string VariantName { get; set; } = string.Empty;
+        public string Sku { get; set; } = string.Empty;
+        public int Quantity { get; set; }
+        public decimal UnitPrice { get; set; }
+        public decimal LineTotal { get; set; }
+    }
+
+    public class SellerChatOrderStatusHistoryDto
+    {
+        public DateTime ChangedAt { get; set; }
+        public OrderStatus? OldStatus { get; set; }
+        public OrderStatus NewStatus { get; set; }
+        public string ChangedByDisplayName { get; set; } = string.Empty;
+        public string? Note { get; set; }
     }
 
     public class ChatThreadDto

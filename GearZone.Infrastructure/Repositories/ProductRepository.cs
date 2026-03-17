@@ -300,7 +300,8 @@ namespace GearZone.Infrastructure.Repositories
 
             if (queryDto.EndDate.HasValue)
             {
-                query = query.Where(p => p.CreatedAt <= queryDto.EndDate.Value);
+                var endOfDay = queryDto.EndDate.Value.Date.AddDays(1).AddTicks(-1);
+                query = query.Where(p => p.CreatedAt <= endOfDay);
             }
 
             if (queryDto.OutOfStock)

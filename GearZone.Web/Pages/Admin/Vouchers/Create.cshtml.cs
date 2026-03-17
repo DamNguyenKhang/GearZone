@@ -26,11 +26,36 @@ namespace GearZone.Web.Pages.Admin.Vouchers
 
         public List<CategoryDto> Categories { get; set; } = new();
 
-        public async Task OnGetAsync()
+        public async Task OnGetAsync(Guid? copyFromId = null)
         {
             Categories = await _categoryService.GetAllCategoriesListAsync();
             
-            // Set default values
+            if (copyFromId.HasValue)
+            {
+                var sourceVoucher = await _voucherService.GetVoucherByIdAsync(copyFromId.Value);
+                if (sourceVoucher != null)
+                {
+                    Input = new CreateVoucherDto
+                    {
+                        Name = sourceVoucher.Name + " (Copy)",
+                        Description = sourceVoucher.Description,
+                        Type = sourceVoucher.Type.ToString(),
+                        DiscountType = sourceVoucher.DiscountType.ToString(),
+                        DiscountValue = sourceVoucher.DiscountValue,
+                        MaxDiscount = sourceVoucher.MaxDiscount,
+                        MinOrderAmount = sourceVoucher.MinOrderAmount ?? 0,
+                        UsageLimit = sourceVoucher.UsageLimit,
+                        CategoryId = sourceVoucher.CategoryId,
+                        IsVisible = true,
+                        // Code is intentionally left blank for the user to enter
+                        StartAt = DateTime.Now,
+                        EndAt = DateTime.Now.AddDays(30)
+                    };
+                    return;
+                }
+            }
+
+            // Set default values for new voucher
             Input.StartAt = DateTime.Now;
             Input.EndAt = DateTime.Now.AddDays(30);
             Input.UsageLimit = 1000;

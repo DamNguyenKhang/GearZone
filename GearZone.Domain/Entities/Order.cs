@@ -34,6 +34,7 @@ namespace GearZone.Domain.Entities
         public Voucher? OrderVoucher { get; set; }
         public Voucher? ShippingVoucher { get; set; }
         public ICollection<SubOrder> SubOrders { get; set; } = new List<SubOrder>();
+        public ICollection<Shipment> Shipments { get; set; } = new List<Shipment>();
         public ICollection<OrderStatusHistory> StatusHistories { get; set; } = new List<OrderStatusHistory>();
         public ICollection<Payment> Payments { get; set; } = new List<Payment>();
     }

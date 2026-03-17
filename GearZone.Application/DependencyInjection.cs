@@ -12,6 +12,7 @@ using GearZone.Application.Features.Payment;
 using GearZone.Application.Features.Payout;
 using GearZone.Application.Features.Reviews;
 using GearZone.Application.Features.Seller;
+using GearZone.Application.Features.Shipping;
 using GearZone.Application.Features.User;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -48,6 +49,7 @@ namespace GearZone.Application
             services.AddScoped<IAdminDashboardService, AdminDashboardService>();
             services.AddScoped<IAdminVoucherService, AdminVoucherService>();
             services.AddScoped<IVoucherService, VoucherService>();
+            services.AddScoped<IShippingService, ShippingService>();
             services.AddScoped<IMapService, MapService>();
             services.AddScoped<IUserService, UserService>();
 

@@ -29,6 +29,7 @@ namespace GearZone.Infrastructure
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<OrderStatusHistory> OrderStatusHistories { get; set; }
+        public DbSet<Shipment> Shipments { get; set; }
 
         public DbSet<Payment> Payments { get; set; }
         public DbSet<SystemSetting> SystemSettings { get; set; }

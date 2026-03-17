@@ -67,5 +67,28 @@ namespace GearZone.Infrastructure.External
                 return null;
             }
         }
+
+        public async Task<double?> GetDistanceAsync(double originLat, double originLng, double destinationLat, double destinationLng)
+        {
+            var url = $"https://rsapi.goong.io/DistanceMatrix?origins={originLat},{originLng}&destinations={destinationLat},{destinationLng}&vehicle=car&api_key={_apiKey}";
+
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<GoongDistanceMatrixResponse>(url);
+                if (response?.Status == "OK" && response.Rows.Count > 0 && response.Rows[0].Elements.Count > 0)
+                {
+                    var element = response.Rows[0].Elements[0];
+                    if (element.Status == "OK")
+                    {
+                        return element.Distance.ValueInMeters / 1000.0; // Convert meters to km
+                    }
+                }
+                return null;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
     }
 }

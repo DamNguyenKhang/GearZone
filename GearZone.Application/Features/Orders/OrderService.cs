@@ -47,6 +47,8 @@ namespace GearZone.Application.Features.Orders
             decimal orderDiscountAmount = 0,
             Guid? shippingVoucherId = null,
             decimal shippingDiscountAmount = 0,
+            decimal totalShippingFee = 0,
+            List<GearZone.Application.Features.Shipping.Dtos.StoreShippingFeeDto>? storeShippingFees = null,
             CancellationToken ct = default)
         {
             var addressParts = new List<string?> 
@@ -63,7 +65,6 @@ namespace GearZone.Application.Features.Orders
             long orderCode = long.Parse(
                 DateTime.UtcNow.ToString("yyMMddHHmmss") + new Random().Next(10, 99).ToString());
 
-            decimal totalShippingFee = 0m; // Free shipping
             decimal grandTotal = 0m;
 
             // Determine initial order status based on payment method
@@ -129,6 +130,22 @@ namespace GearZone.Application.Features.Orders
                 };
 
                 order.SubOrders.Add(subOrder);
+                
+                // Create Shipment for this store
+                var storeShipping = storeShippingFees?.FirstOrDefault(sf => sf.StoreId == storeId);
+                if (storeShipping != null)
+                {
+                    order.Shipments.Add(new Shipment
+                    {
+                        Id = Guid.NewGuid(),
+                        OrderId = order.Id,
+                        StoreId = storeId,
+                        ShippingFee = storeShipping.ShippingFee,
+                        DistanceKm = storeShipping.DistanceKm,
+                        ShippingProvider = "Standard"
+                    });
+                }
+
                 grandTotal += subtotal;
             }
 

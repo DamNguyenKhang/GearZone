@@ -23,6 +23,8 @@ namespace GearZone.Application.Abstractions.Services
             decimal orderDiscountAmount = 0,
             Guid? shippingVoucherId = null,
             decimal shippingDiscountAmount = 0,
+            decimal totalShippingFee = 0,
+            List<GearZone.Application.Features.Shipping.Dtos.StoreShippingFeeDto>? storeShippingFees = null,
             CancellationToken ct = default);
 
         Task<bool> CancelOrderAsync(Guid orderId, string? userId = null, CancellationToken ct = default);

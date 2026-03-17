@@ -98,6 +98,8 @@ namespace GearZone.Application.Features.Checkout
                     MaxDiscount = v.MaxDiscount,
                     MinOrderAmount = v.MinOrderAmount,
                     EndAt = v.EndAt,
+                    UsedCount = v.UsedCount,
+                    UsageLimit = v.UsageLimit,
                     IsEligible = true
                 };
 

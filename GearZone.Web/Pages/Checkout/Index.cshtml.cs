@@ -20,6 +20,7 @@ namespace GearZone.Web.Pages.Checkout
         private readonly IConfiguration _configuration;
         private readonly IUserService _userService;
         private readonly IVoucherService _voucherService;
+        private readonly IShippingService _shippingService;
 
         public IndexModel(
             ICheckoutService checkoutService,
@@ -27,7 +28,8 @@ namespace GearZone.Web.Pages.Checkout
             UserManager<ApplicationUser> userManager,
             IConfiguration configuration,
             IUserService userService,
-            IVoucherService voucherService)
+            IVoucherService voucherService,
+            IShippingService shippingService)
         {
             _checkoutService = checkoutService;
             _orderService = orderService;
@@ -35,6 +37,7 @@ namespace GearZone.Web.Pages.Checkout
             _configuration = configuration;
             _userService = userService;
             _voucherService = voucherService;
+            _shippingService = shippingService;
         }
 
         public string? GoongApiKey => _configuration["GOONG_API_KEY"];
@@ -163,6 +166,20 @@ namespace GearZone.Web.Pages.Checkout
             }
         }
 
+        public async Task<IActionResult> OnPostCalculateShippingAsync([FromBody] CalculateShippingRequest request)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+
+            if (request.CartItemIds == null || !request.CartItemIds.Any())
+                return BadRequest("No items selected.");
+
+            var items = await _checkoutService.GetCheckoutItemsAsync(userId, request.CartItemIds);
+            var result = await _shippingService.CalculateShippingFeeAsync(request.Latitude, request.Longitude, items);
+
+            return new JsonResult(result);
+        }
+
         // ─── Voucher AJAX Handlers ────────────────────────
 
         public async Task<IActionResult> OnPostApplyVoucherAsync([FromBody] ApplyVoucherRequest request)
@@ -214,6 +231,13 @@ namespace GearZone.Web.Pages.Checkout
         public string Type { get; set; } = "order"; // "order" or "shipping"
         public decimal MerchandiseTotal { get; set; }
         public decimal ShippingFee { get; set; }
+    }
+
+    public class CalculateShippingRequest
+    {
+        public List<Guid> CartItemIds { get; set; } = new();
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
     }
 }
 

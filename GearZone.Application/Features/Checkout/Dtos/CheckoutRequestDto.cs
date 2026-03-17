@@ -9,8 +9,11 @@ namespace GearZone.Application.Features.Checkout.Dtos
         public List<Guid> CartItemIds { get; set; } = new List<Guid>();
         public ShippingInfoDto ShippingInfo { get; set; } = null!;
         public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.COD;
+        public decimal ShippingFee { get; set; }
         public bool SaveAddress { get; set; }
         public bool IsDefaultAddress { get; set; }
+        public string? OrderVoucherCode { get; set; }
+        public string? ShippingVoucherCode { get; set; }
     }
 
     public class ShippingInfoDto

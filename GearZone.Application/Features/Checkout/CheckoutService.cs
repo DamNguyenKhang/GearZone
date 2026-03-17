@@ -25,6 +25,7 @@ namespace GearZone.Application.Features.Checkout
         private readonly PaymentStrategyFactory _paymentStrategyFactory;
         private readonly IBackgroundJobService _backgroundJobService;
         private readonly IUserService _userService;
+        private readonly IVoucherService _voucherService;
 
         public CheckoutService(
             ICartItemRepository cartItemRepository,
@@ -35,7 +36,8 @@ namespace GearZone.Application.Features.Checkout
             IUnitOfWork unitOfWork,
             PaymentStrategyFactory paymentStrategyFactory,
             IBackgroundJobService backgroundJobService,
-            IUserService userService)
+            IUserService userService,
+            IVoucherService voucherService)
         {
             _cartItemRepository = cartItemRepository;
             _productVariantRepository = productVariantRepository;
@@ -46,6 +48,7 @@ namespace GearZone.Application.Features.Checkout
             _paymentStrategyFactory = paymentStrategyFactory;
             _backgroundJobService = backgroundJobService;
             _userService = userService;
+            _voucherService = voucherService;
         }
 
         public async Task<CheckoutResponseDto> ProcessCheckoutAsync(
@@ -82,10 +85,44 @@ namespace GearZone.Application.Features.Checkout
                 await _productVariantRepository.UpdateAsync(cartItem.Variant);
             }
 
-            // 4. Create order (status depends on payment method)
-            var order = await _orderService.CreateOrderAsync(userId, request, cartItems, ct);
+            // 4. Validate vouchers
+            Guid? orderVoucherId = null;
+            decimal orderDiscountAmount = 0;
+            Guid? shippingVoucherId = null;
+            decimal shippingDiscountAmount = 0;
 
-            // 5. Process payment via Strategy Pattern
+            var merchandiseTotal = cartItems.Sum(ci => ci.Quantity * ci.Variant.Price);
+
+            if (!string.IsNullOrWhiteSpace(request.OrderVoucherCode))
+            {
+                var orderVoucherResult = await _voucherService.ValidateVoucherAsync(
+                    request.OrderVoucherCode, userId, merchandiseTotal, request.ShippingFee, Domain.Enums.VoucherType.OrderDiscount);
+                if (!orderVoucherResult.IsValid)
+                    return new CheckoutResponseDto { Success = false, ErrorMessage = orderVoucherResult.ErrorMessage };
+
+                orderVoucherId = orderVoucherResult.VoucherId;
+                orderDiscountAmount = orderVoucherResult.DiscountAmount;
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.ShippingVoucherCode))
+            {
+                var shippingVoucherResult = await _voucherService.ValidateVoucherAsync(
+                    request.ShippingVoucherCode, userId, merchandiseTotal, request.ShippingFee, Domain.Enums.VoucherType.ShippingDiscount);
+                if (!shippingVoucherResult.IsValid)
+                    return new CheckoutResponseDto { Success = false, ErrorMessage = shippingVoucherResult.ErrorMessage };
+
+                shippingVoucherId = shippingVoucherResult.VoucherId;
+                shippingDiscountAmount = shippingVoucherResult.DiscountAmount;
+            }
+
+            // 5. Create order
+            var order = await _orderService.CreateOrderAsync(
+                userId, request, cartItems,
+                orderVoucherId, orderDiscountAmount,
+                shippingVoucherId, shippingDiscountAmount,
+                ct);
+
+            // 6. Process payment via Strategy Pattern
             var strategy = _paymentStrategyFactory.GetStrategy(request.PaymentMethod);
             var paymentResult = await strategy.ProcessPaymentAsync(order);
 
@@ -98,8 +135,14 @@ namespace GearZone.Application.Features.Checkout
                 };
             }
 
-            // 6. Clear cart items
+            // 7. Clear cart items
             await _cartService.ClearCartItemsAsync(request.CartItemIds, ct);
+
+            // 8. Record voucher usage
+            if (orderVoucherId.HasValue)
+                await _voucherService.RecordVoucherUsageAsync(orderVoucherId.Value, userId, order.Id, orderDiscountAmount);
+            if (shippingVoucherId.HasValue)
+                await _voucherService.RecordVoucherUsageAsync(shippingVoucherId.Value, userId, order.Id, shippingDiscountAmount);
 
             // 7. Save address if requested
             if (request.SaveAddress)

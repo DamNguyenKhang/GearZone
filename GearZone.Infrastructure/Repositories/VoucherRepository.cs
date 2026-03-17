@@ -112,5 +112,27 @@ namespace GearZone.Infrastructure.Repositories
                 TotalSavedAmount = totalSavedAmount
             };
         }
+
+        public async Task<Voucher?> GetByCodeAsync(string code)
+        {
+            return await Query()
+                .FirstOrDefaultAsync(v => v.Code == code);
+        }
+
+        public async Task<List<Voucher>> GetAvailableVouchersAsync(VoucherType type)
+        {
+            var now = DateTime.Now;
+            return await Query()
+                .AsNoTracking()
+                .Where(v => v.Type == type
+                    && v.Status == VoucherStatus.Active
+                    && v.IsActive
+                    && v.StartAt <= now
+                    && v.EndAt >= now
+                    && v.UsedCount < v.UsageLimit)
+                .OrderByDescending(v => v.DiscountValue)
+                .ToListAsync();
+        }
     }
 }
+

@@ -23,8 +23,16 @@ namespace GearZone.Domain.Entities
         public DateTime? PaidAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 
+        // Voucher / Discount
+        public Guid? OrderVoucherId { get; set; }
+        public decimal OrderDiscountAmount { get; set; }
+        public Guid? ShippingVoucherId { get; set; }
+        public decimal ShippingDiscountAmount { get; set; }
+
         // Navigation
         public ApplicationUser User { get; set; } = null!;
+        public Voucher? OrderVoucher { get; set; }
+        public Voucher? ShippingVoucher { get; set; }
         public ICollection<SubOrder> SubOrders { get; set; } = new List<SubOrder>();
         public ICollection<OrderStatusHistory> StatusHistories { get; set; } = new List<OrderStatusHistory>();
         public ICollection<Payment> Payments { get; set; } = new List<Payment>();

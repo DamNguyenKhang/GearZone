@@ -47,6 +47,7 @@ namespace GearZone.Application
             services.AddScoped<IAdminPlatformService, AdminPlatformService>();
             services.AddScoped<IAdminDashboardService, AdminDashboardService>();
             services.AddScoped<IAdminVoucherService, AdminVoucherService>();
+            services.AddScoped<IVoucherService, VoucherService>();
             services.AddScoped<IMapService, MapService>();
             services.AddScoped<IUserService, UserService>();
 

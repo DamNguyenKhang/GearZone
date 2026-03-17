@@ -19,6 +19,10 @@ namespace GearZone.Application.Abstractions.Services
             string userId,
             CheckoutRequestDto request,
             List<CartItem> cartItems,
+            Guid? orderVoucherId = null,
+            decimal orderDiscountAmount = 0,
+            Guid? shippingVoucherId = null,
+            decimal shippingDiscountAmount = 0,
             CancellationToken ct = default);
 
         Task<bool> CancelOrderAsync(Guid orderId, string? userId = null, CancellationToken ct = default);

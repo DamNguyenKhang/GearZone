@@ -19,19 +19,22 @@ namespace GearZone.Web.Pages.Checkout
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
         private readonly IUserService _userService;
+        private readonly IVoucherService _voucherService;
 
         public IndexModel(
             ICheckoutService checkoutService,
             IOrderService orderService,
             UserManager<ApplicationUser> userManager,
             IConfiguration configuration,
-            IUserService userService)
+            IUserService userService,
+            IVoucherService voucherService)
         {
             _checkoutService = checkoutService;
             _orderService = orderService;
             _userManager = userManager;
             _configuration = configuration;
             _userService = userService;
+            _voucherService = voucherService;
         }
 
         public string? GoongApiKey => _configuration["GOONG_API_KEY"];
@@ -159,5 +162,58 @@ namespace GearZone.Web.Pages.Checkout
                 return StatusCode(500, new { message = "Error saving to database", detail = ex.Message });
             }
         }
+
+        // ─── Voucher AJAX Handlers ────────────────────────
+
+        public async Task<IActionResult> OnPostApplyVoucherAsync([FromBody] ApplyVoucherRequest request)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+
+            if (string.IsNullOrWhiteSpace(request.Code))
+                return new JsonResult(new { isValid = false, errorMessage = "Please enter a voucher code." });
+
+            var expectedType = request.Type == "shipping"
+                ? VoucherType.ShippingDiscount
+                : VoucherType.OrderDiscount;
+
+            var result = await _voucherService.ValidateVoucherAsync(
+                request.Code, userId, request.OrderTotal, request.ShippingFee, expectedType);
+
+            return new JsonResult(new
+            {
+                isValid = result.IsValid,
+                errorMessage = result.ErrorMessage,
+                voucherId = result.VoucherId,
+                voucherName = result.VoucherName,
+                voucherCode = result.VoucherCode,
+                discountAmount = result.DiscountAmount,
+                discountLabel = result.DiscountLabel
+            });
+        }
+
+        public async Task<IActionResult> OnGetAvailableVouchersAsync(string type, decimal orderTotal, decimal shippingFee)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+
+            var voucherType = type == "shipping"
+                ? VoucherType.ShippingDiscount
+                : VoucherType.OrderDiscount;
+
+            var vouchers = await _voucherService.GetAvailableVouchersForCheckoutAsync(
+                userId, orderTotal, shippingFee, voucherType);
+
+            return new JsonResult(vouchers);
+        }
+    }
+
+    public class ApplyVoucherRequest
+    {
+        public string Code { get; set; } = string.Empty;
+        public string Type { get; set; } = "order"; // "order" or "shipping"
+        public decimal OrderTotal { get; set; }
+        public decimal ShippingFee { get; set; }
     }
 }
+

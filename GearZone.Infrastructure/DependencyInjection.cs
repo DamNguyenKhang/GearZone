@@ -72,6 +72,7 @@ namespace GearZone.Infrastructure
             services.AddScoped<IWalletTransactionRepository, WalletTransactionRepository>();
             services.AddScoped<IPlatformTransactionRepository, PlatformTransactionRepository>();
             services.AddScoped<IVoucherRepository, VoucherRepository>();
+            services.AddScoped<IVoucherUsageRepository, VoucherUsageRepository>();
             services.AddScoped<IUserAddressRepository, UserAddressRepository>();
 
             // Jobs

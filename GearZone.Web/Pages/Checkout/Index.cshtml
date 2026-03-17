@@ -8,14 +8,15 @@
 
 @* ─── NORMAL CHECKOUT FORM ──────────────────────────────────── *@
 
-<div class="flex items-center justify-between mb-8">
-    <h1 class="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-        Checkout
-        <span class="text-lg font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full cart-total-count">
-            (@Model.SelectedItems.Count items)
-        </span>
-    </h1>
-</div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+    <div class="flex items-center justify-between mb-8">
+        <h1 class="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+            Checkout
+            <span class="text-lg font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full cart-total-count">
+                (@Model.SelectedItems.Count items)
+            </span>
+        </h1>
+    </div>
 
 @if (!ModelState.IsValid)
 {
@@ -138,6 +139,74 @@
                 </div>
             </div>
 
+            <!-- Voucher Selection -->
+            <div class="bg-white dark:bg-[#1a202c] rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 flex gap-3 items-center">
+                    <span class="material-symbols-outlined text-primary text-xl">confirmation_number</span>
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Vouchers</h2>
+                </div>
+                <input type="hidden" name="CheckoutRequest.OrderVoucherCode" id="order-voucher-code-input" />
+                <input type="hidden" name="CheckoutRequest.ShippingVoucherCode" id="shipping-voucher-code-input" />
+                <input type="hidden" name="CheckoutRequest.ShippingFee" id="shipping-fee-hidden" value="0" />
+                <div class="p-6 space-y-4">
+                    <!-- Order Discount Voucher Row -->
+                    <div class="flex items-center justify-between p-4 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl transition-all" id="order-voucher-row">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-orange-500 text-xl">sell</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-900 dark:text-white">Order Discount</p>
+                                <p class="text-xs text-slate-500" id="order-voucher-status">No voucher applied</p>
+                            </div>
+                        </div>
+                        <div id="order-voucher-actions">
+                            <button type="button" onclick="openVoucherModal('order')" class="text-sm font-bold text-primary hover:text-blue-700 bg-primary/5 hover:bg-primary/10 px-4 py-2 rounded-lg transition-all flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[16px]">add</span>
+                                Select Voucher
+                            </button>
+                        </div>
+                        <div id="order-voucher-applied" class="hidden flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-sm font-bold rounded-lg border border-green-200 dark:border-green-800">
+                                <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                                <span id="order-voucher-label"></span>
+                            </span>
+                            <button type="button" onclick="removeVoucher('order')" class="text-slate-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">close</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Shipping Discount Voucher Row -->
+                    <div class="flex items-center justify-between p-4 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl transition-all" id="shipping-voucher-row">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-blue-500 text-xl">local_shipping</span>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-900 dark:text-white">Free Shipping</p>
+                                <p class="text-xs text-slate-500" id="shipping-voucher-status">No voucher applied</p>
+                            </div>
+                        </div>
+                        <div id="shipping-voucher-actions">
+                            <button type="button" onclick="openVoucherModal('shipping')" class="text-sm font-bold text-primary hover:text-blue-700 bg-primary/5 hover:bg-primary/10 px-4 py-2 rounded-lg transition-all flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[16px]">add</span>
+                                Select Voucher
+                            </button>
+                        </div>
+                        <div id="shipping-voucher-applied" class="hidden flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1 px-3 py-1.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-sm font-bold rounded-lg border border-green-200 dark:border-green-800">
+                                <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                                <span id="shipping-voucher-label"></span>
+                            </span>
+                            <button type="button" onclick="removeVoucher('shipping')" class="text-slate-400 hover:text-red-500 p-1 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">close</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Ordered Items List -->
             <div class="bg-white dark:bg-[#1a202c] rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                  <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/30 flex gap-3 items-center">
@@ -212,11 +281,19 @@
                     <div class="space-y-4 text-sm text-slate-600 dark:text-slate-300">
                         <div class="flex justify-between items-center">
                             <span>Merchandise Subtotal</span>
-                            <span class="font-medium text-slate-900 dark:text-white">@Model.GrandTotal.ToString("N0")₫</span>
+                            <span class="font-medium text-slate-900 dark:text-white" id="summary-subtotal">@Model.GrandTotal.ToString("N0")₫</span>
                         </div>
                         <div class="flex justify-between items-center">
                             <span>Shipping Total</span>
                             <span class="font-medium text-slate-900 dark:text-white">0₫</span>
+                        </div>
+                        <div class="flex justify-between items-center hidden" id="summary-order-discount-row">
+                            <span class="flex items-center gap-1 text-green-600"><span class="material-symbols-outlined text-[14px]">confirmation_number</span> Order Discount</span>
+                            <span class="font-medium text-green-600" id="summary-order-discount">-0₫</span>
+                        </div>
+                        <div class="flex justify-between items-center hidden" id="summary-shipping-discount-row">
+                            <span class="flex items-center gap-1 text-green-600"><span class="material-symbols-outlined text-[14px]">local_shipping</span> Shipping Discount</span>
+                            <span class="font-medium text-green-600" id="summary-shipping-discount">-0₫</span>
                         </div>
                     </div>
                     
@@ -225,7 +302,7 @@
                     <div class="flex justify-between items-center mb-6">
                         <span class="text-lg font-semibold text-slate-900 dark:text-white">Total Payment</span>
                         <div class="text-right">
-                            <span class="block text-3xl font-bold text-secondary">@Model.GrandTotal.ToString("N0")₫</span>
+                            <span class="block text-3xl font-bold text-secondary" id="summary-total">@Model.GrandTotal.ToString("N0")₫</span>
                         </div>
                     </div>
                     
@@ -423,11 +500,287 @@
 
         </div>
 
+        <!-- Voucher Modal -->
+        <div id="voucher-modal" class="fixed inset-0 z-[100] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="closeVoucherModal()"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                
+                <div class="inline-block align-bottom bg-white dark:bg-[#1a202c] rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full">
+                    <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                        <h3 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                             <span class="material-symbols-outlined text-primary" id="voucher-modal-icon">confirmation_number</span>
+                             <span id="voucher-modal-title">Select Voucher</span>
+                        </h3>
+                        <button type="button" onclick="closeVoucherModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+
+                    <div class="p-6">
+                        <!-- Manual Entry -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Have a voucher code?</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="manual-voucher-code" class="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl focus:border-primary outline-none transition-all uppercase placeholder:normal-case font-mono" placeholder="Enter code here..." />
+                                <button type="button" onclick="applyManualVoucher()" class="px-6 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-primary/20">
+                                    Apply
+                                </button>
+                            </div>
+                            <p id="voucher-error" class="hidden mt-2 text-sm text-red-500 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[16px]">error</span>
+                                <span id="voucher-error-msg"></span>
+                            </p>
+                        </div>
+
+                        <div class="relative py-2">
+                            <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                                <div class="w-full border-t border-slate-100 dark:border-slate-800"></div>
+                            </div>
+                            <div class="relative flex justify-center text-xs uppercase tracking-widest font-bold">
+                                <span class="px-3 bg-white dark:bg-[#1a202c] text-slate-400">Available Vouchers</span>
+                            </div>
+                        </div>
+
+                        <!-- Voucher List Container -->
+                        <div id="voucher-list" class="mt-6 space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                           <!-- JS will populate this -->
+                           <div class="flex flex-col items-center justify-center py-12 text-slate-400">
+                               <div class="loading-spinner mb-3"></div>
+                               <p>Finding best deals for you...</p>
+                           </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
 </form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <link href="https://cdn.jsdelivr.net/npm/@@goongmaps/goong-js/dist/goong-js.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@@goongmaps/goong-js/dist/goong-js.js"></script>
+
+    <script>
+        let currentVoucherType = 'order';
+        const orderTotal = @Model.GrandTotal;
+        let shippingFee = 0; // Dynamic value or from internal state
+        let appliedVouchers = {
+            order: null,
+            shipping: null
+        };
+
+        function openVoucherModal(type) {
+            currentVoucherType = type;
+            document.getElementById('voucher-modal-title').textContent = type === 'order' ? 'Select Order Voucher' : 'Select Shipping Voucher';
+            document.getElementById('voucher-modal-icon').textContent = type === 'order' ? 'sell' : 'local_shipping';
+            document.getElementById('voucher-modal').classList.remove('hidden');
+            document.getElementById('manual-voucher-code').value = '';
+            document.getElementById('voucher-error').classList.add('hidden');
+            document.body.style.overflow = 'hidden';
+
+            loadAvailableVouchers(type);
+        }
+
+        function closeVoucherModal() {
+            document.getElementById('voucher-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        async function loadAvailableVouchers(type) {
+            const listContainer = document.getElementById('voucher-list');
+            listContainer.innerHTML = `<div class="flex flex-col items-center justify-center py-12 text-slate-400">
+                                            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-primary border-r-2 border-r-transparent mb-3"></div>
+                                            <p>Finding best deals for you...</p>
+                                        </div>`;
+
+            try {
+                const response = await fetch(`/Checkout/Index?handler=AvailableVouchers&type=${type}&orderTotal=${orderTotal}&shippingFee=${shippingFee}`);
+                if (!response.ok) throw new Error('Failed to fetch vouchers');
+                
+                const vouchers = await response.json();
+                
+                if (vouchers.length === 0) {
+                    listContainer.innerHTML = `<div class="text-center py-12 text-slate-400">
+                                                  <span class="material-symbols-outlined text-4xl mb-2">sentiment_dissatisfied</span>
+                                                  <p>No available vouchers found.</p>
+                                               </div>`;
+                    return;
+                }
+
+                listContainer.innerHTML = '';
+                vouchers.forEach(v => {
+                    const expiry = new Date(v.endAt).toLocaleDateString('vi-VN');
+                    const isApplied = appliedVouchers[type]?.voucherCode === v.code;
+                    
+                    const card = document.createElement('div');
+                    card.className = `group p-4 border-2 rounded-xl transition-all ${v.isEligible ? 'cursor-pointer hover:border-primary hover:bg-primary/5 border-slate-100 dark:border-slate-800' : 'opacity-60 grayscale cursor-not-allowed border-slate-50 dark:border-slate-900 bg-slate-50/50 dark:bg-slate-900/50'}`;
+                    
+                    if (v.isEligible) {
+                        card.onclick = () => selectVoucher(v.code);
+                    }
+
+                    const discountTxt = v.discountType === 0 ? `${v.discountValue}% Off` : `${v.discountValue.toLocaleString('vi-VN')}₫ Off`;
+
+                    card.innerHTML = `
+                        <div class="flex items-start justify-between">
+                            <div class="flex gap-4">
+                                <div class="w-12 h-12 rounded-lg bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
+                                     <span class="material-symbols-outlined text-primary text-2xl">${type === 'order' ? 'sell' : 'local_shipping'}</span>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <h4 class="font-bold text-slate-900 dark:text-white">${v.name}</h4>
+                                        <span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-[10px] font-mono font-bold rounded border border-slate-200 dark:border-slate-700">${v.code}</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 dark:text-slate-400 mb-2">${discountTxt}${v.maxDiscount ? ` (Max ${v.maxDiscount.toLocaleString()}₫)` : ''}</p>
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-[10px] text-slate-500 flex items-center gap-0.5">
+                                            <span class="material-symbols-outlined text-[12px]">schedule</span>
+                                            Expires: ${expiry}
+                                        </span>
+                                        ${v.minOrderAmount ? `
+                                        <span class="text-[10px] text-slate-500 flex items-center gap-0.5">
+                                            <span class="material-symbols-outlined text-[12px]">payments</span>
+                                            Min: ${v.minOrderAmount.toLocaleString()}₫
+                                        </span>` : ''}
+                                    </div>
+                                    ${!v.isEligible ? `<p class="mt-2 text-[10px] font-bold text-orange-500 flex items-center gap-1"><span class="material-symbols-outlined text-[12px]">info</span> ${v.ineligibleReason}</p>` : ''}
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                ${isApplied ? `
+                                    <span class="w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-[18px]">check</span>
+                                    </span>
+                                ` : v.isEligible ? `
+                                    <span class="w-6 h-6 rounded-full border-2 border-slate-200 dark:border-slate-700 group-hover:border-primary transition-colors"></span>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                    listContainer.appendChild(card);
+                });
+            } catch (error) {
+                console.error(error);
+                listContainer.innerHTML = `<div class="text-center py-12 text-red-500">Error loading vouchers.</div>`;
+            }
+        }
+
+        async function selectVoucher(code) {
+            await validateAndApply(code, currentVoucherType);
+            closeVoucherModal();
+        }
+
+        async function applyManualVoucher() {
+            const code = document.getElementById('manual-voucher-code').value.trim();
+            if (!code) return;
+
+            const errorEl = document.getElementById('voucher-error');
+            errorEl.classList.add('hidden');
+
+            const result = await validateAndApply(code, currentVoucherType);
+            if (result.isValid) {
+                closeVoucherModal();
+            } else {
+                document.getElementById('voucher-error-msg').textContent = result.errorMessage;
+                errorEl.classList.remove('hidden');
+            }
+        }
+
+        async function validateAndApply(code, type) {
+            try {
+                const response = await fetch(`/Checkout/Index?handler=ApplyVoucher`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ code: code, type: type, orderTotal: orderTotal, shippingFee: shippingFee })
+                });
+
+                const result = await response.json();
+                if (result.isValid) {
+                    appliedVouchers[type] = result;
+                    updateVoucherUI(type);
+                    calculateFinalTotal();
+                }
+                return result;
+            } catch (error) {
+                console.error(error);
+                return { isValid: false, errorMessage: 'Network error. Please try again.' };
+            }
+        }
+
+        function removeVoucher(type) {
+            appliedVouchers[type] = null;
+            updateVoucherUI(type);
+            calculateFinalTotal();
+        }
+
+        function updateVoucherUI(type) {
+            const row = document.getElementById(`${type}-voucher-row`);
+            const actions = document.getElementById(`${type}-voucher-actions`);
+            const applied = document.getElementById(`${type}-voucher-applied`);
+            const label = document.getElementById(`${type}-voucher-label`);
+            const status = document.getElementById(`${type}-voucher-status`);
+            const hiddenInput = document.getElementById(`${type}-voucher-code-input`);
+
+            const voucher = appliedVouchers[type];
+
+            if (voucher) {
+                actions.classList.add('hidden');
+                applied.classList.remove('hidden');
+                label.textContent = `${voucher.voucherCode} (-${voucher.discountAmount.toLocaleString()}₫)`;
+                status.textContent = 'Voucher applied successfully';
+                row.classList.remove('border-slate-200', 'dark:border-slate-700');
+                row.classList.add('border-green-500', 'bg-green-50/10');
+                hiddenInput.value = voucher.voucherCode;
+            } else {
+                actions.classList.remove('hidden');
+                applied.classList.add('hidden');
+                status.textContent = 'No voucher applied';
+                row.classList.add('border-slate-200', 'dark:border-slate-700');
+                row.classList.remove('border-green-500', 'bg-green-50/10');
+                hiddenInput.value = '';
+            }
+        }
+
+        function calculateFinalTotal() {
+            const orderDiscount = appliedVouchers.order?.discountAmount || 0;
+            const shippingDiscount = appliedVouchers.shipping?.discountAmount || 0;
+            const shippingFee = 0; // Currently set to 0 in this version
+
+            const subtotalEl = document.getElementById('summary-subtotal');
+            const totalEl = document.getElementById('summary-total');
+            
+            // Order Discount Row
+            const orderRow = document.getElementById('summary-order-discount-row');
+            if (orderDiscount > 0) {
+                orderRow.classList.remove('hidden');
+                document.getElementById('summary-order-discount').textContent = `-${orderDiscount.toLocaleString()}₫`;
+            } else {
+                orderRow.classList.add('hidden');
+            }
+
+            // Shipping Discount Row
+            const shippingRow = document.getElementById('summary-shipping-discount-row');
+            if (shippingDiscount > 0) {
+                shippingRow.classList.remove('hidden');
+                document.getElementById('summary-shipping-discount').textContent = `-${shippingDiscount.toLocaleString()}₫`;
+            } else {
+                shippingRow.classList.add('hidden');
+            }
+
+            const finalTotal = orderTotal + shippingFee - orderDiscount - shippingDiscount;
+            totalEl.textContent = `${Math.max(0, finalTotal).toLocaleString()}₫`;
+        }
+
+        // Initialize total calculation
+        calculateFinalTotal();
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@@goongmaps/goong-js/dist/goong-js.js"></script>
     <script src="~/js/goong-autocomplete.js"></script>
     <script>

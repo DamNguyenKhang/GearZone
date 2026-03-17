@@ -43,6 +43,10 @@ namespace GearZone.Application.Features.Orders
             string userId,
             CheckoutRequestDto request,
             List<CartItem> cartItems,
+            Guid? orderVoucherId = null,
+            decimal orderDiscountAmount = 0,
+            Guid? shippingVoucherId = null,
+            decimal shippingDiscountAmount = 0,
             CancellationToken ct = default)
         {
             var addressParts = new List<string?> 
@@ -128,7 +132,11 @@ namespace GearZone.Application.Features.Orders
                 grandTotal += subtotal;
             }
 
-            order.GrandTotal = grandTotal + totalShippingFee;
+            order.OrderVoucherId = orderVoucherId;
+            order.OrderDiscountAmount = orderDiscountAmount;
+            order.ShippingVoucherId = shippingVoucherId;
+            order.ShippingDiscountAmount = shippingDiscountAmount;
+            order.GrandTotal = grandTotal + totalShippingFee - orderDiscountAmount - shippingDiscountAmount;
 
             await _orderRepository.AddAsync(order, ct);
 

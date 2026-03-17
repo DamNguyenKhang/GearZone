@@ -36,6 +36,10 @@ namespace GearZone.Application.Features.Admin.Dtos
         [Range(1, 1000000, ErrorMessage = "Usage limit must be at least 1")]
         public int UsageLimit { get; set; }
 
+        [Required(ErrorMessage = "Max usage per user is required")]
+        [Range(1, 1000, ErrorMessage = "Max usage per user must be between 1 and 1000")]
+        public int MaxUsagePerUser { get; set; } = 1;
+
         [Required(ErrorMessage = "Start date is required")]
         public DateTime StartAt { get; set; }
 

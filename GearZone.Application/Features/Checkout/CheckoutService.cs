@@ -96,7 +96,7 @@ namespace GearZone.Application.Features.Checkout
             if (!string.IsNullOrWhiteSpace(request.OrderVoucherCode))
             {
                 var orderVoucherResult = await _voucherService.ValidateVoucherAsync(
-                    request.OrderVoucherCode, userId, merchandiseTotal, request.ShippingFee, Domain.Enums.VoucherType.OrderDiscount);
+                    request.OrderVoucherCode, userId, merchandiseTotal, 0, Domain.Enums.VoucherType.OrderDiscount);
                 if (!orderVoucherResult.IsValid)
                     return new CheckoutResponseDto { Success = false, ErrorMessage = orderVoucherResult.ErrorMessage };
 
@@ -107,7 +107,7 @@ namespace GearZone.Application.Features.Checkout
             if (!string.IsNullOrWhiteSpace(request.ShippingVoucherCode))
             {
                 var shippingVoucherResult = await _voucherService.ValidateVoucherAsync(
-                    request.ShippingVoucherCode, userId, merchandiseTotal, request.ShippingFee, Domain.Enums.VoucherType.ShippingDiscount);
+                    request.ShippingVoucherCode, userId, merchandiseTotal, 0, Domain.Enums.VoucherType.ShippingDiscount);
                 if (!shippingVoucherResult.IsValid)
                     return new CheckoutResponseDto { Success = false, ErrorMessage = shippingVoucherResult.ErrorMessage };
 

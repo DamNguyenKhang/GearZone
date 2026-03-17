@@ -178,7 +178,7 @@ namespace GearZone.Web.Pages.Checkout
                 : VoucherType.OrderDiscount;
 
             var result = await _voucherService.ValidateVoucherAsync(
-                request.Code, userId, request.OrderTotal, request.ShippingFee, expectedType);
+                request.Code, userId, request.MerchandiseTotal, request.ShippingFee, expectedType);
 
             return new JsonResult(new
             {
@@ -192,7 +192,7 @@ namespace GearZone.Web.Pages.Checkout
             });
         }
 
-        public async Task<IActionResult> OnGetAvailableVouchersAsync(string type, decimal orderTotal, decimal shippingFee)
+        public async Task<IActionResult> OnGetAvailableVouchersAsync(string type, decimal merchandiseTotal, decimal shippingFee)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return Unauthorized();
@@ -202,7 +202,7 @@ namespace GearZone.Web.Pages.Checkout
                 : VoucherType.OrderDiscount;
 
             var vouchers = await _voucherService.GetAvailableVouchersForCheckoutAsync(
-                userId, orderTotal, shippingFee, voucherType);
+                userId, merchandiseTotal, shippingFee, voucherType);
 
             return new JsonResult(vouchers);
         }
@@ -212,7 +212,7 @@ namespace GearZone.Web.Pages.Checkout
     {
         public string Code { get; set; } = string.Empty;
         public string Type { get; set; } = "order"; // "order" or "shipping"
-        public decimal OrderTotal { get; set; }
+        public decimal MerchandiseTotal { get; set; }
         public decimal ShippingFee { get; set; }
     }
 }

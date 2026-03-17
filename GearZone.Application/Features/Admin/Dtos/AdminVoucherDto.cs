@@ -17,6 +17,7 @@ namespace GearZone.Application.Features.Admin.Dtos
         public decimal? MinOrderAmount { get; set; }
         public int UsageLimit { get; set; }
         public int UsedCount { get; set; }
+        public int MaxUsagePerUser { get; set; }
         public DateTime StartAt { get; set; }
         public DateTime EndAt { get; set; }
         public VoucherStatus Status { get; set; }

@@ -20,7 +20,7 @@ namespace GearZone.Application.Features.Checkout
         }
 
         public async Task<VoucherValidationResult> ValidateVoucherAsync(
-            string code, string userId, decimal orderTotal, decimal shippingFee, VoucherType expectedType)
+            string code, string userId, decimal merchandiseTotal, decimal shippingFee, VoucherType expectedType)
         {
             var voucher = await _voucherRepository.GetByCodeAsync(code);
 
@@ -49,15 +49,19 @@ namespace GearZone.Application.Features.Checkout
             // Check per-user usage limit
             var userUsageCount = await _voucherUsageRepository.GetUsageCountByUserAsync(voucher.Id, userId);
             if (userUsageCount >= voucher.MaxUsagePerUser)
-                return VoucherValidationResult.Fail("You have already used this voucher the maximum number of times.");
+                return VoucherValidationResult.Fail("You have already used this voucher.");
 
-            // Check minimum order amount
-            if (voucher.MinOrderAmount.HasValue && orderTotal < voucher.MinOrderAmount.Value)
+            // Check minimum order amount (always against merchandise total)
+            if (voucher.MinOrderAmount.HasValue && merchandiseTotal < voucher.MinOrderAmount.Value)
                 return VoucherValidationResult.Fail(
                     $"Minimum order amount is {voucher.MinOrderAmount.Value:N0}₫ to use this voucher.");
 
             // Calculate discount
-            var discountAmount = CalculateDiscount(voucher, orderTotal, shippingFee);
+            // For OrderDiscount: base is merchandiseTotal
+            // For ShippingDiscount: base is shippingFee
+            var calculationBase = voucher.Type == VoucherType.ShippingDiscount ? shippingFee : merchandiseTotal;
+            var discountAmount = CalculateDiscount(voucher, calculationBase);
+            
             var discountLabel = voucher.DiscountType == DiscountType.Percent
                 ? $"{voucher.DiscountValue}%"
                 : $"{voucher.DiscountValue:N0}₫";
@@ -75,7 +79,7 @@ namespace GearZone.Application.Features.Checkout
         }
 
         public async Task<List<AvailableVoucherDto>> GetAvailableVouchersForCheckoutAsync(
-            string userId, decimal orderTotal, decimal shippingFee, VoucherType type)
+            string userId, decimal merchandiseTotal, decimal shippingFee, VoucherType type)
         {
             var vouchers = await _voucherRepository.GetAvailableVouchersAsync(type);
             var result = new List<AvailableVoucherDto>();
@@ -102,9 +106,9 @@ namespace GearZone.Application.Features.Checkout
                 if (userUsageCount >= v.MaxUsagePerUser)
                 {
                     dto.IsEligible = false;
-                    dto.IneligibleReason = "Usage limit reached";
+                    dto.IneligibleReason = "Limit per user reached";
                 }
-                else if (v.MinOrderAmount.HasValue && orderTotal < v.MinOrderAmount.Value)
+                else if (v.MinOrderAmount.HasValue && merchandiseTotal < v.MinOrderAmount.Value)
                 {
                     dto.IsEligible = false;
                     dto.IneligibleReason = $"Min. order {v.MinOrderAmount.Value:N0}₫";
@@ -141,15 +145,12 @@ namespace GearZone.Application.Features.Checkout
             await _voucherUsageRepository.AddAsync(usage);
         }
 
-        private static decimal CalculateDiscount(Voucher voucher, decimal orderTotal, decimal shippingFee)
+        private static decimal CalculateDiscount(Voucher voucher, decimal calculationBase)
         {
-            decimal baseAmount = voucher.Type == VoucherType.ShippingDiscount ? shippingFee : orderTotal;
-            if (baseAmount <= 0) return 0;
-
             decimal discount;
             if (voucher.DiscountType == DiscountType.Percent)
             {
-                discount = baseAmount * voucher.DiscountValue / 100;
+                discount = calculationBase * voucher.DiscountValue / 100;
                 if (voucher.MaxDiscount.HasValue && discount > voucher.MaxDiscount.Value)
                     discount = voucher.MaxDiscount.Value;
             }
@@ -158,8 +159,8 @@ namespace GearZone.Application.Features.Checkout
                 discount = voucher.DiscountValue;
             }
 
-            // Discount can't exceed base amount
-            return Math.Min(discount, baseAmount);
+            // Discount can't exceed the base (e.g. shipping discount can't exceed shipping fee)
+            return Math.Min(discount, calculationBase);
         }
     }
 }

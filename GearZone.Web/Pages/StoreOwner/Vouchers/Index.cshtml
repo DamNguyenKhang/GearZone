@@ -5,157 +5,243 @@
     ViewData["Title"] = "Voucher Management";
     ViewData["PageHeader"] = "Voucher Management";
     ViewData["ActivePage"] = "Vouchers";
-    ViewData["Breadcrumb"] = new[] { "Vouchers" };
+    ViewData["Breadcrumb"] = new[] { "Marketing", "Vouchers" };
     Layout = "_StoreOwnerLayout";
+
+    var activeFilterCount = 0;
+    if (Model.Query.CategoryId.HasValue) activeFilterCount++;
+    if (Model.Query.DiscountType.HasValue) activeFilterCount++;
+    if (!string.IsNullOrWhiteSpace(Model.DateRange)) activeFilterCount++;
+    var hasAdvancedFilters = activeFilterCount > 0;
 }
 
-<div class="space-y-6">
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+}
+
+<div class="flex flex-col gap-6">
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
             @TempData["SuccessMessage"]
         </div>
     }
     @if (TempData["ErrorMessage"] != null)
     {
-        <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             @TempData["ErrorMessage"]
         </div>
     }
 
-    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div class="flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-white p-4 shadow-card">
         <div>
-            <p class="text-xs font-black uppercase tracking-[0.24em] text-orange-500">Store Voucher Desk</p>
-            <h1 class="mt-2 text-3xl font-black text-slate-900">Product Vouchers</h1>
-            <p class="mt-2 text-sm text-slate-500">Create and manage seller vouchers for your products/orders. Shipping vouchers are not supported here.</p>
+            <h3 class="text-lg font-bold text-slate-800">Voucher Management</h3>
+            <p class="text-sm text-slate-500">Monitor and create seller voucher programs for your store.</p>
         </div>
-        <a asp-page="/StoreOwner/Vouchers/Create" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark">
-            <span class="material-symbols-outlined text-[20px]">add</span>
+        <a asp-page="/StoreOwner/Vouchers/Create" class="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-primary/20 transition-all hover:bg-primary-dark">
+            <span class="material-symbols-outlined">add</span>
             Create Voucher
         </a>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div class="rounded-xl border border-slate-200 bg-white p-5">
-            <p class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Total Vouchers</p>
-            <p class="mt-2 text-3xl font-black text-slate-900">@Model.Summary.TotalVouchers</p>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="flex items-center gap-4 rounded-xl border border-slate-100 bg-white p-4 shadow-card">
+            <div class="flex size-12 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                <span class="material-symbols-outlined">confirmation_number</span>
+            </div>
+            <div>
+                <p class="text-xs font-medium uppercase tracking-wider text-slate-500">Total Vouchers</p>
+                <h3 class="text-2xl font-bold text-slate-900">@Model.Summary.TotalVouchers.ToString("N0")</h3>
+            </div>
         </div>
-        <div class="rounded-xl border border-slate-200 bg-white p-5">
-            <p class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Active Today</p>
-            <p class="mt-2 text-3xl font-black text-emerald-600">@Model.Summary.ActiveToday</p>
+        <div class="flex items-center gap-4 rounded-xl border border-slate-100 bg-white p-4 shadow-card">
+            <div class="flex size-12 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                <span class="material-symbols-outlined">bolt</span>
+            </div>
+            <div>
+                <p class="text-xs font-medium uppercase tracking-wider text-slate-500">Active Today</p>
+                <h3 class="text-2xl font-bold text-slate-900">@Model.Summary.ActiveToday.ToString("N0")</h3>
+            </div>
         </div>
-        <div class="rounded-xl border border-slate-200 bg-white p-5">
-            <p class="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Redemption Rate</p>
-            <p class="mt-2 text-3xl font-black text-indigo-600">@Model.Summary.RedemptionRate.ToString("0.##")%</p>
+        <div class="flex items-center gap-4 rounded-xl border border-slate-100 bg-white p-4 shadow-card">
+            <div class="flex size-12 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                <span class="material-symbols-outlined">percent</span>
+            </div>
+            <div>
+                <p class="text-xs font-medium uppercase tracking-wider text-slate-500">Redemption Rate</p>
+                <h3 class="text-2xl font-bold text-slate-900">@Model.Summary.RedemptionRate.ToString("0.##")%</h3>
+            </div>
         </div>
     </div>
 
-    <form method="get" class="rounded-xl border border-slate-200 bg-white p-4">
-        <input type="hidden" asp-for="Query.PageNumber" />
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
-            <input asp-for="Query.Search" placeholder="Search by code or name" class="rounded-xl border-slate-200 text-sm xl:col-span-2" />
+    <div class="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-card">
+        <form method="get" id="filterForm" class="flex flex-col">
+            <input type="hidden" asp-for="Query.Status" id="statusInput" />
+            <input type="hidden" asp-for="Query.PageNumber" id="pageNumberInput" />
 
-            <select asp-for="Query.Status" class="rounded-xl border-slate-200 text-sm">
-                <option value="">All Statuses</option>
+            <div class="flex border-b border-slate-200">
+                <button type="button" onclick="filterByStatus('')" class="px-6 py-3 text-sm font-semibold transition-all @(Model.Query.Status == null ? "border-b-2 border-primary text-primary" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700")">
+                    All
+                </button>
                 @foreach (VoucherStatus status in Enum.GetValues(typeof(VoucherStatus)))
                 {
                     if (status == VoucherStatus.Finished) continue;
-                    <option value="@status">@status</option>
+                    <button type="button" onclick="filterByStatus('@status')" class="px-6 py-3 text-sm font-semibold transition-all @(Model.Query.Status == status ? "border-b-2 border-primary text-primary" : "text-slate-500 hover:bg-slate-50 hover:text-slate-700")">
+                        @status
+                    </button>
                 }
-            </select>
-
-            <select asp-for="Query.DiscountType" class="rounded-xl border-slate-200 text-sm">
-                <option value="">All Discount Types</option>
-                <option value="Percent">Percent</option>
-                <option value="FixedAmount">Fixed Amount</option>
-            </select>
-
-            <select asp-for="Query.CategoryId" class="rounded-xl border-slate-200 text-sm">
-                <option value="">All Categories</option>
-                @foreach (var category in Model.Categories)
-                {
-                    <option value="@category.Id">@category.Name</option>
-                }
-            </select>
-
-            <div class="flex gap-2">
-                <button type="submit" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800">
-                    <span class="material-symbols-outlined text-[18px]">search</span>
-                    Filter
-                </button>
-                <a asp-page="/StoreOwner/Vouchers/Index" class="inline-flex items-center justify-center rounded-xl border border-slate-200 px-3 py-2 text-slate-600 transition hover:bg-slate-50" title="Reset">
-                    <span class="material-symbols-outlined text-[18px]">restart_alt</span>
-                </a>
             </div>
-        </div>
-    </form>
 
-    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
-        @if (!Model.PagedVouchers.Items.Any())
-        {
-            <div class="px-6 py-20 text-center">
-                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                    <span class="material-symbols-outlined">confirmation_number</span>
+            <div class="p-4">
+                <div class="flex flex-col gap-4 lg:flex-row">
+                    <div class="relative flex-1">
+                        <span class="absolute inset-y-0 left-3 flex items-center text-slate-400">
+                            <span class="material-symbols-outlined text-[20px]">search</span>
+                        </span>
+                        <input asp-for="Query.Search" type="text" placeholder="Search by code or name..." class="w-full rounded-lg border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 focus:border-primary focus:ring-primary" onchange="submitFilter()" />
+                    </div>
+
+                    <div class="w-full lg:w-44">
+                        <select asp-for="SortOption" class="w-full rounded-lg border-slate-200 bg-slate-50 py-2.5 text-sm text-slate-900 focus:border-primary focus:ring-primary" onchange="submitFilter()">
+                            <option value="">Sort By</option>
+                            <option value="createdAt-desc">Newest First</option>
+                            <option value="createdAt-asc">Oldest First</option>
+                            <option value="name-asc">Name (A-Z)</option>
+                            <option value="name-desc">Name (Z-A)</option>
+                            <option value="discount-desc">Highest Discount</option>
+                            <option value="discount-asc">Lowest Discount</option>
+                            <option value="usage-desc">Most Used</option>
+                            <option value="expiry-asc">Expiring Soon</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-dark">
+                            <span class="material-symbols-outlined text-[18px]">search</span>
+                            Search
+                        </button>
+
+                        <button type="button" id="toggleAdvancedBtn" class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-600 shadow-sm transition-colors hover:bg-slate-50">
+                            <span class="material-symbols-outlined text-[18px]">tune</span>
+                            Filters
+                            @if (activeFilterCount > 0)
+                            {
+                                <span class="inline-flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-white">@activeFilterCount</span>
+                            }
+                        </button>
+
+                        <a asp-page="/StoreOwner/Vouchers/Index" class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white p-2.5 text-slate-500 shadow-sm transition-colors hover:bg-slate-50" title="Reset filters">
+                            <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+                        </a>
+                    </div>
                 </div>
-                <h2 class="mt-4 text-lg font-bold text-slate-900">No vouchers found</h2>
-                <p class="mt-1 text-sm text-slate-500">Create your first product voucher to start promotions.</p>
             </div>
-        }
-        else
-        {
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-slate-200">
-                    <thead class="bg-slate-50">
-                        <tr>
-                            <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Voucher</th>
-                            <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Discount</th>
-                            <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Usage</th>
-                            <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Period</th>
-                            <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Status</th>
-                            <th class="px-5 py-3 text-right text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @foreach (var voucher in Model.PagedVouchers.Items)
+
+            <div id="advancedFilters" class="@(hasAdvancedFilters ? "" : "hidden") border-t border-slate-100 bg-slate-50/40 p-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <div class="space-y-1.5">
+                        <label class="ml-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                            <span class="material-symbols-outlined text-[14px]">payments</span>
+                            Discount Type
+                        </label>
+                        <select asp-for="Query.DiscountType" class="w-full rounded-lg border-slate-200 bg-white py-2 text-sm text-slate-900 focus:border-primary focus:ring-primary">
+                            <option value="">All Types</option>
+                            @foreach (DiscountType type in Enum.GetValues(typeof(DiscountType)))
+                            {
+                                <option value="@type">@type</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="ml-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                            <span class="material-symbols-outlined text-[14px]">category</span>
+                            Category
+                        </label>
+                        <select asp-for="Query.CategoryId" class="w-full rounded-lg border-slate-200 bg-white py-2 text-sm text-slate-900 focus:border-primary focus:ring-primary">
+                            <option value="">All Categories</option>
+                            @foreach (var category in Model.Categories)
+                            {
+                                <option value="@category.Id">@category.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="ml-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                            <span class="material-symbols-outlined text-[14px]">calendar_today</span>
+                            Date Range
+                        </label>
+                        <input asp-for="DateRange" id="dateRangePicker" type="text" placeholder="All time" class="w-full rounded-lg border-slate-200 bg-white py-2 text-sm text-slate-900 focus:border-primary focus:ring-primary" />
+                    </div>
+                </div>
+
+                <div class="mt-4 flex justify-end">
+                    <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-slate-800 px-6 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-900">
+                        <span class="material-symbols-outlined text-[18px]">check</span>
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-card">
+        <div class="overflow-x-auto">
+            <table class="min-w-full border-collapse text-left">
+                <thead>
+                    <tr class="border-b border-slate-100 bg-slate-50/60">
+                        <th class="px-5 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Voucher</th>
+                        <th class="px-4 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Discount</th>
+                        <th class="px-4 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Usage</th>
+                        <th class="px-4 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500">Period</th>
+                        <th class="px-4 py-4 text-xs font-semibold uppercase tracking-wider text-slate-500 text-center">Status</th>
+                        <th class="px-5 py-4 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @if (Model.PagedVouchers.Items.Any())
+                    {
+                        foreach (var voucher in Model.PagedVouchers.Items)
                         {
-                            <tr class="hover:bg-slate-50">
+                            <tr class="hover:bg-slate-50 transition-colors">
                                 <td class="px-5 py-4 align-top">
-                                    <p class="text-sm font-black text-slate-900">@voucher.Name</p>
-                                    <p class="mt-1 text-xs font-semibold text-slate-500">@voucher.Code</p>
+                                    <p class="text-sm font-bold text-slate-900">@voucher.Name</p>
+                                    <p class="mt-1 font-mono text-xs text-slate-500">@voucher.Code</p>
                                     <p class="mt-1 text-xs text-slate-400">@(voucher.CategoryName ?? "All categories")</p>
                                 </td>
-                                <td class="px-5 py-4 align-top text-sm text-slate-700">
-                                    <p class="font-bold">
+                                <td class="px-4 py-4 align-top text-sm text-slate-700">
+                                    <p class="font-semibold">
                                         @(voucher.DiscountType == DiscountType.Percent
                                             ? $"{voucher.DiscountValue:0.##}%"
                                             : $"{voucher.DiscountValue:N0} VND")
                                     </p>
-                                    <p class="mt-1 text-xs text-slate-500">Min spend: @((voucher.MinOrderAmount ?? 0).ToString("N0")) VND</p>
+                                    <p class="text-xs text-slate-500">Min spend: @((voucher.MinOrderAmount ?? 0).ToString("N0")) VND</p>
                                     @if (voucher.DiscountType == DiscountType.Percent && voucher.MaxDiscount.HasValue)
                                     {
                                         <p class="text-xs text-slate-500">Max: @voucher.MaxDiscount.Value.ToString("N0") VND</p>
                                     }
                                 </td>
-                                <td class="px-5 py-4 align-top text-sm text-slate-700">
-                                    <p><span class="font-bold">@voucher.UsedCount</span> / @voucher.UsageLimit</p>
+                                <td class="px-4 py-4 align-top text-sm text-slate-700">
+                                    <span class="font-semibold">@voucher.UsedCount</span> / @voucher.UsageLimit
                                 </td>
-                                <td class="px-5 py-4 align-top text-sm text-slate-700">
+                                <td class="px-4 py-4 align-top text-sm text-slate-700">
                                     <p>@voucher.StartAt.ToString("dd MMM yyyy HH:mm")</p>
                                     <p class="text-xs text-slate-500">@voucher.EndAt.ToString("dd MMM yyyy HH:mm")</p>
                                 </td>
-                                <td class="px-5 py-4 align-top">
+                                <td class="px-4 py-4 align-top text-center">
                                     <span class="inline-flex rounded-full px-3 py-1 text-xs font-bold @GearZone.Web.Pages.StoreOwner.Vouchers.IndexModel.GetStatusClass(voucher.Status)">
                                         @voucher.Status
                                     </span>
                                 </td>
-                                <td class="px-5 py-4 text-right align-top">
+                                <td class="px-5 py-4 align-top text-right">
                                     <div class="inline-flex items-center gap-2">
-                                        <a asp-page="/StoreOwner/Vouchers/Edit" asp-route-id="@voucher.Id" class="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">
+                                        <a asp-page="/StoreOwner/Vouchers/Edit" asp-route-id="@voucher.Id" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50">
                                             <span class="material-symbols-outlined text-[16px]">edit</span>
                                             Edit
                                         </a>
-                                        <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@voucher.Id" class="inline">
-                                            <button type="submit" class="inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition @(voucher.Status == VoucherStatus.Disabled ? "border-emerald-200 text-emerald-700 hover:bg-emerald-50" : "border-rose-200 text-rose-700 hover:bg-rose-50")">
+                                        <form method="post" asp-page-handler="ToggleStatus" asp-route-id="@voucher.Id">
+                                            <button type="submit" class="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors @(voucher.Status == VoucherStatus.Disabled ? "border-emerald-200 text-emerald-700 hover:bg-emerald-50" : "border-rose-200 text-rose-700 hover:bg-rose-50")">
                                                 <span class="material-symbols-outlined text-[16px]">@(voucher.Status == VoucherStatus.Disabled ? "play_arrow" : "block")</span>
                                                 @(voucher.Status == VoucherStatus.Disabled ? "Enable" : "Disable")
                                             </button>
@@ -164,46 +250,107 @@
                                 </td>
                             </tr>
                         }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="px-6 py-16 text-center text-slate-500">
+                                <div class="flex flex-col items-center gap-3">
+                                    <span class="material-symbols-outlined text-[56px] text-slate-300">confirmation_number</span>
+                                    <p class="text-base font-medium text-slate-900">No vouchers found</p>
+                                    <p class="text-sm">Try changing filters or create a new voucher.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
 
-            @if (Model.PagedVouchers.TotalPages > 1)
-            {
-                <div class="flex items-center justify-between border-t border-slate-200 px-5 py-4">
-                    <p class="text-sm text-slate-500">Page @Model.PagedVouchers.PageNumber of @Model.PagedVouchers.TotalPages</p>
-                    <div class="flex items-center gap-2">
-                        @if (Model.PagedVouchers.PageNumber > 1)
-                        {
-                            <form method="get">
-                                <input type="hidden" name="Query.PageNumber" value="@(Model.PagedVouchers.PageNumber - 1)" />
-                                <input type="hidden" name="Query.PageSize" value="@Model.Query.PageSize" />
-                                <input type="hidden" name="Query.Search" value="@Model.Query.Search" />
-                                <input type="hidden" name="Query.Status" value="@Model.Query.Status" />
-                                <input type="hidden" name="Query.DiscountType" value="@Model.Query.DiscountType" />
-                                <input type="hidden" name="Query.CategoryId" value="@Model.Query.CategoryId" />
-                                <button type="submit" class="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">
-                                    Previous
-                                </button>
-                            </form>
-                        }
-                        @if (Model.PagedVouchers.PageNumber < Model.PagedVouchers.TotalPages)
-                        {
-                            <form method="get">
-                                <input type="hidden" name="Query.PageNumber" value="@(Model.PagedVouchers.PageNumber + 1)" />
-                                <input type="hidden" name="Query.PageSize" value="@Model.Query.PageSize" />
-                                <input type="hidden" name="Query.Search" value="@Model.Query.Search" />
-                                <input type="hidden" name="Query.Status" value="@Model.Query.Status" />
-                                <input type="hidden" name="Query.DiscountType" value="@Model.Query.DiscountType" />
-                                <input type="hidden" name="Query.CategoryId" value="@Model.Query.CategoryId" />
-                                <button type="submit" class="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100">
-                                    Next
-                                </button>
-                            </form>
-                        }
-                    </div>
+        @if (Model.PagedVouchers.TotalPages > 1)
+        {
+            <div class="flex flex-col items-center justify-between gap-4 border-t border-slate-100 bg-slate-50/30 px-5 py-4 sm:flex-row">
+                <div class="text-sm text-slate-500">
+                    Showing
+                    <span class="font-medium text-slate-900">@((Model.PagedVouchers.PageNumber - 1) * Model.PagedVouchers.PageSize + 1)</span>
+                    to
+                    <span class="font-medium text-slate-900">@Math.Min(Model.PagedVouchers.PageNumber * Model.PagedVouchers.PageSize, Model.PagedVouchers.TotalCount)</span>
+                    of
+                    <span class="font-medium text-slate-900">@Model.PagedVouchers.TotalCount.ToString("N0")</span>
+                    vouchers
                 </div>
-            }
+                <nav class="flex items-center gap-1" aria-label="Pagination">
+                    @if (Model.PagedVouchers.PageNumber > 1)
+                    {
+                        <button type="button" onclick="gotoPage(@(Model.PagedVouchers.PageNumber - 1))" class="rounded-lg border border-slate-200 p-2 text-slate-500 transition-all hover:border-primary hover:text-primary">
+                            <span class="material-symbols-outlined text-[18px] leading-none">chevron_left</span>
+                        </button>
+                    }
+                    @{
+                        var startPage = Math.Max(1, Model.PagedVouchers.PageNumber - 2);
+                        var endPage = Math.Min(Model.PagedVouchers.TotalPages, startPage + 4);
+                        if (endPage - startPage < 4 && startPage > 1)
+                        {
+                            startPage = Math.Max(1, endPage - 4);
+                        }
+                    }
+                    @for (var page = startPage; page <= endPage; page++)
+                    {
+                        <button type="button" onclick="gotoPage(@(page))" class="min-w-[36px] rounded-lg border px-3 py-1.5 text-sm font-medium transition-all @(page == Model.PagedVouchers.PageNumber ? "border-primary bg-primary text-white" : "border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-primary")">
+@(page)
+                        </button>
+                    }
+                    @if (Model.PagedVouchers.PageNumber < Model.PagedVouchers.TotalPages)
+                    {
+                        <button type="button" onclick="gotoPage(@(Model.PagedVouchers.PageNumber + 1))" class="rounded-lg border border-slate-200 p-2 text-slate-500 transition-all hover:border-primary hover:text-primary">
+                            <span class="material-symbols-outlined text-[18px] leading-none">chevron_right</span>
+                        </button>
+                    }
+                </nav>
+            </div>
         }
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        const filterForm = document.getElementById("filterForm");
+        const pageNumberInput = document.getElementById("pageNumberInput");
+        const statusInput = document.getElementById("statusInput");
+        const advancedFilters = document.getElementById("advancedFilters");
+        const toggleAdvancedBtn = document.getElementById("toggleAdvancedBtn");
+
+        function submitFilter(resetPage = true) {
+            if (resetPage && pageNumberInput) {
+                pageNumberInput.value = "1";
+            }
+            filterForm?.submit();
+        }
+
+        function filterByStatus(statusValue) {
+            if (statusInput) {
+                statusInput.value = statusValue || "";
+            }
+            submitFilter();
+        }
+
+        function gotoPage(page) {
+            if (pageNumberInput) {
+                pageNumberInput.value = page.toString();
+            }
+            filterForm?.submit();
+        }
+
+        toggleAdvancedBtn?.addEventListener("click", () => {
+            advancedFilters?.classList.toggle("hidden");
+        });
+
+        if (window.flatpickr) {
+            window.flatpickr("#dateRangePicker", {
+                mode: "range",
+                dateFormat: "Y-m-d"
+            });
+        }
+    </script>
+}

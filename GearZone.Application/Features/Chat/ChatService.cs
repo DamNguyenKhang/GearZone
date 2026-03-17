@@ -394,6 +394,24 @@ namespace GearZone.Application.Features.Chat
                 "Rejected by store owner");
         }
 
+        public Task<bool> MarkSellerOrderProcessingAsync(string ownerUserId, Guid subOrderId)
+        {
+            return ChangeSellerOrderStatusAsync(
+                ownerUserId,
+                subOrderId,
+                OrderStatus.Processing,
+                "Marked as processing by store owner");
+        }
+
+        public Task<bool> MarkSellerOrderDeliveredAsync(string ownerUserId, Guid subOrderId)
+        {
+            return ChangeSellerOrderStatusAsync(
+                ownerUserId,
+                subOrderId,
+                OrderStatus.Delivered,
+                "Marked as delivered by store owner");
+        }
+
         public async Task<ChatConversationUpdateDto?> GetConversationUpdateForBuyerAsync(string buyerUserId, Guid conversationId)
         {
             if (string.IsNullOrWhiteSpace(buyerUserId))
@@ -597,14 +615,22 @@ namespace GearZone.Application.Features.Chat
                 return true;
             }
 
-            // Seller order desk only allows approve/reject when order is awaiting confirmation.
-            if (oldStatus != OrderStatus.Pending)
+            var isValidTransition =
+                (oldStatus == OrderStatus.Pending && (targetStatus == OrderStatus.Approved || targetStatus == OrderStatus.Rejected)) ||
+                ((oldStatus == OrderStatus.Approved || oldStatus == OrderStatus.Paid) && targetStatus == OrderStatus.Processing) ||
+                (oldStatus == OrderStatus.Processing && targetStatus == OrderStatus.Delivered);
+
+            if (!isValidTransition)
             {
                 return false;
             }
 
             subOrder.Status = targetStatus;
             subOrder.UpdatedAt = DateTime.UtcNow;
+            if (targetStatus == OrderStatus.Delivered)
+            {
+                subOrder.DeliveredAt = DateTime.UtcNow;
+            }
 
             await _subOrderRepository.UpdateAsync(subOrder);
             await _orderStatusHistoryRepository.AddAsync(new OrderStatusHistory

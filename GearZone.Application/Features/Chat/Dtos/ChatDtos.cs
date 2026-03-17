@@ -35,6 +35,13 @@ namespace GearZone.Application.Features.Chat.Dtos
     public class SellerChatOrderQueryDto
     {
         public string? SearchTerm { get; set; }
+        public OrderStatus? Status { get; set; }
+        public decimal? MinSubtotal { get; set; }
+        public decimal? MaxSubtotal { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public string? SortBy { get; set; } = "createdAt";
+        public string? SortDirection { get; set; } = "desc";
         public int PageNumber { get; set; } = 1;
         public int PageSize { get; set; } = 10;
     }

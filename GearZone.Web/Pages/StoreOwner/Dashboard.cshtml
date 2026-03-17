@@ -1,250 +1,227 @@
 @page
+@using GearZone.Domain.Enums
 @model GearZone.Web.Pages.StoreOwner.DashboardModel
 @{
-    ViewData["Title"] = "Seller Dashboard";
+    ViewData["Title"] = "Store Overview";
     ViewData["PageHeader"] = "Store Overview";
     ViewData["ActivePage"] = "Dashboard";
     ViewData["Breadcrumb"] = new string[] { "Dashboard" };
     Layout = "_StoreOwnerLayout";
+
+    var maxRevenue = Model.RevenueByMonth.Any() ? Model.RevenueByMonth.Max(x => x.Revenue) : 0m;
+
+    string GetOrderStatusBadgeClass(OrderStatus status) => status switch
+    {
+        OrderStatus.Pending => "bg-amber-50 text-amber-700",
+        OrderStatus.AwaitingPayment => "bg-orange-50 text-orange-700",
+        OrderStatus.Approved => "bg-sky-50 text-sky-700",
+        OrderStatus.Paid => "bg-indigo-50 text-indigo-700",
+        OrderStatus.Processing => "bg-blue-50 text-blue-700",
+        OrderStatus.Delivered => "bg-emerald-50 text-emerald-700",
+        OrderStatus.Completed => "bg-emerald-100 text-emerald-800",
+        OrderStatus.Cancelled => "bg-rose-50 text-rose-700",
+        OrderStatus.Refunded => "bg-orange-50 text-orange-700",
+        OrderStatus.Rejected => "bg-red-50 text-red-700",
+        _ => "bg-slate-50 text-slate-700"
+    };
+
+    string GetPayoutStatusBadgeClass(PayoutTransactionStatus status) => status switch
+    {
+        PayoutTransactionStatus.Queued => "bg-slate-50 text-slate-700",
+        PayoutTransactionStatus.Processing => "bg-blue-50 text-blue-700",
+        PayoutTransactionStatus.Success => "bg-emerald-50 text-emerald-700",
+        PayoutTransactionStatus.Failed => "bg-red-50 text-red-700",
+        PayoutTransactionStatus.ManualRequired => "bg-orange-50 text-orange-700",
+        PayoutTransactionStatus.Excluded => "bg-slate-100 text-slate-600",
+        _ => "bg-slate-50 text-slate-700"
+    };
 }
 
-<!-- Stats Cards -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-    <div class="bg-surface-light rounded-xl p-5 border border-border-light shadow-soft relative overflow-hidden group hover:shadow-md transition-all">
-        <div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        <div class="flex justify-between items-start relative z-10">
-            <div>
-                <p class="text-slate-500 text-sm font-medium mb-1">Total Sales</p>
-                <h3 class="text-2xl font-bold text-text-heading">15,234</h3>
-            </div>
-            <div class="p-2 bg-primary/10 rounded-lg text-primary">
-                <span class="material-symbols-outlined">shopping_cart</span>
-            </div>
+@if (!Model.HasStore)
+{
+    <div class="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-card">
+        <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+            <span class="material-symbols-outlined text-[28px]">store</span>
         </div>
-        <div class="mt-4 flex items-center text-xs relative z-10">
-            <span class="text-emerald-600 flex items-center font-medium bg-emerald-50 px-1.5 py-0.5 rounded">
-                <span class="material-symbols-outlined text-base mr-0.5">trending_up</span>
-                12%
-            </span>
-            <span class="text-slate-500 ml-2">vs last month</span>
-        </div>
+        <h2 class="text-xl font-bold text-slate-900">No store data yet</h2>
+        <p class="mt-2 text-sm text-slate-500">Your overview will appear after your store is approved and starts receiving orders.</p>
     </div>
-    <div class="bg-surface-light rounded-xl p-5 border border-border-light shadow-soft relative overflow-hidden group hover:shadow-md transition-all">
-        <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        <div class="flex justify-between items-start relative z-10">
-            <div>
-                <p class="text-slate-500 text-sm font-medium mb-1">Active Products</p>
-                <h3 class="text-2xl font-bold text-text-heading">842</h3>
-            </div>
-            <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
-                <span class="material-symbols-outlined">inventory_2</span>
-            </div>
+}
+else
+{
+    <div class="flex flex-col gap-6">
+        <div class="rounded-xl border border-slate-100 bg-white p-5 shadow-card">
+            <h2 class="text-lg font-bold text-slate-900">@Model.StoreName</h2>
+            <p class="text-sm text-slate-500">Live performance snapshot of your store operations and payout status.</p>
         </div>
-        <div class="mt-4 flex items-center text-xs relative z-10">
-            <a href="#" class="bg-amber-100 text-amber-700 hover:bg-amber-200 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors inline-block cursor-pointer">
-                12 Low Stock
-            </a>
-        </div>
-    </div>
-    <div class="bg-surface-light rounded-xl p-5 border border-border-light shadow-soft relative overflow-hidden group hover:shadow-md transition-all">
-        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        <div class="flex justify-between items-start relative z-10">
-            <div>
-                <p class="text-slate-500 text-sm font-medium mb-1">Monthly Revenue</p>
-                <h3 class="text-2xl font-bold text-text-heading">₫4.2B</h3>
-            </div>
-            <div class="p-2 bg-emerald-100 rounded-lg text-emerald-600">
-                <span class="material-symbols-outlined">payments</span>
-            </div>
-        </div>
-        <div class="mt-4 flex items-center text-xs relative z-10">
-            <span class="text-emerald-600 flex items-center font-medium bg-emerald-50 px-1.5 py-0.5 rounded">
-                <span class="material-symbols-outlined text-base mr-0.5">trending_up</span>
-                8.5%
-            </span>
-            <span class="text-slate-500 ml-2">growth</span>
-        </div>
-    </div>
-    <div class="bg-surface-light rounded-xl p-5 border border-border-light shadow-soft relative overflow-hidden group hover:shadow-md transition-all">
-        <div class="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        <div class="flex justify-between items-start relative z-10">
-            <div>
-                <p class="text-slate-500 text-sm font-medium mb-1">Customer Messages</p>
-                <h3 class="text-2xl font-bold text-text-heading">@Model.CustomerConversationCount</h3>
-            </div>
-            <div class="p-2 bg-red-100 rounded-lg text-red-600">
-                <span class="material-symbols-outlined">chat</span>
-            </div>
-        </div>
-        <div class="mt-4 flex items-center text-xs relative z-10">
-            <a asp-page="/StoreOwner/Messages/Index" class="bg-red-100 text-red-700 hover:bg-red-200 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider transition-colors">
-                @Model.CustomerUnreadCount Unread
-            </a>
-        </div>
-    </div>
-</div>
 
-<!-- Charts Section -->
-<div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-    <div class="lg:col-span-3 bg-surface-light border border-border-light rounded-xl p-6 shadow-soft">
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h3 class="text-text-heading font-semibold">Monthly Revenue</h3>
-                <p class="text-slate-500 text-sm">Last 6 months performance</p>
-            </div>
-            <button class="text-slate-400 hover:text-primary p-1 rounded-full hover:bg-slate-100 transition-colors">
-                <span class="material-symbols-outlined">more_horiz</span>
-            </button>
-        </div>
-        <div class="h-64 w-full flex items-end justify-between gap-2 sm:gap-4 px-2">
-            <div class="flex flex-col items-center gap-2 flex-1 group">
-                <div class="w-full bg-slate-100 rounded-t-sm h-full relative overflow-hidden">
-                    <div class="absolute bottom-0 left-0 right-0 bg-blue-300 group-hover:bg-primary transition-all duration-500" style="height: 45%;"></div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="rounded-xl border border-slate-100 bg-white p-4 shadow-card">
+                <div class="mb-3 flex items-center justify-between">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Orders</p>
+                    <span class="material-symbols-outlined text-primary">receipt_long</span>
                 </div>
-                <span class="text-xs text-slate-500 font-medium">May</span>
+                <h3 class="text-2xl font-bold text-slate-900">@Model.TotalOrders.ToString("N0")</h3>
             </div>
-            <div class="flex flex-col items-center gap-2 flex-1 group">
-                <div class="w-full bg-slate-100 rounded-t-sm h-full relative overflow-hidden">
-                    <div class="absolute bottom-0 left-0 right-0 bg-blue-300 group-hover:bg-primary transition-all duration-500" style="height: 58%;"></div>
+            <div class="rounded-xl border border-slate-100 bg-white p-4 shadow-card">
+                <div class="mb-3 flex items-center justify-between">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Awaiting Action</p>
+                    <span class="material-symbols-outlined text-amber-600">pending_actions</span>
                 </div>
-                <span class="text-xs text-slate-500 font-medium">Jun</span>
+                <h3 class="text-2xl font-bold text-slate-900">@Model.PendingOrders.ToString("N0")</h3>
             </div>
-            <div class="flex flex-col items-center gap-2 flex-1 group">
-                <div class="w-full bg-slate-100 rounded-t-sm h-full relative overflow-hidden">
-                    <div class="absolute bottom-0 left-0 right-0 bg-blue-300 group-hover:bg-primary transition-all duration-500" style="height: 42%;"></div>
+            <div class="rounded-xl border border-slate-100 bg-white p-4 shadow-card">
+                <div class="mb-3 flex items-center justify-between">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Gross Revenue</p>
+                    <span class="material-symbols-outlined text-indigo-600">payments</span>
                 </div>
-                <span class="text-xs text-slate-500 font-medium">Jul</span>
+                <h3 class="text-2xl font-bold text-slate-900">@Model.GrossRevenue.ToString("N0") VND</h3>
             </div>
-            <div class="flex flex-col items-center gap-2 flex-1 group">
-                <div class="w-full bg-slate-100 rounded-t-sm h-full relative overflow-hidden">
-                    <div class="absolute bottom-0 left-0 right-0 bg-blue-300 group-hover:bg-primary transition-all duration-500" style="height: 65%;"></div>
+            <div class="rounded-xl border border-slate-100 bg-white p-4 shadow-card">
+                <div class="mb-3 flex items-center justify-between">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Pending Payout</p>
+                    <span class="material-symbols-outlined text-orange-600">account_balance_wallet</span>
                 </div>
-                <span class="text-xs text-slate-500 font-medium">Aug</span>
-            </div>
-            <div class="flex flex-col items-center gap-2 flex-1 group">
-                <div class="w-full bg-slate-100 rounded-t-sm h-full relative overflow-hidden">
-                    <div class="absolute bottom-0 left-0 right-0 bg-blue-300 group-hover:bg-primary transition-all duration-500" style="height: 78%;"></div>
-                </div>
-                <span class="text-xs text-slate-500 font-medium">Sep</span>
-            </div>
-            <div class="flex flex-col items-center gap-2 flex-1 group">
-                <div class="w-full bg-slate-100 rounded-t-sm h-full relative overflow-hidden">
-                    <div class="absolute bottom-0 left-0 right-0 bg-primary group-hover:bg-blue-600 transition-all duration-500" style="height: 92%;"></div>
-                </div>
-                <span class="text-xs text-text-heading font-bold">Oct</span>
+                <h3 class="text-2xl font-bold text-slate-900">@Model.PendingPayoutAmount.ToString("N0") VND</h3>
             </div>
         </div>
-    </div>
-    <div class="lg:col-span-2 bg-surface-light border border-border-light rounded-xl p-6 shadow-soft">
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h3 class="text-text-heading font-semibold">Order Status</h3>
-                <p class="text-slate-500 text-sm">Distribution by status</p>
-            </div>
-        </div>
-        <div class="flex flex-col items-center justify-center h-64 relative">
-            <div class="relative w-48 h-48">
-                <svg class="transform -rotate-90 w-full h-full" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" fill="transparent" r="40" stroke="#CBD5E1" stroke-dasharray="251.2" stroke-dashoffset="0" stroke-width="12"></circle>
-                    <circle cx="50" cy="50" fill="transparent" r="40" stroke="#10b981" stroke-dasharray="251.2" stroke-dashoffset="100" stroke-width="12"></circle>
-                    <circle cx="50" cy="50" fill="transparent" r="40" stroke="#3b82f6" stroke-dasharray="251.2" stroke-dashoffset="180" stroke-width="12"></circle>
-                    <circle cx="50" cy="50" fill="transparent" r="40" stroke="#ef4444" stroke-dasharray="251.2" stroke-dashoffset="230" stroke-width="12"></circle>
-                </svg>
-                <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span class="text-2xl font-bold text-text-heading">1,250</span>
-                    <span class="text-xs text-slate-500">Total Orders</span>
-                </div>
-            </div>
-            <div class="w-full mt-6 flex justify-center gap-4 text-xs">
-                <div class="flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span class="text-slate-600">Delivered</span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                    <span class="text-slate-600">Shipped</span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-slate-300"></span>
-                    <span class="text-slate-600">Proc.</span>
-                </div>
-                <div class="flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
-                    <span class="text-slate-600">Return</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Lists Section -->
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6">
-    <div class="bg-surface-light border border-border-light rounded-xl overflow-hidden flex flex-col shadow-soft">
-        <div class="p-6 border-b border-border-light flex justify-between items-center bg-gray-50/50">
-            <h3 class="text-text-heading font-semibold">Low Stock Products</h3>
-            <a class="text-primary text-sm hover:underline font-medium" href="#">View All</a>
-        </div>
-        <div class="flex-1">
-            <div class="p-4 flex items-center justify-between border-b border-border-light hover:bg-slate-50 transition-colors">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 shadow-sm">
-                        <span class="material-symbols-outlined text-lg">store</span>
-                    </div>
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-5">
+            <div class="rounded-xl border border-slate-100 bg-white p-6 shadow-card lg:col-span-3">
+                <div class="mb-5 flex items-center justify-between">
                     <div>
-                        <h4 class="text-text-heading text-sm font-medium">Logitech G Pro X Superlight</h4>
-                        <p class="text-slate-500 text-xs">Stock: 3 units remaining</p>
+                        <h3 class="text-base font-bold text-slate-900">Revenue (Last 6 Months)</h3>
+                        <p class="text-sm text-slate-500">Monthly gross subtotal from your orders.</p>
                     </div>
                 </div>
-                    <button class="p-2 text-primary hover:bg-blue-100 rounded-lg transition-colors" title="Restock">
-                        <span class="material-symbols-outlined text-xl">inventory</span>
-                    </button>
+                <div class="flex h-64 items-end justify-between gap-3">
+                    @foreach (var point in Model.RevenueByMonth)
+                    {
+                        var barHeight = maxRevenue > 0 ? Math.Max(8, (int)Math.Round(point.Revenue / maxRevenue * 100m)) : 8;
+                        <div class="flex flex-1 flex-col items-center gap-2">
+                            <div class="relative h-full w-full overflow-hidden rounded bg-slate-100">
+                                <div class="absolute bottom-0 left-0 right-0 rounded-t bg-primary transition-all duration-500" style="height:@barHeight%"></div>
+                            </div>
+                            <span class="text-xs font-medium text-slate-600">@point.Label</span>
+                            <span class="text-[10px] text-slate-400">@point.Revenue.ToString("N0")</span>
+                        </div>
+                    }
+                </div>
             </div>
-            <div class="p-4 flex items-center justify-between border-b border-border-light hover:bg-slate-50 transition-colors">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 shadow-sm">
-                        <span class="material-symbols-outlined text-lg">memory</span>
+
+            <div class="rounded-xl border border-slate-100 bg-white p-6 shadow-card lg:col-span-2">
+                <h3 class="text-base font-bold text-slate-900">Operations Snapshot</h3>
+                <p class="mb-5 text-sm text-slate-500">High-level health for orders, chat, and payout.</p>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3">
+                        <span class="text-sm font-medium text-slate-600">Fulfilled Orders</span>
+                        <span class="text-base font-bold text-slate-900">@Model.FulfilledOrders.ToString("N0")</span>
                     </div>
-                    <div>
-                        <h4 class="text-text-heading text-sm font-medium">Razer Huntsman Mini</h4>
-                        <p class="text-slate-500 text-xs">Stock: 0 units remaining</p>
+                    <div class="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3">
+                        <span class="text-sm font-medium text-slate-600">Paid Out</span>
+                        <span class="text-base font-bold text-emerald-700">@Model.PaidOutAmount.ToString("N0") VND</span>
                     </div>
+                    <div class="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-3">
+                        <span class="text-sm font-medium text-slate-600">Conversations</span>
+                        <span class="text-base font-bold text-slate-900">@Model.CustomerConversationCount.ToString("N0")</span>
+                    </div>
+                    <a asp-page="/StoreOwner/Messages/Index" class="flex items-center justify-between rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-semibold text-orange-700 transition-colors hover:bg-orange-100">
+                        <span>Unread messages</span>
+                        <span>@Model.CustomerUnreadCount.ToString("N0")</span>
+                    </a>
                 </div>
-                    <button class="p-2 text-primary hover:bg-blue-100 rounded-lg transition-colors" title="Restock">
-                        <span class="material-symbols-outlined text-xl">inventory</span>
-                    </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div class="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-card">
+                <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+                    <h3 class="font-bold text-slate-900">Recent Orders</h3>
+                    <a asp-page="/StoreOwner/Orders/Index" class="text-sm font-medium text-primary hover:underline">View all</a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-left text-sm">
+                        <thead class="bg-slate-50/70 text-xs uppercase tracking-wider text-slate-500">
+                            <tr>
+                                <th class="px-5 py-3">Order</th>
+                                <th class="px-4 py-3">Buyer</th>
+                                <th class="px-4 py-3">Status</th>
+                                <th class="px-5 py-3 text-right">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @if (Model.RecentOrders.Any())
+                            {
+                                foreach (var order in Model.RecentOrders)
+                                {
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="px-5 py-3">
+                                            <a asp-page="/StoreOwner/Orders/Detail" asp-route-subOrderId="@order.SubOrderId" class="font-semibold text-slate-900 hover:text-primary">#@order.OrderCode</a>
+                                            <p class="text-xs text-slate-500">@order.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
+                                        </td>
+                                        <td class="px-4 py-3 text-slate-700">@order.BuyerName</td>
+                                        <td class="px-4 py-3">
+                                            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold @GetOrderStatusBadgeClass(order.Status)">
+                                                @order.Status
+                                            </span>
+                                        </td>
+                                        <td class="px-5 py-3 text-right font-semibold text-slate-900">@order.Subtotal.ToString("N0")</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="px-5 py-10 text-center text-slate-500">No recent orders yet.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-card">
+                <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+                    <h3 class="font-bold text-slate-900">Recent Payout Transactions</h3>
+                    <a asp-page="/StoreOwner/Revenue/Index" class="text-sm font-medium text-primary hover:underline">Payout management</a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-left text-sm">
+                        <thead class="bg-slate-50/70 text-xs uppercase tracking-wider text-slate-500">
+                            <tr>
+                                <th class="px-5 py-3">Code</th>
+                                <th class="px-4 py-3">Status</th>
+                                <th class="px-4 py-3 text-right">Amount</th>
+                                <th class="px-5 py-3">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @if (Model.RecentPayouts.Any())
+                            {
+                                foreach (var payout in Model.RecentPayouts)
+                                {
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="px-5 py-3 font-mono text-xs font-semibold text-slate-800">@payout.TransactionCode</td>
+                                        <td class="px-4 py-3">
+                                            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold @GetPayoutStatusBadgeClass(payout.Status)">
+                                                @payout.Status
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 text-right font-semibold text-slate-900">@payout.NetAmount.ToString("N0")</td>
+                                        <td class="px-5 py-3 text-slate-600">@payout.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="px-5 py-10 text-center text-slate-500">No payout records found yet.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-    <div class="bg-surface-light border border-border-light rounded-xl overflow-hidden flex flex-col shadow-soft">
-        <div class="p-6 border-b border-border-light flex justify-between items-center bg-gray-50/50">
-            <h3 class="text-text-heading font-semibold">Recent Orders</h3>
-            <a class="text-primary text-sm hover:underline font-medium" href="#">View All</a>
-        </div>
-        <div class="flex-1">
-            <div class="p-4 flex items-center justify-between border-b border-border-light hover:bg-slate-50 transition-colors">
-                <div class="flex flex-col gap-1">
-                    <div class="flex items-center gap-2">
-                        <h4 class="text-text-heading text-sm font-medium">Order #9921</h4>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-600 uppercase">Processing</span>
-                    </div>
-                    <p class="text-slate-500 text-xs">Total: ₫1,250,000 - <span class="text-slate-400">Buyer: Minh T.</span></p>
-                </div>
-                <button class="px-3 py-1.5 bg-white hover:bg-gray-50 text-slate-700 text-xs font-medium rounded border border-slate-200 shadow-sm transition-colors">
-                    Fulfill
-                </button>
-            </div>
-            <div class="p-4 flex items-center justify-between border-b border-border-light hover:bg-slate-50 transition-colors">
-                <div class="flex flex-col gap-1">
-                    <div class="flex items-center gap-2">
-                        <h4 class="text-text-heading text-sm font-medium">Order #9920</h4>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 uppercase">Shipped</span>
-                    </div>
-                    <p class="text-slate-500 text-xs">Total: ₫540,000 - <span class="text-slate-400">Buyer: Lan A.</span></p>
-                </div>
-                <button class="px-3 py-1.5 bg-white hover:bg-gray-50 text-slate-700 text-xs font-medium rounded border border-slate-200 shadow-sm transition-colors">
-                    Details
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+}

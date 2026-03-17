@@ -1,19 +1,11 @@
 using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Abstractions.Services;
+using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Checkout.Dtos;
+using GearZone.Application.Features.Orders.Dtos;
 using GearZone.Domain.Entities;
 using GearZone.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using GearZone.Application.Common.Models;
-using GearZone.Application.Features.Orders.Dtos;
 
 namespace GearZone.Application.Features.Orders
 {
@@ -221,6 +213,88 @@ namespace GearZone.Application.Features.Orders
         public async Task<UserOrderStatusSummaryDto> GetUserOrderStatusSummaryAsync(string userId)
         {
             return await _subOrderRepository.GetUserOrderStatusSummaryAsync(userId, DateTime.UtcNow);
+        }
+
+        public async Task<UserOrderTrackingDto?> GetUserOrderTrackingAsync(string userId, Guid subOrderId, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(userId) || subOrderId == Guid.Empty)
+            {
+                return null;
+            }
+
+            var subOrder = await _subOrderRepository.Query()
+                .AsNoTracking()
+                .Include(x => x.Store)
+                .Include(x => x.Items)
+                    .ThenInclude(i => i.Variant)
+                        .ThenInclude(v => v.Product)
+                            .ThenInclude(p => p.Images)
+                .Include(x => x.Order)
+                    .ThenInclude(o => o.StatusHistories)
+                        .ThenInclude(h => h.ChangedByUser)
+                .FirstOrDefaultAsync(x => x.Id == subOrderId && x.Order.UserId == userId, ct);
+
+            if (subOrder == null)
+            {
+                return null;
+            }
+
+            var history = subOrder.Order.StatusHistories
+                .OrderBy(x => x.ChangedAt)
+                .Select(x => new UserOrderTrackingStatusHistoryDto
+                {
+                    ChangedAt = x.ChangedAt,
+                    OldStatus = x.OldStatus,
+                    NewStatus = x.NewStatus,
+                    ChangedByDisplayName = x.ChangedByUser != null
+                        ? (x.ChangedByUser.FullName ?? x.ChangedByUser.UserName ?? x.ChangedByUser.Email ?? "System")
+                        : "System",
+                    Note = x.Note
+                })
+                .ToList();
+
+            return new UserOrderTrackingDto
+            {
+                SubOrderId = subOrder.Id,
+                OrderId = subOrder.OrderId,
+                OrderCode = subOrder.Order.OrderCode,
+                StoreId = subOrder.StoreId,
+                StoreName = subOrder.Store.StoreName,
+                StoreSlug = subOrder.Store.Slug,
+                Status = subOrder.Status,
+                CreatedAt = subOrder.CreatedAt,
+                UpdatedAt = subOrder.UpdatedAt,
+                DeliveredAt = subOrder.DeliveredAt,
+                Subtotal = subOrder.Subtotal,
+                ShippingFee = subOrder.Order.ShippingFee,
+                GrandTotal = subOrder.Order.GrandTotal,
+                ReceiverName = subOrder.Order.ReceiverName,
+                ReceiverPhone = subOrder.Order.ReceiverPhone,
+                ShippingAddress = subOrder.Order.ShippingAddress,
+                ShippingProvider = subOrder.Order.ShippingProvider,
+                TrackingNumber = subOrder.Order.TrackingNumber,
+                Items = subOrder.Items
+                    .OrderBy(i => i.ProductNameSnapshot)
+                    .ThenBy(i => i.SkuSnapshot)
+                    .Select(i => new UserOrderTrackingItemDto
+                    {
+                        OrderItemId = i.Id,
+                        ProductId = i.Variant.ProductId,
+                        ProductName = i.ProductNameSnapshot,
+                        ProductSlug = i.Variant.Product.Slug,
+                        ProductImageUrl = i.Variant.Product.Images
+                            .Where(img => img.IsPrimary)
+                            .Select(img => img.ImageUrl)
+                            .FirstOrDefault()
+                            ?? i.Variant.Product.Images.Select(img => img.ImageUrl).FirstOrDefault(),
+                        VariantName = i.VariantNameSnapshot,
+                        Quantity = i.Quantity,
+                        UnitPrice = i.UnitPriceSnapshot,
+                        LineTotal = i.LineTotal
+                    })
+                    .ToList(),
+                StatusHistory = history
+            };
         }
     }
 }

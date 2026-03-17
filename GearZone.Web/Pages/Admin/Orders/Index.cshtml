@@ -214,6 +214,7 @@
                                 </span>
                             </button>
                         </th>
+                        <th class="py-4 px-6 text-xs font-semibold uppercase tracking-wider text-slate-500 text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -221,8 +222,8 @@
                     {
                         foreach (var order in Model.Orders.Items)
                         {
-                            <tr class="hover:bg-slate-50 transition-all cursor-default">
-                                <td class="py-4 px-6 align-middle font-mono text-sm font-semibold text-slate-900">
+                            <tr class="hover:bg-slate-50 transition-all cursor-pointer group/row" onclick="window.location.href='/admin/orders/detail?id=@order.Id'">
+                                <td class="py-4 px-6 align-middle font-mono text-sm font-semibold text-slate-900 group-hover/row:text-primary transition-colors">
                                     #@order.OrderCode
                                 </td>
                                 <td class="py-4 px-3 hidden md:table-cell align-middle whitespace-nowrap">
@@ -250,8 +251,13 @@
                                         </span>
                                     }
                                 </td>
-                                <td class="py-4 px-6 text-right align-middle whitespace-nowrap">
+                                <td class="py-4 px-3 text-right align-middle whitespace-nowrap">
                                     <p class="text-sm text-slate-500">@order.CreatedAt.ToString("MMM dd, yyyy")</p>
+                                </td>
+                                <td class="py-4 px-6 text-right align-middle whitespace-nowrap">
+                                    <a href="/admin/orders/detail?id=@order.Id" class="inline-flex items-center justify-center p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/5 transition-all" title="View Details" onclick="event.stopPropagation();">
+                                        <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                    </a>
                                 </td>
                             </tr>
                         }

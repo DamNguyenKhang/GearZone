@@ -10,6 +10,7 @@ namespace GearZone.Application.Abstractions.Services
         Task<PagedResult<AdminProductDto>> GetProductsAsync(AdminProductQueryDto queryDto);
         Task<AdminProductStatsDto> GetProductStatsAsync();
         Task<AdminProductDetailDto?> GetProductDetailAsync(Guid id);
-        Task<bool> BulkUpdateStatusAsync(List<Guid> productIds, ProductStatus status);
+        Task<bool> DeleteProductAsync(Guid id, string reason);
+        Task<bool> BulkUpdateStatusAsync(List<Guid> productIds, ProductStatus status, string? reason = null);
     }
 }

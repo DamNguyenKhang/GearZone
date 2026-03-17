@@ -111,9 +111,6 @@
                         <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">Email</th>
                         <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">Phone</th>
                         <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">Status</th>
-                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap text-center">Total Products</th>
-                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap text-center">Total Orders</th>
-                        <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap text-center">Revenue</th>
                         <th class="py-4 px-3 text-xs font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">Created Date</th>
                         <th class="py-4 pl-3 pr-6 text-xs font-semibold uppercase tracking-wider text-slate-500 text-right whitespace-nowrap">Actions</th>
                     </tr>
@@ -161,9 +158,6 @@
                                     @item.Status
                                 </span>
                             </td>
-                            <td class="py-4 px-3 text-sm text-slate-600 text-center whitespace-nowrap">0</td>
-                            <td class="py-4 px-3 text-sm text-slate-600 text-center whitespace-nowrap">0</td>
-                            <td class="py-4 px-3 text-sm text-slate-900 font-medium whitespace-nowrap text-center">$0.00</td>
                             <td class="py-4 px-3 whitespace-nowrap">
                                 <div class="flex flex-col">
                                     <span class="text-sm text-slate-900">@item.CreatedAt.ToString("MMM dd, yyyy")</span>
@@ -208,7 +202,7 @@
                     @if (!Model.StoreApplications.Items.Any())
                     {
                         <tr>
-                            <td colspan="10" class="text-center py-6 text-slate-500">No stores found matching your criteria.</td>
+                            <td colspan="7" class="text-center py-6 text-slate-500">No stores found matching your criteria.</td>
                         </tr>
                     }
                 </tbody>

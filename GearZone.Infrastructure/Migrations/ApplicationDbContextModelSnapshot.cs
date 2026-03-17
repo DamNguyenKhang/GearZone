@@ -1143,6 +1143,9 @@ namespace GearZone.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<string>("StatusReason")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("StoreId")
                         .HasColumnType("uniqueidentifier");
 

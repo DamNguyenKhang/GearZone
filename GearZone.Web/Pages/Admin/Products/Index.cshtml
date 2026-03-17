@@ -393,12 +393,15 @@
                                         
                                         @if (product.Status == "Pending")
                                         {
-                                            <form method="post" asp-page-handler="Approve" asp-route-id="@product.Id" class="inline">
+                                            <form method="post" asp-page-handler="Approve" asp-route-id="@product.Id" class="inline" onsubmit="event.preventDefault(); window.handleSingleAction(this, 'Approve', 'check_circle', 'bg-emerald-100 text-emerald-600', 'bg-emerald-600')">
                                                 <button type="submit" class="text-slate-400 hover:text-green-600 transition-colors p-1.5 rounded-lg hover:bg-green-50" title="Approve Product">
                                                     <span class="material-symbols-outlined text-[20px]">check_circle</span>
                                                 </button>
                                             </form>
-                                            <form method="post" asp-page-handler="Reject" asp-route-id="@product.Id" class="inline" onsubmit="return confirm('Reject this product?')">
+                                            <form method="post" asp-page-handler="BulkUpdateStatus" asp-route-id="@product.Id" class="inline" onsubmit="event.preventDefault(); window.handleSingleAction(this, 'Reject', 'cancel', 'bg-red-100 text-red-600', 'bg-red-600')">
+                                                <input type="hidden" name="productIds" value="@product.Id" />
+                                                <input type="hidden" name="actionType" value="Reject" />
+                                                <input type="hidden" name="reason" class="action-reason" value="" />
                                                 <button type="submit" class="text-slate-400 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50" title="Reject Product">
                                                     <span class="material-symbols-outlined text-[20px]">cancel</span>
                                                 </button>
@@ -406,10 +409,24 @@
                                         }
                                         else if (product.Status == "Active")
                                         {
-                                            <button class="text-slate-400 hover:text-amber-500 transition-colors p-1.5 rounded-lg hover:bg-amber-50" title="Set Inactive">
-                                                <span class="material-symbols-outlined text-[20px]">block</span>
-                                            </button>
+                                            <form method="post" asp-page-handler="BulkUpdateStatus" asp-route-id="@product.Id" class="inline" onsubmit="event.preventDefault(); window.handleSingleAction(this, 'inactive', 'block', 'bg-amber-100 text-amber-600', 'bg-amber-600')">
+                                                <input type="hidden" name="productIds" value="@product.Id" />
+                                                <input type="hidden" name="actionType" value="inactive" />
+                                                <input type="hidden" name="reason" class="action-reason" value="" />
+                                                <button type="submit" class="text-slate-400 hover:text-amber-500 transition-colors p-1.5 rounded-lg hover:bg-amber-50" title="Set Inactive">
+                                                    <span class="material-symbols-outlined text-[20px]">block</span>
+                                                </button>
+                                            </form>
                                         }
+
+                                        <form method="post" asp-page-handler="BulkUpdateStatus" asp-route-id="@product.Id" class="inline" onsubmit="event.preventDefault(); window.handleSingleAction(this, 'Delete', 'delete', 'bg-red-100 text-red-600', 'bg-red-600')">
+                                            <input type="hidden" name="productIds" value="@product.Id" />
+                                            <input type="hidden" name="actionType" value="Delete" />
+                                            <input type="hidden" name="reason" class="action-reason" value="" />
+                                            <button type="submit" class="text-slate-400 hover:text-red-600 transition-colors p-1.5 rounded-lg hover:bg-red-50" title="Delete Product">
+                                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -539,6 +556,7 @@
 <form id="bulk-action-form" method="post" asp-page-handler="BulkUpdateStatus">
     <div id="bulk-action-inputs"></div>
     <input type="hidden" name="actionType" id="bulk-action-type" value="" />
+    <input type="hidden" name="reason" id="bulk-action-reason" value="" />
     <!-- Preserve search filters -->
     <input type="hidden" name="Query.SearchTerm" value="@Model.Query.SearchTerm" />
     <input type="hidden" name="Query.Status" value="@Model.Query.Status" />
@@ -745,22 +763,89 @@
 
             // Expose a function to handle bulk actions
             window.handleBulkAction = function(action) {
-                if (!confirm(`Are you sure you want to ${action} the selected products?`)) return;
+                const actionTitle = action.charAt(0).toUpperCase() + action.slice(1);
+                const isNasty = action === 'Reject' || action === 'inactive' || action === 'Delete';
                 
-                bulkActionType.value = action;
-                bulkActionInputs.innerHTML = '';
-                
-                const checkedBoxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
-                checkedBoxes.forEach(cb => {
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'productIds';
-                    input.value = cb.value;
-                    bulkActionInputs.appendChild(input);
-                });
-                
-                bulkActionForm.submit();
+                const showModal = (reasonRequired) => {
+                    if (reasonRequired) {
+                        window.showReasonModal({
+                            title: `${actionTitle} Selected?`,
+                            message: `Please provide a reason to ${action.toLowerCase()} the selected products.`,
+                            confirmText: actionTitle,
+                            confirmClass: isNasty ? 'bg-red-600' : 'bg-emerald-600',
+                            icon: action === 'Approve' ? 'check_circle' : (action === 'Reject' ? 'cancel' : (action === 'Delete' ? 'delete' : 'block')),
+                            iconClass: isNasty ? (action === 'inactive' ? 'bg-amber-100 text-amber-600' : 'bg-red-100 text-red-600') : 'bg-emerald-100 text-emerald-600',
+                            onConfirm: (reason) => {
+                                submitBulkAction(action, reason);
+                            }
+                        });
+                    } else {
+                        window.showConfirmModal({
+                            title: `${actionTitle} Selected?`,
+                            message: `Are you sure you want to ${action.toLowerCase()} the selected products?`,
+                            confirmText: actionTitle,
+                            confirmClass: isNasty ? 'bg-red-600' : 'bg-emerald-600',
+                            icon: action === 'Approve' ? 'check_circle' : 'info',
+                            iconClass: isNasty ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600',
+                            onConfirm: () => {
+                                submitBulkAction(action);
+                            }
+                        });
+                    }
+                };
+
+                const submitBulkAction = (action, reason = '') => {
+                    bulkActionType.value = action;
+                    const reasonInput = document.getElementById('bulk-action-reason');
+                    if (reasonInput) reasonInput.value = reason;
+
+                    bulkActionInputs.innerHTML = '';
+                    const checkedBoxes = Array.from(rowCheckboxes).filter(cb => cb.checked);
+                    checkedBoxes.forEach(cb => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'productIds';
+                        input.value = cb.value;
+                        bulkActionInputs.appendChild(input);
+                    });
+                    bulkActionForm.submit();
+                };
+
+                showModal(isNasty);
             };
+
+            window.handleSingleAction = function(form, action, icon, iconClass, btnClass) {
+                const isNasty = action === 'Reject' || action === 'inactive' || action === 'Delete';
+                if (isNasty) {
+                    window.showReasonModal({
+                        title: `${action} Product?`,
+                        message: `Please provide a reason to ${action.toLowerCase()} this product.`,
+                        confirmText: action,
+                        confirmClass: btnClass,
+                        icon: icon,
+                        iconClass: iconClass,
+                        onConfirm: (reason) => {
+                            const reasonInput = form.querySelector('.action-reason');
+                            if (reasonInput) reasonInput.value = reason;
+                            form.submit();
+                        }
+                    });
+                } else {
+                    window.showConfirmModal({
+                        title: `${action} Product?`,
+                        message: `Are you sure you want to ${action.toLowerCase()} this product?`,
+                        confirmText: action,
+                        confirmClass: btnClass,
+                        icon: icon,
+                        iconClass: iconClass,
+                        onConfirm: () => form.submit()
+                    });
+                }
+            }
+
+            window.confirmAction = function(form, action, icon, iconClass, btnClass) {
+                window.handleSingleAction(form, action, icon, iconClass, btnClass);
+            }
 
             function updateSelection() {
                 const checkedBoxes = Array.from(rowCheckboxes).filter(cb => cb.checked);

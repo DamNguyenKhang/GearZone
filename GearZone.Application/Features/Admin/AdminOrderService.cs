@@ -26,6 +26,14 @@ namespace GearZone.Application.Features.Admin
             return new PagedResult<AdminOrderDto>(items, pagedOrders.TotalCount, pagedOrders.PageNumber, pagedOrders.PageSize);
         }
 
+        public async Task<AdminOrderDetailDto?> GetOrderDetailAsync(Guid id)
+        {
+            var order = await _orderRepository.GetAdminOrderDetailAsync(id);
+            if (order == null) return null;
+
+            return _mapper.Map<AdminOrderDetailDto>(order);
+        }
+
         public async Task<AdminOrderStatsDto> GetOrderStatsAsync()
         {
             return await _orderRepository.GetAdminOrderStatsAsync();

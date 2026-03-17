@@ -9,9 +9,6 @@ using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using PayOS;
 
 namespace GearZone.Infrastructure
 {
@@ -19,22 +16,64 @@ namespace GearZone.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
+            static string ReadFirstNonEmpty(IConfiguration config, params string[] keys)
+            {
+                foreach (var key in keys)
+                {
+                    var value = config[key];
+                    if (!string.IsNullOrWhiteSpace(value))
+                    {
+                        return value.Trim();
+                    }
+                }
+
+                return string.Empty;
+            }
+
+            var payInClientId = ReadFirstNonEmpty(configuration, "PAYOS_PAYIN_CLIENT_ID", "PAYOS_CLIENT_ID");
+            var payInApiKey = ReadFirstNonEmpty(configuration, "PAYOS_PAYIN_API_KEY", "PAYOS_API_KEY");
+            var payInChecksumKey = ReadFirstNonEmpty(configuration, "PAYOS_PAYIN_CHECKSUM_KEY", "PAYOS_CHECKSUM_KEY");
+            var payInReturnUrl = ReadFirstNonEmpty(
+                configuration,
+                "PAYOS_PAYIN_RETURN_URL",
+                "PAYOS_RETURN_URL",
+                "PayOS:ReturnUrl");
+            var payInCancelUrl = ReadFirstNonEmpty(
+                configuration,
+                "PAYOS_PAYIN_CANCEL_URL",
+                "PAYOS_CANCEL_URL",
+                "PayOS:CancelUrl");
+
+            var payOutClientId = ReadFirstNonEmpty(configuration, "PAYOS_PAYOUT_CLIENT_ID", "PAYOS_CLIENT_ID");
+            var payOutApiKey = ReadFirstNonEmpty(configuration, "PAYOS_PAYOUT_API_KEY", "PAYOS_API_KEY");
+            var payOutChecksumKey = ReadFirstNonEmpty(configuration, "PAYOS_PAYOUT_CHECKSUM_KEY", "PAYOS_CHECKSUM_KEY");
+
+            var payInConfigured =
+                !string.IsNullOrWhiteSpace(payInClientId) &&
+                !string.IsNullOrWhiteSpace(payInApiKey) &&
+                !string.IsNullOrWhiteSpace(payInChecksumKey);
+
+            var payOutConfigured =
+                !string.IsNullOrWhiteSpace(payOutClientId) &&
+                !string.IsNullOrWhiteSpace(payOutApiKey) &&
+                !string.IsNullOrWhiteSpace(payOutChecksumKey);
+
             // PayOS PayIn settings (standardized variable names)
             services.Configure<PayOSSettings>(options =>
             {
-                options.ClientId = configuration["PAYOS_PAYIN_CLIENT_ID"]!;
-                options.ApiKey = configuration["PAYOS_PAYIN_API_KEY"]!;
-                options.ChecksumKey = configuration["PAYOS_PAYIN_CHECKSUM_KEY"]!;
-                options.ReturnUrl = configuration["PAYOS_PAYIN_RETURN_URL"]!;
-                options.CancelUrl = configuration["PAYOS_PAYIN_CANCEL_URL"]!;
+                options.ClientId = payInClientId;
+                options.ApiKey = payInApiKey;
+                options.ChecksumKey = payInChecksumKey;
+                options.ReturnUrl = payInReturnUrl;
+                options.CancelUrl = payInCancelUrl;
             });
 
             // PayOS Payout settings
             services.Configure<PayOSPayoutSettings>(options =>
             {
-                options.ClientId = configuration["PAYOS_PAYOUT_CLIENT_ID"]!;
-                options.ApiKey = configuration["PAYOS_PAYOUT_API_KEY"]!;
-                options.ChecksumKey = configuration["PAYOS_PAYOUT_CHECKSUM_KEY"]!;
+                options.ClientId = payOutClientId;
+                options.ApiKey = payOutApiKey;
+                options.ChecksumKey = payOutChecksumKey;
             });
 
             services.AddMemoryCache();
@@ -42,7 +81,6 @@ namespace GearZone.Infrastructure
             services.AddScoped<IFileStorageService, CloudinaryStorageService>();
             services.AddScoped<IEmailService, SmtpEmailService>();
             services.AddHttpClient<IGoongService, GoongService>();
-            services.AddScoped<IPaymentStrategy, PayOSPaymentStrategy>();
             services.AddScoped<IBrandRepository, BrandRepository>();
             services.AddScoped<ICategoryAttributeRepository, CategoryAttributeRepository>();
             services.AddScoped<ICartRepository, CartRepository>();
@@ -81,36 +119,28 @@ namespace GearZone.Infrastructure
             services.AddScoped<PaymentTimeoutJob>();
             services.AddScoped<IBackgroundJobService, BackgroundJobService>();
 
-            // Payment strategies (registered once)
-            services.AddScoped<IPaymentStrategy, PayOSPaymentStrategy>();
+            // Payment strategies
             services.AddScoped<IPaymentStrategy, CodPaymentStrategy>();
-            services.AddScoped<IPaymentGateway, PayOSPaymentGateway>();
-            services.AddScoped<IPayoutClient, PayOSPayoutClient>();
 
-            // PayOS clients (keyed singletons)
-            services.AddKeyedSingleton("OrderClient", (sp, key) =>
+            if (payInConfigured)
             {
-                var settings = sp.GetRequiredService<IOptions<PayOSSettings>>().Value;
-                return new PayOSClient(new PayOSOptions
-                {
-                    ClientId = settings.ClientId,
-                    ApiKey = settings.ApiKey,
-                    ChecksumKey = settings.ChecksumKey,
-                    LogLevel = LogLevel.Debug,
-                });
-            });
+                services.AddScoped<IPaymentStrategy, PayOSPaymentStrategy>();
+                services.AddScoped<IPaymentGateway, PayOSPaymentGateway>();
+            }
+            else
+            {
+                services.AddScoped<IPaymentStrategy, UnavailablePayOSPaymentStrategy>();
+                services.AddScoped<IPaymentGateway, DisabledPaymentGateway>();
+            }
 
-            services.AddKeyedSingleton("TransferClient", (sp, key) =>
+            if (payOutConfigured)
             {
-                var settings = sp.GetRequiredService<IOptions<PayOSPayoutSettings>>().Value;
-                return new PayOSClient(new PayOSOptions
-                {
-                    ClientId = settings.ClientId,
-                    ApiKey = settings.ApiKey,
-                    ChecksumKey = settings.ChecksumKey,
-                    LogLevel = LogLevel.Debug,
-                });
-            });
+                services.AddScoped<IPayoutClient, PayOSPayoutClient>();
+            }
+            else
+            {
+                services.AddScoped<IPayoutClient, DisabledPayoutClient>();
+            }
 
             services.AddHangfireServer(opt => opt.WorkerCount = 2);
 

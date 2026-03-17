@@ -7,8 +7,8 @@ namespace GearZone.Web.Pages.Public.User.Messages
 {
     public sealed class BuyerInboxComposer
     {
-        private const string DefaultEmptyTitle = "Chon mot cuoc tro chuyen";
-        private const string DefaultEmptyDescription = "Chon shop o cot ben trai de xem toan bo tin nhan.";
+        private const string DefaultEmptyTitle = "Choose a conversation";
+        private const string DefaultEmptyDescription = "Pick a shop from the left column to view the full thread.";
         private readonly IChatService _chatService;
 
         public BuyerInboxComposer(IChatService chatService)
@@ -34,7 +34,7 @@ namespace GearZone.Web.Pages.Public.User.Messages
                 SearchTerm = request.SearchTerm,
                 CounterpartScopeKey = request.CounterpartScopeKey,
                 PageNumber = 1,
-                PageSize = request.InboxPageSize
+                PageSize = Math.Max(1, request.InboxPageSize) * Math.Max(1, request.LoadedConversationPageCount)
             };
 
             var conversations = await _chatService.GetBuyerInboxAsync(userId, query);
@@ -87,8 +87,9 @@ namespace GearZone.Web.Pages.Public.User.Messages
                 ProductSlug = request.ProductSlug,
                 ActiveConversationId = activeConversationId,
                 TotalUnreadCount = await _chatService.GetBuyerUnreadCountAsync(userId),
-                EmptyInboxTitle = "Chua co cuoc tro chuyen nao",
-                EmptyInboxDescription = "Mo bat ky shop hop le nao va bam Chat de bat dau tro chuyen.",
+                LoadedConversationPageCount = Math.Max(1, request.LoadedConversationPageCount),
+                EmptyInboxTitle = "No conversations yet",
+                EmptyInboxDescription = "Open any available shop and press Chat to start a conversation.",
                 CounterpartScopeOptions = counterpartScopeOptions,
                 Conversations = conversations,
                 ActiveThread = thread
@@ -133,8 +134,9 @@ namespace GearZone.Web.Pages.Public.User.Messages
                 ProductSlug = widget.ActiveThread?.ActiveProductContext?.ProductSlug,
                 ActiveConversationId = widget.ActiveConversationId,
                 TotalUnreadCount = widget.TotalUnreadCount,
-                EmptyInboxTitle = "Chua co cuoc tro chuyen nao",
-                EmptyInboxDescription = "Mo bat ky shop hop le nao va bam Chat de bat dau tro chuyen.",
+                LoadedConversationPageCount = 1,
+                EmptyInboxTitle = "No conversations yet",
+                EmptyInboxDescription = "Open any available shop and press Chat to start a conversation.",
                 CounterpartScopeOptions = widget.CounterpartScopeOptions,
                 Conversations = widget.Conversations,
                 ActiveThread = widget.ActiveThread
@@ -147,6 +149,7 @@ namespace GearZone.Web.Pages.Public.User.Messages
             {
                 IsSellerView = false,
                 IsWidgetSurface = inbox.IsWidgetSurface,
+                IsFullCanvasPage = inbox.IsFullCanvasPage,
                 IsAccountCenterSurface = inbox.IsAccountCenterSurface,
                 CurrentUserId = inbox.CurrentUserId,
                 BasePath = inbox.BasePath,
@@ -155,6 +158,7 @@ namespace GearZone.Web.Pages.Public.User.Messages
                 CounterpartScopeKey = inbox.CounterpartScopeKey,
                 ActiveConversationId = inbox.ActiveConversationId,
                 TotalUnreadCount = inbox.TotalUnreadCount,
+                LoadedConversationPageCount = inbox.LoadedConversationPageCount,
                 EmptyInboxTitle = inbox.EmptyInboxTitle,
                 EmptyInboxDescription = inbox.EmptyInboxDescription,
                 CounterpartScopeOptions = inbox.CounterpartScopeOptions,
@@ -193,6 +197,7 @@ namespace GearZone.Web.Pages.Public.User.Messages
         public bool IsWidgetSurface { get; set; }
         public bool IsAccountCenterSurface { get; set; }
         public int LoadedPageCount { get; set; } = 1;
+        public int LoadedConversationPageCount { get; set; } = 1;
         public int InboxPageSize { get; set; } = 20;
         public int MessagePageSize { get; set; } = 30;
     }

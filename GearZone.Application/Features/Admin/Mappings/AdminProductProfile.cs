@@ -34,7 +34,10 @@ public class AdminProductProfile : Profile
         CreateMap<Category, AdminCategoryInfoDto>();
         CreateMap<Brand, AdminBrandInfoDto>();
         CreateMap<Store, AdminStoreInfoDto>()
-            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.StoreName));
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.StoreName))
+            .ForMember(dest => dest.JoinedAt, opt => opt.MapFrom(src => src.CreatedAt))
+            .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.LogoUrl))
+            .ForMember(dest => dest.VendorId, opt => opt.MapFrom(src => "ST-" + src.Id.ToString().ToUpper().Substring(0, 8)));
 
         CreateMap<VariantAttributeValue, AdminVariantAttributeDto>()
             .ForMember(dest => dest.AttributeName, opt => opt.MapFrom(src => 
@@ -55,6 +58,24 @@ public class AdminProductProfile : Profile
                 src.Variants != null ? src.Variants.Sum(v => v.StockQuantity) : 0))
             .ForMember(dest => dest.Images, opt => opt.MapFrom(src => 
                 src.Images != null ? src.Images.OrderBy(i => i.SortOrder).Select(i => i.ImageUrl).ToList() : new List<string>()))
+            .ForMember(dest => dest.Store, opt => opt.MapFrom(src => src.Store != null ? new AdminStoreInfoDto {
+                Id = src.Store.Id,
+                Name = src.Store.StoreName,
+                Slug = src.Store.Slug,
+                JoinedAt = src.Store.CreatedAt,
+                AvatarUrl = src.Store.LogoUrl,
+                VendorId = "ST-" + src.Store.Id.ToString().ToUpper().Substring(0, 8)
+            } : null))
+            .ForMember(dest => dest.Category, opt => opt.MapFrom(src => new AdminCategoryInfoDto {
+                Id = src.Category.Id,
+                Name = src.Category.Name,
+                Slug = src.Category.Slug
+            }))
+            .ForMember(dest => dest.Brand, opt => opt.MapFrom(src => new AdminBrandInfoDto {
+                Id = src.Brand.Id,
+                Name = src.Brand.Name,
+                Slug = src.Brand.Slug
+            }))
             .ForMember(dest => dest.Specs, opt => opt.MapFrom(src =>
                 MapSpecs(src)));
     }

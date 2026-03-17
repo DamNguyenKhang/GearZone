@@ -1,31 +1,45 @@
 using GearZone.Application.Abstractions.External;
 using GearZone.Application.Features.Payout.Dtos;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
+using GearZone.Infrastructure.Settings;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using PayOS;
 using PayOS.Models.V1.Payouts;
 using PayOS.Models.V1.Payouts.Batch;
-using PayOS.Models.V1.PayoutsAccount;
 
 namespace GearZone.Infrastructure.External
 {
     public class PayOSPayoutClient : IPayoutClient
     {
-        private readonly PayOSClient _client;
+        private readonly PayOSClient? _client;
+        private readonly string? _initError;
         private readonly ILogger<PayOSPayoutClient> _logger;
 
         public PayOSPayoutClient(
-            [FromKeyedServices("TransferClient")] PayOSClient client,
+            IOptions<PayOSPayoutSettings> settings,
             ILogger<PayOSPayoutClient> logger)
         {
-            _client = client;
             _logger = logger;
+
+            try
+            {
+                var cfg = settings.Value;
+                _client = PayOSClientFactory.Create(cfg.ClientId, cfg.ApiKey, cfg.ChecksumKey);
+            }
+            catch (Exception ex)
+            {
+                _initError = ex.Message;
+                _logger.LogError(ex, "Could not initialize PayOS payout client.");
+            }
         }
 
         public async Task<PayoutResult> CreatePayoutAsync(PayoutRequestDto payout)
         {
+            if (_client == null)
+            {
+                return new PayoutResult(isSuccess: false, errorMessage: _initError ?? "PayOS payout client is not initialized.");
+            }
+
             var request = new PayoutRequest
             {
                 ReferenceId = Guid.NewGuid().ToString(),
@@ -55,6 +69,11 @@ namespace GearZone.Infrastructure.External
 
         public async Task<PayoutResult> CreateBatchPayoutAsync(List<PayoutRequestDto> payouts)
         {
+            if (_client == null)
+            {
+                return new PayoutResult(isSuccess: false, errorMessage: _initError ?? "PayOS payout client is not initialized.");
+            }
+
             var request = new PayoutBatchRequest
             {
                 ReferenceId = Guid.NewGuid().ToString(),
@@ -88,6 +107,18 @@ namespace GearZone.Infrastructure.External
 
         public async Task<PayoutAccountInfoDto> GetAccountBalance()
         {
+            if (_client == null)
+            {
+                _logger.LogWarning("PayOS payout client is not initialized: {Error}", _initError);
+                return new PayoutAccountInfoDto
+                {
+                    AccountName = "Unavailable",
+                    AccountNumber = string.Empty,
+                    Balance = "0",
+                    Currency = string.Empty
+                };
+            }
+
             try
             {
                 var payoutAccount = await _client.PayoutsAccount.GetBalanceAsync();

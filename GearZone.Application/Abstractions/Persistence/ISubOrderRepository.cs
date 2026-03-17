@@ -43,6 +43,7 @@ namespace GearZone.Application.Abstractions.Persistence
         Task<UserOrderStatusSummaryDto> GetUserOrderStatusSummaryAsync(string userId, DateTime utcNow, CancellationToken ct = default);
         Task<PagedResult<SellerChatOrderListItemDto>> GetSellerChatOrdersAsync(string ownerUserId, SellerChatOrderQueryDto queryDto, CancellationToken ct = default);
         Task<SubOrder?> GetSellerChatSubOrderAsync(string ownerUserId, Guid subOrderId, CancellationToken ct = default);
+        Task<SellerChatOrderDetailDto?> GetSellerChatOrderDetailAsync(string ownerUserId, Guid subOrderId, CancellationToken ct = default);
         Task<List<ChatContextOrderDto>> GetConversationOrderContextAsync(string buyerUserId, Guid storeId, int take, CancellationToken ct = default);
     }
 }

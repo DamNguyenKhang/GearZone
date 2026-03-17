@@ -1,0 +1,276 @@
+@using GearZone.Application.Features.Catalog.DTOs
+@using GearZone.Web.Pages.Shared.Models
+@model ProductDetailDto
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12" id="product-root" data-variants='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Variants))'>
+    
+    <!-- Left Column: Gallery (45%) -->
+    <div class="lg:col-span-5 flex flex-col gap-4">
+        <div class="relative w-full aspect-[4/3] bg-white rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm group">
+            <img id="main-product-image" alt="@Model.Name main view"
+                 class="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-105"
+                 src="@(Model.ImageUrls.FirstOrDefault() ?? "/images/placeholder.png")" />
+            <div class="absolute top-4 left-4 bg-secondary text-white text-xs font-bold px-2 py-1 rounded">-15% OFF</div>
+        </div>
+        
+        @if (Model.ImageUrls.Count > 1)
+        {
+            <div class="grid grid-cols-4 gap-3">
+                @foreach (var img in Model.ImageUrls.Take(4))
+                {
+                    <button class="gallery-thumb aspect-square rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden p-1 bg-white hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+                            onclick="document.getElementById('main-product-image').src='@img'">
+                        <img alt="Thumbnail view" class="w-full h-full object-contain" src="@img" />
+                    </button>
+                }
+            </div>
+        }
+        <!-- Premium Compare Toggle (Detail View) -->
+        <button class="flex items-center gap-3 px-6 py-2.5 bg-white dark:bg-slate-800/50 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-2xl text-slate-600 dark:text-slate-300 hover:border-primary/50 hover:bg-primary/5 transition-all shadow-sm hover:shadow-md mt-4 compare-detail-btn group/detail"
+                data-product-id="@Model.Id"
+                data-product-name="@Model.Name"
+                data-product-image="@(Model.ImageUrls.FirstOrDefault() ?? "/images/placeholder.png")"
+                data-category-id="@Model.CategoryId">
+            <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center group-hover/detail:bg-primary group-hover/detail:text-white transition-all duration-300">
+                <span class="material-symbols-outlined text-lg">compare_arrows</span>
+            </div>
+            <span id="compare-text" class="text-sm font-black uppercase tracking-widest group-hover/detail:text-primary transition-colors">Compare this product</span>
+        </button>
+    </div>
+
+    <!-- Right Column: Product Info (55%) -->
+    <div class="lg:col-span-7 flex flex-col gap-6">
+        <!-- Title & Header -->
+        <div>
+            <div class="flex items-center gap-2 mb-3">
+                <a href="/store/@Model.StoreSlug" class="bg-primary/10 text-primary text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-primary/20 hover:bg-primary hover:text-white transition-colors">
+                    <span class="material-symbols-outlined text-[14px]">storefront</span>
+                    @Model.StoreName
+                </a>
+                <a href="/Public/User/Profile?tab=messages&storeSlug=@Model.StoreSlug&productSlug=@Model.Slug"
+                   class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-orange-600 transition hover:-translate-y-0.5 hover:bg-orange-100">
+                    <span class="material-symbols-outlined text-[14px]">chat</span>
+                    Chat Now
+                </a>
+                @if (Model.ReviewCount > 0)
+                {
+                    <div class="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1">
+                        <partial name="/Pages/Shared/_ReviewStars.cshtml"
+                                 model='new ReviewStarsViewModel
+                                 {
+                                     Rating = Model.Rating,
+                                     SizePx = 14,
+                                     AriaLabel = $"{Model.Rating:0.0} out of 5 stars"
+                                 }' />
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300">@Model.Rating.ToString("0.0")</span>
+                        <span class="text-xs text-slate-400">(@Model.ReviewCount)</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="flex items-center gap-1 text-slate-400 dark:text-slate-500">
+                        <partial name="/Pages/Shared/_ReviewStars.cshtml"
+                                 model='new ReviewStarsViewModel
+                                 {
+                                     Rating = 0,
+                                     SizePx = 14,
+                                     AriaLabel = "No reviews yet"
+                                 }' />
+                        <span class="text-xs font-bold">No reviews yet</span>
+                    </div>
+                }
+            </div>
+            <h1 class="text-3xl font-bold text-slate-900 dark:text-white leading-tight mb-2">@Model.Name</h1>
+            <div class="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+                <span>Brand: <a class="text-primary hover:underline" href="/catalog?brand=@Model.BrandSlug">@Model.BrandName</a></span>
+                <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                <span>SKU: <span id="display-sku">@Model.Variants.FirstOrDefault()?.Sku</span></span>
+                <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                <span>@Model.SoldCount Sold</span>
+            </div>
+        </div>
+
+        <!-- Price Section -->
+        <div class="bg-slate-50 dark:bg-surface-dark/50 p-5 rounded-xl">
+            <div class="flex items-end gap-3 flex-wrap">
+                <span id="display-price" class="text-4xl font-extrabold text-secondary tracking-tight">
+                    @(Model.Variants.FirstOrDefault()?.Price.ToString("N0") ?? Model.BasePrice.ToString("N0")) VND
+                </span>
+                <span id="display-original-price" class="text-lg text-slate-400 line-through mb-1">
+                    @(( (Model.Variants.FirstOrDefault()?.Price ?? Model.BasePrice) * 1.15m ).ToString("N0")) VND
+                </span>
+                <span class="text-sm font-bold text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400 px-2 py-1 rounded mb-1">Save 15%</span>
+            </div>
+        </div>
+
+        <!-- Shopee-style Variant Selection -->
+        @if (Model.AttributeSelections.Any())
+        {
+            <div class="space-y-4">
+                @foreach (var attr in Model.AttributeSelections)
+                {
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-slate-900 dark:text-white">@attr.Name</label>
+                        <div class="flex flex-wrap gap-2 attribute-group" data-attribute-id="@attr.AttributeId">
+                            @foreach (var opt in attr.Options)
+                            {
+                                <button type="button" 
+                                        class="variant-option px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-400 dark:hover:border-slate-500 font-medium text-sm bg-white dark:bg-surface-dark transition-all focus:outline-none"
+                                        data-option-id="@opt.OptionId">
+                                    @opt.Value
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Stock & Actions -->
+        <div class="flex flex-col gap-5 pt-2">
+            <div class="flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400" id="stock-container">
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                <span id="display-stock">In Stock (@(Model.Variants.FirstOrDefault()?.StockQuantity ?? 0) units available)</span>
+            </div>
+            <div class="flex items-center gap-2 text-sm font-medium text-red-600 dark:text-red-400 hidden" id="out-of-stock-container">
+                <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                <span>Out of Stock</span>
+            </div>
+            
+            <div class="flex flex-wrap gap-4 items-stretch">
+                <!-- Quantity -->
+                <div class="flex items-center border border-slate-300 dark:border-slate-600 rounded-lg h-12 bg-white dark:bg-surface-dark">
+                    <button type="button" class="w-10 h-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white" onclick="updateQty(-1)">
+                        <span class="material-symbols-outlined text-lg">remove</span>
+                    </button>
+                    <input id="qty-input" class="w-12 h-full text-center border-none focus:ring-0 text-slate-900 dark:text-white bg-transparent font-medium p-0"
+                           readonly type="text" value="1" />
+                    <button type="button" class="w-10 h-full flex items-center justify-center text-slate-500 hover:text-slate-900 dark:hover:text-white" onclick="updateQty(1)">
+                        <span class="material-symbols-outlined text-lg">add</span>
+                    </button>
+                </div>
+                
+                <!-- Add to Cart -->
+                <button id="add-to-cart-btn" class="flex-1 min-w-[160px] h-12 rounded-lg border-2 border-primary text-primary font-bold hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined">add_shopping_cart</span>
+                    Add to Cart
+                </button>
+                <!-- Buy Now -->
+                <button class="flex-[1.5] min-w-[200px] h-12 rounded-lg bg-secondary text-white font-bold hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2">
+                    Buy Now
+                </button>
+            </div>
+            <div id="selection-warning" class="text-sm text-red-500 hidden">Please select a valid combination of options.</div>
+        </div>
+
+        <!-- Highlight Box -->
+        <div class="bg-blue-50 dark:bg-slate-800/50 rounded-xl p-5 border border-blue-100 dark:border-slate-700 mt-2">
+            <ul class="space-y-3">
+                <li class="flex items-start gap-3">
+                    <div class="min-w-6 h-6 rounded-full bg-white dark:bg-slate-700 flex items-center justify-center shadow-sm text-primary">
+                        <span class="material-symbols-outlined text-sm">verified_user</span>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-slate-900 dark:text-white">36 Months Genuine Warranty</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Directly from GearZone service centers.</p>
+                    </div>
+                </li>
+                <li class="flex items-start gap-3">
+                    <div class="min-w-6 h-6 rounded-full bg-white dark:bg-slate-700 flex items-center justify-center shadow-sm text-primary">
+                        <span class="material-symbols-outlined text-sm">local_shipping</span>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-slate-900 dark:text-white">Free Nationwide Shipping</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Estimated delivery: 2-4 business days.</p>
+                    </div>
+                </li>
+                <li class="flex items-start gap-3">
+                    <div class="min-w-6 h-6 rounded-full bg-white dark:bg-slate-700 flex items-center justify-center shadow-sm text-primary">
+                        <span class="material-symbols-outlined text-sm">replay</span>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-slate-900 dark:text-white">7-Day Return Policy</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">If there is a manufacturer defect.</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+    </div>
+</div>
+
+<!-- Below Fold: Specs, Description & Reviews -->
+<div class="mt-16 space-y-10">
+    <div class="sticky top-0 z-10 bg-slate-50 pt-4 dark:bg-background-dark">
+        <nav aria-label="Tabs" class="flex gap-8 overflow-x-auto no-scrollbar border-b border-slate-200 dark:border-slate-700">
+            @if (!string.IsNullOrWhiteSpace(Model.Description))
+            {
+                <a href="#product-description" class="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap">
+                    Description
+                </a>
+            }
+            @if (Model.Specifications.Any())
+            {
+                <a href="#product-specifications" class="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap">
+                    Specifications
+                </a>
+            }
+            @if (ViewData["IsPreview"] as bool? != true)
+            {
+                <a href="#product-reviews" class="border-b-2 border-transparent py-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-200 whitespace-nowrap">
+                    Reviews (@Model.ReviewCount)
+                </a>
+            }
+        </nav>
+    </div>
+
+    <div class="space-y-10">
+        @if (Model.Specifications.Any())
+        {
+            <section id="product-specifications">
+                <h3 class="mb-6 text-xl font-bold text-slate-900 dark:text-white">Technical Specifications</h3>
+                <div class="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700">
+                    <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                        <tbody class="divide-y divide-slate-200 bg-white dark:divide-slate-700 dark:bg-surface-dark">
+                            @foreach (var spec in Model.Specifications)
+                            {
+                                <tr>
+                                    <td class="w-1/3 whitespace-nowrap bg-slate-50/50 py-4 pl-4 pr-3 text-sm font-medium text-slate-500 dark:bg-slate-800/30 dark:text-slate-400 sm:pl-6">
+                                        @spec.Name
+                                    </td>
+                                    <td class="break-words whitespace-normal px-3 py-4 font-mono text-sm text-slate-900 dark:text-white">
+                                        @spec.Value
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.Description))
+        {
+            <section id="product-description">
+                <h3 class="mb-6 text-xl font-bold text-slate-900 dark:text-white">Description</h3>
+                <div class="prose max-w-none text-slate-600 dark:prose-invert dark:text-slate-300">
+                    @Html.Raw(Model.Description)
+                </div>
+            </section>
+        }
+
+        @if (ViewData["IsPreview"] as bool? != true)
+        {
+            <section id="product-reviews">
+                <partial name="/Pages/Public/Catalog/Partials/_ProductReviewPanel.cshtml" model='new GearZone.Web.Pages.Public.Catalog.Models.ProductReviewPanelViewModel {
+                    ProductSlug = Model.Slug,
+                    ReviewSummary = Model.ReviewSummary,
+                    EligibleReview = Model.EligibleReview,
+                    ProductReviews = (ViewData["ProductReviews"] as GearZone.Application.Common.Models.PagedResult<GearZone.Application.Features.Reviews.Dtos.ProductReviewListItemDto>) ?? new GearZone.Application.Common.Models.PagedResult<GearZone.Application.Features.Reviews.Dtos.ProductReviewListItemDto>(),
+                    ReviewRating = (ViewData["ReviewRating"] as int?),
+                    WithCommentOnly = (ViewData["WithCommentOnly"] as bool? ?? false)
+                }' />
+            </section>
+        }
+    </div>
+</div>

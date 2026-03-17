@@ -12,7 +12,8 @@ namespace GearZone.Infrastructure.Seed
     {
         public static async Task SeedAsync(ApplicationDbContext context)
         {
-            if (await context.Products.AnyAsync()) return;
+            if (!await context.Products.AnyAsync())
+            {
 
             var owner = await context.Users.FirstOrDefaultAsync();
             if (owner == null) return;
@@ -621,6 +622,175 @@ namespace GearZone.Infrastructure.Seed
             }
 
             await context.SaveChangesAsync();
+            }
+
+            // ── Seed Orders for KeLuaDao ──────────────────────────────────
+            const string keLuaDaoOwnerEmail = "thnguyen0407@gmail.com";
+            var klOwner = await context.Users.FirstOrDefaultAsync(u => u.Email == keLuaDaoOwnerEmail);
+            if (klOwner == null)
+            {
+                Console.WriteLine($"Seed[KeLuaDao]: owner '{keLuaDaoOwnerEmail}' not found.");
+                return;
+            }
+
+            var klStore = await context.Stores.FirstOrDefaultAsync(
+                s => s.OwnerUserId == klOwner.Id &&
+                     (s.StoreName == "KeLuaDao" || s.StoreName.Contains("KeLuaDao")));
+
+            if (klStore == null)
+            {
+                var slugBase = "keluadao";
+                var slug = slugBase;
+                var suffix = 1;
+                while (await context.Stores.AnyAsync(s => s.Slug == slug))
+                {
+                    slug = $"{slugBase}-{suffix++}";
+                }
+
+                klStore = new Store
+                {
+                    Id = Guid.NewGuid(),
+                    OwnerUserId = klOwner.Id,
+                    StoreName = "KeLuaDao",
+                    Slug = slug,
+                    BusinessType = BusinessType.Individual,
+                    Phone = "0909000000",
+                    Email = keLuaDaoOwnerEmail,
+                    AddressLine = "KeLuaDao Address",
+                    Province = "Ho Chi Minh City",
+                    Status = StoreStatus.Approved,
+                    CommissionRate = 5,
+                    CreatedAt = DateTime.UtcNow,
+                    ApprovedAt = DateTime.UtcNow
+                };
+
+                context.Stores.Add(klStore);
+                await context.SaveChangesAsync();
+                Console.WriteLine($"Seed[KeLuaDao]: created store '{klStore.StoreName}' ({klStore.Id}).");
+            }
+
+            var existingSubOrders = await context.SubOrders.CountAsync(so => so.StoreId == klStore.Id);
+            Console.WriteLine($"Seed[KeLuaDao]: existing suborders = {existingSubOrders}.");
+            if (existingSubOrders < 5)
+            {
+                var customer = await context.Users.FirstOrDefaultAsync(u => u.Id != klStore.OwnerUserId);
+                customer ??= klOwner;
+
+                var product = await context.Products
+                    .Include(p => p.Variants)
+                    .FirstOrDefaultAsync(p => p.StoreId == klStore.Id);
+                if (product == null)
+                {
+                    var cat = await context.Categories.FirstOrDefaultAsync(c => c.Slug == "gpus") ?? await context.Categories.FirstAsync();
+                    var brand = await context.Brands.FirstOrDefaultAsync(b => b.Slug == "asus") ?? await context.Brands.FirstAsync();
+
+                    product = new Product
+                    {
+                        Id = Guid.NewGuid(),
+                        StoreId = klStore.Id,
+                        CategoryId = cat.Id,
+                        BrandId = brand.Id,
+                        Name = "KeLuaDao Test Product",
+                        Slug = "keluadao-test-" + Guid.NewGuid().ToString().Substring(0, 5),
+                        BasePrice = 100000,
+                        Status = ProductStatus.Active,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    product.Variants.Add(new ProductVariant
+                    {
+                        Id = Guid.NewGuid(),
+                        Sku = "KL-TEST-V1",
+                        Price = 100000,
+                        StockQuantity = 100,
+                        IsActive = true
+                    });
+                    context.Products.Add(product);
+                    await context.SaveChangesAsync();
+                }
+
+                var variant = product.Variants.FirstOrDefault(v => v.IsActive) ?? product.Variants.FirstOrDefault();
+                if (variant == null)
+                {
+                    variant = new ProductVariant
+                    {
+                        Id = Guid.NewGuid(),
+                        ProductId = product.Id,
+                        Sku = "KL-TEST-V1",
+                        Price = product.BasePrice > 0 ? product.BasePrice : 100000,
+                        StockQuantity = 100,
+                        IsActive = true
+                    };
+                    context.ProductVariants.Add(variant);
+                    await context.SaveChangesAsync();
+                }
+
+                var baseCode = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                var rng = new Random();
+                var statuses = new[]
+                {
+                    OrderStatus.Pending,
+                    OrderStatus.Approved,
+                    OrderStatus.Processing,
+                    OrderStatus.Delivered,
+                    OrderStatus.Completed
+                };
+
+                for (int i = existingSubOrders + 1; i <= 5; i++)
+                {
+                    var status = statuses[i - 1];
+                    var createdAt = DateTime.UtcNow.AddHours(-i * 6);
+                    var commissionRate = 5m;
+                    var subtotal = variant.Price;
+                    var commissionAmount = Math.Round(subtotal * commissionRate / 100m, 2, MidpointRounding.AwayFromZero);
+                    var netAmount = subtotal - commissionAmount;
+
+                    var order = new Order
+                    {
+                        Id = Guid.NewGuid(),
+                        OrderCode = baseCode + (i * 10) + rng.Next(1, 9),
+                        UserId = customer.Id,
+                        ReceiverName = "Test Buyer",
+                        ReceiverPhone = "0909000000",
+                        ShippingAddress = "789 Test St, HCM",
+                        CreatedAt = createdAt,
+                        ShippingFee = 30000,
+                        GrandTotal = subtotal + 30000
+                    };
+
+                    var subOrder = new SubOrder
+                    {
+                        Id = Guid.NewGuid(),
+                        OrderId = order.Id,
+                        StoreId = klStore.Id,
+                        Status = status,
+                        Subtotal = subtotal,
+                        CommissionRateSnapshot = commissionRate,
+                        CommissionAmount = commissionAmount,
+                        NetAmount = netAmount,
+                        CreatedAt = createdAt,
+                        DeliveredAt = status == OrderStatus.Delivered || status == OrderStatus.Completed ? createdAt.AddDays(2) : null,
+                        UpdatedAt = createdAt.AddHours(1)
+                    };
+
+                    subOrder.Items.Add(new OrderItem
+                    {
+                        Id = Guid.NewGuid(),
+                        SubOrderId = subOrder.Id,
+                        VariantId = variant.Id,
+                        ProductNameSnapshot = product.Name,
+                        VariantNameSnapshot = "Default",
+                        SkuSnapshot = variant.Sku,
+                        Quantity = 1,
+                        UnitPriceSnapshot = variant.Price,
+                        LineTotal = variant.Price
+                    });
+
+                    order.SubOrders.Add(subOrder);
+                    context.Orders.Add(order);
+                }
+                await context.SaveChangesAsync();
+                Console.WriteLine($"Seed[KeLuaDao]: seeded {5 - existingSubOrders} suborders.");
+            }
         }
     }
 }

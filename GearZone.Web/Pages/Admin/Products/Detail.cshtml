@@ -288,17 +288,24 @@
             <!-- Vendor Info Mini Card -->
             <div class="bg-white rounded-xl shadow-card border border-slate-100 p-5 group flex flex-col gap-4">
                 <div class="flex items-center gap-4">
-                    <div class="size-14 rounded-full bg-slate-100 flex-shrink-0 bg-cover bg-center border border-slate-200 group-hover:border-primary/50 transition-colors shadow-sm" style="background-image: url('@(p.Store?.AvatarUrl ?? "")');"></div>
+                    <div class="size-14 rounded-full bg-slate-100 flex-shrink-0 bg-cover bg-center border border-slate-200 group-hover:border-primary/50 transition-colors shadow-sm" style="background-image: url('@(p.Store?.AvatarUrl ?? "")');">
+                        @if (string.IsNullOrEmpty(p.Store?.AvatarUrl))
+                        {
+                            <div class="w-full h-full flex items-center justify-center text-slate-300">
+                                <span class="material-symbols-outlined text-2xl">store</span>
+                            </div>
+                        }
+                    </div>
                     <div class="flex-1 min-w-0">
                         <h4 class="text-base font-bold text-slate-900 truncate">@(p.Store?.Name ?? "N/A")</h4>
-                        <p class="text-xs font-medium text-slate-500 mt-0.5">@(p.Store?.VendorId ?? "")</p>
+                        <p class="text-xs font-medium text-slate-500 mt-0.5">@(p.Store?.VendorId ?? "N/A")</p>
                     </div>
                 </div>
                 <div class="bg-slate-50 rounded-lg p-3 border border-slate-100 text-xs flex justify-between items-center">
                     <span class="text-slate-500">Joined Date</span>
-                    <span class="font-bold text-slate-700">@(p.Store != null ? p.Store.JoinedAt.ToString("MMM yyyy") : "N/A")</span>
+                    <span class="font-bold text-slate-700">@(p.Store != null ? p.Store.JoinedAt.ToString("dd MMM, yyyy") : "N/A")</span>
                 </div>
-                <a href="#" class="w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-sm text-center border border-slate-200 transition-colors rounded-lg flex justify-center items-center gap-2">
+                <a asp-page="/Admin/StoreManagement/Detail" asp-route-id="@p.Store?.Id" class="w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-sm text-center border border-slate-200 transition-colors rounded-lg flex justify-center items-center gap-2">
                     <span class="material-symbols-outlined text-[18px]">store</span>
                     Visit Store Profile
                 </a>
@@ -312,17 +319,23 @@
 <div class="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-slate-200 p-4 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] z-40 mx-[-24px] px-[24px]">
     <div class="max-w-[1440px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
         <div class="w-full sm:w-auto">
-            <button class="text-red-500 hover:text-red-700 text-sm font-bold hover:bg-red-50 px-3 py-2 rounded-lg flex items-center justify-center gap-1.5 transition-colors w-full sm:w-auto">
-                <span class="material-symbols-outlined text-[18px]">delete</span>
-                Delete Product
-            </button>
+            <form method="post" asp-page-handler="Delete" asp-route-id="@p.Id" onsubmit="event.preventDefault(); window.handleSingleAction(this, 'Delete', 'delete', 'bg-red-100 text-red-600', 'bg-red-600')">
+                <input type="hidden" name="reason" class="action-reason" value="" />
+                <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-bold hover:bg-red-50 px-3 py-2 rounded-lg flex items-center justify-center gap-1.5 transition-colors w-full sm:w-auto">
+                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                    Delete Product
+                </button>
+            </form>
         </div>
         
         <div class="flex flex-wrap items-center justify-end gap-3 w-full sm:w-auto">
-            <button class="px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-sm bg-white">
-                <span class="material-symbols-outlined text-[18px]">visibility_off</span>
-                Hide / Suspend
-            </button>
+            <form method="post" asp-page-handler="Suspend" asp-route-id="@p.Id" onsubmit="event.preventDefault(); window.handleSingleAction(this, 'inactive', 'block', 'bg-amber-100 text-amber-600', 'bg-amber-600')">
+                <input type="hidden" name="reason" class="action-reason" value="" />
+                <button type="submit" class="px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-sm bg-white">
+                    <span class="material-symbols-outlined text-[18px]">visibility_off</span>
+                    Hide / Suspend
+                </button>
+            </form>
             
             <a href="#" class="px-4 py-2.5 rounded-lg border border-primary/20 text-primary font-bold text-sm hover:bg-primary/5 transition-colors flex items-center gap-2 shadow-sm bg-white">
                 <span class="material-symbols-outlined text-[18px]">edit</span>
@@ -331,16 +344,34 @@
             
             <div class="hidden sm:block w-px h-8 bg-slate-200 mx-1"></div>
 
+            @if (p.Status == "Active")
+            {
+                <a href="/product/@p.Slug" target="_blank" class="px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+                    View Live
+                </a>
+            }
+            else
+            {
+                <a asp-page="/Public/Catalog/Preview" asp-route-id="@p.Id" target="_blank" class="px-4 py-2.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 font-bold text-sm shadow-sm transition-colors border border-slate-200 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">visibility</span>
+                    Live Preview
+                </a>
+            }
+
+            <div class="hidden sm:block w-px h-8 bg-slate-200 mx-1"></div>
+
             @if (p.Status == "Pending")
             {
-                <form method="post" asp-page-handler="Reject" asp-route-id="@p.Id" onsubmit="return confirm('Note: You are rejecting this product request. Continue?')">
+                <form method="post" asp-page-handler="Reject" asp-route-id="@p.Id" onsubmit="event.preventDefault(); window.handleSingleAction(this, 'Reject', 'cancel', 'bg-red-100 text-red-600', 'bg-red-600')">
+                    <input type="hidden" name="reason" class="action-reason" value="" />
                     <button type="submit" class="px-4 py-2.5 rounded-lg border border-red-200 text-red-600 font-bold text-sm hover:bg-red-50 transition-colors flex items-center gap-2 shadow-sm">
                         <span class="material-symbols-outlined text-[18px]">close</span>
-                        Reject
+                        Reject Request
                     </button>
                 </form>
                 
-                <form method="post" asp-page-handler="Approve" asp-route-id="@p.Id">
+                <form method="post" asp-page-handler="Approve" asp-route-id="@p.Id" onsubmit="event.preventDefault(); window.handleSingleAction(this, 'Approve', 'check_circle', 'bg-emerald-100 text-emerald-600', 'bg-emerald-600')">
                     <button type="submit" class="px-6 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold text-sm shadow-md transition-colors flex items-center gap-2">
                         <span class="material-symbols-outlined text-[18px]">check_circle</span>
                         Approve Request
@@ -351,7 +382,7 @@
             {
                 <button disabled title="Product is currently @p.Status" class="px-6 py-2.5 rounded-lg bg-slate-100 text-slate-400 font-bold text-sm shadow-inner transition-colors border border-slate-200 cursor-not-allowed flex items-center gap-2">
                     <span class="material-symbols-outlined text-[18px]">gpp_good</span>
-                    @(p.Status == "Active" ? "Approved" : p.Status)
+                    Approved
                 </button>
             }
         </div>
@@ -381,5 +412,34 @@
                 }, 150);
             });
         });
+
+        window.handleSingleAction = function(form, action, icon, iconClass, btnClass) {
+            const isNasty = action === 'Reject' || action === 'inactive' || action === 'Delete';
+            if (isNasty) {
+                window.showReasonModal({
+                    title: `${action === 'inactive' ? 'Suspend' : action} Product?`,
+                    message: `Please provide a reason to ${action === 'inactive' ? 'suspend' : action.toLowerCase()} this product.`,
+                    confirmText: action === 'inactive' ? 'Suspend' : action,
+                    confirmClass: btnClass,
+                    icon: icon,
+                    iconClass: iconClass,
+                    onConfirm: (reason) => {
+                        const reasonInput = form.querySelector('.action-reason');
+                        if (reasonInput) reasonInput.value = reason;
+                        form.submit();
+                    }
+                });
+            } else {
+                window.showConfirmModal({
+                    title: `${action} Product?`,
+                    message: `Are you sure you want to ${action.toLowerCase()} this product?`,
+                    confirmText: action,
+                    confirmClass: btnClass,
+                    icon: icon,
+                    iconClass: iconClass,
+                    onConfirm: () => form.submit()
+                });
+            }
+        }
     </script>
 }

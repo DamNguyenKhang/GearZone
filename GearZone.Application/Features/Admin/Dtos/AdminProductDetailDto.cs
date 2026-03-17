@@ -12,6 +12,8 @@ namespace GearZone.Application.Features.Admin.Dtos
         public string Status { get; set; } = string.Empty;
         public decimal BasePrice { get; set; }
         public int Stock { get; set; }
+        public int SoldCount { get; set; }
+        public string Slug { get; set; } = string.Empty;
         public decimal CommissionRate { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
@@ -38,18 +40,21 @@ namespace GearZone.Application.Features.Admin.Dtos
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
     }
 
     public class AdminBrandInfoDto
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
     }
 
     public class AdminStoreInfoDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty;
         public string VendorId { get; set; } = string.Empty;
         public DateTime JoinedAt { get; set; }
         public string AvatarUrl { get; set; } = string.Empty;

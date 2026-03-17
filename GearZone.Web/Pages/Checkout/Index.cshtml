@@ -25,7 +25,7 @@
 }
 
 <form method="post" id="checkout-form">
-    @foreach (var id in Model.SelectedCartItemIds)
+    @foreach (var id in (Model.CheckoutRequest.CartItemIds.Any() ? Model.CheckoutRequest.CartItemIds : Model.SelectedCartItemIds))
     {
         <input type="hidden" name="CheckoutRequest.CartItemIds" value="@id" />
     }

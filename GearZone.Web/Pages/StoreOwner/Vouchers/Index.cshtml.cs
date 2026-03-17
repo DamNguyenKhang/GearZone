@@ -35,6 +35,12 @@ namespace GearZone.Web.Pages.StoreOwner.Vouchers
             SortDirection = "desc"
         };
 
+        [BindProperty(SupportsGet = true)]
+        public string? SortOption { get; set; }
+
+        [BindProperty(SupportsGet = true)]
+        public string? DateRange { get; set; }
+
         public async Task<IActionResult> OnGetAsync()
         {
             var ownerUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -47,6 +53,34 @@ namespace GearZone.Web.Pages.StoreOwner.Vouchers
             Query.PageSize = Query.PageSize < 1 ? 10 : Query.PageSize;
             Query.SortBy ??= "createdAt";
             Query.SortDirection ??= "desc";
+
+            if (!string.IsNullOrWhiteSpace(SortOption))
+            {
+                var parts = SortOption.Split('-', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length == 2)
+                {
+                    Query.SortBy = parts[0];
+                    Query.SortDirection = parts[1];
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(DateRange))
+            {
+                var dates = DateRange.Split(" to ", StringSplitOptions.RemoveEmptyEntries);
+                if (dates.Length == 2)
+                {
+                    if (DateTime.TryParse(dates[0], out var start)) Query.StartDate = start;
+                    if (DateTime.TryParse(dates[1], out var end)) Query.EndDate = end;
+                }
+                else if (dates.Length == 1)
+                {
+                    if (DateTime.TryParse(dates[0], out var start))
+                    {
+                        Query.StartDate = start;
+                        Query.EndDate = start;
+                    }
+                }
+            }
 
             PagedVouchers = await _sellerVoucherService.GetPaginatedVouchersAsync(ownerUserId, Query);
             Summary = await _sellerVoucherService.GetVoucherSummaryAsync(ownerUserId);

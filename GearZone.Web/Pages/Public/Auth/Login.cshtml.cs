@@ -26,9 +26,15 @@ namespace GearZone.Web.Pages.Public.Auth
         [BindProperty(SupportsGet = true)]
         public string? ReturnUrl { get; set; }
 
-        public void OnGet(string? returnUrl = null)
+        public void OnGet(string? returnUrl = null, string? remoteError = null)
         {
             ReturnUrl = returnUrl ?? "/";
+
+            if (!string.IsNullOrWhiteSpace(remoteError))
+            {
+                TempData["ErrorMessage"] = $"Google login failed: {remoteError}";
+                ViewData["ActiveTab"] = "login";
+            }
         }
 
         public async Task<IActionResult> OnPostLoginAsync()

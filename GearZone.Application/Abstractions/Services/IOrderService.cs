@@ -25,5 +25,6 @@ namespace GearZone.Application.Abstractions.Services
         Task<Order?> GetOrderByIdAsync(Guid orderId, CancellationToken ct = default);
         Task<Order?> GetOrderByOrderCodeAsync(long orderCode, CancellationToken ct = default);
         Task<List<Order>> GetOrdersByStatusAndTimeoutAsync(OrderStatus status, DateTime cutoffTime, CancellationToken ct = default);
+        Task<UserOrderTrackingDto?> GetUserOrderTrackingAsync(string userId, Guid subOrderId, CancellationToken ct = default);
     }
 }

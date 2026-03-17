@@ -414,6 +414,10 @@ namespace GearZone.Infrastructure.Repositories
 
         public async Task<PagedResult<SellerChatOrderListItemDto>> GetSellerChatOrdersAsync(string ownerUserId, SellerChatOrderQueryDto queryDto, CancellationToken ct = default)
         {
+            queryDto ??= new SellerChatOrderQueryDto();
+            queryDto.PageNumber = queryDto.PageNumber < 1 ? 1 : queryDto.PageNumber;
+            queryDto.PageSize = queryDto.PageSize < 1 ? 10 : queryDto.PageSize;
+
             var query = _dbSet
                 .AsNoTracking()
                 .Where(x => x.Store.OwnerUserId == ownerUserId);
@@ -429,9 +433,47 @@ namespace GearZone.Infrastructure.Repositories
                     x.Items.Any(item => item.ProductNameSnapshot.ToLower().Contains(search)));
             }
 
+            if (queryDto.Status.HasValue)
+            {
+                query = query.Where(x => x.Status == queryDto.Status.Value);
+            }
+
+            if (queryDto.MinSubtotal.HasValue)
+            {
+                query = query.Where(x => x.Subtotal >= queryDto.MinSubtotal.Value);
+            }
+
+            if (queryDto.MaxSubtotal.HasValue)
+            {
+                query = query.Where(x => x.Subtotal <= queryDto.MaxSubtotal.Value);
+            }
+
+            if (queryDto.StartDate.HasValue)
+            {
+                query = query.Where(x => x.CreatedAt >= queryDto.StartDate.Value);
+            }
+
+            if (queryDto.EndDate.HasValue)
+            {
+                var endOfDay = queryDto.EndDate.Value.Date.AddDays(1).AddTicks(-1);
+                query = query.Where(x => x.CreatedAt <= endOfDay);
+            }
+
+            var sortBy = (queryDto.SortBy ?? "createdAt").Trim().ToLowerInvariant();
+            var sortDirection = (queryDto.SortDirection ?? "desc").Trim().ToLowerInvariant();
+            var isAsc = sortDirection == "asc";
+
+            query = sortBy switch
+            {
+                "ordercode" => isAsc ? query.OrderBy(x => x.Order.OrderCode) : query.OrderByDescending(x => x.Order.OrderCode),
+                "buyer" => isAsc ? query.OrderBy(x => x.Order.User.FullName ?? x.Order.User.UserName ?? x.Order.User.Email) : query.OrderByDescending(x => x.Order.User.FullName ?? x.Order.User.UserName ?? x.Order.User.Email),
+                "subtotal" => isAsc ? query.OrderBy(x => x.Subtotal) : query.OrderByDescending(x => x.Subtotal),
+                "status" => isAsc ? query.OrderBy(x => x.Status) : query.OrderByDescending(x => x.Status),
+                _ => isAsc ? query.OrderBy(x => x.CreatedAt) : query.OrderByDescending(x => x.CreatedAt)
+            };
+
             var totalCount = await query.CountAsync(ct);
             var items = await query
-                .OrderByDescending(x => x.CreatedAt)
                 .Skip((queryDto.PageNumber - 1) * queryDto.PageSize)
                 .Take(queryDto.PageSize)
                 .Select(x => new SellerChatOrderListItemDto

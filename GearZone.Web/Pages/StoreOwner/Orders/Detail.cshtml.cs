@@ -36,10 +36,9 @@ namespace GearZone.Web.Pages.StoreOwner.Orders
                 return RedirectToPage("/StoreOwner/Orders/Index");
             }
 
-            var detail = await _chatService.GetSellerChatOrderDetailAsync(userId, subOrderId);
+            var detail = await LoadOrderDetailAsync(userId, subOrderId);
             if (detail == null)
             {
-                TempData["ErrorMessage"] = "Order not found or you do not have permission.";
                 return RedirectToPage("/StoreOwner/Orders/Index");
             }
 
@@ -51,6 +50,82 @@ namespace GearZone.Web.Pages.StoreOwner.Orders
             ViewData["Breadcrumb"] = new[] { "Orders", $"#{detail.OrderCode}" };
 
             return Page();
+        }
+
+        public async Task<IActionResult> OnPostMarkProcessingAsync(Guid subOrderId)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Redirect("/Public/Auth/Login");
+            }
+
+            var ok = await _chatService.MarkSellerOrderProcessingAsync(userId, subOrderId);
+            TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok
+                ? "Order marked as processing."
+                : "Cannot mark this order as processing. Valid states: Approved or Paid.";
+
+            return RedirectToPage(new { subOrderId });
+        }
+
+        public async Task<IActionResult> OnPostMarkDeliveredAsync(Guid subOrderId)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Redirect("/Public/Auth/Login");
+            }
+
+            var ok = await _chatService.MarkSellerOrderDeliveredAsync(userId, subOrderId);
+            TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok
+                ? "Order marked as delivered."
+                : "Cannot mark this order as delivered. Valid state: Processing.";
+
+            return RedirectToPage(new { subOrderId });
+        }
+
+        public async Task<IActionResult> OnPostApproveAsync(Guid subOrderId)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Redirect("/Public/Auth/Login");
+            }
+
+            var ok = await _chatService.ApproveSellerOrderAsync(userId, subOrderId);
+            TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok
+                ? "Order approved successfully."
+                : "Cannot approve this order. Only pending orders can be approved.";
+
+            return RedirectToPage(new { subOrderId });
+        }
+
+        public async Task<IActionResult> OnPostRejectAsync(Guid subOrderId)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return Redirect("/Public/Auth/Login");
+            }
+
+            var ok = await _chatService.RejectSellerOrderAsync(userId, subOrderId);
+            TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok
+                ? "Order rejected successfully."
+                : "Cannot reject this order. Only pending orders can be rejected.";
+
+            return RedirectToPage(new { subOrderId });
+        }
+
+        private async Task<SellerChatOrderDetailDto?> LoadOrderDetailAsync(string userId, Guid subOrderId)
+        {
+            var detail = await _chatService.GetSellerChatOrderDetailAsync(userId, subOrderId);
+            if (detail == null)
+            {
+                TempData["ErrorMessage"] = "Order not found or you do not have permission.";
+                return null;
+            }
+
+            return detail;
         }
     }
 }

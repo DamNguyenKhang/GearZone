@@ -98,6 +98,14 @@ namespace GearZone.Web.Pages.Checkout
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return RedirectToPage("/Public/Auth/Login");
 
+            if (CheckoutRequest.CartItemIds == null || CheckoutRequest.CartItemIds.Count == 0)
+            {
+                TempData["ErrorMessage"] = "Please select at least one item before checkout.";
+                return RedirectToPage("/Cart/Index");
+            }
+
+            SelectedCartItemIds = CheckoutRequest.CartItemIds;
+
             // We MUST capture the items before they potentially get cleared from the cart
             SelectedItems = await _checkoutService.GetCheckoutItemsAsync(userId, CheckoutRequest.CartItemIds);
             GrandTotal = SelectedItems.Sum(ci => ci.Quantity * ci.Variant.Price);
@@ -118,6 +126,7 @@ namespace GearZone.Web.Pages.Checkout
                 ModelState.AddModelError(string.Empty, result.ErrorMessage ?? "Checkout failed.");
                 CurrentUser = await _userManager.FindByIdAsync(userId);
                 UserAddresses = (await _userService.GetUserAddressesAsync(userId)).ToList();
+                SelectedCartItemIds = CheckoutRequest.CartItemIds;
                 return Page();
             }
 

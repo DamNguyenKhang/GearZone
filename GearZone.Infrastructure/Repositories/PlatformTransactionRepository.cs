@@ -185,7 +185,11 @@ namespace GearZone.Infrastructure.Repositories
             }
 
             if (startDate.HasValue) query = query.Where(x => x.CreatedAt >= startDate.Value);
-            if (endDate.HasValue) query = query.Where(x => x.CreatedAt <= endDate.Value);
+            if (endDate.HasValue)
+            {
+                var endLocal = endDate.Value.Date.AddDays(1).AddTicks(-1);
+                query = query.Where(x => x.CreatedAt <= endLocal);
+            }
 
             if (filter.MinAmount.HasValue) query = query.Where(x => x.Amount >= filter.MinAmount.Value);
             if (filter.MaxAmount.HasValue) query = query.Where(x => x.Amount <= filter.MaxAmount.Value);

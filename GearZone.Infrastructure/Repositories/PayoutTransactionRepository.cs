@@ -171,7 +171,8 @@ public class PayoutTransactionRepository : Repository<PayoutTransaction, Guid>, 
 
         if (endDate.HasValue)
         {
-            query = query.Where(x => x.CreatedAt <= endDate.Value);
+            var endLocal = endDate.Value.Date.AddDays(1).AddTicks(-1);
+            query = query.Where(x => x.CreatedAt <= endLocal);
         }
 
         if (filter.MinAmount.HasValue)

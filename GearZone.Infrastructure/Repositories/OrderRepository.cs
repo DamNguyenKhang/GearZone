@@ -101,6 +101,22 @@ namespace GearZone.Infrastructure.Repositories
             return new PagedResult<Order>(items, totalCount, queryDto.PageNumber, queryDto.PageSize);
         }
 
+        public async Task<Order?> GetAdminOrderDetailAsync(Guid id)
+        {
+            return await _dbSet
+                .Include(o => o.User)
+                .Include(o => o.Payments)
+                .Include(o => o.StatusHistories)
+                .Include(o => o.SubOrders)
+                    .ThenInclude(s => s.Store)
+                .Include(o => o.SubOrders)
+                    .ThenInclude(s => s.Items)
+                        .ThenInclude(i => i.Variant)
+                            .ThenInclude(v => v.Product)
+                                .ThenInclude(p => p.Images)
+                .FirstOrDefaultAsync(o => o.Id == id);
+        }
+
         public async Task<AdminOrderStatsDto> GetAdminOrderStatsAsync()
         {
             var stats = new AdminOrderStatsDto();

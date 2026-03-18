@@ -25,8 +25,13 @@ namespace GearZone.Infrastructure.Configurations
             builder.Property(x => x.TotalNetAmount)
                 .HasColumnType("decimal(18,2)");
 
+            builder.Property(x => x.Status)
+                   .HasMaxLength(20)
+                   .IsRequired()
+                   .HasConversion<string>();
+
             builder.Property(x => x.HoldReason)
-                .HasMaxLength(500);
+                   .HasMaxLength(500);
 
             builder.Property(x => x.ApprovedByAdminId)
                 .HasMaxLength(450); // Typical Identity string length

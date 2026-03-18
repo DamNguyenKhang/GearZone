@@ -1,6 +1,7 @@
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Admin.Dtos;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace GearZone.Application.Abstractions.Services
@@ -15,5 +16,6 @@ namespace GearZone.Application.Abstractions.Services
         // Transactions
         Task<AdminPayoutTransactionSummaryDto> GetPayoutTransactionSummaryAsync(PayoutTransactionQueryDto query);
         Task<AdminPayoutTransactionDetailDto?> GetPayoutTransactionDetailAsync(Guid id);
+        Task<List<AdminSellerPayableSummaryDto>> GetSellerPayableSummaryAsync(DateTime start, DateTime end);
     }
 }

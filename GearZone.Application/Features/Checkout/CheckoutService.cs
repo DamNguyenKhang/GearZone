@@ -88,37 +88,7 @@ namespace GearZone.Application.Features.Checkout
                 await _productVariantRepository.UpdateAsync(cartItem.Variant);
             }
 
-            // 4. Validate vouchers
-            Guid? orderVoucherId = null;
-            decimal orderDiscountAmount = 0;
-            Guid? shippingVoucherId = null;
-            decimal shippingDiscountAmount = 0;
-
-            var merchandiseTotal = cartItems.Sum(ci => ci.Quantity * ci.Variant.Price);
-
-            if (!string.IsNullOrWhiteSpace(request.OrderVoucherCode))
-            {
-                var orderVoucherResult = await _voucherService.ValidateVoucherAsync(
-                    request.OrderVoucherCode, userId, merchandiseTotal, 0, Domain.Enums.VoucherType.OrderDiscount);
-                if (!orderVoucherResult.IsValid)
-                    return new CheckoutResponseDto { Success = false, ErrorMessage = orderVoucherResult.ErrorMessage };
-
-                orderVoucherId = orderVoucherResult.VoucherId;
-                orderDiscountAmount = orderVoucherResult.DiscountAmount;
-            }
-
-            if (!string.IsNullOrWhiteSpace(request.ShippingVoucherCode))
-            {
-                var shippingVoucherResult = await _voucherService.ValidateVoucherAsync(
-                    request.ShippingVoucherCode, userId, merchandiseTotal, 0, Domain.Enums.VoucherType.ShippingDiscount);
-                if (!shippingVoucherResult.IsValid)
-                    return new CheckoutResponseDto { Success = false, ErrorMessage = shippingVoucherResult.ErrorMessage };
-
-                shippingVoucherId = shippingVoucherResult.VoucherId;
-                shippingDiscountAmount = shippingVoucherResult.DiscountAmount;
-            }
-
-            // 5. Calculate shipping fees if coordinates available
+            // 4. Calculate shipping fees if coordinates available
             decimal totalShippingFee = 0;
             List<Shipping.Dtos.StoreShippingFeeDto>? storeShippingFees = null;
 
@@ -131,6 +101,46 @@ namespace GearZone.Application.Features.Checkout
                 
                 totalShippingFee = shippingResult.TotalShippingFee;
                 storeShippingFees = shippingResult.StoreFees;
+            }
+
+            // 5. Validate vouchers with final checkout numbers
+            Guid? orderVoucherId = null;
+            decimal orderDiscountAmount = 0;
+            Guid? shippingVoucherId = null;
+            decimal shippingDiscountAmount = 0;
+
+            var merchandiseTotal = cartItems.Sum(ci => ci.Quantity * ci.Variant.Price);
+
+            if (!string.IsNullOrWhiteSpace(request.OrderVoucherCode))
+            {
+                var orderVoucherResult = await _voucherService.ValidateVoucherAsync(
+                    request.OrderVoucherCode,
+                    userId,
+                    merchandiseTotal,
+                    totalShippingFee,
+                    Domain.Enums.VoucherType.OrderDiscount);
+
+                if (!orderVoucherResult.IsValid)
+                    return new CheckoutResponseDto { Success = false, ErrorMessage = orderVoucherResult.ErrorMessage };
+
+                orderVoucherId = orderVoucherResult.VoucherId;
+                orderDiscountAmount = orderVoucherResult.DiscountAmount;
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.ShippingVoucherCode))
+            {
+                var shippingVoucherResult = await _voucherService.ValidateVoucherAsync(
+                    request.ShippingVoucherCode,
+                    userId,
+                    merchandiseTotal,
+                    totalShippingFee,
+                    Domain.Enums.VoucherType.ShippingDiscount);
+
+                if (!shippingVoucherResult.IsValid)
+                    return new CheckoutResponseDto { Success = false, ErrorMessage = shippingVoucherResult.ErrorMessage };
+
+                shippingVoucherId = shippingVoucherResult.VoucherId;
+                shippingDiscountAmount = shippingVoucherResult.DiscountAmount;
             }
 
             // 6. Create order

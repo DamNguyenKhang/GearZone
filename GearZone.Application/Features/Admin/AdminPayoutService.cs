@@ -3,7 +3,6 @@ using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Admin.Dtos;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,15 +14,18 @@ namespace GearZone.Application.Features.Admin
     {
         private readonly IPayoutBatchRepository _batchRepo;
         private readonly IPayoutTransactionRepository _txRepo;
+        private readonly ISubOrderRepository _subOrderRepo;
         private readonly IMapper _mapper;
 
         public AdminPayoutService(
             IPayoutBatchRepository batchRepo,
             IPayoutTransactionRepository txRepo,
+            ISubOrderRepository subOrderRepo,
             IMapper mapper)
         {
             _batchRepo = batchRepo;
             _txRepo = txRepo;
+            _subOrderRepo = subOrderRepo;
             _mapper = mapper;
         }
 
@@ -68,6 +70,31 @@ namespace GearZone.Application.Features.Admin
             var dto = _mapper.Map<AdminPayoutBatchDto>(batch);
             dto.Transactions = _mapper.Map<List<AdminPayoutTransactionDto>>(batch.Transactions);
             return dto;
+        }
+
+        public async Task<List<AdminSellerPayableSummaryDto>> GetSellerPayableSummaryAsync(DateTime start, DateTime end)
+        {
+            var eligibleOrders = await _subOrderRepo.GetEligibleForPayoutAsync(start, end);
+
+            var overview = eligibleOrders
+                .GroupBy(o => o.StoreId)
+                .Select(g => {
+                    var store = g.First().Store;
+                    return new AdminSellerPayableSummaryDto
+                    {
+                        StoreId = g.Key,
+                        StoreName = store.StoreName,
+                        LogoUrl = store.LogoUrl,
+                        OrderCount = g.Count(),
+                        TotalGrossAmount = g.Sum(o => o.Subtotal),
+                        TotalCommissionAmount = g.Sum(o => o.CommissionAmount),
+                        TotalNetAmount = g.Sum(o => o.NetAmount)
+                    };
+                })
+                .OrderByDescending(x => x.TotalNetAmount)
+                .ToList();
+
+            return overview;
         }
     }
 }

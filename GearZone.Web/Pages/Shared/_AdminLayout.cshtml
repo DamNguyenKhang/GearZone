@@ -191,6 +191,11 @@
                 <span class="font-medium text-sm sidebar-text">Payouts</span>
             </a>
 
+            <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "SellerPayableSummary" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" asp-page="/Admin/SellerPayableSummary">
+                <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "SellerPayableSummary" ? "filled" : "")">summarize</span>
+                <span class="font-medium text-sm sidebar-text">Seller Payable</span>
+            </a>
+
             <a class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg @(ViewData["ActivePage"]?.ToString() == "PayoutBatches" ? "active-link" : "text-slate-500 hover:text-primary hover:bg-slate-50") transition-all group" asp-page="/Admin/PayoutBatches/Index">
                 <span class="material-symbols-outlined @(ViewData["ActivePage"]?.ToString() == "PayoutBatches" ? "filled" : "")">account_balance_wallet</span>
                 <span class="font-medium text-sm sidebar-text">Payout Batches</span>
@@ -251,6 +256,7 @@
                                 { "Product Management", "/admin/products" },
                                 { "Category Management", "/admin/categories" },
                                 { "Brand Management", "/admin/brands" },
+                                { "Seller Payable Summary", "/Admin/SellerPayableSummary" },
                                 { "Payout Batches", "/Admin/PayoutBatches/Index" }
                             };
                         }

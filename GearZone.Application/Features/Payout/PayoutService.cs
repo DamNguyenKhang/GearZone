@@ -153,6 +153,112 @@ namespace GearZone.Application.Features.Payout
         }
 
         // ────────────────────────────────────────────────────────────
+        public async Task<string> GenerateApprovedBatchForStoresAsync(
+            DateTime periodStart,
+            DateTime periodEnd,
+            IReadOnlyCollection<Guid> storeIds,
+            string adminId,
+            CancellationToken ct = default)
+        {
+            var uniqueStoreIds = storeIds
+                .Where(x => x != Guid.Empty)
+                .Distinct()
+                .ToList();
+
+            if (!uniqueStoreIds.Any())
+            {
+                throw new InvalidOperationException("Please select at least one seller.");
+            }
+
+            var normalizedStart = periodStart.Date;
+            var normalizedEnd = periodEnd.Date.AddDays(1).AddTicks(-1);
+            var eligibleSubOrders = await _subOrderRepository.GetEligibleForPayoutByStoresAsync(
+                normalizedStart, normalizedEnd, uniqueStoreIds, ct);
+
+            if (!eligibleSubOrders.Any())
+            {
+                throw new InvalidOperationException("No eligible payouts found for selected sellers in this period.");
+            }
+
+            var storeGroups = eligibleSubOrders
+                .GroupBy(o => o.StoreId)
+                .ToList();
+
+            var weekNum = GetWeekNumber(normalizedStart);
+            var batch = new PayoutBatch
+            {
+                Id = Guid.NewGuid(),
+                BatchCode = $"BATCH-{normalizedStart:yyyy}-W{weekNum:D2}-SEL-{DateTime.UtcNow:MMddHHmmssfff}",
+                PeriodStart = normalizedStart,
+                PeriodEnd = normalizedEnd,
+                Status = PayoutBatchStatus.Approved,
+                TotalStores = storeGroups.Count,
+                ApprovedByAdminId = adminId,
+                ApprovedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            var transactions = new List<PayoutTransaction>();
+            var sequence = 1;
+
+            foreach (var group in storeGroups)
+            {
+                var store = group.First().Store;
+                var orders = group.ToList();
+
+                var items = orders.Select(o => new PayoutItem
+                {
+                    Id = Guid.NewGuid(),
+                    SubOrderId = o.Id,
+                    GrandTotal = o.Subtotal,
+                    CommissionAmount = o.CommissionAmount,
+                    NetAmount = o.Subtotal - o.CommissionAmount,
+                    IsExcluded = false,
+                }).ToList();
+
+                var transaction = new PayoutTransaction
+                {
+                    Id = Guid.NewGuid(),
+                    PayoutBatchId = batch.Id,
+                    StoreId = group.Key,
+                    TransactionCode = $"{batch.BatchCode.Replace("BATCH", "PTX")}-{sequence:D3}",
+                    BankName = store.BankName,
+                    BankAccountNumber = store.BankAccountNumber,
+                    BankAccountName = store.BankAccountName,
+                    BankBin = store.BankBin,
+                    OrderCount = orders.Count,
+                    GrossAmount = orders.Sum(o => o.Subtotal),
+                    CommissionAmount = orders.Sum(o => o.CommissionAmount),
+                    NetAmount = orders.Sum(o => o.Subtotal - o.CommissionAmount),
+                    Status = PayoutTransactionStatus.Queued,
+                    RetryCount = 0,
+                    CreatedAt = DateTime.UtcNow,
+                    Items = items,
+                };
+
+                transactions.Add(transaction);
+                sequence++;
+            }
+
+            batch.TotalGrossAmount = transactions.Sum(t => t.GrossAmount);
+            batch.TotalCommissionAmount = transactions.Sum(t => t.CommissionAmount);
+            batch.TotalNetAmount = transactions.Sum(t => t.NetAmount);
+            batch.Transactions = transactions;
+
+            var subOrderIds = eligibleSubOrders.Select(o => o.Id).ToList();
+            await _subOrderRepository.BulkUpdatePayoutStatusAsync(
+                subOrderIds, PayoutStatus.Locked, ct);
+
+            await _payoutBatchRepository.AddAsync(batch, ct);
+            await _unitOfWork.SaveChangesAsync(ct);
+
+            _logger.LogInformation(
+                "[Payout] Approved seller batch {Code} created with {StoreCount} stores.",
+                batch.BatchCode, batch.TotalStores);
+
+            return batch.BatchCode;
+        }
+
         public async Task ApproveBatchAsync(
             Guid batchId,
             string adminId,
@@ -206,33 +312,31 @@ namespace GearZone.Application.Features.Payout
                 batch.BatchCode, queued.Count);
 
             // 4. Map → PayoutRequestDto
-            var requests = queued.Select(t => new PayoutRequestDto
-            {
-                Description = $"GearZone {batch.BatchCode} - {t.BankAccountName}",
-                Amount = (long)t.NetAmount,
-                ToAccountNumber = t.BankAccountNumber,
-                ToBin = t.BankBin,
-            }).ToList();
-
-            // 5. Gọi PayOS batch API
-            var result = await _payoutClient.CreateBatchPayoutAsync(requests);
-
-            // 6. Lấy balance snapshot trước khi tạo wallet transactions
             var lastTx = await _walletTransactionRepository.GetLastCompletedTransactionAsync(ct);
             var runningBalance = lastTx?.BalanceAfter ?? 0m;
 
-            // 7. Xử lý kết quả + tạo WalletTransactions
             var walletTxs = new List<WalletTransaction>();
+            var successfulTxIds = new List<Guid>();
 
-            if (result.IsSuccess)
+            foreach (var t in queued)
             {
-                foreach (var t in queued)
+                var request = new PayoutRequestDto
+                {
+                    Description = BuildPayOSDescription(t.TransactionCode),
+                    Amount = (long)t.NetAmount,
+                    ToAccountNumber = t.BankAccountNumber,
+                    ToBin = t.BankBin,
+                };
+
+                var result = await _payoutClient.CreatePayoutAsync(request);
+
+                if (result.IsSuccess)
                 {
                     t.Status = PayoutTransactionStatus.Success;
                     t.PayOSTransactionId = result.ReferenceId;
                     t.ProcessedAt = DateTime.UtcNow;
+                    successfulTxIds.Add(t.Id);
 
-                    // Tạo WalletTransaction OUT - Completed cho mỗi payout thành công
                     var balanceBefore = runningBalance;
                     var balanceAfter = runningBalance - t.NetAmount;
                     runningBalance = balanceAfter;
@@ -257,19 +361,7 @@ namespace GearZone.Application.Features.Payout
                         CreatedAt = DateTime.UtcNow
                     });
                 }
-
-                // Đánh dấu orders đã paid
-                var txIds = queued.Select(t => t.Id).ToList();
-                var subOrderIds = await _payoutItemRepository
-                    .GetSubOrderIdsByTransactionIdsAsync(txIds, ct);
-
-                await _subOrderRepository.BulkUpdatePayoutStatusAsync(
-                    subOrderIds, PayoutStatus.Paid, ct);
-            }
-            else
-            {
-                // Batch API fail toàn bộ → đánh dấu từng cái Failed + tạo WalletTransaction Failed
-                foreach (var t in queued)
+                else
                 {
                     t.Status = PayoutTransactionStatus.Failed;
                     t.FailureReason = result.ErrorMessage;
@@ -283,23 +375,27 @@ namespace GearZone.Application.Features.Payout
                         Amount = t.NetAmount,
                         Currency = "VND",
                         BalanceBefore = runningBalance,
-                        BalanceAfter = runningBalance, // Balance không thay đổi vì failed
+                        BalanceAfter = runningBalance,
                         ReferenceCode = batch.BatchCode,
                         PayoutBatchId = batch.Id,
                         PayoutTransactionId = t.Id,
                         Provider = "PayOS",
                         Status = WalletTransactionStatus.Failed,
-                        Note = $"[FAILED] Payout to {t.BankAccountName}: {result.ErrorMessage}",
+                        Note = $"[FAILED] Payout to {t.BankAccountName}: {result.ErrorMessage ?? "Unknown error"}",
                         CreatedAt = DateTime.UtcNow
                     });
                 }
-
-                _logger.LogWarning(
-                    "[Payout] Batch {Code} PayOS call failed: {Err}",
-                    batch.BatchCode, result.ErrorMessage);
             }
 
-            // 8. Update transactions
+            if (successfulTxIds.Any())
+            {
+                var successfulSubOrderIds = await _payoutItemRepository
+                    .GetSubOrderIdsByTransactionIdsAsync(successfulTxIds, ct);
+
+                await _subOrderRepository.BulkUpdatePayoutStatusAsync(
+                    successfulSubOrderIds, PayoutStatus.Paid, ct);
+            }
+
             await _payoutTransactionRepository.UpdateRangeAsync(queued, ct);
 
             // 9. Lưu wallet transactions
@@ -360,7 +456,7 @@ namespace GearZone.Application.Features.Payout
             {
                 var request = new PayoutRequestDto
                 {
-                    Description = $"GearZone RETRY {transaction.Batch.BatchCode}",
+                    Description = BuildPayOSDescription($"RTY-{transaction.TransactionCode}"),
                     Amount = (long)transaction.NetAmount,
                     ToAccountNumber = transaction.BankAccountNumber,
                     ToBin = transaction.BankBin,
@@ -552,6 +648,13 @@ namespace GearZone.Application.Features.Payout
             await _payoutBatchRepository.UpdateAsync(batch);
         }
 
+        private static string BuildPayOSDescription(string reference)
+        {
+            const int maxLength = 25;
+            var value = $"GZ {reference}".Trim();
+            return value.Length <= maxLength ? value : value[..maxLength];
+        }
+
         private static int GetWeekNumber(DateTime date)
         {
             var cal = System.Globalization.CultureInfo
@@ -563,3 +666,4 @@ namespace GearZone.Application.Features.Payout
         }
     }
 }
+

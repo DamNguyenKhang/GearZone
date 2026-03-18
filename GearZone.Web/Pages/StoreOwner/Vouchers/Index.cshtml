@@ -391,7 +391,7 @@
                                     <span class="material-symbols-outlined text-xl">content_copy</span>
                                 </a>
                                 <button type="button" 
-                                        onclick="toggleVoucherStatus('@voucher.Id')"
+                                        onclick="toggleVoucherStatus('@voucher.Id', '@voucher.Status')"
                                         class="p-2 @(voucher.Status == VoucherStatus.Disabled ? "text-emerald-500 hover:bg-emerald-50" : "text-red-400 hover:text-red-500 hover:bg-red-50") rounded-lg transition-all" 
                                         title="@(voucher.Status == VoucherStatus.Disabled ? "Enable Voucher" : "Disable Voucher")">
                                     <span class="material-symbols-outlined text-xl">
@@ -488,6 +488,8 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
+
+
         document.addEventListener('DOMContentLoaded', function() {
             const toggleBtn = document.getElementById('toggleAdvancedBtn');
             const advancedPanel = document.getElementById('advancedFiltersPanel');
@@ -535,11 +537,27 @@
             }
         });
 
-        function toggleVoucherStatus(id) {
-            if (confirm('Are you sure you want to change this voucher\'s status?')) {
-                document.getElementById('toggleVoucherId').value = id;
-                document.getElementById('toggleStatusForm').submit();
-            }
+        function toggleVoucherStatus(id, currentStatus) {
+            const form = document.getElementById('toggleStatusForm');
+            const idInput = document.getElementById('toggleVoucherId');
+            const isDisabled = currentStatus === 'Disabled';
+            const action = isDisabled ? 'Enable' : 'Disable';
+            const icon = isDisabled ? 'play_arrow' : 'block';
+            const iconClass = isDisabled ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600';
+            const btnClass = isDisabled ? 'bg-primary' : 'bg-red-600';
+
+            window.showConfirmModal({
+                title: `${action} Voucher?`,
+                message: `Are you sure you want to ${action.toLowerCase()} this voucher?`,
+                confirmText: "Confirm",
+                confirmClass: btnClass,
+                icon: icon,
+                iconClass: iconClass,
+                onConfirm: () => {
+                    idInput.value = id;
+                    form.submit();
+                }
+            });
         }
     </script>
     @if (TempData["ToastMessage"] != null)

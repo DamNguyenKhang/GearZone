@@ -1,4 +1,4 @@
-@page "{id:Guid}"
+@page "/storeowner/products/details/{id:guid}"
 @model GearZone.Web.Pages.StoreOwner.Products.DetailsModel
 @{
     ViewData["Title"] = "Product Details - " + Model.Product.Name;
@@ -21,7 +21,25 @@
             </div>
         </div>
         <div class="flex items-center gap-3">
+            @if (Model.Product.Status == "Active" || Model.Product.Status == "Approved")
+            {
+                <a href="/product/@Model.Product.Slug" target="_blank" class="px-5 py-2.5 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+                    View Live
+                </a>
+            }
+            else
+            {
+                <a asp-page="/Public/Catalog/Preview" asp-route-id="@Model.Product.Id" target="_blank" class="px-5 py-2.5 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px]">visibility</span>
+                    Live Preview
+                </a>
+            }
             <a asp-page="./Edit" asp-route-id="@Model.Product.Id" class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Edit Product</a>
+            <a asp-page="./Create" asp-route-copyFromId="@Model.Product.Id" class="px-5 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">content_copy</span>
+                Copy Product
+            </a>
             <span class="px-3 py-1.5 rounded-full text-xs font-bold @(Model.Product.Status == "Active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700")">
                 @Model.Product.Status
             </span>
@@ -174,3 +192,5 @@
         </div>
     </div>
 </div>
+
+

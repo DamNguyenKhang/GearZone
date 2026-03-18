@@ -239,6 +239,22 @@
                 <div class="flex flex-col">
                     <h1 class="text-text-heading text-lg font-semibold leading-tight">@ViewData["PageHeader"]</h1>
                     <nav class="flex items-center gap-1.5 text-slate-500 text-xs mt-0.5">
+                        @{
+                            var breadcrumbLinks = new Dictionary<string, string>
+                            {
+                                { "Dashboard", "/storeowner/dashboard" },
+                                { "Products", "/storeowner/products" },
+                                { "Orders", "/storeowner/orders" },
+                                { "Vouchers", "/storeowner/vouchers" },
+                                { "Marketing", "/storeowner/vouchers" },
+                                { "Messages", "/storeowner/messages" },
+                                { "Reviews", "/storeowner/reviews" },
+                                { "Disputes", "/storeowner/disputes" },
+                                { "Finance", "/storeowner/payouts" },
+                                { "Payouts", "/storeowner/payouts" },
+                                { "Settings", "/storeowner/settings" }
+                            };
+                        }
                         <a asp-page="/StoreOwner/Dashboard" class="hover:text-primary">Seller Center</a>
                         @if (ViewData["Breadcrumb"] != null)
                         {
@@ -246,7 +262,18 @@
                             foreach (var crumb in crumbs)
                             {
                                 <span class="material-symbols-outlined text-[10px] scale-75">chevron_right</span>
-                                <span class="@(crumb == crumbs.Last() ? "text-slate-400 font-medium" : "hover:text-primary cursor-default")">@crumb</span>
+                                @if (crumb == crumbs.Last())
+                                {
+                                    <span class="text-slate-400 font-medium">@crumb</span>
+                                }
+                                else if (breadcrumbLinks.TryGetValue(crumb, out var url))
+                                {
+                                    <a href="@url" class="hover:text-primary font-medium">@crumb</a>
+                                }
+                                else
+                                {
+                                    <span class="hover:text-primary cursor-default font-medium">@crumb</span>
+                                }
                             }
                         }
                     </nav>
@@ -286,6 +313,7 @@
     </main>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/toast.js" asp-append-version="true"></script>
 
     <script>
@@ -309,6 +337,55 @@
     </script>
     
     <partial name="_Toast" />
+    
+    <!-- Generic Confirmation Modal -->
+    <div id="confirm-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
+            <div class="p-6 text-center">
+                <div id="confirm-modal-icon-container" class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span id="confirm-modal-icon" class="material-symbols-outlined text-3xl">delete</span>
+                </div>
+                <h3 id="confirm-modal-title" class="text-xl font-bold text-gray-900 mb-2">Are you sure?</h3>
+                <p id="confirm-modal-message" class="text-gray-500 mb-6 font-medium text-sm leading-relaxed">Do you really want to perform this action?</p>
+                <div class="flex gap-3">
+                    <button id="btn-confirm-cancel" class="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors">
+                        Cancel
+                    </button>
+                    <button id="btn-confirm-proceed" class="flex-1 px-4 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark shadow-lg shadow-primary/20 transition-all">
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Reason Modal -->
+    <div id="reason-modal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
+            <div class="p-6">
+                <div id="reason-modal-icon-container" class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span id="reason-modal-icon" class="material-symbols-outlined text-3xl">info</span>
+                </div>
+                <h3 id="reason-modal-title" class="text-xl font-bold text-gray-900 mb-2 text-center">Action Required</h3>
+                <p id="reason-modal-message" class="text-gray-500 mb-4 text-center text-sm">Please provide a reason for this action.</p>
+                
+                <div class="mb-6">
+                    <label for="reason-text" class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Reason / Note</label>
+                    <textarea id="reason-text" rows="3" class="w-full rounded-xl border-slate-200 focus:border-primary focus:ring-primary text-sm bg-slate-50 transition-colors placeholder:text-slate-300" placeholder="Type the reason here..."></textarea>
+                </div>
+
+                <div class="flex gap-3">
+                    <button id="btn-reason-cancel" class="flex-1 px-4 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors">
+                        Cancel
+                    </button>
+                    <button id="btn-reason-proceed" class="flex-1 px-4 py-2.5 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark shadow-lg shadow-primary/20 transition-all">
+                        Confirm Action
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

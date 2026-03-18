@@ -1,4 +1,4 @@
-﻿using GearZone.Application.Abstractions.Services;
+using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Seller.Dtos;
 using GearZone.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -30,12 +30,47 @@ namespace GearZone.Web.Pages.StoreOwner.Products
         public List<SelectListItem> CategoryOptions { get; set; } = new();
         public List<SelectListItem> BrandOptions { get; set; } = new();
 
-        public async Task<IActionResult> OnGetAsync()
+        public async Task<IActionResult> OnGetAsync(Guid? copyFromId = null)
         {
             await LoadMetadataAsync();
 
+            if (copyFromId.HasValue)
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var store = await _storeService.GetStoreByOwnerIdAsync(userId!);
+                if (store != null)
+                {
+                    var editDto = await _productService.GetProductForEditAsync(copyFromId.Value, store.Id);
+                    if (editDto != null)
+                    {
+                        Input = new CreateProductDto
+                        {
+                            Name = editDto.Name + " (Copy)",
+                            Description = editDto.Description,
+                            CategoryId = editDto.CategoryId,
+                            BrandId = editDto.BrandId,
+                            BasePrice = editDto.BasePrice,
+                            IsDraft = true,
+                            Specifications = editDto.Specifications,
+                            Variants = editDto.Variants.Select(v => new ProductVariantDto
+                            {
+                                VariantName = v.VariantName,
+                                Sku = "", // Clear SKU for cloning
+                                Price = v.Price,
+                                StockQuantity = v.StockQuantity,
+                                Attributes = v.Attributes
+                            }).ToList()
+                        };
+                        return Page();
+                    }
+                }
+            }
+
             // Initialize with one default variant.
-            Input.Variants.Add(new ProductVariantDto { VariantName = "Default", StockQuantity = 0 });
+            if (!Input.Variants.Any())
+            {
+                Input.Variants.Add(new ProductVariantDto { VariantName = string.Empty, StockQuantity = 0 });
+            }
 
             return Page();
         }

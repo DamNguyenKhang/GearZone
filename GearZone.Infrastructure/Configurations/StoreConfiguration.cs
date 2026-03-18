@@ -1,9 +1,6 @@
-﻿using GearZone.Domain.Entities;
+using GearZone.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace GearZone.Infrastructure.Configurations
 {
@@ -25,7 +22,6 @@ namespace GearZone.Infrastructure.Configurations
             builder.Property(x => x.BankAccountNumber).HasMaxLength(50);
             builder.Property(x => x.BankBin).HasMaxLength(20);
             
-            // Replaced Business Info
             builder.Property(x => x.TaxCode).HasMaxLength(50);
             builder.Property(x => x.Phone).HasMaxLength(50);
             builder.Property(x => x.Email).HasMaxLength(256);
@@ -38,6 +34,9 @@ namespace GearZone.Infrastructure.Configurations
             builder.Property(x => x.Status).HasMaxLength(20).IsRequired().HasConversion<string>();
             builder.Property(x => x.RejectReason).HasMaxLength(500);
             builder.Property(x => x.LockReason).HasMaxLength(500);
+
+            builder.Property(x => x.Latitude).HasColumnType("float");
+            builder.Property(x => x.Longitude).HasColumnType("float");
 
             builder.HasIndex(x => x.Slug).IsUnique();
             builder.HasIndex(x => x.OwnerUserId);
@@ -53,5 +52,4 @@ namespace GearZone.Infrastructure.Configurations
                    .UsingEntity(j => j.ToTable("StoreStaffs"));
         }
     }
-
 }

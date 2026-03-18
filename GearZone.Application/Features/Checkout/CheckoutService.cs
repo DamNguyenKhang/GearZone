@@ -26,6 +26,7 @@ namespace GearZone.Application.Features.Checkout
         private readonly IBackgroundJobService _backgroundJobService;
         private readonly IUserService _userService;
         private readonly IVoucherService _voucherService;
+        private readonly IShippingService _shippingService;
 
         public CheckoutService(
             ICartItemRepository cartItemRepository,
@@ -37,7 +38,8 @@ namespace GearZone.Application.Features.Checkout
             PaymentStrategyFactory paymentStrategyFactory,
             IBackgroundJobService backgroundJobService,
             IUserService userService,
-            IVoucherService voucherService)
+            IVoucherService voucherService,
+            IShippingService shippingService)
         {
             _cartItemRepository = cartItemRepository;
             _productVariantRepository = productVariantRepository;
@@ -49,6 +51,7 @@ namespace GearZone.Application.Features.Checkout
             _backgroundJobService = backgroundJobService;
             _userService = userService;
             _voucherService = voucherService;
+            _shippingService = shippingService;
         }
 
         public async Task<CheckoutResponseDto> ProcessCheckoutAsync(
@@ -115,11 +118,27 @@ namespace GearZone.Application.Features.Checkout
                 shippingDiscountAmount = shippingVoucherResult.DiscountAmount;
             }
 
-            // 5. Create order
+            // 5. Calculate shipping fees if coordinates available
+            decimal totalShippingFee = 0;
+            List<Shipping.Dtos.StoreShippingFeeDto>? storeShippingFees = null;
+
+            if (request.ShippingInfo.Latitude != null && request.ShippingInfo.Longitude != null)
+            {
+                var shippingResult = await _shippingService.CalculateShippingFeeAsync(
+                    (double)request.ShippingInfo.Latitude,
+                    (double)request.ShippingInfo.Longitude,
+                    cartItems);
+                
+                totalShippingFee = shippingResult.TotalShippingFee;
+                storeShippingFees = shippingResult.StoreFees;
+            }
+
+            // 6. Create order
             var order = await _orderService.CreateOrderAsync(
                 userId, request, cartItems,
                 orderVoucherId, orderDiscountAmount,
                 shippingVoucherId, shippingDiscountAmount,
+                totalShippingFee, storeShippingFees,
                 ct);
 
             // 6. Process payment via Strategy Pattern
@@ -139,10 +158,10 @@ namespace GearZone.Application.Features.Checkout
             await _cartService.ClearCartItemsAsync(request.CartItemIds, ct);
 
             // 8. Record voucher usage
-            if (orderVoucherId.HasValue)
-                await _voucherService.RecordVoucherUsageAsync(orderVoucherId.Value, userId, order.Id, orderDiscountAmount);
-            if (shippingVoucherId.HasValue)
-                await _voucherService.RecordVoucherUsageAsync(shippingVoucherId.Value, userId, order.Id, shippingDiscountAmount);
+            if (orderVoucherId != null)
+                await _voucherService.RecordVoucherUsageAsync((Guid)orderVoucherId, userId, order.Id, orderDiscountAmount);
+            if (shippingVoucherId != null)
+                await _voucherService.RecordVoucherUsageAsync((Guid)shippingVoucherId, userId, order.Id, shippingDiscountAmount);
 
             // 7. Save address if requested
             if (request.SaveAddress)

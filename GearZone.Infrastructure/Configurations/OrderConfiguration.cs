@@ -37,6 +37,11 @@ namespace GearZone.Infrastructure.Configurations
                    .WithMany()
                    .HasForeignKey(x => x.ShippingVoucherId)
                    .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasMany(x => x.Shipments)
+                   .WithOne(s => s.Order)
+                   .HasForeignKey(s => s.OrderId)
+                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

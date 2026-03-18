@@ -14,6 +14,8 @@ namespace GearZone.Application.Features.Checkout.Dtos
         public decimal? MaxDiscount { get; set; }
         public decimal? MinOrderAmount { get; set; }
         public DateTime EndAt { get; set; }
+        public int UsedCount { get; set; }
+        public int UsageLimit { get; set; }
         public bool IsEligible { get; set; }
         public string? IneligibleReason { get; set; }
     }

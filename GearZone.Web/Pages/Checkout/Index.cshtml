@@ -79,14 +79,15 @@
 
 @* ─── NORMAL CHECKOUT FORM ──────────────────────────────────── *@
 
-<div class="flex items-center justify-between mb-8">
-    <h1 class="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-        Checkout
-        <span class="text-lg font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full cart-total-count">
-            (@Model.SelectedItems.Count items)
-        </span>
-    </h1>
-</div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+    <div class="flex items-center justify-between mb-8">
+        <h1 class="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+            Checkout
+            <span class="text-lg font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full cart-total-count">
+                (@Model.SelectedItems.Count items)
+            </span>
+        </h1>
+    </div>
 
 @if (!ModelState.IsValid)
 {
@@ -332,8 +333,11 @@
                             
                             <!-- Store Shipping & Subtotal -->
                             <div class="px-6 py-3 bg-slate-50/20 dark:bg-slate-800/10 flex justify-between items-center text-sm">
-                                <span class="text-slate-500">Shipping (Standard)</span>
-                                <span class="font-medium text-slate-900 dark:text-white">Free</span>
+                                <div class="flex flex-col">
+                                    <span class="text-slate-500">Shipping (Standard)</span>
+                                    <span class="text-[10px] text-slate-400" id="store-distance-@store?.Id">Distance: -- km</span>
+                                </div>
+                                <span class="font-medium text-slate-900 dark:text-white" id="store-shipping-@store?.Id">Calculating...</span>
                             </div>
                         </div>
                     }
@@ -354,7 +358,7 @@
                         </div>
                         <div class="flex justify-between items-center">
                             <span>Shipping Total</span>
-                            <span class="font-medium text-slate-900 dark:text-white">0₫</span>
+                            <span class="font-medium text-slate-900 dark:text-white" id="summary-shipping">0₫</span>
                         </div>
                         <div class="flex justify-between items-center hidden" id="summary-order-discount-row">
                             <span class="flex items-center gap-1 text-green-600"><span class="material-symbols-outlined text-[14px]">confirmation_number</span> Order Discount</span>
@@ -567,9 +571,7 @@
                 </div>
             </div>
 
-        </div>
-
-        <!-- Voucher Modal -->
+            <!-- Voucher Modal -->
         <div id="voucherModal" class="fixed inset-0 z-[100] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                 <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" aria-hidden="true" onclick="closeVoucherModal()"></div>
@@ -623,6 +625,7 @@
         </div>
 
 </form>
+</div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
@@ -633,6 +636,12 @@
         document.addEventListener('DOMContentLoaded', function () {
             const apiKey = '@Model.GoongApiKey';
             const mapKey = '@Model.GoongMapKey';
+
+            const defaultLat = parseFloat('@Model.CheckoutRequest.ShippingInfo.Latitude') || 0;
+            const defaultLng = parseFloat('@Model.CheckoutRequest.ShippingInfo.Longitude') || 0;
+            if (defaultLat !== 0 && defaultLng !== 0) {
+                setTimeout(() => calculateShipping(defaultLat, defaultLng), 500);
+            }
             let map, marker;
 
             // Initialize Map
@@ -897,6 +906,8 @@
                 // Update UI Card
                 updateSummaryCard(data.name, data.phone, data.address, data.ward, data.district, data.province);
 
+                calculateShipping(parseFloat(data.lat), parseFloat(data.lng));
+
                 closeAddressModal();
             };
 
@@ -1071,6 +1082,8 @@
                 // Update UI Summary Card
                 updateSummaryCard(name, phone, address, ward, district, province);
 
+                calculateShipping(lat, lng);
+
                 closeNewAddressModal();
             };
 
@@ -1094,6 +1107,53 @@
             let currentVoucherType = 'order'; // 'order' or 'shipping'
             let appliedOrderVoucher = null;
             let appliedShippingVoucher = null;
+            let currentShippingFee = 0;
+
+            window.calculateShipping = async function(lat, lng) {
+                if (!lat || !lng || lat === 0) return;
+                
+                const storeIds = [];
+                document.querySelectorAll('[id^="store-shipping-"]').forEach(el => {
+                    const id = el.id.replace('store-shipping-', '');
+                    storeIds.push(id);
+                    el.innerText = "Calculating...";
+                });
+
+                try {
+                    const response = await fetch('/Checkout?handler=CalculateShipping', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        },
+                        body: JSON.stringify({
+                            cartItemIds: @Html.Raw(Json.Serialize(Model.SelectedCartItemIds)),
+                            latitude: lat,
+                            longitude: lng
+                        })
+                    });
+
+                    if (!response.ok) throw new Error("Failed to calculate shipping Fee");
+                    
+                    const result = await response.json();
+                    currentShippingFee = result.totalShippingFee;
+
+                    result.storeFees.forEach(sf => {
+                        const feeEl = document.getElementById(`store-shipping-${sf.storeId}`);
+                        const distEl = document.getElementById(`store-distance-${sf.storeId}`);
+                        
+                        if (feeEl) feeEl.innerText = sf.isFreeShipping ? "FREE" : formatCurrency(sf.shippingFee);
+                        if (distEl) distEl.innerText = `Distance: ${sf.distanceKm.toFixed(1)} km`;
+                    });
+
+                    const shipTotalEl = document.getElementById('summary-shipping');
+                    if (shipTotalEl) shipTotalEl.innerText = formatCurrency(currentShippingFee);
+                    
+                    updateFinalTotal();
+                } catch (error) {
+                    console.error('Error calculating shipping:', error);
+                }
+            };
 
             window.openVoucherModal = function(type) {
                 currentVoucherType = type;
@@ -1148,11 +1208,14 @@
                         card.className = `voucher-ticket mb-4 group ${v.isEligible ? 'eligible cursor-pointer active:scale-[0.98]' : 'opacity-60'}`;
                         
                         const discountLabel = v.discountType === 0 ? `${v.discountValue}%` : formatCurrency(v.discountValue);
+                        const usagePercent = Math.min(100, Math.round((v.usedCount / v.usageLimit) * 100));
                         const expiry = new Date(v.endAt).toLocaleDateString('vi-VN', { 
                             month: 'short', 
                             day: 'numeric', 
                             year: 'numeric' 
                         });
+                        const validText = `VALID UNTIL ${expiry}`;
+                        
                         const icon = currentVoucherType === 'order' ? 'sell' : 'local_shipping';
 
                         card.innerHTML = `
@@ -1170,7 +1233,7 @@
                                         <div class="flex items-center gap-2">
                                             <h5 class="font-bold text-slate-900 dark:text-white truncate max-w-[150px] leading-tight">${v.name}</h5>
                                             <span class="voucher-badge ${v.isEligible ? 'voucher-badge-active' : 'voucher-badge-ineligible'}">
-                                                ${v.isEligible ? 'Active' : 'Ineligible'}
+                                                ${v.isEligible ? 'ACTIVE' : 'INELIGIBLE'}
                                             </span>
                                         </div>
                                     </div>
@@ -1185,15 +1248,23 @@
                                             Max Disc: <span class="text-slate-900 dark:text-slate-200 font-bold ml-auto">${v.maxDiscount ? formatCurrency(v.maxDiscount) : 'No Limit'}</span>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                <div class="flex justify-between items-center mt-3 pt-2 border-t border-slate-50 dark:border-slate-800">
-                                    ${!v.isEligible ? `<span class="text-[10px] font-bold text-red-500 italic truncate mr-2">${v.ineligibleReason}</span>` : '<span></span>'}
-                                    <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
-                                        <span class="material-symbols-outlined text-[14px]">schedule</span>
-                                        ${expiry}
+
+                                    <!-- Progress Bar Section -->
+                                    <div class="mt-4">
+                                        <div class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                            <div class="h-full bg-primary" style="width: ${usagePercent}%"></div>
+                                        </div>
+                                        <div class="flex justify-between mt-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+                                            <span>${v.usedCount} USAGE / ${v.usageLimit}</span>
+                                            <span>${validText}</span>
+                                        </div>
                                     </div>
                                 </div>
+                                
+                                ${!v.isEligible ? `
+                                <div class="mt-2 pt-2 border-t border-slate-50 dark:border-slate-800">
+                                    <span class="text-[10px] font-bold text-red-500 italic truncate">${v.ineligibleReason}</span>
+                                </div>` : ''}
                             </div>
                         `;
 
@@ -1238,7 +1309,7 @@
                             code: code,
                             type: currentVoucherType,
                             merchandiseTotal: merchandiseTotal,
-                            shippingFee: shippingFee
+                            shippingFee: currentShippingFee
                         })
                     });
 
@@ -1314,7 +1385,7 @@
                 const subtotal = parseFloat("@Model.GrandTotal");
                 const orderDiscount = appliedOrderVoucher ? appliedOrderVoucher.discountAmount : 0;
                 const shippingDiscount = appliedShippingVoucher ? appliedShippingVoucher.discountAmount : 0;
-                const shippingFee = 0; // Currently 0 based on model
+                const shippingFee = currentShippingFee;
 
                 const finalTotal = Math.max(0, subtotal + shippingFee - orderDiscount - shippingDiscount);
                 document.getElementById('summary-total').innerText = formatCurrency(finalTotal);

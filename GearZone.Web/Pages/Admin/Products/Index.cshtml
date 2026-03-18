@@ -871,7 +871,7 @@
                     checkedBoxes.forEach(cb => {
                         const status = cb.getAttribute('data-status');
                         if (status !== 'Pending') allPending = false;
-                        if (status !== 'Active' && status !== 'Approved') allActive = false;
+                        if (status !== 'Active') allActive = false;
                     });
 
                     let actionsHtml = '';

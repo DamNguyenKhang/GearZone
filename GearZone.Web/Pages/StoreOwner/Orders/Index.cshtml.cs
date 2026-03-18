@@ -110,8 +110,13 @@ namespace GearZone.Web.Pages.StoreOwner.Orders
             }
 
             var ok = await _chatService.ApproveSellerOrderAsync(userId, subOrderId);
+            if (ok)
+            {
+                await _chatService.MarkSellerOrderProcessingAsync(userId, subOrderId);
+            }
+
             TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok
-                ? "Order approved successfully."
+                ? "Order approved and moved to processing."
                 : "Cannot approve this order. Only pending orders can be approved.";
 
             return RedirectToPage(new

@@ -1,4 +1,4 @@
-@page
+@page "/storeowner/orders/{subOrderId:guid}"
 @using GearZone.Domain.Enums
 @using System.Collections.Generic
 @model GearZone.Web.Pages.StoreOwner.Orders.DetailModel
@@ -67,12 +67,13 @@
         @if (subOrder.Status == OrderStatus.Pending)
         {
             <form method="post" asp-page-handler="Approve" asp-route-subOrderId="@subOrder.SubOrderId" class="inline">
-                <button type="submit" class="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark">
+                <button type="button" onclick="handleConfirm(this, 'Approve Order', 'Approve this order?', 'check_circle', 'bg-emerald-100 text-emerald-600', 'bg-emerald-600')" class="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark">
                     <span class="material-symbols-outlined text-lg">check_circle</span><span>Approve</span>
                 </button>
             </form>
             <form method="post" asp-page-handler="Reject" asp-route-subOrderId="@subOrder.SubOrderId" class="inline">
-                <button type="submit" class="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-700 transition-all hover:bg-red-100">
+                <input type="hidden" name="reason" class="action-reason" value="" />
+                <button type="button" onclick="handleReject(this)" class="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-700 transition-all hover:bg-red-100">
                     <span class="material-symbols-outlined text-lg">cancel</span><span>Reject</span>
                 </button>
             </form>
@@ -80,7 +81,7 @@
         else if (subOrder.Status == OrderStatus.Approved || subOrder.Status == OrderStatus.Paid)
         {
             <form method="post" asp-page-handler="MarkProcessing" asp-route-subOrderId="@subOrder.SubOrderId" class="inline">
-                <button type="submit" class="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark">
+                <button type="button" onclick="handleConfirm(this, 'Start Processing', 'Move this order to processing?', 'local_shipping', 'bg-blue-100 text-blue-600', 'bg-primary')" class="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark">
                     <span class="material-symbols-outlined text-lg">local_shipping</span><span>Update Status</span>
                 </button>
             </form>
@@ -88,7 +89,7 @@
         else if (subOrder.Status == OrderStatus.Processing)
         {
             <form method="post" asp-page-handler="MarkDelivered" asp-route-subOrderId="@subOrder.SubOrderId" class="inline">
-                <button type="submit" class="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark">
+                <button type="button" onclick="handleConfirm(this, 'Mark Delivered', 'Confirm delivery for this order?', 'inventory', 'bg-emerald-100 text-emerald-600', 'bg-emerald-600')" class="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/25 transition-all hover:bg-primary-dark">
                     <span class="material-symbols-outlined text-lg">inventory</span><span>Update Status</span>
                 </button>
             </form>
@@ -290,7 +291,7 @@
                 <div class="absolute -right-10 -top-10 size-40 rounded-full bg-blue-500/10 blur-3xl transition-all group-hover:bg-blue-500/20"></div>
                 <div class="absolute -bottom-10 -left-10 size-32 rounded-full bg-indigo-500/10 blur-2xl"></div>
                 <div class="relative">
-                    <div class="mb-6 flex size-12 items-center justify-center rounded-2xl border border-white/20 bg-white/10 shadow-lg backdrop-blur-xl"><span class="material-symbols-outlined text-white">support_agent</span></div>
+                    <div class="mb-6 flex size-12 items-center justify-center rounded-2xl border border-white/20 bg-white/10 shadow-lg backdrop-blur-xl"><span class="material-symbols-outlined text-2xl">support_agent</span></div>
                     <h4 class="mb-3 text-xl font-black tracking-tight">Need Assistance?</h4>
                     <p class="mb-8 text-sm font-medium leading-relaxed text-slate-300">Our senior administrators are ready to resolve any seller-customer disputes 24/7.</p>
                     <div class="flex flex-col gap-3">
@@ -302,3 +303,37 @@
         </div>
     </div>
 </div>
+@section Scripts {
+    <script>
+        function handleConfirm(btn, title, text, icon, iconClass, btnClass) {
+            const form = btn.closest('form');
+            window.showConfirmModal({
+                title: title,
+                message: text,
+                confirmText: "Confirm",
+                confirmClass: btnClass,
+                icon: icon,
+                iconClass: iconClass,
+                onConfirm: () => form.submit()
+            });
+        }
+
+        function handleReject(btn) {
+            const form = btn.closest('form');
+            window.showReasonModal({
+                title: "Reject Order",
+                message: "Please provide a reason for rejecting this order.",
+                confirmText: "Reject",
+                confirmClass: "bg-red-600",
+                icon: "block",
+                iconClass: "bg-red-100 text-red-600",
+                onConfirm: (reason) => {
+                    const reasonInput = form.querySelector('.action-reason');
+                    if (reasonInput) reasonInput.value = reason;
+                    form.submit();
+                }
+            });
+        }
+    </script>
+}
+

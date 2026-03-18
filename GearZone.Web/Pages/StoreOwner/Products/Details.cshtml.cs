@@ -29,8 +29,9 @@ namespace GearZone.Web.Pages.StoreOwner.Products
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId)) return RedirectToPage("/Public/Auth/Login");
 
-            Store = await _storeService.GetStoreByOwnerIdAsync(userId);
-            if (Store == null) return RedirectToPage("/StoreOwner/Dashboard");
+            var store = await _storeService.GetStoreByOwnerIdAsync(userId);
+            if (store == null) return RedirectToPage("/StoreOwner/Dashboard");
+            Store = store;
 
             var product = await _productService.GetProductByIdAsync(id, Store.Id);
             if (product == null) return NotFound();

@@ -1,4 +1,4 @@
-@page "{id:Guid}"
+@page "/storeowner/products/edit/{id:guid}"
 @model GearZone.Web.Pages.StoreOwner.Products.EditModel
 @{
     ViewData["Title"] = "Edit Product";
@@ -86,15 +86,35 @@
                         </div>
                     }
 
-                    <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-primary transition-colors cursor-pointer bg-gray-50/30">
-                        <input type="file" asp-for="Input.NewImages" class="hidden" id="imageUpload" multiple accept="image/*">
-                        <label for="imageUpload" class="cursor-pointer block">
-                            <span class="material-symbols-outlined text-4xl text-gray-400 mb-2">cloud_upload</span>
-                            <p class="text-sm font-medium text-gray-900">Upload New Images</p>
-                            <p class="text-xs text-gray-500 mt-1">PNG, JPG up to 10MB (max 5 images total)</p>
-                        </label>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Primary Image (Thumbnail)</label>
+                            <label class="relative block aspect-[4/3] rounded-xl border-2 border-dashed border-gray-200 bg-gray-50/60 hover:border-primary/50 transition-colors cursor-pointer overflow-hidden">
+                                <input type="file" name="Input.NewImages" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer primary-image-input" data-preview="#primaryPreviewEdit" accept="image/*">
+                                <div id="primaryPreviewEdit" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 gap-2">
+                                    <span class="material-symbols-outlined text-4xl">photo_camera</span>
+                                    <p class="text-sm font-medium">Click to upload primary image</p>
+                                    <p class="text-xs">This will replace the current thumbnail.</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-sm font-medium text-gray-700">Additional Images</label>
+                                <span class="text-xs text-gray-400">Max 4 images</span>
+                            </div>
+                            <div id="additionalImagesContainerEdit" class="grid grid-cols-2 sm:grid-cols-4 gap-4" data-max="4" data-input-name="Input.NewImages">
+                                <label class="image-slot relative aspect-square rounded-lg border-2 border-dashed border-gray-200 bg-gray-50/60 hover:border-primary/50 transition-colors cursor-pointer overflow-hidden">
+                                    <input type="file" name="Input.NewImages" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer image-slot-input" accept="image/*">
+                                    <div class="image-slot-content absolute inset-0 flex flex-col items-center justify-center text-gray-400 gap-1">
+                                        <span class="material-symbols-outlined text-2xl">add_photo_alternate</span>
+                                        <span class="text-xs font-medium">Add image</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
                     </div>
-                    <div id="imagePreview" class="grid grid-cols-5 gap-4 mt-4"></div>
                 </div>
                 <!-- Product Specifications -->
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
@@ -141,22 +161,39 @@
                                     <input type="hidden" name="Input.Specifications[@i].AttributeId" value="@Model.Input.Specifications[i].AttributeId" />
                                     <input type="hidden" name="Input.Specifications[@i].Unit" value="@Model.Input.Specifications[i].Unit" />
                                     <input type="hidden" name="Input.Specifications[@i].ValueType" value="@Model.Input.Specifications[i].ValueType" />
-                                    <div>
-                                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Specification</label>
-                                        <input name="Input.Specifications[@i].Key" value="@Model.Input.Specifications[i].Key" readonly class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 font-medium" />
-                                    </div>
-                                    <div>
-                                        <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Value</label>
-                                        <div class="relative">
-                                            <input name="Input.Specifications[@i].Value" value="@Model.Input.Specifications[i].Value" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white @(string.IsNullOrWhiteSpace(Model.Input.Specifications[i].Unit) ? string.Empty : "pr-16")" placeholder="Enter @Model.Input.Specifications[i].Key" 
-                                                data-val="true" data-val-required="@(Model.Input.Specifications[i].Key) is required" required />
-                                            @if (!string.IsNullOrWhiteSpace(Model.Input.Specifications[i].Unit))
+                                        @{
+                                            var valueType = Model.Input.Specifications[i].ValueType;
+                                            var valuePlaceholder = string.IsNullOrWhiteSpace(valueType)
+                                                ? $"Enter {Model.Input.Specifications[i].Key}"
+                                                : $"Enter {Model.Input.Specifications[i].Key} ({valueType})";
+                                            var valueText = Model.Input.Specifications[i].Value;
+                                            if (!string.IsNullOrWhiteSpace(valueType) && string.Equals(valueText, valueType, StringComparison.OrdinalIgnoreCase))
                                             {
-                                                <span class="absolute inset-y-0 right-3 flex items-center text-xs font-bold text-gray-400 uppercase">@Model.Input.Specifications[i].Unit</span>
+                                                valueText = string.Empty;
                                             }
+                                        }
+                                        <div>
+                                            <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Specification</label>
+                                            <input name="Input.Specifications[@i].Key" value="@Model.Input.Specifications[i].Key" readonly class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 font-medium" />
                                         </div>
-                                        <span class="field-validation-valid text-[10px] text-red-500 font-medium" data-valmsg-for="Input.Specifications[@i].Value" data-valmsg-replace="true"></span>
-                                    </div>
+                                        <div>
+                                            <div class="flex items-center justify-between">
+                                                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Value</label>
+                                                @if (!string.IsNullOrWhiteSpace(valueType))
+                                                {
+                                                    <span class="text-[10px] font-semibold text-gray-400 uppercase">Type: @valueType</span>
+                                                }
+                                            </div>
+                                            <div class="relative">
+                                                <input name="Input.Specifications[@i].Value" value="@valueText" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white @(string.IsNullOrWhiteSpace(Model.Input.Specifications[i].Unit) ? string.Empty : "pr-16")" placeholder="@valuePlaceholder" 
+                                                    data-val="true" data-val-required="@(Model.Input.Specifications[i].Key) is required" required />
+                                                @if (!string.IsNullOrWhiteSpace(Model.Input.Specifications[i].Unit))
+                                                {
+                                                    <span class="absolute inset-y-0 right-3 flex items-center text-xs font-bold text-gray-400 uppercase">@Model.Input.Specifications[i].Unit</span>
+                                                }
+                                            </div>
+                                            <span class="field-validation-valid text-[10px] text-red-500 font-medium" data-valmsg-for="Input.Specifications[@i].Value" data-valmsg-replace="true"></span>
+                                        </div>
                                 </div>
                             }
                         }
@@ -355,7 +392,7 @@
                 {
                     foreach (var error in modelState.Errors)
                     {
-                        <text>window.showToast?.('error', "@Html.Raw(System.Web.HttpUtility.JavaScriptStringEncode(error.ErrorMessage))");</text>
+                        <text>window.showToast?.('error', @Json.Serialize(error.ErrorMessage));</text>
                     }
                 }
             }
@@ -408,8 +445,18 @@
 
                 specs.forEach(function(spec, index) {
                     const unit = spec.unit || '';
-                    const value = currentValues[spec.key] || spec.value || ''; // Prefer current typed value
+                    const valueType = spec.valueType || '';
+                    let value = currentValues[spec.key] || spec.value || ''; // Prefer current typed value
+                    if (valueType && value && value.toLowerCase() === valueType.toLowerCase()) {
+                        value = '';
+                    }
                     const inputPadding = unit ? 'pr-16' : '';
+                    const placeholder = valueType
+                        ? `Enter ${spec.key || 'value'} (${valueType})`
+                        : `Enter ${spec.key || 'value'}`;
+                    const valueTypeHint = valueType
+                        ? `<span class="text-[10px] font-semibold text-gray-400 uppercase">Type: ${valueType}</span>`
+                        : '';
                     container.append(`
                         <div class="spec-row grid grid-cols-1 md:grid-cols-2 gap-4 items-end bg-gray-50/50 p-4 rounded-lg border border-gray-100">
                             <input type="hidden" name="Input.Specifications[${index}].AttributeId" value="${spec.attributeId || 0}" />
@@ -420,9 +467,12 @@
                                 <input name="Input.Specifications[${index}].Key" value="${spec.key || ''}" readonly class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-700 font-medium" />
                             </div>
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Value</label>
+                                <div class="flex items-center justify-between">
+                                    <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Value</label>
+                                    ${valueTypeHint}
+                                </div>
                                 <div class="relative">
-                                    <input name="Input.Specifications[${index}].Value" value="${value}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white ${inputPadding}" placeholder="Enter ${spec.key || 'value'}" data-val="true" data-val-required="${spec.key} is required" required />
+                                    <input name="Input.Specifications[${index}].Value" value="${value}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary bg-white ${inputPadding}" placeholder="${placeholder}" data-val="true" data-val-required="${spec.key} is required" required />
                                     ${unit ? `<span class="absolute inset-y-0 right-3 flex items-center text-xs font-bold text-gray-400 uppercase">${unit}</span>` : ''}
                                 </div>
                                 <span class="field-validation-valid text-[10px] text-red-500 font-medium" data-valmsg-for="Input.Specifications[${index}].Value" data-valmsg-replace="true"></span>
@@ -688,23 +738,66 @@
                 updateIndices('variantsContainer', 'variant-row');
             });
 
-            $('#imageUpload').change(function () {
-                const preview = $('#imagePreview');
-                preview.empty();
-                if (this.files) {
-                    Array.from(this.files).forEach(file => {
+            function wirePrimaryPreview() {
+                $('.primary-image-input').each(function () {
+                    const input = $(this);
+                    const previewSelector = input.data('preview');
+                    const preview = $(previewSelector);
+
+                    input.on('change', function () {
+                        const file = this.files && this.files[0];
+                        if (!file) return;
+
                         const reader = new FileReader();
                         reader.onload = function (e) {
-                            preview.append(`
-                                <div class="aspect-square rounded-lg overflow-hidden border border-gray-200">
-                                    <img src="${e.target.result}" class="w-full h-full object-cover" />
-                                </div>
-                            `);
+                            preview.html(`<img src="${e.target.result}" class="w-full h-full object-cover" />`);
                         };
                         reader.readAsDataURL(file);
                     });
+                });
+            }
+
+            function createImageSlot(inputName) {
+                return $(`
+                    <label class="image-slot relative aspect-square rounded-lg border-2 border-dashed border-gray-200 bg-gray-50/60 hover:border-primary/50 transition-colors cursor-pointer overflow-hidden">
+                        <input type="file" name="${inputName}" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer image-slot-input" accept="image/*">
+                        <div class="image-slot-content absolute inset-0 flex flex-col items-center justify-center text-gray-400 gap-1">
+                            <span class="material-symbols-outlined text-2xl">add_photo_alternate</span>
+                            <span class="text-xs font-medium">Add image</span>
+                        </div>
+                    </label>
+                `);
+            }
+
+            function ensureEmptySlot(container) {
+                const max = Number(container.data('max')) || 0;
+                const inputName = container.data('input-name');
+                const slots = container.find('.image-slot');
+                const hasEmpty = slots.filter(function () { return !$(this).hasClass('is-filled'); }).length > 0;
+
+                if (!hasEmpty && slots.length < max) {
+                    container.append(createImageSlot(inputName));
                 }
+            }
+
+            $(document).on('change', '.image-slot-input', function () {
+                const file = this.files && this.files[0];
+                if (!file) return;
+
+                const slot = $(this).closest('.image-slot');
+                const container = slot.closest('[data-max]');
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    slot.addClass('is-filled');
+                    slot.find('.image-slot-content').html(`<img src="${e.target.result}" class="w-full h-full object-cover" />`);
+                    ensureEmptySlot(container);
+                };
+                reader.readAsDataURL(file);
             });
+
+            wirePrimaryPreview();
+            ensureEmptySlot($('#additionalImagesContainerEdit'));
 
             reparseValidation();
         });
@@ -739,6 +832,8 @@
         }
     </style>
 }
+
+
 
 
 

@@ -63,6 +63,7 @@ namespace GearZone.Application.Features.Seller
                 {
                     Id = p.Id,
                     Name = p.Name,
+                    Slug = p.Slug,
                     CategoryName = p.Category.Name,
                     BrandName = p.Brand.Name,
                     BasePrice = p.BasePrice,
@@ -172,9 +173,11 @@ namespace GearZone.Application.Features.Seller
 
             await _productRepository.AddAsync(product);
 
+            const int maxImages = 5;
             if (dto.Images != null && dto.Images.Any())
             {
-                var imageUrls = await _fileStorageService.UploadAsync(dto.Images);
+                var imagesToUpload = dto.Images.Take(maxImages).ToList();
+                var imageUrls = await _fileStorageService.UploadAsync(imagesToUpload);
                 int sortOrder = 0;
                 foreach (var imageUrl in imageUrls)
                 {
@@ -351,22 +354,28 @@ namespace GearZone.Application.Features.Seller
 
             if (dto.NewImages != null && dto.NewImages.Any())
             {
+                var maxTotalImages = 5;
                 var currentImageCount = product.Images.Count;
-                var imageUrls = await _fileStorageService.UploadAsync(dto.NewImages);
-                int sortOrder = currentImageCount;
-
-                foreach (var imageUrl in imageUrls)
+                var slotsLeft = Math.Max(0, maxTotalImages - currentImageCount);
+                if (slotsLeft > 0)
                 {
-                    if (sortOrder >= 5) break;
+                    var imagesToUpload = dto.NewImages.Take(slotsLeft).ToList();
+                    var imageUrls = await _fileStorageService.UploadAsync(imagesToUpload);
+                    int sortOrder = currentImageCount;
 
-                    await _productImageRepository.AddAsync(new ProductImage
+                    foreach (var imageUrl in imageUrls)
                     {
-                        Id = Guid.NewGuid(),
-                        ProductId = product.Id,
-                        ImageUrl = imageUrl,
-                        IsPrimary = sortOrder == 0,
-                        SortOrder = sortOrder++
-                    });
+                        if (sortOrder >= maxTotalImages) break;
+
+                        await _productImageRepository.AddAsync(new ProductImage
+                        {
+                            Id = Guid.NewGuid(),
+                            ProductId = product.Id,
+                            ImageUrl = imageUrl,
+                            IsPrimary = sortOrder == 0,
+                            SortOrder = sortOrder++
+                        });
+                    }
                 }
             }
 
@@ -579,7 +588,18 @@ namespace GearZone.Application.Features.Seller
 
             if (product == null) throw new InvalidOperationException("Product not found.");
 
-            product.Status = product.Status == ProductStatus.Active ? ProductStatus.Inactive : ProductStatus.Active;
+            if (product.Status == ProductStatus.Active || product.Status == ProductStatus.Approved)
+            {
+                product.Status = ProductStatus.Inactive;
+            }
+            else if (product.Status == ProductStatus.Inactive)
+            {
+                product.Status = ProductStatus.Active;
+            }
+            else
+            {
+                throw new InvalidOperationException("Only active or approved products can be deactivated.");
+            }
             product.UpdatedAt = DateTime.UtcNow;
 
             await _productRepository.UpdateAsync(product);

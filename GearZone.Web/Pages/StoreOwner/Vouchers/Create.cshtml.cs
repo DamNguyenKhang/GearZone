@@ -25,9 +25,41 @@ namespace GearZone.Web.Pages.StoreOwner.Vouchers
 
         public List<CategoryDto> Categories { get; set; } = new();
 
-        public async Task OnGetAsync()
+        public async Task<IActionResult> OnGetAsync(Guid? copyFromId = null)
         {
             Categories = await _categoryService.GetAllCategoriesListAsync();
+
+            if (copyFromId.HasValue)
+            {
+                var ownerUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrWhiteSpace(ownerUserId))
+                {
+                    return RedirectToPage("/Public/Auth/Login");
+                }
+
+                var sourceVoucher = await _sellerVoucherService.GetVoucherByIdAsync(ownerUserId, copyFromId.Value);
+                if (sourceVoucher != null)
+                {
+                    Input = new SellerCreateVoucherDto
+                    {
+                        Name = sourceVoucher.Name + " (Copy)",
+                        Description = sourceVoucher.Description,
+                        Type = "Order",
+                        DiscountType = sourceVoucher.DiscountType.ToString(),
+                        DiscountValue = sourceVoucher.DiscountValue,
+                        MaxDiscount = sourceVoucher.MaxDiscount,
+                        MinOrderAmount = sourceVoucher.MinOrderAmount ?? 0,
+                        UsageLimit = sourceVoucher.UsageLimit,
+                        CategoryId = sourceVoucher.CategoryId,
+                        IsVisible = true,
+                        StartAt = DateTime.Now,
+                        EndAt = DateTime.Now.AddDays(30)
+                    };
+
+                    return Page();
+                }
+            }
+
             Input.StartAt = DateTime.Now;
             Input.EndAt = DateTime.Now.AddDays(30);
             Input.DiscountType = "Percent";
@@ -35,6 +67,8 @@ namespace GearZone.Web.Pages.StoreOwner.Vouchers
             Input.MinOrderAmount = 50000;
             Input.UsageLimit = 100;
             Input.IsVisible = true;
+
+            return Page();
         }
 
         public async Task<IActionResult> OnPostAsync()

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using PayOS;
 using PayOS.Models.V1.Payouts;
 using PayOS.Models.V1.Payouts.Batch;
+using System.Linq;
 
 namespace GearZone.Infrastructure.External
 {
@@ -52,10 +53,16 @@ namespace GearZone.Infrastructure.External
             try
             {
                 var response = await _client.Payouts.CreateAsync(request);
+                var transaction = response.Transactions?.FirstOrDefault();
+                var isSucceeded = transaction?.State == PayoutTransactionState.Succeeded;
 
                 return new PayoutResult(
-                    isSuccess: true,
-                    referenceId: response.ReferenceId
+                    isSuccess: isSucceeded,
+                    referenceId: transaction?.Id ?? response.ReferenceId,
+                    errorMessage: isSucceeded
+                        ? null
+                        : transaction?.ErrorMessage
+                          ?? $"PayOS payout state: {transaction?.State.ToString() ?? "Unknown"}"
                 );
             }
             catch (Exception ex)
@@ -90,10 +97,17 @@ namespace GearZone.Infrastructure.External
             try
             {
                 var response = await _client.Payouts.Batch.CreateAsync(request);
+                var transactions = response.Transactions ?? new List<PayoutTransaction>();
+                var failedTx = transactions.FirstOrDefault(t => t.State != PayoutTransactionState.Succeeded);
+                var allSucceeded = transactions.Count > 0 && failedTx == null;
 
                 return new PayoutResult(
-                    isSuccess: true,
-                    referenceId: response.ReferenceId
+                    isSuccess: allSucceeded,
+                    referenceId: response.ReferenceId,
+                    errorMessage: allSucceeded
+                        ? null
+                        : failedTx?.ErrorMessage
+                          ?? $"PayOS payout batch has non-success transaction state: {failedTx?.State.ToString() ?? "Unknown"}"
                 );
             }
             catch (Exception ex)

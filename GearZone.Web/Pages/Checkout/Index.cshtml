@@ -216,8 +216,8 @@
                     <span class="material-symbols-outlined text-primary text-xl">confirmation_number</span>
                     <h2 class="text-lg font-bold text-slate-900 dark:text-white">Vouchers</h2>
                 </div>
-                <input type="hidden" name="CheckoutRequest.OrderVoucherCode" id="order-voucher-code-input" />
-                <input type="hidden" name="CheckoutRequest.ShippingVoucherCode" id="shipping-voucher-code-input" />
+                <input type="hidden" asp-for="CheckoutRequest.OrderVoucherCode" id="order-voucher-code-input" />
+                <input type="hidden" asp-for="CheckoutRequest.ShippingVoucherCode" id="shipping-voucher-code-input" />
                 <div class="p-6 space-y-4">
                     <!-- Order Discount Voucher Row -->
                     <div class="flex items-center justify-between p-4 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl transition-all" id="order-voucher-row">
@@ -1185,7 +1185,7 @@
                 const skeleton = list.querySelector('.voucher-skeleton');
                 const emptyMsg = document.getElementById('no-vouchers-msg');
                 const merchandiseTotal = parseFloat("@Model.GrandTotal");
-                const shippingFee = 0; // Currently 0
+                const shippingFee = currentShippingFee;
 
                 list.innerHTML = '';
                 list.appendChild(skeleton);
@@ -1292,8 +1292,6 @@
                 const errorMsg = document.getElementById('voucher-error-msg');
                 const originalText = btn.innerHTML;
                 const merchandiseTotal = parseFloat("@Model.GrandTotal");
-                const shippingFee = 0;
-
                 btn.innerHTML = '<span class="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>';
                 btn.disabled = true;
                 errorMsg.classList.add('hidden');

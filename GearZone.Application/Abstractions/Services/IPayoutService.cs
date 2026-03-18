@@ -1,5 +1,7 @@
-using GearZone.Application.Common;
-using GearZone.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace GearZone.Application.Abstractions.Services;
 
@@ -21,6 +23,17 @@ public interface IPayoutService
     /// Approves all eligible transactions in a batch.
     /// </summary>
     Task ProcessPayoutBatchAsync(string batchCode, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates an approved payout batch for selected stores in the provided period.
+    /// Returns generated batch code.
+    /// </summary>
+    Task<string> GenerateApprovedBatchForStoresAsync(
+        DateTime periodStart,
+        DateTime periodEnd,
+        IReadOnlyCollection<Guid> storeIds,
+        string adminId,
+        CancellationToken cancellationToken = default);
 
     Task ApproveBatchAsync(Guid batchId, string adminId, CancellationToken cancellationToken = default);
 

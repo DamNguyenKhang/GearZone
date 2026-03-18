@@ -20,6 +20,12 @@ namespace GearZone.Application.Abstractions.Persistence
             DateTime periodEnd,
             CancellationToken ct = default);
 
+        Task<List<SubOrder>> GetEligibleForPayoutByStoresAsync(
+            DateTime periodStart,
+            DateTime periodEnd,
+            IReadOnlyCollection<Guid> storeIds,
+            CancellationToken ct = default);
+
         Task BulkUpdatePayoutStatusAsync(
             List<Guid> subOrderIds,
             PayoutStatus status,

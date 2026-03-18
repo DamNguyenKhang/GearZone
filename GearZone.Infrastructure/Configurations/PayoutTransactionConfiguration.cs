@@ -41,6 +41,11 @@ namespace GearZone.Infrastructure.Configurations
             builder.Property(x => x.NetAmount)
                 .HasColumnType("decimal(18,2)");
 
+            builder.Property(x => x.Status)
+                   .HasMaxLength(20)
+                   .IsRequired()
+                   .HasConversion<string>();
+
             builder.Property(x => x.PayOSTransactionId)
                 .HasMaxLength(100);
 

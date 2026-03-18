@@ -26,6 +26,8 @@ namespace GearZone.Infrastructure.Repositories
             .Where(o =>
                 o.Status == OrderStatus.Completed &&
                 o.PayoutStatus == PayoutStatus.Unpaid &&
+                o.Order.Payments.Any(p => p.Status == PaymentStatus.Paid &&
+                                          p.Method != PaymentMethod.COD) &&
                 o.UpdatedAt <= DateTime.UtcNow.AddDays(-7)
             )
             .ToListAsync();
@@ -37,13 +39,28 @@ namespace GearZone.Infrastructure.Repositories
             DateTime periodEnd,
             CancellationToken ct = default)
         {
-            return await _dbSet
-                .Include(o => o.Items)
-                .Include(o => o.Store)
-                .Where(o => o.Status == OrderStatus.Completed &&
-                            o.PayoutStatus == PayoutStatus.Unpaid &&
-                            o.CreatedAt >= periodStart &&
-                            o.CreatedAt <= periodEnd)
+            return await BuildEligibleForPayoutQuery(periodStart, periodEnd)
+                .ToListAsync(ct);
+        }
+
+        public async Task<List<SubOrder>> GetEligibleForPayoutByStoresAsync(
+            DateTime periodStart,
+            DateTime periodEnd,
+            IReadOnlyCollection<Guid> storeIds,
+            CancellationToken ct = default)
+        {
+            var uniqueStoreIds = storeIds
+                .Where(x => x != Guid.Empty)
+                .Distinct()
+                .ToList();
+
+            if (!uniqueStoreIds.Any())
+            {
+                return new List<SubOrder>();
+            }
+
+            return await BuildEligibleForPayoutQuery(periodStart, periodEnd)
+                .Where(o => uniqueStoreIds.Contains(o.StoreId))
                 .ToListAsync(ct);
         }
 
@@ -286,6 +303,21 @@ namespace GearZone.Infrastructure.Repositories
                 OrderStatus.Cancelled => "bg-slate-200",
                 _ => "bg-slate-400"
             };
+        }
+
+        private IQueryable<SubOrder> BuildEligibleForPayoutQuery(
+            DateTime periodStart,
+            DateTime periodEnd)
+        {
+            return _dbSet
+                .Include(o => o.Items)
+                .Include(o => o.Store)
+                .Where(o => o.Status == OrderStatus.Completed &&
+                            o.PayoutStatus == PayoutStatus.Unpaid &&
+                            o.Order.Payments.Any(p => p.Status == PaymentStatus.Paid &&
+                                                      p.Method != PaymentMethod.COD) &&
+                            o.CreatedAt >= periodStart &&
+                            o.CreatedAt <= periodEnd);
         }
 
         public async Task<PagedResult<UserOrderDto>> GetUserOrdersAsync(string userId, UserOrderQueryDto queryDto, DateTime utcNow, CancellationToken ct = default)

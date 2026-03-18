@@ -89,4 +89,40 @@ namespace GearZone.Application.Common.Dtos
         [JsonPropertyName("status")]
         public string Status { get; set; } = string.Empty;
     }
+
+    public class GoongDistanceMatrixResponse
+    {
+        [JsonPropertyName("rows")]
+        public List<GoongDistanceRow> Rows { get; set; } = new();
+
+        [JsonPropertyName("status")]
+        public string Status { get; set; } = string.Empty;
+    }
+
+    public class GoongDistanceRow
+    {
+        [JsonPropertyName("elements")]
+        public List<GoongDistanceElement> Elements { get; set; } = new();
+    }
+
+    public class GoongDistanceElement
+    {
+        [JsonPropertyName("distance")]
+        public GoongDistanceValue Distance { get; set; } = new();
+
+        [JsonPropertyName("duration")]
+        public GoongDistanceValue Duration { get; set; } = new();
+
+        [JsonPropertyName("status")]
+        public string Status { get; set; } = string.Empty;
+    }
+
+    public class GoongDistanceValue
+    {
+        [JsonPropertyName("text")]
+        public string Text { get; set; } = string.Empty;
+
+        [JsonPropertyName("value")]
+        public int ValueInMeters { get; set; } // meters
+    }
 }

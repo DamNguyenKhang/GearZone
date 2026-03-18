@@ -1,4 +1,4 @@
-﻿using GearZone.Domain.Enums;
+using GearZone.Domain.Enums;
 
 namespace GearZone.Domain.Entities
 {
@@ -16,6 +16,8 @@ namespace GearZone.Domain.Entities
         public string Email { get; set; } = string.Empty;
         public string AddressLine { get; set; } = string.Empty;
         public string Province { get; set; } = string.Empty;
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
         public string? IdentityCardFrontImageUrl { get; set; }
         public string? IdentityCardBackImageUrl { get; set; }
 

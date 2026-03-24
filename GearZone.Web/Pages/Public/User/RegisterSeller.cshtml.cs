@@ -51,7 +51,7 @@ namespace GearZone.Web.Pages.Public.User
                     return RedirectToPage("/StoreOwner/Dashboard");
                 if (existingStore.Status == StoreStatus.Pending)
                 {
-                    TempData["InfoMessage"] = "Đơn đăng ký của bạn đang chờ duyệt.";
+                    TempData["InfoMessage"] = "Your registration is pending approval.";
                     return RedirectToPage("/Public/User/Profile");
                 }
             }
@@ -141,7 +141,7 @@ namespace GearZone.Web.Pages.Public.User
             try
             {
                 await _sellerStoreService.SubmitRegistrationAsync(Progress.StoreId.Value, user.Id);
-                TempData["SuccessMessage"] = "Đơn đăng ký của bạn đã được gửi thành công! Chúng tôi sẽ xem xét và phản hồi sớm nhất.";
+                TempData["SuccessMessage"] = "Your registration has been submitted successfully! We will review and respond as soon as possible.";
                 return RedirectToPage("/Public/User/Profile");
             }
             catch (Exception ex)

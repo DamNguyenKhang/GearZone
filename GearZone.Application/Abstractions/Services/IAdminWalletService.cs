@@ -12,6 +12,7 @@ namespace GearZone.Application.Abstractions.Services
             CancellationToken ct = default);
 
         Task<List<WalletTransactionDto>> GetBalanceHistoryAsync(int days = 30, CancellationToken ct = default);
+        Task<List<WalletTransactionDto>> GetCashFlowHistoryAsync(int recentMonths = 6, CancellationToken ct = default);
 
         Task RecordTopupAsync(
             TopupWalletDto dto,

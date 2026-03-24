@@ -1,3 +1,4 @@
+﻿using Microsoft.AspNetCore.Authorization;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Admin.Dtos;
@@ -11,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace GearZone.Web.Pages.Admin
 {
+    [Authorize(Roles = "Super Admin")]
     public class SellerPayableSummaryModel : PageModel
     {
         private readonly IAdminPayoutService _adminPayoutService;

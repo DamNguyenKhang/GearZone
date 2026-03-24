@@ -1,3 +1,4 @@
+﻿using Microsoft.AspNetCore.Authorization;
 using AutoMapper;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Admin.Dtos;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace GearZone.Web.Pages.Admin.Categories
 {
+    [Authorize(Roles = "Super Admin")]
     public class EditModel : PageModel
     {
         private readonly IAdminCategoryService _adminCategoryService;

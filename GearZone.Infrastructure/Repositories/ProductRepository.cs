@@ -118,6 +118,11 @@ namespace GearZone.Infrastructure.Repositories
                                        p.Brand.Name.ToLower().Contains(searchTerm));
             }
 
+            if (filter.StoreId.HasValue && filter.StoreId.Value != Guid.Empty)
+            {
+                query = query.Where(p => p.StoreId == filter.StoreId.Value);
+            }
+
             if (!string.IsNullOrEmpty(filter.CategorySlug))
             {
                 // Collect IDs: the matched category itself + all its direct children

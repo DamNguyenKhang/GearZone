@@ -11,6 +11,7 @@ namespace GearZone.Application.Abstractions.Persistence
             CancellationToken ct = default);
 
         Task<List<WalletTransactionDto>> GetRecentAsync(int count = 30, CancellationToken ct = default);
+        Task<List<WalletTransactionDto>> GetCompletedSinceAsync(DateTime fromUtc, CancellationToken ct = default);
         Task<WalletTransaction?> GetLastCompletedTransactionAsync(CancellationToken ct = default);
     }
 }

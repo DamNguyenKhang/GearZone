@@ -90,6 +90,27 @@ namespace GearZone.Infrastructure.Repositories
                 .ToListAsync(ct);
         }
 
+        public async Task<List<WalletTransactionDto>> GetCompletedSinceAsync(DateTime fromUtc, CancellationToken ct = default)
+        {
+            return await _dbSet
+                .Where(x => x.Status == WalletTransactionStatus.Completed && x.CreatedAt >= fromUtc)
+                .OrderBy(x => x.CreatedAt)
+                .Select(x => new WalletTransactionDto
+                {
+                    Id = x.Id,
+                    TransactionCode = x.TransactionCode,
+                    CreatedAt = x.CreatedAt,
+                    Type = x.Type,
+                    Direction = x.Direction,
+                    Amount = x.Amount,
+                    BalanceBefore = x.BalanceBefore,
+                    BalanceAfter = x.BalanceAfter,
+                    Currency = x.Currency,
+                    Status = x.Status
+                })
+                .ToListAsync(ct);
+        }
+
         public async Task<WalletTransaction?> GetLastCompletedTransactionAsync(CancellationToken ct = default)
         {
             return await _dbSet

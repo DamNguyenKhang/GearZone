@@ -1,3 +1,4 @@
+﻿using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,7 @@ using System.Security.Claims;
 
 namespace GearZone.Web.Pages.Admin.PayoutBatches
 {
+    [Authorize(Roles = "Super Admin")]
     public class DetailsModel : PageModel
     {
         private readonly IAdminPayoutService _payoutService;

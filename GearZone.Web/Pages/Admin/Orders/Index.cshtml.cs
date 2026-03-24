@@ -1,3 +1,4 @@
+﻿using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using GearZone.Application.Features.Admin.Dtos;
 
 namespace GearZone.Web.Pages.Admin.Orders
 {
+    [Authorize(Roles = "Super Admin")]
     public class IndexModel : PageModel
     {
         private readonly IAdminOrderService _orderService;

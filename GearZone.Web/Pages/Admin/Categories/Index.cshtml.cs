@@ -1,3 +1,4 @@
+﻿using Microsoft.AspNetCore.Authorization;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Admin.Dtos;
 using Microsoft.AspNetCore.Mvc;
@@ -5,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace GearZone.Web.Pages.Admin.Categories
 {
+    [Authorize(Roles = "Super Admin")]
     public class IndexModel : PageModel
     {
         private readonly IAdminCategoryService _adminCategoryService;

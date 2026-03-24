@@ -91,6 +91,16 @@ namespace GearZone.Application.Features.Admin
             return await _walletTransactionRepository.GetRecentAsync(days, ct);
         }
 
+        public async Task<List<WalletTransactionDto>> GetCashFlowHistoryAsync(int recentMonths = 6, CancellationToken ct = default)
+        {
+            var normalizedMonths = recentMonths < 1 ? 1 : recentMonths;
+            var now = DateTime.UtcNow;
+            var fromUtc = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc)
+                .AddMonths(-(normalizedMonths - 1));
+
+            return await _walletTransactionRepository.GetCompletedSinceAsync(fromUtc, ct);
+        }
+
         public async Task RecordTopupAsync(
             TopupWalletDto dto,
             string adminId,
@@ -111,11 +121,11 @@ namespace GearZone.Application.Features.Admin
                 Amount = dto.Amount,
                 Currency = "VND",
                 BalanceBefore = balanceBefore,
-                BalanceAfter = balanceBefore, // Will be updated when confirmed
+                BalanceAfter = balanceBefore + dto.Amount,
                 ReferenceCode = $"TOPUP-{DateTime.UtcNow:yyyyMMddHHmmss}",
                 ProviderTransactionId = dto.ProviderTransactionId,
                 Note = dto.Note,
-                Status = WalletTransactionStatus.Pending,
+                Status = WalletTransactionStatus.Completed,
                 CreatedByAdminId = adminId,
                 CreatedAt = DateTime.UtcNow
             };

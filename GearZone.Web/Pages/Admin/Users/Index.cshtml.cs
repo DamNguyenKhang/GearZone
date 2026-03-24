@@ -1,3 +1,4 @@
+﻿using Microsoft.AspNetCore.Authorization;
 using AutoMapper;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Common.Models;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace GearZone.Web.Pages.Admin.Users
 {
+    [Authorize(Roles = "Super Admin")]
     public class IndexModel : PageModel
     {
         private readonly IAdminUserService _adminUserService;

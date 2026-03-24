@@ -1,3 +1,4 @@
+﻿using Microsoft.AspNetCore.Authorization;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Admin.Dtos;
 using GearZone.Application.Common.Models;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace GearZone.Web.Pages.Admin.Brands
 {
+    [Authorize(Roles = "Super Admin")]
     public class IndexModel : PageModel
     {
         private readonly IAdminBrandService _adminBrandService;

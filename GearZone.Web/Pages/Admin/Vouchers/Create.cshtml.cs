@@ -1,3 +1,4 @@
+﻿using Microsoft.AspNetCore.Authorization;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Admin.Dtos;
 using GearZone.Domain.Enums;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 
 namespace GearZone.Web.Pages.Admin.Vouchers
 {
+    [Authorize(Roles = "Super Admin")]
     public class CreateModel : PageModel
     {
         private readonly IAdminVoucherService _voucherService;

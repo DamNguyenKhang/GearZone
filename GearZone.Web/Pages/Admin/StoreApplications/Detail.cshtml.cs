@@ -1,3 +1,4 @@
+﻿using Microsoft.AspNetCore.Authorization;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Features.Admin.Dtos;
 using GearZone.Domain.Enums;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace GearZone.Web.Pages.Admin.StoreApplications
 {
+    [Authorize(Roles = "Super Admin")]
     public class DetailModel : PageModel
     {
         private readonly IAdminStoreService _adminStoreService;

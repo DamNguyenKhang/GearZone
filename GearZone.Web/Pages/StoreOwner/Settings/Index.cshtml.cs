@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using GearZone.Application.Abstractions.Services;
@@ -12,12 +13,17 @@ namespace GearZone.Web.Pages.StoreOwner.Settings
     public class IndexModel : PageModel
     {
         private readonly ISellerStoreService _storeService;
+        private readonly IConfiguration _configuration;
 
         public Store? Store { get; set; }
 
-        public IndexModel(ISellerStoreService storeService)
+        public string? GoongApiKey => _configuration["GOONG_API_KEY"];
+        public string? GoongMapKey => _configuration["GOONG_MAP_KEY"];
+
+        public IndexModel(ISellerStoreService storeService, IConfiguration configuration)
         {
             _storeService = storeService;
+            _configuration = configuration;
         }
 
         public async Task<IActionResult> OnGetAsync()
@@ -32,6 +38,31 @@ namespace GearZone.Web.Pages.StoreOwner.Settings
             }
             
             return Page();
+        }
+
+        public async Task<IActionResult> OnPostUpdateProfileAsync([FromForm] GearZone.Application.Features.Seller.Dtos.UpdateStoreProfileDto dto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
+
+            if (!ModelState.IsValid)
+            {
+                TempData["ErrorMessage"] = "Please check your input and try again.";
+                return RedirectToPage();
+            }
+
+            var result = await _storeService.UpdateStoreProfileAsync(userId, dto);
+            
+            if (result)
+            {
+                TempData["SuccessMessage"] = "Store profile updated successfully!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to update store profile. Note: Only approved stores can update profile here.";
+            }
+
+            return RedirectToPage();
         }
     }
 }

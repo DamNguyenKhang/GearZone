@@ -26,6 +26,10 @@ namespace GearZone.Application.Features.Catalog.DTOs
         public Guid StoreId { get; set; }
         public string StoreName { get; set; } = string.Empty;
         public string StoreSlug { get; set; } = string.Empty;
+        public int StoreReviewCount { get; set; }
+        public int StoreProductCount { get; set; }
+        public DateTime StoreCreatedAt { get; set; }
+        public int StoreFollowerCount { get; set; }
 
         // Shared Images for all variants
         public List<string> ImageUrls { get; set; } = new();

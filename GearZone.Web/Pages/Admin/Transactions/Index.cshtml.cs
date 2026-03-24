@@ -1,3 +1,4 @@
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using GearZone.Application.Abstractions.Persistence;
@@ -8,6 +9,7 @@ using GearZone.Application.Features.Admin.Dtos; // Keep this as AdminPlatformTra
 
 namespace GearZone.Web.Pages.Admin.Transactions
 {
+    [Authorize(Roles = "Super Admin")]
     public class IndexModel : PageModel
     {
         private readonly IAdminPlatformService _platformService;

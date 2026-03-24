@@ -101,7 +101,7 @@ namespace GearZone.Infrastructure.Repositories
             
             var totalLimit = vouchers.Sum(v => v.UsageLimit);
             var totalUsed = vouchers.Sum(v => v.UsedCount);
-            var redemptionRate = totalLimit > 0 ? (decimal)totalUsed / totalLimit * 100 : 0;
+            var redemptionRate = totalLimit > 0 ? Math.Round((decimal)totalUsed / totalLimit * 100, 1) : 0;
 
             // Simplified calculation for total saved amount
             var totalSavedAmount = 0m; 
@@ -186,7 +186,7 @@ namespace GearZone.Infrastructure.Repositories
 
             var totalLimit = vouchers.Sum(v => v.UsageLimit);
             var totalUsed = vouchers.Sum(v => v.UsedCount);
-            var redemptionRate = totalLimit > 0 ? (decimal)totalUsed / totalLimit * 100 : 0;
+            var redemptionRate = totalLimit > 0 ? Math.Round((decimal)totalUsed / totalLimit * 100, 1) : 0;
 
             return new SellerVoucherSummaryDto
             {

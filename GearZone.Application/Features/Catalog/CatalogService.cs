@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -209,8 +209,8 @@ namespace GearZone.Application.Features.Catalog
                 Province = store.Province,
                 ProductCount = productCount,
                 TotalSold = totalSold,
-                Rating = reviewSnapshot.AverageRating,
-                ReviewCount = reviewSnapshot.TotalReviews,
+                Rating = reviewSnapshot?.AverageRating ?? 0,
+                ReviewCount = reviewSnapshot?.TotalReviews ?? 0,
                 FollowerCount = followerCount,
                 IsFollowing = isFollowing,
                 CreatedAt = store.CreatedAt,
@@ -459,12 +459,17 @@ namespace GearZone.Application.Features.Catalog
                 StoreId = product.StoreId,
                 StoreName = product.Store.StoreName,
                 StoreSlug = product.Store.Slug,
+                StoreCreatedAt = product.Store.CreatedAt,
                 ImageUrls = product.Images.OrderByDescending(i => i.IsPrimary).Select(i => i.ImageUrl).ToList(),
             };
 
             dto.ReviewSummary = await _productReviewRepository.GetProductReviewSummaryAsync(product.Id);
             dto.Rating = dto.ReviewSummary.AverageRating;
             dto.ReviewCount = dto.ReviewSummary.TotalReviews;
+
+            dto.StoreReviewCount = (await _productReviewRepository.GetStoreReviewSnapshotAsync(product.StoreId)).TotalReviews;
+            dto.StoreProductCount = await _productRepository.Query().CountAsync(p => p.StoreId == product.StoreId && !p.IsDeleted && p.Status == GearZone.Domain.Enums.ProductStatus.Active);
+            dto.StoreFollowerCount = await _storeFollowRepository.GetFollowerCountAsync(product.StoreId);
 
             var allAttributeValues = product.Variants.SelectMany(v => v.AttributeValues).ToList();
 

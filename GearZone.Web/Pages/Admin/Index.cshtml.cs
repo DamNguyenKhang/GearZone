@@ -1,3 +1,4 @@
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using GearZone.Application.Abstractions.Services;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace GearZone.Web.Pages.Admin
 {
+    [Authorize(Roles = "Super Admin")]
     public class IndexModel : PageModel
     {
         private readonly IAdminDashboardService _dashboardService;

@@ -41,52 +41,71 @@
     <!-- Right Column: Product Info (55%) -->
     <div class="lg:col-span-7 flex flex-col gap-6">
         <!-- Title & Header -->
-        <div>
-            <div class="flex items-center gap-2 mb-3">
-                <a href="/store/@Model.StoreSlug" class="bg-primary/10 text-primary text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 border border-primary/20 hover:bg-primary hover:text-white transition-colors">
-                    <span class="material-symbols-outlined text-[14px]">storefront</span>
-                    @Model.StoreName
-                </a>
-                <a href="/Public/User/Profile?tab=messages&storeSlug=@Model.StoreSlug&productSlug=@Model.Slug"
-                   class="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-orange-600 transition hover:-translate-y-0.5 hover:bg-orange-100">
-                    <span class="material-symbols-outlined text-[14px]">chat</span>
-                    Chat Now
-                </a>
+        <!-- Title & Header -->
+        <div class="flex flex-col gap-2">
+            <h1 class="text-2xl font-medium text-slate-900 dark:text-white leading-relaxed mb-1 mt-0">
+                @Model.Name
+            </h1>
+
+            <div class="flex items-center gap-4 text-[14px]">
                 @if (Model.ReviewCount > 0)
                 {
-                    <div class="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1">
-                        <partial name="/Pages/Shared/_ReviewStars.cshtml"
-                                 model='new ReviewStarsViewModel
-                                 {
-                                     Rating = Model.Rating,
-                                     SizePx = 14,
-                                     AriaLabel = $"{Model.Rating:0.0} out of 5 stars"
-                                 }' />
-                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300">@Model.Rating.ToString("0.0")</span>
-                        <span class="text-xs text-slate-400">(@Model.ReviewCount)</span>
+                    <div class="flex items-center gap-1.5 cursor-pointer">
+                        <span class="text-[#ee4d2d] border-b border-[#ee4d2d] leading-tight">@Model.Rating.ToString("0.0")</span>
+                        <div class="flex items-center text-[#ee4d2d] scale-90 origin-left">
+                            <partial name="/Pages/Shared/_ReviewStars.cshtml"
+                                     model='new ReviewStarsViewModel
+                                     {
+                                         Rating = Model.Rating,
+                                         SizePx = 13,
+                                         AriaLabel = $"{Model.Rating:0.0} out of 5 stars"
+                                     }' />
+                        </div>
                     </div>
+                    <div class="w-px h-3.5 bg-slate-300 dark:bg-slate-600"></div>
+                    <div class="flex items-center gap-1.5 cursor-pointer">
+                        <span class="border-b border-slate-900 dark:border-white text-slate-900 dark:text-white leading-tight">@Model.ReviewCount</span>
+                        <span class="text-[#757575] dark:text-slate-400">Ratings</span>
+                    </div>
+                    <div class="w-px h-3.5 bg-slate-300 dark:bg-slate-600"></div>
                 }
                 else
                 {
-                    <div class="flex items-center gap-1 text-slate-400 dark:text-slate-500">
-                        <partial name="/Pages/Shared/_ReviewStars.cshtml"
-                                 model='new ReviewStarsViewModel
-                                 {
-                                     Rating = 0,
-                                     SizePx = 14,
-                                     AriaLabel = "No reviews yet"
-                                 }' />
-                        <span class="text-xs font-bold">No reviews yet</span>
+                    <div class="flex items-center gap-1 text-[#757575] dark:text-slate-400">
+                        <div class="flex items-center scale-90 origin-left">
+                            <partial name="/Pages/Shared/_ReviewStars.cshtml"
+                                     model='new ReviewStarsViewModel
+                                     {
+                                         Rating = 0,
+                                         SizePx = 13,
+                                         AriaLabel = "No reviews yet"
+                                     }' />
+                        </div>
+                        <span class="text-[13px]">No ratings yet</span>
                     </div>
+                    <div class="w-px h-3.5 bg-slate-300 dark:bg-slate-600"></div>
                 }
+
+                <div class="flex items-center gap-1.5">
+                    <span class="text-slate-900 dark:text-white">
+                        @(Model.SoldCount > 999 ? (Model.SoldCount / 1000m).ToString("0.#") + "k" : Model.SoldCount.ToString())
+                    </span>
+                    <span class="text-[#757575] dark:text-slate-400">Sold</span>
+                </div>
+
+                <div class="flex-1"></div>
+
+                <a href="javascript:void(0)" class="text-[13px] text-[#757575] dark:text-slate-400 hover:text-slate-900 transition-colors">
+                    Report
+                </a>
             </div>
-            <h1 class="text-3xl font-bold text-slate-900 dark:text-white leading-tight mb-2">@Model.Name</h1>
-            <div class="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+
+            <!-- Meta details unobtrusive -->
+            <div class="hidden">
+                <span id="display-sku">@Model.Variants.FirstOrDefault()?.Sku</span>
+            </div>
+            <div class="text-[13px] text-[#757575] mt-1 space-x-2">
                 <span>Brand: <a class="text-primary hover:underline" href="/catalog?brand=@Model.BrandSlug">@Model.BrandName</a></span>
-                <span class="w-1 h-1 rounded-full bg-slate-300"></span>
-                <span>SKU: <span id="display-sku">@Model.Variants.FirstOrDefault()?.Sku</span></span>
-                <span class="w-1 h-1 rounded-full bg-slate-300"></span>
-                <span>@Model.SoldCount Sold</span>
             </div>
         </div>
 
@@ -196,6 +215,94 @@
             </ul>
         </div>
 
+    </div>
+</div>
+
+<!-- Store Summary Banner -->
+<div class="mt-6 bg-[#fafafa] dark:bg-surface-dark border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="flex flex-col sm:flex-row items-center p-5 gap-6 sm:gap-10">
+
+        <!-- Left: Store identity + actions -->
+        <div class="flex items-center gap-4 sm:border-r border-slate-200 dark:border-slate-700 pr-0 sm:pr-8 min-w-[320px]">
+            <!-- Store logo -->
+            <a href="/store/@Model.StoreSlug" class="block w-20 h-20 rounded-full bg-white border border-slate-200 overflow-hidden flex-shrink-0 flex items-center justify-center relative shadow-sm">
+                <span class="text-[28px] font-black text-slate-800 tracking-wider">
+                    @(string.IsNullOrEmpty(Model.StoreName) ? "S" : Model.StoreName.Substring(0, 1).ToUpper())
+                </span>
+            </a>
+            
+            <div class="flex flex-col gap-1 min-w-0">
+                <a href="/store/@Model.StoreSlug" class="text-[15px] font-medium text-slate-800 dark:text-white hover:text-[#ee4d2d] transition-colors truncate">
+                    @Model.StoreName
+                </a>
+                
+                <div class="text-[13px] text-[#757575] dark:text-slate-400 mb-2">
+                    Active 6 minutes ago
+                </div>
+                
+                <!-- Action buttons -->
+                <div class="flex items-center gap-2.5">
+                    <button type="button"
+                            data-chat-launch="true"
+                            data-chat-store-slug="@Model.StoreSlug"
+                            data-chat-product-slug="@Model.Slug"
+                            class="inline-flex items-center gap-1.5 px-3 py-[7px] rounded-sm bg-[#ffeee8] border border-[#ee4d2d] text-[#ee4d2d] text-[13px] hover:bg-[#ffe1d5] transition-colors">
+                        <span class="material-symbols-outlined text-[15px] text-[#ee4d2d]">chat</span>
+                        Chat Now
+                    </button>
+                    <a href="/store/@Model.StoreSlug"
+                       class="inline-flex items-center gap-1.5 px-3 py-[7px] rounded-sm border border-[#d5d5d5] bg-white text-[#555] text-[13px] hover:bg-slate-50 transition-colors shadow-sm">
+                        <span class="material-symbols-outlined text-[15px] text-[#555]">storefront</span>
+                        View Shop
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Store stats grid -->
+        @{
+            var joinedDays = (DateTime.UtcNow - Model.StoreCreatedAt).TotalDays;
+            var joinedText = joinedDays >= 365 ? $"{(int)(joinedDays / 365)} years ago" : 
+                             (joinedDays >= 30 ? $"{(int)(joinedDays / 30)} months ago" : "recently");
+        }
+        <div class="flex-1 w-full grid grid-cols-1 sm:grid-cols-3 gap-y-4 gap-x-4 text-[14px]">
+            <!-- Column 1 -->
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center gap-4">
+                    <span class="text-[#757575] dark:text-slate-400 w-[60px] sm:w-[80px]">Ratings</span>
+                    <span class="text-[#ee4d2d] font-normal">@(Model.StoreReviewCount > 999 ? (Model.StoreReviewCount / 1000m).ToString("0.#") + "k" : Model.StoreReviewCount.ToString())</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="text-[#757575] dark:text-slate-400 w-[60px] sm:w-[80px]">Products</span>
+                    <span class="text-[#ee4d2d] font-normal">@(Model.StoreProductCount > 999 ? (Model.StoreProductCount / 1000m).ToString("0.#") + "k" : Model.StoreProductCount.ToString())</span>
+                </div>
+            </div>
+            
+            <!-- Column 2 -->
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center gap-4">
+                    <span class="text-[#757575] dark:text-slate-400 w-[110px]">Response Rate</span>
+                    <span class="text-[#ee4d2d] font-normal">91%</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="text-[#757575] dark:text-slate-400 w-[110px]">Response Time</span>
+                    <span class="text-[#ee4d2d] font-normal">within hours</span>
+                </div>
+            </div>
+            
+            <!-- Column 3 -->
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center gap-4">
+                    <span class="text-[#757575] dark:text-slate-400 w-[70px]">Joined</span>
+                    <span class="text-[#ee4d2d] font-normal">@joinedText</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="text-[#757575] dark:text-slate-400 w-[70px]">Followers</span>
+                    <span class="text-[#ee4d2d] font-normal">@(Model.StoreFollowerCount > 999 ? (Model.StoreFollowerCount / 1000m).ToString("0.#") + "k" : Model.StoreFollowerCount.ToString())</span>
+                </div>
+            </div>
+        </div>
+        
     </div>
 </div>
 

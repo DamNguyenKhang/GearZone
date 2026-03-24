@@ -155,7 +155,7 @@
     </style>
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="bg-background-light text-text-body min-h-screen flex overflow-hidden">
+<body class="bg-background-light text-text-body h-screen flex overflow-hidden">
     <!-- Sidebar -->
     <aside id="sidebar" class="sidebar w-64 bg-surface-light border-r border-border-light flex flex-col shrink-0 shadow-sm z-30">
         <div class="h-16 flex items-center px-6 border-b border-border-light logo-container">
@@ -220,13 +220,37 @@
                 <span class="font-medium text-sm sidebar-text">Settings</span>
             </a>
 
-            <div class="mt-auto px-3 py-2 border-t border-border-light sidebar-text">
-                 <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors group" href="/Public/Auth/Logout">
-                    <span class="material-symbols-outlined group-hover:text-red-600">logout</span>
-                    <span class="font-medium text-sm">Log Out</span>
-                </a>
+                    </nav>
+
+        <div class="mt-auto border-t border-border-light relative" id="sidebar-profile-dropdown">
+            <button type="button" class="w-full flex items-center gap-3 p-4 hover:bg-slate-50 transition-colors focus:outline-none">
+                <div class="size-9 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-xs shadow-soft shrink-0">
+                    @(User.Identity?.Name?.Substring(0, 2).ToUpper() ?? "SO")
+                </div>
+                <div class="flex flex-col items-start min-w-0 sidebar-text">
+                    <span class="text-sm font-bold text-text-heading leading-none truncate w-full text-left">@(User.Identity?.Name ?? "Store Owner")</span>
+                    <span class="text-[10px] font-medium text-slate-400 mt-1">Store Owner</span>
+                </div>
+                <span class="material-symbols-outlined text-slate-400 ml-auto sidebar-text transition-transform duration-200" id="profile-chevron">expand_less</span>
+            </button>
+            <div class="absolute bottom-full left-0 w-full mb-1 px-3 hidden sidebar-text" id="profile-menu">
+                <div class="bg-white border flex flex-col border-border-light rounded-xl shadow-card overflow-hidden">
+                    <a href="/" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors group">
+                        <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-primary">home</span>
+                        Go to Home
+                    </a>
+                    <a href="/Public/User/Profile" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors group">
+                        <span class="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-primary">person</span>
+                        Account Settings
+                    </a>
+                    <div class="border-t border-border-light my-1"></div>
+                    <a href="/Public/Auth/Logout" class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors group">
+                        <span class="material-symbols-outlined text-[20px] group-hover:text-red-700">logout</span>
+                        Log Out
+                    </a>
+                </div>
             </div>
-        </nav>
+        </div>
     </aside>
 
     <main class="flex-1 flex flex-col h-screen overflow-hidden relative">
@@ -292,15 +316,7 @@
                     </a>
                 </div>
 
-                <div class="flex items-center gap-3 pl-4 border-l border-border-light">
-                    <div class="size-9 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-primary/20">
-                        @(User.Identity?.Name?.Substring(0, 2).ToUpper() ?? "SO")
-                    </div>
-                    <div class="hidden sm:flex flex-col">
-                        <span class="text-sm font-bold text-text-heading leading-none">@(User.Identity?.Name ?? "Store Owner")</span>
-                        <span class="text-[10px] font-medium text-slate-400 mt-0.5">Store Owner</span>
-                    </div>
-                </div>
+                
             </div>
         </header>
 
@@ -333,6 +349,30 @@
         // Handle mobile responsiveness
         if (window.innerWidth < 1024) {
             sidebar.classList.add('collapsed');
+        }
+
+        const profileDropdown = document.getElementById('sidebar-profile-dropdown');
+        const profileMenu = document.getElementById('profile-menu');
+        const profileChevron = document.getElementById('profile-chevron');
+
+        if (profileDropdown && profileMenu && profileChevron) {
+            profileDropdown.querySelector('button').addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                profileMenu.classList.toggle('hidden');
+                if (profileMenu.classList.contains('hidden')) {
+                    profileChevron.style.transform = '';
+                } else {
+                    profileChevron.style.transform = 'rotate(180deg)';
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!profileDropdown.contains(e.target)) {
+                    profileMenu.classList.add('hidden');
+                    profileChevron.style.transform = '';
+                }
+            });
         }
     </script>
     

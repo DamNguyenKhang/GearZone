@@ -1,3 +1,4 @@
+﻿using Microsoft.AspNetCore.Authorization;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Admin.Dtos;
@@ -7,6 +8,7 @@ using System.Security.Claims;
 
 namespace GearZone.Web.Pages.Admin.Wallet
 {
+    [Authorize(Roles = "Super Admin")]
     public class IndexModel : PageModel
     {
         private readonly IAdminWalletService _walletService;
@@ -18,7 +20,7 @@ namespace GearZone.Web.Pages.Admin.Wallet
 
         public WalletSummaryDto Summary { get; set; } = new();
         public PagedResult<WalletTransactionDto> Transactions { get; set; } = new();
-        public List<WalletTransactionDto> BalanceHistory { get; set; } = new();
+        public List<WalletTransactionDto> CashFlowHistory { get; set; } = new();
 
         [BindProperty(SupportsGet = true)]
         public WalletTransactionQuery Query { get; set; } = new();
@@ -30,7 +32,7 @@ namespace GearZone.Web.Pages.Admin.Wallet
         {
             Summary = await _walletService.GetWalletSummaryAsync();
             Transactions = await _walletService.GetTransactionsAsync(Query);
-            BalanceHistory = await _walletService.GetBalanceHistoryAsync(days: 30);
+            CashFlowHistory = await _walletService.GetCashFlowHistoryAsync(recentMonths: 6);
         }
 
         public async Task<IActionResult> OnPostTopupAsync()
@@ -40,7 +42,7 @@ namespace GearZone.Web.Pages.Admin.Wallet
                 // Reload page data on validation failure
                 Summary = await _walletService.GetWalletSummaryAsync();
                 Transactions = await _walletService.GetTransactionsAsync(Query);
-                BalanceHistory = await _walletService.GetBalanceHistoryAsync(days: 30);
+                CashFlowHistory = await _walletService.GetCashFlowHistoryAsync(recentMonths: 6);
                 return Page();
             }
 
@@ -48,7 +50,7 @@ namespace GearZone.Web.Pages.Admin.Wallet
 
             await _walletService.RecordTopupAsync(TopupInput, adminId);
 
-            TempData["SuccessMessage"] = $"Topup đ{TopupInput.Amount:N0} recorded successfully with status Pending.";
+            TempData["SuccessMessage"] = $"Topup đ{TopupInput.Amount:N0} recorded successfully with status Completed.";
             return RedirectToPage();
         }
     }

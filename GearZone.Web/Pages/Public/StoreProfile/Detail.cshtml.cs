@@ -19,8 +19,8 @@ namespace GearZone.Web.Pages.Public.StoreProfile
             _userManager = userManager;
         }
 
-        public StoreProfileDto Store { get; set; } = null!;
-        public PagedResult<CatalogProductDto> Products { get; set; } = null!;
+        public StoreProfileDto Store { get; set; } = new();
+        public PagedResult<CatalogProductDto> Products { get; set; } = new(new List<CatalogProductDto>(), 0, 1, 20);
         public List<CatalogCategoryDto> Categories { get; set; } = new();
 
         [BindProperty(SupportsGet = true)]
@@ -70,18 +70,28 @@ namespace GearZone.Web.Pages.Public.StoreProfile
         // AJAX: Toggle Follow
         public async Task<IActionResult> OnPostFollowAsync(string slug)
         {
-            var userId = _userManager.GetUserId(User);
-            if (string.IsNullOrEmpty(userId))
-                return new JsonResult(new { success = false, message = "Please login first" }) { StatusCode = 401 };
+            try
+            {
+                var userId = _userManager.GetUserId(User);
+                if (string.IsNullOrEmpty(userId))
+                    return new JsonResult(new { success = false, message = "Please login first" }) { StatusCode = 401 };
 
-            var store = await _catalogService.GetStoreProfileAsync(slug);
-            if (store == null)
-                return new JsonResult(new { success = false, message = "Store not found" }) { StatusCode = 404 };
+                if (string.IsNullOrWhiteSpace(slug))
+                    return new JsonResult(new { success = false, message = "Missing store slug" }) { StatusCode = 400 };
 
-            var isFollowing = await _catalogService.ToggleFollowAsync(userId, store.Id);
-            var followerCount = await _catalogService.GetFollowerCountAsync(store.Id);
+                var store = await _catalogService.GetStoreProfileAsync(slug.Trim());
+                if (store == null)
+                    return new JsonResult(new { success = false, message = $"Store not found for slug '{slug}'" }) { StatusCode = 404 };
 
-            return new JsonResult(new { success = true, isFollowing, followerCount });
+                var isFollowing = await _catalogService.ToggleFollowAsync(userId, store.Id);
+                var followerCount = await _catalogService.GetFollowerCountAsync(store.Id);
+
+                return new JsonResult(new { success = true, isFollowing, followerCount });
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { success = false, message = ex.Message }) { StatusCode = 500 };
+            }
         }
 
     }

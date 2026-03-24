@@ -2,8 +2,11 @@
 @model GearZone.Web.Pages.Public.StoreProfile.DetailModel
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
-    ViewData["Title"] = Model.Store.StoreName;
-    var totalPages = (int)Math.Ceiling((double)Model.Products.TotalCount / 20);
+    var store = Model.Store ?? new GearZone.Application.Abstractions.Services.StoreProfileDto();
+    var products = Model.Products ?? new GearZone.Application.Common.Models.PagedResult<GearZone.Application.Features.Catalog.DTOs.CatalogProductDto>(new List<GearZone.Application.Features.Catalog.DTOs.CatalogProductDto>(), 0, 1, 20);
+    var categories = Model.Categories ?? new List<GearZone.Application.Abstractions.Services.CatalogCategoryDto>();
+    ViewData["Title"] = store.StoreName;
+    var totalPages = (int)Math.Ceiling((double)products.TotalCount / 20);
     var currentSort = Model.SortBy ?? "popular";
     var requestToken = Antiforgery.GetAndStoreTokens(HttpContext).RequestToken;
 }
@@ -14,9 +17,9 @@
         <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
             <!-- Store Logo -->
             <div class="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-white/20 overflow-hidden bg-white flex-shrink-0 shadow-lg">
-                @if (!string.IsNullOrEmpty(Model.Store.LogoUrl))
+                @if (!string.IsNullOrEmpty(store.LogoUrl))
                 {
-                    <img src="@Model.Store.LogoUrl" alt="@Model.Store.StoreName" class="w-full h-full object-cover" />
+                    <img src="@store.LogoUrl" alt="@store.StoreName" class="w-full h-full object-cover" />
                 }
                 else
                 {
@@ -29,34 +32,34 @@
             <!-- Store Info -->
             <div class="flex-1">
                 <div class="flex items-center gap-3 mb-2">
-                    <h1 class="text-2xl md:text-3xl font-bold">@Model.Store.StoreName</h1>
+                    <h1 class="text-2xl md:text-3xl font-bold">@store.StoreName</h1>
                     <span class="bg-green-500/20 text-green-400 text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1">
                         <span class="w-2 h-2 bg-green-400 rounded-full"></span>
                         Verified
                     </span>
                 </div>
-                @if (!string.IsNullOrEmpty(Model.Store.Province))
+                @if (!string.IsNullOrEmpty(store.Province))
                 {
                     <p class="text-gray-300 text-sm flex items-center gap-1 mb-3">
                         <span class="material-symbols-outlined text-[16px]">location_on</span>
-                        @Model.Store.Province
+                        @store.Province
                     </p>
                 }
-                @if (!string.IsNullOrEmpty(Model.Store.Description))
+                @if (!string.IsNullOrEmpty(store.Description))
                 {
-                    <p class="text-gray-400 text-sm max-w-2xl line-clamp-2">@Model.Store.Description</p>
+                    <p class="text-gray-400 text-sm max-w-2xl line-clamp-2">@store.Description</p>
                 }
             </div>
 
             <!-- Store Actions -->
             <div class="flex items-center gap-3 flex-shrink-0">
                 <button id="followBtn" onclick="toggleFollow()"
-                        class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm @(Model.Store.IsFollowing ? "bg-white/10 border border-white/20 text-white hover:bg-red-500/20 hover:border-red-400 hover:text-red-300" : "bg-secondary hover:bg-orange-600 text-white")">
-                    <span class="material-symbols-outlined text-[18px]" id="followIcon" style="font-variation-settings: 'FILL' @(Model.Store.IsFollowing ? "1" : "0")">@(Model.Store.IsFollowing ? "favorite" : "add")</span>
-                    <span id="followText">@(Model.Store.IsFollowing ? "Following" : "Follow")</span>
-                    <span id="followerCount" class="bg-white/10 px-2 py-0.5 rounded-full text-xs">@Model.Store.FollowerCount</span>
+                        class="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm @(store.IsFollowing ? "bg-white/10 border border-white/20 text-white hover:bg-red-500/20 hover:border-red-400 hover:text-red-300" : "bg-secondary hover:bg-orange-600 text-white")">
+                    <span class="material-symbols-outlined text-[18px]" id="followIcon" style="font-variation-settings: 'FILL' @(store.IsFollowing ? "1" : "0")">@(store.IsFollowing ? "favorite" : "add")</span>
+                    <span id="followText">@(store.IsFollowing ? "Following" : "Follow")</span>
+                    <span id="followerCount" class="bg-white/10 px-2 py-0.5 rounded-full text-xs">@store.FollowerCount</span>
                 </button>
-                <a href="/Public/User/Profile?tab=messages&storeSlug=@Model.Store.Slug"
+                <a href="/Public/User/Profile?tab=messages&storeSlug=@store.Slug"
                    class="flex items-center gap-2 px-5 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-semibold transition-colors border border-white/20">
                     <span class="material-symbols-outlined text-[18px]">chat</span>
                     Chat
@@ -67,22 +70,22 @@
         <!-- Store Stats -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-white/10">
             <div class="text-center md:text-left">
-                <p class="text-2xl font-bold text-white">@Model.Store.ProductCount</p>
+                <p class="text-2xl font-bold text-white">@store.ProductCount</p>
                 <p class="text-xs text-gray-400 uppercase tracking-wider mt-1">Products</p>
             </div>
             <div class="text-center md:text-left">
-                <p class="text-2xl font-bold text-white">@Model.Store.TotalSold.ToString("N0")</p>
+                <p class="text-2xl font-bold text-white">@store.TotalSold.ToString("N0")</p>
                 <p class="text-xs text-gray-400 uppercase tracking-wider mt-1">Total Sold</p>
             </div>
             <div class="text-center md:text-left">
-                @if (Model.Store.ReviewCount > 0)
+                @if (store.ReviewCount > 0)
                 {
                     <div class="flex items-center justify-center md:justify-start gap-1">
                         <span class="material-symbols-outlined text-amber-400 text-xl" style="font-variation-settings: 'FILL' 1">star</span>
-                        <p class="text-2xl font-bold text-white">@Model.Store.Rating.ToString("0.0")</p>
+                        <p class="text-2xl font-bold text-white">@store.Rating.ToString("0.0")</p>
                         <span class="text-gray-400 text-sm">/5</span>
                     </div>
-                    <p class="text-xs text-gray-400 uppercase tracking-wider mt-1">@Model.Store.ReviewCount.ToString("N0") Reviews</p>
+                    <p class="text-xs text-gray-400 uppercase tracking-wider mt-1">@store.ReviewCount.ToString("N0") Reviews</p>
                 }
                 else
                 {
@@ -95,7 +98,7 @@
             </div>
             <div class="text-center md:text-left">
                 @{
-                    var storeAge = DateTime.Now - Model.Store.CreatedAt;
+                    var storeAge = DateTime.Now - store.CreatedAt;
                     var storeAgeText = storeAge.TotalDays >= 365
                         ? $"{(int)(storeAge.TotalDays / 365)} year(s)"
                         : storeAge.TotalDays >= 30
@@ -113,32 +116,32 @@
 <section class="bg-white border-b border-gray-200 sticky top-[80px] z-30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center gap-1 h-12 overflow-x-auto hide-scrollbar">
-            <a href="/store/@Model.Store.Slug?SortBy=popular&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+            <a href="/store/@store.Slug?SortBy=popular&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
                class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors @(currentSort == "popular" ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100")">
                 <span class="material-symbols-outlined text-[16px] align-middle mr-1">trending_up</span>
                 Popular
             </a>
-            <a href="/store/@Model.Store.Slug?SortBy=newest&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+            <a href="/store/@store.Slug?SortBy=newest&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
                class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors @(currentSort == "newest" ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100")">
                 <span class="material-symbols-outlined text-[16px] align-middle mr-1">schedule</span>
                 Newest
             </a>
-            <a href="/store/@Model.Store.Slug?SortBy=best_selling&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+            <a href="/store/@store.Slug?SortBy=best_selling&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
                class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors @(currentSort == "best_selling" ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100")">
                 <span class="material-symbols-outlined text-[16px] align-middle mr-1">local_fire_department</span>
                 Best Selling
             </a>
             <div class="h-6 w-px bg-gray-200 mx-2"></div>
-            <a href="/store/@Model.Store.Slug?SortBy=price_asc&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+            <a href="/store/@store.Slug?SortBy=price_asc&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
                class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors @(currentSort == "price_asc" ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100")">
                 Price ↑
             </a>
-            <a href="/store/@Model.Store.Slug?SortBy=price_desc&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+            <a href="/store/@store.Slug?SortBy=price_desc&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
                class="px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors @(currentSort == "price_desc" ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100")">
                 Price ↓
             </a>
             <div class="ml-auto text-sm text-gray-500 whitespace-nowrap">
-                <span class="font-semibold text-gray-700">@Model.Products.TotalCount</span> products found
+                <span class="font-semibold text-gray-700">@products.TotalCount</span> products found
             </div>
         </div>
     </div>
@@ -157,15 +160,15 @@
                     </h3>
                     <ul class="space-y-1">
                         <li>
-                            <a href="/store/@Model.Store.Slug?SortBy=@currentSort&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+                            <a href="/store/@store.Slug?SortBy=@currentSort&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
                                class="block px-3 py-2 text-sm rounded-lg transition-colors @(string.IsNullOrEmpty(Model.CategorySlug) ? "bg-primary/10 text-primary font-semibold" : "text-gray-600 hover:bg-gray-50")">
                                 All Products
                             </a>
                         </li>
-                        @foreach (var cat in Model.Categories)
+                        @foreach (var cat in categories)
                         {
                             <li>
-                                <a href="/store/@Model.Store.Slug?SortBy=@currentSort&CategorySlug=@cat.Slug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+                                <a href="/store/@store.Slug?SortBy=@currentSort&CategorySlug=@cat.Slug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
                                    class="block px-3 py-2 text-sm rounded-lg transition-colors @(Model.CategorySlug == cat.Slug ? "bg-primary/10 text-primary font-semibold" : "text-gray-600 hover:bg-gray-50")">
                                     @cat.Name
                                 </a>
@@ -175,7 +178,7 @@
                                         @foreach (var sub in cat.SubCategories)
                                         {
                                             <li>
-                                                <a href="/store/@Model.Store.Slug?SortBy=@currentSort&CategorySlug=@sub.Slug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+                                                <a href="/store/@store.Slug?SortBy=@currentSort&CategorySlug=@sub.Slug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
                                                    class="block px-3 py-1.5 text-xs rounded-lg transition-colors @(Model.CategorySlug == sub.Slug ? "bg-primary/10 text-primary font-semibold" : "text-gray-500 hover:bg-gray-50")">
                                                     @sub.Name
                                                 </a>
@@ -193,7 +196,7 @@
                         <span class="material-symbols-outlined text-[18px] text-primary">payments</span>
                         Price Range
                     </h3>
-                    <form method="get" action="/store/@Model.Store.Slug">
+                    <form method="get" action="/store/@store.Slug">
                         <input type="hidden" name="SortBy" value="@currentSort" />
                         <input type="hidden" name="CategorySlug" value="@Model.CategorySlug" />
                         <div class="flex items-center gap-2 mb-3">
@@ -212,7 +215,7 @@
 
                 @if (Model.CategorySlug != null || Model.MinPrice != null || Model.MaxPrice != null)
                 {
-                    <a href="/store/@Model.Store.Slug" class="flex items-center justify-center gap-2 text-sm text-red-500 hover:text-red-600 font-medium py-2">
+                    <a href="/store/@store.Slug" class="flex items-center justify-center gap-2 text-sm text-red-500 hover:text-red-600 font-medium py-2">
                         <span class="material-symbols-outlined text-[16px]">filter_alt_off</span>
                         Clear All Filters
                     </a>
@@ -222,10 +225,10 @@
 
         <!-- Product Grid -->
         <div class="flex-1 min-w-0">
-            @if (Model.Products.Items.Any())
+            @if (products.Items.Any())
             {
                 <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
-                    @foreach (var product in Model.Products.Items)
+                    @foreach (var product in products.Items)
                     {
                         <partial name="_ProductCard" model="product" />
                     }
@@ -236,7 +239,7 @@
                     <nav class="flex items-center justify-center gap-2 mt-8">
                         @if (Model.PageNumber > 1)
                         {
-                            <a href="/store/@Model.Store.Slug?PageNumber=@(Model.PageNumber - 1)&SortBy=@currentSort&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+                            <a href="/store/@store.Slug?PageNumber=@(Model.PageNumber - 1)&SortBy=@currentSort&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
                                class="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors">
                                 <span class="material-symbols-outlined text-[20px]">chevron_left</span>
                             </a>
@@ -246,7 +249,7 @@
                             var isCurrentPage = i == Model.PageNumber;
                             if (i <= 3 || i >= totalPages - 1 || Math.Abs(i - Model.PageNumber) <= 1)
                             {
-                                <a href="/store/@Model.Store.Slug?PageNumber=@i&SortBy=@currentSort&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+                                <a href="/store/@store.Slug?PageNumber=@i&SortBy=@currentSort&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
                                    class="flex items-center justify-center w-10 h-10 rounded-lg text-sm font-medium transition-colors @(isCurrentPage ? "bg-primary text-white shadow-sm" : "border border-gray-300 text-gray-600 hover:bg-gray-100")">
                                     @i
                                 </a>
@@ -258,7 +261,7 @@
                         }
                         @if (Model.PageNumber < totalPages)
                         {
-                            <a href="/store/@Model.Store.Slug?PageNumber=@(Model.PageNumber + 1)&SortBy=@currentSort&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
+                            <a href="/store/@store.Slug?PageNumber=@(Model.PageNumber + 1)&SortBy=@currentSort&CategorySlug=@Model.CategorySlug&MinPrice=@Model.MinPrice&MaxPrice=@Model.MaxPrice"
                                class="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-100 transition-colors">
                                 <span class="material-symbols-outlined text-[20px]">chevron_right</span>
                             </a>
@@ -274,7 +277,7 @@
                     </div>
                     <h3 class="text-lg font-semibold text-gray-700 mb-2">No Products Found</h3>
                     <p class="text-sm text-gray-500 mb-4">This store hasn't listed any products matching your filters yet.</p>
-                    <a href="/store/@Model.Store.Slug" class="text-primary hover:text-primary/80 text-sm font-medium flex items-center gap-1">
+                    <a href="/store/@store.Slug" class="text-primary hover:text-primary/80 text-sm font-medium flex items-center gap-1">
                         <span class="material-symbols-outlined text-[16px]">arrow_back</span>
                         View all products
                     </a>
@@ -286,16 +289,16 @@
 
 @section Scripts {
 <script>
-    const storeSlug = '@Model.Store.Slug';
+    const storeSlug = '@store.Slug';
     const antiforgeryToken = '@requestToken';
-    let isFollowing = @(Model.Store.IsFollowing ? "true" : "false");
+    let isFollowing = @(store.IsFollowing ? "true" : "false");
 
     // ===== FOLLOW =====
     async function toggleFollow() {
         const btn = document.getElementById('followBtn');
         btn.disabled = true;
         try {
-            const res = await fetch(`/store/${storeSlug}?handler=Follow`, {
+            const res = await fetch(`/store/${encodeURIComponent(storeSlug)}?handler=Follow`, {
                 method: 'POST',
                 headers: {
                     'RequestVerificationToken': antiforgeryToken,
@@ -310,8 +313,14 @@
             if (data.success) {
                 isFollowing = data.isFollowing;
                 updateFollowButton(data.isFollowing, data.followerCount);
+            } else {
+                console.error('Follow failed:', data.message || data);
+                alert(data.message || 'Follow action failed');
             }
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error('Follow request failed:', e);
+            alert('Cannot complete follow action. Check console for details.');
+        }
         finally { btn.disabled = false; }
     }
 

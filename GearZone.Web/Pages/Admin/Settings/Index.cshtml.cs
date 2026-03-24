@@ -1,3 +1,4 @@
+﻿using Microsoft.AspNetCore.Authorization;
 using GearZone.Application.Features.Admin;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Domain.Enums;
@@ -6,7 +7,8 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace GearZone.Web.Pages.Admin.Settings;
 
-public class IndexModel : PageModel
+[Authorize(Roles = "Super Admin")]
+    public class IndexModel : PageModel
 {
     private readonly ISystemSettingService _settingService;
 

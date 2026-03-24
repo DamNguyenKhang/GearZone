@@ -1,3 +1,4 @@
+﻿using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,7 @@ using GearZone.Domain.Enums;
 
 namespace GearZone.Web.Pages.Admin.Products
 {
+    [Authorize(Roles = "Super Admin")]
     public class IndexModel : PageModel
     {
         private readonly IAdminProductService _productService;

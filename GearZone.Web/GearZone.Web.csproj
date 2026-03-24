@@ -4,7 +4,15 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>195a3d30-b091-4d3e-9b16-5706b58e66e6</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Pages\Admin\Businesses\**" />
+    <Content Remove="Pages\Admin\Businesses\**" />
+    <EmbeddedResource Remove="Pages\Admin\Businesses\**" />
+    <None Remove="Pages\Admin\Businesses\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\GearZone.Application\GearZone.Application.csproj" />
@@ -13,9 +21,7 @@
 
   <ItemGroup>
     <Folder Include="Middlewares\" />
-    <Folder Include="Pages\Admin\Businesses\" />
-    <Folder Include="Pages\Admin\Users\" />
-    <Folder Include="Pages\Admin\Stores\" />
+    <Folder Include="Pages\Admin\Users\Models\" />
     <Folder Include="Pages\Cart\Models\" />
     <Folder Include="Pages\Checkout\" />
     <Folder Include="Pages\Public\Auth\Models\" />
@@ -32,6 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.3" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2">

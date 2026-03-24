@@ -21,6 +21,9 @@ namespace GearZone.Infrastructure.Configurations
             builder.HasIndex(x => x.Slug).IsUnique();
             builder.HasIndex(x => x.ParentId);
             builder.HasIndex(x => x.IsActive);
+            builder.HasIndex(x => x.IsDeleted);
+
+            builder.HasQueryFilter(x => !x.IsDeleted);
 
             builder.HasOne(x => x.Parent)
                    .WithMany(x => x.Children)

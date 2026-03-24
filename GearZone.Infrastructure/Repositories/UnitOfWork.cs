@@ -11,6 +11,7 @@ namespace GearZone.Infrastructure.Repositories
         {
             _dbContext = dbContext;
         }
+
         public Task<int> SaveChangesAsync(CancellationToken ct = default)
         => _dbContext.SaveChangesAsync(ct);
     }

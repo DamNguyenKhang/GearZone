@@ -28,6 +28,58 @@
 
     int GetReviewCountForRating(int rating) =>
         reviewSummary.Breakdown.FirstOrDefault(x => x.Rating == rating)?.Count ?? 0;
+
+    List<int?> BuildPaginationItems()
+    {
+        var items = new List<int?>();
+        var totalPages = Model.ProductReviews.TotalPages;
+        var currentPage = Model.ProductReviews.PageNumber;
+
+        if (totalPages <= 7)
+        {
+            for (var page = 1; page <= totalPages; page++)
+            {
+                items.Add(page);
+            }
+
+            return items;
+        }
+
+        items.Add(1);
+
+        var windowStart = Math.Max(2, currentPage - 1);
+        var windowEnd = Math.Min(totalPages - 1, currentPage + 1);
+
+        if (currentPage <= 4)
+        {
+            windowStart = 2;
+            windowEnd = 5;
+        }
+        else if (currentPage >= totalPages - 3)
+        {
+            windowStart = totalPages - 4;
+            windowEnd = totalPages - 1;
+        }
+
+        if (windowStart > 2)
+        {
+            items.Add(null);
+        }
+
+        for (var page = windowStart; page <= windowEnd; page++)
+        {
+            items.Add(page);
+        }
+
+        if (windowEnd < totalPages - 1)
+        {
+            items.Add(null);
+        }
+
+        items.Add(totalPages);
+
+        return items;
+    }
 }
 
 <section id="product-review-panel"
@@ -211,14 +263,57 @@
 
             @if (Model.ProductReviews.TotalPages > 1)
             {
-                <div class="flex items-center justify-center gap-2 border-t border-[#f5f5f5] py-5">
-                    @for (var pageNumber = 1; pageNumber <= Model.ProductReviews.TotalPages; pageNumber++)
+                var paginationItems = BuildPaginationItems();
+                var currentPage = Model.ProductReviews.PageNumber;
+                var totalPages = Model.ProductReviews.TotalPages;
+
+                <div class="flex flex-wrap items-center justify-center gap-2 border-t border-[#f5f5f5] py-5">
+                    @if (currentPage > 1)
                     {
-                        <a href="@BuildReviewUrl(Model.ReviewRating, Model.WithCommentOnly, pageNumber)"
+                        <a href="@BuildReviewUrl(Model.ReviewRating, Model.WithCommentOnly, currentPage - 1)"
                            data-review-link
-                           class="review-page-link @(pageNumber == Model.ProductReviews.PageNumber ? "is-active" : string.Empty)">
-                            @pageNumber
+                           aria-label="Previous review page"
+                           class="review-page-link review-page-nav">
+                            <span aria-hidden="true">&lsaquo;</span>
                         </a>
+                    }
+                    else
+                    {
+                        <span aria-disabled="true" class="review-page-link review-page-nav is-disabled">
+                            <span aria-hidden="true">&lsaquo;</span>
+                        </span>
+                    }
+
+                    @foreach (var pageNumber in paginationItems)
+                    {
+                        if (pageNumber.HasValue)
+                        {
+                            <a href="@BuildReviewUrl(Model.ReviewRating, Model.WithCommentOnly, pageNumber.Value)"
+                               data-review-link
+                               class="review-page-link @(pageNumber.Value == currentPage ? "is-active" : string.Empty)">
+                                @pageNumber.Value
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="review-page-ellipsis" aria-hidden="true">...</span>
+                        }
+                    }
+
+                    @if (currentPage < totalPages)
+                    {
+                        <a href="@BuildReviewUrl(Model.ReviewRating, Model.WithCommentOnly, currentPage + 1)"
+                           data-review-link
+                           aria-label="Next review page"
+                           class="review-page-link review-page-nav">
+                            <span aria-hidden="true">&rsaquo;</span>
+                        </a>
+                    }
+                    else
+                    {
+                        <span aria-disabled="true" class="review-page-link review-page-nav is-disabled">
+                            <span aria-hidden="true">&rsaquo;</span>
+                        </span>
                     }
                 </div>
             }

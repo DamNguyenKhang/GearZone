@@ -4,6 +4,7 @@ using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Chat.Dtos;
 using GearZone.Domain.Entities;
 using GearZone.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace GearZone.Application.Features.Chat
 {
@@ -603,7 +604,15 @@ namespace GearZone.Application.Features.Chat
                 return false;
             }
 
-            var subOrder = await _subOrderRepository.GetSellerChatSubOrderAsync(ownerUserId, subOrderId);
+            var subOrder = await _subOrderRepository.Query()
+                .Include(x => x.Order)
+                .ThenInclude(x => x.Payments)
+                .Include(x => x.Order.User)
+                .Include(x => x.Store)
+                .Include(x => x.Items)
+                    .ThenInclude(x => x.Variant)
+                        .ThenInclude(x => x.Product)
+                .FirstOrDefaultAsync(x => x.Id == subOrderId && x.Store.OwnerUserId == ownerUserId);
             if (subOrder == null)
             {
                 return false;
@@ -630,6 +639,7 @@ namespace GearZone.Application.Features.Chat
             if (targetStatus == OrderStatus.Delivered)
             {
                 subOrder.DeliveredAt = DateTime.UtcNow;
+                ApplyDeliveredSoldCount(subOrder);
             }
 
             await _subOrderRepository.UpdateAsync(subOrder);
@@ -646,6 +656,33 @@ namespace GearZone.Application.Features.Chat
 
             await _unitOfWork.SaveChangesAsync();
             return true;
+        }
+
+        private static void ApplyDeliveredSoldCount(SubOrder subOrder)
+        {
+            if (subOrder.Order?.Payments.Any(p => p.Status == PaymentStatus.Paid) == true)
+            {
+                return;
+            }
+
+            var soldByProduct = subOrder.Items
+                .Where(x => x.Variant?.Product != null)
+                .GroupBy(x => x.Variant.ProductId)
+                .Select(group => new
+                {
+                    Product = group.First().Variant.Product,
+                    Quantity = group.Sum(item => item.Quantity)
+                });
+
+            foreach (var item in soldByProduct)
+            {
+                if (item.Product.IsDeleted)
+                {
+                    continue;
+                }
+
+                item.Product.SoldCount += item.Quantity;
+            }
         }
     }
 }

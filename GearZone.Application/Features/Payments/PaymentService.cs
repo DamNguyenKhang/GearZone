@@ -44,6 +44,9 @@ namespace GearZone.Application.Features.Payment
                 var order = await _orderRepository.Query()
                     .Include(o => o.Payments)
                     .Include(o => o.SubOrders)
+                        .ThenInclude(so => so.Items)
+                            .ThenInclude(oi => oi.Variant)
+                                .ThenInclude(v => v.Product)
                     .Include(o => o.StatusHistories)
                     .FirstOrDefaultAsync(o => o.OrderCode == orderCode, ct);
 
@@ -82,6 +85,8 @@ namespace GearZone.Application.Features.Payment
                         subOrder.UpdatedAt = DateTime.UtcNow;
                     }
 
+                    ApplyPaidSoldCount(order);
+
                     order.StatusHistories.Add(new OrderStatusHistory
                     {
                         NewStatus = OrderStatus.Paid,
@@ -100,6 +105,29 @@ namespace GearZone.Application.Features.Payment
             {
                 _logger.LogError(ex, "Error verifying payment for order {OrderCode}", orderCode);
                 return PaymentVerificationResult.Fail("An error occurred while verifying payment.");
+            }
+        }
+
+        private static void ApplyPaidSoldCount(Order order)
+        {
+            var soldByProduct = order.SubOrders
+                .SelectMany(so => so.Items)
+                .Where(oi => oi.Variant?.Product != null)
+                .GroupBy(oi => oi.Variant.ProductId)
+                .Select(group => new
+                {
+                    Product = group.First().Variant.Product,
+                    Quantity = group.Sum(item => item.Quantity)
+                });
+
+            foreach (var item in soldByProduct)
+            {
+                if (item.Product.IsDeleted)
+                {
+                    continue;
+                }
+
+                item.Product.SoldCount += item.Quantity;
             }
         }
     }

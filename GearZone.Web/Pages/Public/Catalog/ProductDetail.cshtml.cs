@@ -113,6 +113,10 @@ namespace GearZone.Web.Pages.Public.Catalog
                 WithCommentOnly = WithCommentOnly
             };
 
+            ViewData["ProductReviews"] = ProductReviews;
+            ViewData["ReviewRating"] = ReviewRating;
+            ViewData["WithCommentOnly"] = WithCommentOnly;
+
             if (includeRelatedProducts)
             {
                 RelatedProducts = await _catalogService.GetRelatedProductsAsync(Product.CategoryId, Product.Id, 4);

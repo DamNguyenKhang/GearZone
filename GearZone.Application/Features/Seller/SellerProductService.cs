@@ -370,26 +370,77 @@ namespace GearZone.Application.Features.Seller
             if (dto.NewImages != null && dto.NewImages.Any())
             {
                 var maxTotalImages = 5;
-                var currentImageCount = product.Images.Count;
-                var slotsLeft = Math.Max(0, maxTotalImages - currentImageCount);
-                if (slotsLeft > 0)
+                var additionalCapacity = Math.Max(0, maxTotalImages - (product.Images.Any() ? product.Images.Count : 1));
+                var imagesToUpload = dto.NewImages
+                    .Take(1 + additionalCapacity)
+                    .ToList();
+
+                if (imagesToUpload.Any())
                 {
-                    var imagesToUpload = dto.NewImages.Take(slotsLeft).ToList();
                     var imageUrls = await _fileStorageService.UploadAsync(imagesToUpload);
-                    int sortOrder = currentImageCount;
 
-                    foreach (var imageUrl in imageUrls)
+                    var orderedImages = product.Images
+                        .OrderByDescending(i => i.IsPrimary)
+                        .ThenBy(i => i.SortOrder)
+                        .ToList();
+
+                    var primaryImage = orderedImages.FirstOrDefault();
+                    var newPrimaryUrl = imageUrls.FirstOrDefault();
+
+                    if (!string.IsNullOrWhiteSpace(newPrimaryUrl))
                     {
-                        if (sortOrder >= maxTotalImages) break;
+                        if (primaryImage == null)
+                        {
+                            primaryImage = new ProductImage
+                            {
+                                Id = Guid.NewGuid(),
+                                ProductId = product.Id,
+                                ImageUrl = newPrimaryUrl,
+                                IsPrimary = true,
+                                SortOrder = 0
+                            };
 
-                        await _productImageRepository.AddAsync(new ProductImage
+                            await _productImageRepository.AddAsync(primaryImage);
+                            product.Images.Add(primaryImage);
+                        }
+                        else
+                        {
+                            primaryImage.ImageUrl = newPrimaryUrl;
+                            primaryImage.IsPrimary = true;
+                            primaryImage.SortOrder = 0;
+                        }
+                    }
+
+                    var secondaryImages = product.Images
+                        .Where(image => primaryImage == null || image.Id != primaryImage.Id)
+                        .OrderBy(image => image.SortOrder)
+                        .ToList();
+
+                    var nextSortOrder = 1;
+                    foreach (var image in secondaryImages)
+                    {
+                        image.IsPrimary = false;
+                        image.SortOrder = nextSortOrder++;
+                    }
+
+                    foreach (var imageUrl in imageUrls.Skip(1))
+                    {
+                        if (product.Images.Count >= maxTotalImages)
+                        {
+                            break;
+                        }
+
+                        var newImage = new ProductImage
                         {
                             Id = Guid.NewGuid(),
                             ProductId = product.Id,
                             ImageUrl = imageUrl,
-                            IsPrimary = sortOrder == 0,
-                            SortOrder = sortOrder++
-                        });
+                            IsPrimary = false,
+                            SortOrder = nextSortOrder++
+                        };
+
+                        await _productImageRepository.AddAsync(newImage);
+                        product.Images.Add(newImage);
                     }
                 }
             }

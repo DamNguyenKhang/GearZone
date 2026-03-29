@@ -86,6 +86,54 @@ namespace GearZone.Infrastructure.Repositories
                     Rating = p.Reviews.Where(r => !r.IsDeleted).Select(r => (decimal?)r.Rating).Average() ?? 0,
                     ReviewCount = p.Reviews.Count(r => !r.IsDeleted),
                     StoreName = p.Store.StoreName,
+                    StoreSlug = p.Store.Slug,
+                    StoreLogoUrl = p.Store.LogoUrl ?? string.Empty,
+                    IsInStock = p.Variants.Where(v => v.IsActive && !v.IsDeleted).Any(v => v.StockQuantity > 0),
+                    DefaultVariantId = p.Variants
+                        .Where(v => v.IsActive && !v.IsDeleted)
+                        .Select(v => v.Id)
+                        .FirstOrDefault(),
+                    HighlightTags = p.Variants
+                        .Where(v => v.IsActive && !v.IsDeleted)
+                        .SelectMany(v => v.AttributeValues)
+                        .Select(av => av.CategoryAttributeOption.Value)
+                        .Distinct()
+                        .Take(3)
+                        .ToList()
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<CatalogProductDto>> GetLatestHomeProductsAsync(int take)
+        {
+            if (take <= 0)
+            {
+                return new List<CatalogProductDto>();
+            }
+
+            return await _context.Products
+                .AsNoTracking()
+                .Where(p => !p.IsDeleted && p.Status == ProductStatus.Active)
+                .OrderByDescending(p => p.UpdatedAt ?? p.CreatedAt)
+                .ThenByDescending(p => p.CreatedAt)
+                .ThenByDescending(p => p.Id)
+                .Take(take)
+                .Select(p => new CatalogProductDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    Slug = p.Slug,
+                    CategoryId = p.CategoryId,
+                    BrandName = p.Brand.Name,
+                    BasePrice = p.BasePrice,
+                    ImageUrl = p.Images
+                        .Where(i => i.IsPrimary)
+                        .Select(i => i.ImageUrl)
+                        .FirstOrDefault() ?? p.Images.Select(i => i.ImageUrl).FirstOrDefault() ?? string.Empty,
+                    Rating = p.Reviews.Where(r => !r.IsDeleted).Select(r => (decimal?)r.Rating).Average() ?? 0,
+                    ReviewCount = p.Reviews.Count(r => !r.IsDeleted),
+                    StoreName = p.Store.StoreName,
+                    StoreSlug = p.Store.Slug,
                     StoreLogoUrl = p.Store.LogoUrl ?? string.Empty,
                     IsInStock = p.Variants.Where(v => v.IsActive && !v.IsDeleted).Any(v => v.StockQuantity > 0),
                     DefaultVariantId = p.Variants
@@ -202,6 +250,7 @@ namespace GearZone.Infrastructure.Repositories
                     Rating = p.Reviews.Where(r => !r.IsDeleted).Select(r => (decimal?)r.Rating).Average() ?? 0,
                     ReviewCount = p.Reviews.Count(r => !r.IsDeleted),
                     StoreName = p.Store.StoreName,
+                    StoreSlug = p.Store.Slug,
                     StoreLogoUrl = p.Store.LogoUrl,
                     IsInStock = p.Variants.Any(v => v.StockQuantity > 0),
                     DefaultVariantId = p.Variants

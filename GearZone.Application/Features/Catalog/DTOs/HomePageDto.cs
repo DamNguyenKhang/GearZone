@@ -7,6 +7,7 @@ namespace GearZone.Application.Features.Catalog.DTOs
     {
         public HomeHeroDto Hero { get; set; } = new();
         public HomePromoCardDto PromoCard { get; set; } = new();
+        public List<CatalogProductDto> HeroProducts { get; set; } = new();
         public List<HomeQuickActionDto> QuickActions { get; set; } = new();
         public List<HomeCategoryTileDto> Categories { get; set; } = new();
         public HomeProductRailDto FlashRail { get; set; } = new();

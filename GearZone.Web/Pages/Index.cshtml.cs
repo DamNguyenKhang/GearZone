@@ -32,6 +32,39 @@ namespace GearZone.Web.Pages
 
         private static IReadOnlyList<HomeHeroSlideViewModel> BuildHeroSlides(HomePageDto homePage)
         {
+            var heroProducts = homePage.HeroProducts
+                .Where(product => !string.IsNullOrWhiteSpace(product.ImageUrl))
+                .Take(5)
+                .ToList();
+
+            if (heroProducts.Any())
+            {
+                return heroProducts
+                    .Select((product, index) => new HomeHeroSlideViewModel
+                    {
+                        Key = $"hero-product-{index + 1}",
+                        Eyebrow = string.IsNullOrWhiteSpace(product.BrandName) ? "Fresh listing" : $"{product.BrandName} update",
+                        Title = product.Name,
+                        Description = $"{product.StoreName} just refreshed this listing, so the homepage now shows the latest product data and primary image without waiting for a hardcoded homepage refresh.",
+                        PrimaryLabel = "View product",
+                        PrimaryHref = $"/product/{product.Slug}",
+                        SecondaryLabel = string.IsNullOrWhiteSpace(product.StoreSlug) ? "Browse catalog" : "Visit store",
+                        SecondaryHref = string.IsNullOrWhiteSpace(product.StoreSlug) ? "/products" : $"/store/{product.StoreSlug}",
+                        ImageUrl = product.ImageUrl,
+                        ImageAlt = product.Name,
+                        Tags = CompactTags(
+                            product.BrandName,
+                            product.StoreName,
+                            product.HighlightTags.FirstOrDefault() ?? (product.IsInStock ? "In stock" : "Out of stock"))
+                    })
+                    .ToList();
+            }
+
+            return BuildFallbackHeroSlides(homePage);
+        }
+
+        private static IReadOnlyList<HomeHeroSlideViewModel> BuildFallbackHeroSlides(HomePageDto homePage)
+        {
             var featuredStore = homePage.Stores.FirstOrDefault();
             var recommendedProduct = homePage.RecommendedRail.Products.FirstOrDefault();
             var flashProduct = homePage.FlashRail.Products.FirstOrDefault();
@@ -65,7 +98,7 @@ namespace GearZone.Web.Pages
                     Title = "Build the dream desk in one scroll.",
                     Description = "A tighter hero, direct product routes, and a cleaner marketplace rhythm without oversized promo blocks.",
                     PrimaryLabel = flashProduct != null ? "Shop flagship deal" : "Shop all gear",
-                    PrimaryHref = flashProduct != null ? $"/product/{flashProduct.Slug}" : ResolveHref(homePage.Hero.PrimaryHref, "/products"),
+                    PrimaryHref = flashProduct != null ? $"/product/{flashProduct.Slug}" : "/products",
                     SecondaryLabel = "Browse components",
                     SecondaryHref = ResolveHref(componentsHref, "/products"),
                     ImageUrl = "/images/home-hero/hero-01.svg",

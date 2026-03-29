@@ -15,6 +15,7 @@ namespace GearZone.Application.Abstractions.Persistence
         Task<Product?> GetAdminProductDetailAsync(Guid id);
         Task<ChatProductContextDto?> GetChatProductContextBySlugAsync(string slug);
         Task<List<CatalogProductDto>> GetCatalogProductsBySlugsAsync(IReadOnlyCollection<string> slugs);
+        Task<List<CatalogProductDto>> GetLatestHomeProductsAsync(int take);
         Task<PagedResult<CatalogProductDto>> GetFilteredProductsAsync(ProductFilterDto filter);
         Task<List<ProductSuggestionDto>> GetProductSuggestionsAsync(string query, int limit = 5);
     }

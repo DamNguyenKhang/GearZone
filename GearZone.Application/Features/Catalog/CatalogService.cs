@@ -40,27 +40,6 @@ namespace GearZone.Application.Features.Catalog
             "gearzone-official"
         };
 
-        private static readonly string[] FlashDealSlugs =
-        {
-            "asus-dual-rtx-4060-ti",
-            "amd-ryzen-7-7800x3d",
-            "akko-asa-pbt-keycaps",
-            "lg-27gp850-b",
-            "samsung-980-pro-nvme-1tb"
-        };
-
-        private static readonly string[] RecommendedSlugs =
-        {
-            "logitech-gpro-x-superlight2",
-            "keychron-q2-pro-65",
-            "corsair-virtuoso-rgb-xt",
-            "corsair-vengeance-ddr5-5600",
-            "msi-pro-b650m-a-wifi"
-        };
-
-        private const string HeroProductSlug = "asus-rog-swift-oled-pg27aqdm";
-        private const string PromoProductSlug = "corsair-4000d-airflow";
-
         public CatalogService(
             IProductRepository productRepository, 
             ICategoryRepository categoryRepository,
@@ -83,64 +62,84 @@ namespace GearZone.Application.Features.Catalog
 
         public async Task<HomePageDto> GetHomePageAsync(string? currentUserId)
         {
-            var curatedProductSlugs = new[]
-            {
-                HeroProductSlug,
-                PromoProductSlug
-            }
-            .Concat(FlashDealSlugs)
-            .Concat(RecommendedSlugs)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-            var curatedProducts = await _productRepository.GetCatalogProductsBySlugsAsync(curatedProductSlugs);
-            var productsBySlug = curatedProducts.ToDictionary(p => p.Slug, StringComparer.OrdinalIgnoreCase);
-
+            var latestProducts = await _productRepository.GetLatestHomeProductsAsync(24);
             var categories = await _categoryRepository.GetHomeCategoriesBySlugsAsync(HomeCategorySlugs);
             var stores = await _storeRepository.GetHomeStoresBySlugsAsync(HomeStoreSlugs);
-
-            productsBySlug.TryGetValue(HeroProductSlug, out var heroProduct);
-            productsBySlug.TryGetValue(PromoProductSlug, out var promoProduct);
             var featuredStore = stores.FirstOrDefault();
+            var heroProducts = latestProducts
+                .Where(product => !string.IsNullOrWhiteSpace(product.ImageUrl))
+                .Take(5)
+                .ToList();
+
+            var heroProductIds = heroProducts
+                .Select(product => product.Id)
+                .ToHashSet();
+
+            var remainingProducts = latestProducts
+                .Where(product => !heroProductIds.Contains(product.Id))
+                .ToList();
+
+            var latestArrivals = remainingProducts
+                .Take(5)
+                .ToList();
+
+            if (!latestArrivals.Any())
+            {
+                latestArrivals = latestProducts.Take(5).ToList();
+            }
+
+            var moreRecentProducts = remainingProducts
+                .Skip(latestArrivals.Count)
+                .Take(10)
+                .ToList();
+
+            if (!moreRecentProducts.Any())
+            {
+                moreRecentProducts = latestProducts
+                    .Skip(latestArrivals.Count)
+                    .Take(10)
+                    .ToList();
+            }
 
             return new HomePageDto
             {
                 Hero = new HomeHeroDto
                 {
-                    Eyebrow = "Premium marketplace picks",
-                    Title = "Build a cleaner,",
-                    AccentTitle = "faster setup.",
-                    Description = "Browse curated PC hardware with calmer spacing, cleaner routing, and real catalog data behind every card.",
-                    PrimaryLabel = "Shop now",
+                    Eyebrow = "Latest marketplace updates",
+                    Title = "Fresh products,",
+                    AccentTitle = "live after each edit.",
+                    Description = "Homepage product surfaces now follow the latest active listings so updated names, prices, and images show up right after a seller refreshes a product.",
+                    PrimaryLabel = "Browse newest products",
                     PrimaryHref = "/products",
-                    SecondaryLabel = "Explore featured gear",
-                    SecondaryHref = heroProduct != null ? $"/product/{heroProduct.Slug}" : "/products",
-                    ImageUrl = heroProduct?.ImageUrl ?? string.Empty,
-                    ProductSlug = heroProduct?.Slug,
-                    ProductName = heroProduct?.Name,
+                    SecondaryLabel = "Visit official store",
+                    SecondaryHref = featuredStore?.Href ?? "/products",
+                    ImageUrl = heroProducts.FirstOrDefault()?.ImageUrl ?? string.Empty,
+                    ProductSlug = heroProducts.FirstOrDefault()?.Slug,
+                    ProductName = heroProducts.FirstOrDefault()?.Name,
                     StoreName = featuredStore?.StoreName,
                     StoreHref = featuredStore?.Href,
                     Highlights = new List<string>
                     {
-                        "Verified catalog",
-                        "Real store routes",
-                        "Quick support"
+                        "Latest active listings",
+                        "Fresh product images",
+                        "Real store routes"
                     }
                 },
                 PromoCard = new HomePromoCardDto
                 {
-                    Eyebrow = "Setup comfort",
-                    Title = "Compact promos, calmer spacing.",
-                    Description = "A focused side card keeps the fold balanced while still taking buyers to a real product page.",
-                    LinkLabel = "Open featured case",
-                    Href = promoProduct != null ? $"/product/{promoProduct.Slug}" : "/products",
-                    ImageUrl = promoProduct?.ImageUrl ?? string.Empty
+                    Eyebrow = "Latest products",
+                    Title = "Recently refreshed catalog items.",
+                    Description = "The homepage now follows the most recently updated products instead of a fixed set of slugs.",
+                    LinkLabel = "Browse newest",
+                    Href = "/products?sort=newest",
+                    ImageUrl = heroProducts.Skip(1).FirstOrDefault()?.ImageUrl ?? string.Empty
                 },
+                HeroProducts = heroProducts,
                 QuickActions = new List<HomeQuickActionDto>
                 {
                     new HomeQuickActionDto { Title = "Fast shipping", Subtitle = "Nationwide coverage", Icon = "local_shipping", Href = "/products", Tone = "blue" },
                     new HomeQuickActionDto { Title = "Verified store", Subtitle = "Official GearZone desk", Icon = "verified", Href = featuredStore?.Href ?? "/products", Tone = "orange" },
-                    new HomeQuickActionDto { Title = "Daily deals", Subtitle = "Curated flash picks", Icon = "bolt", Href = "/products?sort=popular", Tone = "violet" },
+                    new HomeQuickActionDto { Title = "Fresh arrivals", Subtitle = "Newest active edits", Icon = "bolt", Href = "/products?sort=newest", Tone = "violet" },
                     new HomeQuickActionDto { Title = "Quick chat", Subtitle = "Talk to shops fast", Icon = "forum", Href = "/Public/User/Profile?tab=messages", Tone = "sky" }
                 },
                 Categories = OrderBySlug(categories, HomeCategorySlugs)
@@ -156,22 +155,22 @@ namespace GearZone.Application.Features.Catalog
                     .ToList(),
                 FlashRail = new HomeProductRailDto
                 {
-                    Eyebrow = "Flash zone",
-                    Title = "Compact flash sale picks",
-                    Description = "Curated best-value hardware already in the demo catalog.",
-                    ViewAllLabel = "See all deals",
-                    ViewAllHref = "/products?sort=popular",
-                    Products = OrderBySlug(curatedProducts, FlashDealSlugs)
+                    Eyebrow = "Just updated",
+                    Title = "Fresh arrivals from active stores",
+                    Description = "Recently edited products flow here automatically after sellers update names, prices, or images.",
+                    ViewAllLabel = "Browse newest",
+                    ViewAllHref = "/products?sort=newest",
+                    Products = latestArrivals
                 },
                 Stores = OrderBySlug(stores, HomeStoreSlugs),
                 RecommendedRail = new HomeProductRailDto
                 {
-                    Eyebrow = "Recommended",
-                    Title = "Popular picks for a cleaner setup",
-                    Description = "Smaller cards, better rhythm, and direct routes into real product pages.",
-                    ViewAllLabel = "Browse catalog",
-                    ViewAllHref = "/products",
-                    Products = OrderBySlug(curatedProducts, RecommendedSlugs)
+                    Eyebrow = "More to explore",
+                    Title = "More recent products without pinned slugs",
+                    Description = "Keep scrolling through newer catalog updates instead of a fixed homepage product list.",
+                    ViewAllLabel = "View all products",
+                    ViewAllHref = "/products?sort=newest",
+                    Products = moreRecentProducts
                 }
             };
         }

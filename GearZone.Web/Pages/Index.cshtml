@@ -352,14 +352,9 @@
                         <span class="rounded-full bg-white px-3 py-1 text-xs font-extrabold uppercase tracking-[0.2em] text-[#0b58c4]">@Model.HomePage.FlashRail.Eyebrow</span>
                         <h2 class="text-xl font-black tracking-[-0.03em]">@Model.HomePage.FlashRail.Title</h2>
                     </div>
-                    <div class="flex items-center gap-2 text-sm font-bold">
-                        <span class="uppercase tracking-[0.18em] text-white/80">Ends in</span>
-                        <span class="dmx-flash-timer-box" data-flash-hours>03</span>
-                        <span class="text-white/60">:</span>
-                        <span class="dmx-flash-timer-box" data-flash-minutes>18</span>
-                        <span class="text-white/60">:</span>
-                        <span class="dmx-flash-timer-box" data-flash-seconds>45</span>
-                    </div>
+                    <span class="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.18em] text-white/85">
+                        Sorted by latest updates
+                    </span>
                 </div>
 
                 <div class="p-4">
@@ -588,31 +583,6 @@
                 setActive(activeIndex, false);
                 scheduleNext();
             });
-
-            const hoursEl = document.querySelector('[data-flash-hours]');
-            const minutesEl = document.querySelector('[data-flash-minutes]');
-            const secondsEl = document.querySelector('[data-flash-seconds]');
-
-            if (hoursEl && minutesEl && secondsEl) {
-                let remainingSeconds = (3 * 60 * 60) + (18 * 60) + 45;
-
-                function paintCountdown() {
-                    const hours = Math.floor(remainingSeconds / 3600);
-                    const minutes = Math.floor((remainingSeconds % 3600) / 60);
-                    const seconds = remainingSeconds % 60;
-
-                    hoursEl.textContent = String(hours).padStart(2, '0');
-                    minutesEl.textContent = String(minutes).padStart(2, '0');
-                    secondsEl.textContent = String(seconds).padStart(2, '0');
-                }
-
-                paintCountdown();
-
-                window.setInterval(function () {
-                    remainingSeconds = remainingSeconds <= 0 ? (3 * 60 * 60) + (18 * 60) + 45 : remainingSeconds - 1;
-                    paintCountdown();
-                }, 1000);
-            }
         });
     </script>
 }

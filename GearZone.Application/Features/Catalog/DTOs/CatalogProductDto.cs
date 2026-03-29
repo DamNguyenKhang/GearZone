@@ -16,6 +16,7 @@ namespace GearZone.Application.Features.Catalog.DTOs
         public decimal Rating { get; set; }
         public int ReviewCount { get; set; }
         public string StoreName { get; set; } = string.Empty;
+        public string StoreSlug { get; set; } = string.Empty;
         public string StoreLogoUrl { get; set; } = string.Empty;
         public List<string> SaleBadges { get; set; } = new List<string>();
         public List<string> HighlightTags { get; set; } = new List<string>(); // e.g. "12GB VRAM"

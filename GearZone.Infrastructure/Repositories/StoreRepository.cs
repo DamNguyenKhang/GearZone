@@ -85,7 +85,9 @@ namespace GearZone.Infrastructure.Repositories
         {
             return await _dbSet
                 .Include(s => s.OwnerUser)
-                .FirstOrDefaultAsync(s => s.OwnerUserId == userId);
+                .Where(s => s.OwnerUserId == userId)
+                .OrderByDescending(s => s.UpdatedAt ?? s.CreatedAt)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<StoreApplicationStatsDto> GetStoreApplicationStatsAsync()

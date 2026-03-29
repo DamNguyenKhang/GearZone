@@ -15,4 +15,5 @@ public interface ISellerStoreService
     Task SaveStep3Async(Guid storeId, Step3Dto dto);
     Task SubmitRegistrationAsync(Guid storeId, string userId);
     Task<RegistrationProgressDto?> GetRegistrationProgressAsync(string userId);
+    Task<Guid> StartReapplicationAsync(string userId);
 }

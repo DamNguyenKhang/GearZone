@@ -168,7 +168,7 @@
                 </div>
                 
                 <!-- Voucher Input Placeholder -->
-                <div class="bg-white dark:bg-[#1a202c] rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 opacity-50 cursor-not-allowed" title="Tính năng đang được phát triển">
+                <div class="bg-white dark:bg-[#1a202c] rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-4 opacity-50 cursor-not-allowed" title="This feature is under development">
                     <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Have a coupon code?</label>
                     <div class="flex gap-2 relative">
                         <input type="text" disabled placeholder="Enter code" class="flex-1 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-600 rounded-lg text-sm disabled:cursor-not-allowed" />
@@ -311,12 +311,12 @@
 
                     const data = await response.json();
                     if (!response.ok) {
-                        window.showToast?.('error', data.error || 'Lỗi cập nhật số lượng');
+                        window.showToast?.('error', data.error || 'Failed to update quantity');
                         return false; // update failed
                     }
                     return true;
                 } catch (error) {
-                    window.showToast?.('error', 'Lỗi kết nối server');
+                    window.showToast?.('error', 'Server connection error');
                     return false;
                 } finally {
                     btnEl.disabled = false;
@@ -333,13 +333,13 @@
 
                     const data = await response.json();
                     if (!response.ok) {
-                        window.showToast?.('error', data.error || 'Lỗi xóa sản phẩm');
+                        window.showToast?.('error', data.error || 'Failed to remove item');
                         return false;
                     }
                     window.showToast?.('success', data.message);
                     return true;
                 } catch (error) {
-                    window.showToast?.('error', 'Lỗi kết nối server');
+                    window.showToast?.('error', 'Server connection error');
                     return false;
                 } finally {
                     btnEl.disabled = false;

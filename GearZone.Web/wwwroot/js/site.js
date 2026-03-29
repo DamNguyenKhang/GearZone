@@ -2,7 +2,7 @@
 async function addToCart(variantId, quantity = 1, buttonElement = null) {
     if (!variantId) {
         window.showToast?.('error', 'Please select a product variant.');
-        return;
+        return false;
     }
 
     let originalHtml = '';
@@ -34,6 +34,7 @@ async function addToCart(variantId, quantity = 1, buttonElement = null) {
             return false;
         }
 
+        const data = await response.json().catch(() => ({}));
         window.showToast?.('success', 'Product added to cart successfully!');
 
         // Update Header Cart Count
@@ -43,7 +44,7 @@ async function addToCart(variantId, quantity = 1, buttonElement = null) {
             let currentCount = parseInt(cartCountEl.textContent) || 0;
             cartCountEl.textContent = currentCount + quantity;
         }
-        return true;
+        return data;
     } catch (error) {
         console.error('Error adding to cart:', error);
         window.showToast?.('error', 'Server connection error.');

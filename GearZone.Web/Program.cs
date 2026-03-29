@@ -209,7 +209,7 @@ using (var scope = app.Services.CreateScope())
     RecurringJob.AddOrUpdate<PayoutBatchJob>(
         "generate-weekly-payout",
         job => job.GenerateWeeklyBatchAsync(),
-        "1 17 * * 0", // Chủ nhật 17:01 UTC = Thứ 2 00:01 VN
+        "1 17 * * 0", // Sunday 17:01 UTC = Monday 00:01 Vietnam time
         TimeZoneInfo.Utc);
 
     RecurringJob.AddOrUpdate<PayoutBatchJob>(

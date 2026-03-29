@@ -1,4 +1,4 @@
-@page "/storeowner/vouchers"
+﻿@page "/storeowner/vouchers"
 @using GearZone.Domain.Enums
 @model GearZone.Web.Pages.StoreOwner.Vouchers.IndexModel
 @{
@@ -124,7 +124,7 @@
             </div>
             <div class="flex flex-col min-w-0 z-10">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Total Saved for Users</p>
-                <h3 class="text-xl font-bold text-white mt-1.5 leading-tight">@Model.Summary.TotalSavedAmount.ToString("N0")đ</h3>
+                <h3 class="text-xl font-bold text-white mt-1.5 leading-tight">@Model.Summary.TotalSavedAmount.ToString("N0") VND</h3>
                 <div class="flex items-center gap-1 mt-2 text-[10px] text-blue-400 font-bold">
                     <span class="material-symbols-outlined text-[12px]">verified_user</span>
                     <span>Platform impact</span>
@@ -350,7 +350,7 @@
                                 }
                                 else
                                 {
-                                    @($"{voucher.DiscountValue.ToString("N0")}đ OFF")
+                                    @($"{voucher.DiscountValue.ToString("N0")} VND OFF")
                                 }
                             </p>
                             <p class="text-[10px] font-black @textSub mt-1 uppercase tracking-widest">@voucher.Code</p>
@@ -371,11 +371,11 @@
                                 <div class="flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-500">
                                     <div class="flex items-center gap-1">
                                         <span class="text-slate-400">Min. Spend:</span>
-                                        <span class="font-bold text-slate-700">@voucher.MinOrderAmount?.ToString("N0")đ</span>
+                                        <span class="font-bold text-slate-700">@voucher.MinOrderAmount?.ToString("N0") VND</span>
                                     </div>
                                     <div class="flex items-center gap-1">
                                         <span class="text-slate-400">Max Disc:</span>
-                                        <span class="font-bold text-slate-700">@(voucher.MaxDiscount > 0 ? voucher.MaxDiscount?.ToString("N0") + "đ" : "No Limit")</span>
+                                        <span class="font-bold text-slate-700">@(voucher.MaxDiscount > 0 ? voucher.MaxDiscount?.ToString("N0") + " VND" : "No Limit")</span>
                                     </div>
                                     <div class="flex items-center gap-1">
                                         <span class="text-slate-400">Target:</span>
@@ -571,4 +571,5 @@
         </script>
     }
 }
+
 

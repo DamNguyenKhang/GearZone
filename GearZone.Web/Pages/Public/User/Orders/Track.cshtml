@@ -1,5 +1,6 @@
 @page "{subOrderId:guid}"
 @using GearZone.Domain.Enums
+@using System.Collections.Generic
 @model GearZone.Web.Pages.Public.User.Orders.TrackModel
 @{
     ViewData["Title"] = $"Track Order #{Model.Tracking.OrderCode}";
@@ -17,6 +18,20 @@
         OrderStatus.Rejected => "bg-red-50 text-red-700 border border-red-200",
         OrderStatus.Refunded => "bg-orange-50 text-orange-700 border border-orange-200",
         _ => "bg-gray-50 text-gray-700 border border-gray-200"
+    };
+
+    var statusIcons = new Dictionary<OrderStatus, string>
+    {
+        { OrderStatus.Pending, "pending" },
+        { OrderStatus.AwaitingPayment, "payments" },
+        { OrderStatus.Approved, "verified" },
+        { OrderStatus.Rejected, "block" },
+        { OrderStatus.Paid, "paid" },
+        { OrderStatus.Processing, "package_2" },
+        { OrderStatus.Delivered, "local_shipping" },
+        { OrderStatus.Cancelled, "do_not_disturb_on" },
+        { OrderStatus.Completed, "task_alt" },
+        { OrderStatus.Refunded, "keyboard_return" }
     };
 }
 
@@ -42,7 +57,7 @@
                 <h1 class="mt-2 text-2xl font-black text-slate-900">#@Model.Tracking.OrderCode</h1>
                 <p class="mt-1 text-sm text-slate-500">Placed @Model.Tracking.CreatedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
             </div>
-            <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] @GetBadgeClass(Model.Tracking.Status)">
+            <span id="tracking-current-status" class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] @GetBadgeClass(Model.Tracking.Status)">
                 @Model.Tracking.Status
             </span>
         </div>
@@ -63,76 +78,110 @@
         </div>
     </section>
 
-    <section class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
-            <h2 class="text-sm font-black uppercase tracking-[0.14em] text-slate-500">Status Timeline</h2>
-            @if (!Model.Tracking.StatusHistory.Any())
-            {
-                <p class="mt-4 text-sm text-slate-500">No tracking history yet.</p>
-            }
-            else
-            {
-                <div class="mt-4 space-y-3">
+    <section class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <div class="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm xl:col-span-2">
+            <div class="flex items-center justify-between border-b border-slate-50 p-6">
+                <div class="flex items-center gap-3">
+                    <div class="flex size-10 items-center justify-center rounded-xl bg-slate-900 text-white shadow-lg">
+                        <span class="material-symbols-outlined text-lg">history</span>
+                    </div>
+                    <h2 class="text-lg font-bold text-slate-900">Order Tracking Activity</h2>
+                </div>
+                <span class="rounded-lg bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-500">Real-time History</span>
+            </div>
+
+            <div class="p-6">
+                <div id="status-timeline-empty" class="@(Model.Tracking.StatusHistory.Any() ? "hidden " : "")flex flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-slate-100 py-12 text-slate-400">
+                    <span class="material-symbols-outlined text-4xl opacity-20">history_toggle_off</span>
+                    <p class="text-sm font-bold uppercase tracking-widest opacity-40">No activity recorded yet</p>
+                </div>
+
+                <div id="status-timeline-list" class="@(Model.Tracking.StatusHistory.Any() ? "" : "hidden ")relative space-y-8 before:absolute before:left-[19px] before:top-0 before:h-full before:w-1 before:bg-gradient-to-b before:from-primary before:via-blue-300 before:to-transparent">
                     @foreach (var history in Model.Tracking.StatusHistory.OrderByDescending(x => x.ChangedAt))
                     {
-                        <div class="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
-                            <div class="flex flex-wrap items-center justify-between gap-2">
-                                <p class="text-sm font-bold text-slate-900">@history.NewStatus</p>
-                                <p class="text-xs font-semibold text-slate-500">@history.ChangedAt.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
+                        var icon = statusIcons.ContainsKey(history.NewStatus) ? statusIcons[history.NewStatus] : "check_circle";
+                        <div class="group relative flex items-start gap-6">
+                            <div class="z-10 rounded-full border-4 border-slate-50 bg-white p-1">
+                                <div class="flex size-7 items-center justify-center rounded-full border-2 border-primary bg-white shadow-sm">
+                                    <span class="material-symbols-outlined text-[14px] font-black text-primary">@icon</span>
+                                </div>
                             </div>
-                            @if (history.OldStatus.HasValue)
-                            {
-                                <p class="mt-1 text-xs text-slate-500">From @history.OldStatus.Value to @history.NewStatus</p>
-                            }
-                            <p class="mt-1 text-xs text-slate-500">By @history.ChangedByDisplayName</p>
-                            @if (!string.IsNullOrWhiteSpace(history.Note))
-                            {
-                                <p class="mt-1 text-xs text-slate-600">@history.Note</p>
-                            }
+                            <div class="-mt-1 flex-1 rounded-2xl border border-slate-100 bg-slate-50/50 p-4 transition-all hover:border-primary/20 hover:bg-white hover:shadow-md">
+                                <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+                                    <h3 class="text-sm font-black uppercase tracking-wider text-slate-900">@history.NewStatus</h3>
+                                    <span class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
+                                        <span class="material-symbols-outlined text-[10px]">calendar_month</span>
+                                        @history.ChangedAt.ToLocalTime().ToString("MMM dd, yyyy - HH:mm")
+                                    </span>
+                                </div>
+
+                                @if (!string.IsNullOrWhiteSpace(history.Note))
+                                {
+                                    <div class="relative">
+                                        <span class="absolute left-0 top-0 text-2xl leading-none text-slate-200">"</span>
+                                        <p class="px-4 text-sm italic text-slate-500">@history.Note</p>
+                                    </div>
+                                }
+
+                                <div class="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100/50 pt-3">
+                                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Modified From</span>
+                                    <span class="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-500">@(history.OldStatus?.ToString() ?? "-")</span>
+                                    <span class="text-[10px] font-semibold text-slate-400">By</span>
+                                    <span class="text-xs font-semibold text-slate-600">@history.ChangedByDisplayName</span>
+                                </div>
+                            </div>
                         </div>
                     }
                 </div>
-            }
+            </div>
         </div>
 
         <div class="space-y-6">
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h2 class="text-sm font-black uppercase tracking-[0.14em] text-slate-500">Shipping Info</h2>
-                <dl class="mt-4 space-y-2 text-sm">
-                    <div class="flex items-start justify-between gap-3">
-                        <dt class="text-slate-500">Receiver</dt>
-                        <dd class="text-right font-semibold text-slate-900">@Model.Tracking.ReceiverName</dd>
+            <div class="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm">
+                <div class="flex items-center gap-3 border-b border-slate-50 p-6">
+                    <div class="flex size-8 items-center justify-center rounded-lg bg-blue-50 text-primary">
+                        <span class="material-symbols-outlined text-lg">local_shipping</span>
                     </div>
-                    <div class="flex items-start justify-between gap-3">
-                        <dt class="text-slate-500">Phone</dt>
-                        <dd class="text-right font-semibold text-slate-900">@Model.Tracking.ReceiverPhone</dd>
+                    <h2 class="font-bold text-slate-800">Logistic Details</h2>
+                </div>
+                <div class="space-y-6 p-6">
+                    <div>
+                        <p class="mb-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Recipient</p>
+                        <div class="flex items-center gap-3">
+                            <div class="flex size-10 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-500">
+                                @(string.IsNullOrWhiteSpace(Model.Tracking.ReceiverName) ? "?" : Model.Tracking.ReceiverName.Substring(0, 1))
+                            </div>
+                            <div>
+                                <p id="shipping-receiver-value" class="leading-none text-sm font-black text-slate-900">@Model.Tracking.ReceiverName</p>
+                                <p id="shipping-phone-value" class="mt-1 text-xs text-slate-500">@Model.Tracking.ReceiverPhone</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex items-start justify-between gap-3">
-                        <dt class="text-slate-500">Address</dt>
-                        <dd class="text-right font-semibold text-slate-900">@Model.Tracking.ShippingAddress</dd>
+
+                    <div>
+                        <p class="mb-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Destination Address</p>
+                        <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm font-medium leading-relaxed text-slate-700 shadow-inner" id="shipping-address-value">
+                            @Model.Tracking.ShippingAddress
+                        </div>
                     </div>
-                    @if (!string.IsNullOrWhiteSpace(Model.Tracking.ShippingProvider))
-                    {
-                        <div class="flex items-start justify-between gap-3">
-                            <dt class="text-slate-500">Provider</dt>
-                            <dd class="text-right font-semibold text-slate-900">@Model.Tracking.ShippingProvider</dd>
+
+                    <div class="space-y-3 pt-1">
+                        <div id="shipping-provider-row" class="@(string.IsNullOrWhiteSpace(Model.Tracking.ShippingProvider) ? "hidden " : "")flex items-center justify-between">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Shipping Agent</p>
+                            <span id="shipping-provider-value" class="text-xs font-bold text-slate-900">@Model.Tracking.ShippingProvider</span>
                         </div>
-                    }
-                    @if (!string.IsNullOrWhiteSpace(Model.Tracking.TrackingNumber))
-                    {
-                        <div class="flex items-start justify-between gap-3">
-                            <dt class="text-slate-500">Tracking Code</dt>
-                            <dd class="text-right font-semibold text-slate-900">@Model.Tracking.TrackingNumber</dd>
+
+                        <div id="shipping-tracking-row" class="@(string.IsNullOrWhiteSpace(Model.Tracking.TrackingNumber) ? "hidden " : "")flex items-center justify-between gap-2">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Waybill</p>
+                            <code id="shipping-tracking-value" class="rounded-lg border border-primary/10 bg-primary/5 px-3 py-1.5 font-mono text-[11px] font-bold text-primary">@Model.Tracking.TrackingNumber</code>
                         </div>
-                    }
-                    @if (Model.Tracking.DeliveredAt.HasValue)
-                    {
-                        <div class="flex items-start justify-between gap-3">
-                            <dt class="text-slate-500">Delivered At</dt>
-                            <dd class="text-right font-semibold text-emerald-700">@Model.Tracking.DeliveredAt.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")</dd>
+
+                        <div id="shipping-delivered-row" class="@(Model.Tracking.DeliveredAt.HasValue ? "" : "hidden ")flex items-center justify-between">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Delivered At</p>
+                            <span id="shipping-delivered-value" class="text-xs font-bold text-emerald-700">@(Model.Tracking.DeliveredAt?.ToLocalTime().ToString("dd MMM yyyy HH:mm"))</span>
                         </div>
-                    }
-                </dl>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -164,3 +213,219 @@
         </div>
     </section>
 </div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const statusBadgeEl = document.getElementById('tracking-current-status');
+            const timelineListEl = document.getElementById('status-timeline-list');
+            const timelineEmptyEl = document.getElementById('status-timeline-empty');
+            const shippingProviderRowEl = document.getElementById('shipping-provider-row');
+            const shippingProviderValueEl = document.getElementById('shipping-provider-value');
+            const shippingTrackingRowEl = document.getElementById('shipping-tracking-row');
+            const shippingTrackingValueEl = document.getElementById('shipping-tracking-value');
+            const shippingDeliveredRowEl = document.getElementById('shipping-delivered-row');
+            const shippingDeliveredValueEl = document.getElementById('shipping-delivered-value');
+
+            if (!statusBadgeEl || !timelineListEl || !timelineEmptyEl) {
+                return;
+            }
+
+            const liveUrlBase = '@Url.Page("/Public/User/Orders/Track", "Live", new { subOrderId = Model.Tracking.SubOrderId })';
+
+            const statusClassMap = {
+                Pending: 'bg-amber-50 text-amber-700 border border-amber-200',
+                AwaitingPayment: 'bg-orange-50 text-orange-700 border border-orange-200',
+                Approved: 'bg-sky-50 text-sky-700 border border-sky-200',
+                Paid: 'bg-indigo-50 text-indigo-700 border border-indigo-200',
+                Processing: 'bg-blue-50 text-blue-700 border border-blue-200',
+                Delivered: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
+                Completed: 'bg-emerald-100 text-emerald-800 border border-emerald-300',
+                Cancelled: 'bg-rose-50 text-rose-700 border border-rose-200',
+                Rejected: 'bg-red-50 text-red-700 border border-red-200',
+                Refunded: 'bg-orange-50 text-orange-700 border border-orange-200'
+            };
+
+            const statusIconMap = {
+                Pending: 'pending',
+                AwaitingPayment: 'payments',
+                Approved: 'verified',
+                Rejected: 'block',
+                Paid: 'paid',
+                Processing: 'package_2',
+                Delivered: 'local_shipping',
+                Cancelled: 'do_not_disturb_on',
+                Completed: 'task_alt',
+                Refunded: 'keyboard_return'
+            };
+
+            const badgeBaseClass = 'inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.14em]';
+            let inFlight = false;
+
+            function getStatusBadgeClass(status) {
+                return statusClassMap[status] || 'bg-gray-50 text-gray-700 border border-gray-200';
+            }
+
+            function getStatusIcon(status) {
+                return statusIconMap[status] || 'check_circle';
+            }
+
+            function escapeHtml(input) {
+                if (input === null || input === undefined) {
+                    return '';
+                }
+
+                return String(input)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            function formatDateTime(isoString) {
+                if (!isoString) {
+                    return '-';
+                }
+
+                const date = new Date(isoString);
+                if (Number.isNaN(date.getTime())) {
+                    return '-';
+                }
+
+                return date.toLocaleString('en-GB', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                });
+            }
+
+            function toggleRow(rowEl, shouldShow) {
+                if (!rowEl) {
+                    return;
+                }
+
+                rowEl.classList.toggle('hidden', !shouldShow);
+            }
+
+            function renderTimeline(statusHistory) {
+                if (!Array.isArray(statusHistory) || statusHistory.length === 0) {
+                    timelineListEl.innerHTML = '';
+                    timelineListEl.classList.add('hidden');
+                    timelineEmptyEl.classList.remove('hidden');
+                    return;
+                }
+
+                const cardsHtml = statusHistory.map((history) => {
+                    const fromStatus = history.oldStatus ? escapeHtml(history.oldStatus) : '-';
+                    const changedBy = escapeHtml(history.changedByDisplayName || 'System');
+                    const statusText = escapeHtml(history.newStatus || '-');
+                    const statusIcon = getStatusIcon(history.newStatus);
+                    const changedAtText = formatDateTime(history.changedAtIso);
+                    const noteHtml = history.note
+                        ? `<div class="relative"><span class="absolute left-0 top-0 text-2xl leading-none text-slate-200">"</span><p class="px-4 text-sm italic text-slate-500">${escapeHtml(history.note)}</p></div>`
+                        : '';
+
+                    return `
+                        <div class="group relative flex items-start gap-6">
+                            <div class="z-10 rounded-full border-4 border-slate-50 bg-white p-1">
+                                <div class="flex size-7 items-center justify-center rounded-full border-2 border-primary bg-white shadow-sm">
+                                    <span class="material-symbols-outlined text-[14px] font-black text-primary">${statusIcon}</span>
+                                </div>
+                            </div>
+                            <div class="-mt-1 flex-1 rounded-2xl border border-slate-100 bg-slate-50/50 p-4 transition-all hover:border-primary/20 hover:bg-white hover:shadow-md">
+                                <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+                                    <h3 class="text-sm font-black uppercase tracking-wider text-slate-900">${statusText}</h3>
+                                    <span class="flex items-center gap-1.5 text-[10px] font-bold text-slate-400">
+                                        <span class="material-symbols-outlined text-[10px]">calendar_month</span>
+                                        ${changedAtText}
+                                    </span>
+                                </div>
+                                ${noteHtml}
+                                <div class="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100/50 pt-3">
+                                    <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Modified From</span>
+                                    <span class="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-500">${fromStatus}</span>
+                                    <span class="text-[10px] font-semibold text-slate-400">By</span>
+                                    <span class="text-xs font-semibold text-slate-600">${changedBy}</span>
+                                </div>
+                            </div>
+                        </div>`;
+                }).join('');
+
+                timelineListEl.innerHTML = cardsHtml;
+                timelineListEl.classList.remove('hidden');
+                timelineEmptyEl.classList.add('hidden');
+            }
+
+            function applyTrackingPayload(payload) {
+                if (!payload) {
+                    return;
+                }
+
+                const latestStatus = payload.status || 'Unknown';
+                statusBadgeEl.className = `${badgeBaseClass} ${getStatusBadgeClass(latestStatus)}`;
+                statusBadgeEl.textContent = latestStatus;
+
+                toggleRow(shippingProviderRowEl, !!payload.shippingProvider);
+                if (shippingProviderValueEl) {
+                    shippingProviderValueEl.textContent = payload.shippingProvider || '';
+                }
+
+                toggleRow(shippingTrackingRowEl, !!payload.trackingNumber);
+                if (shippingTrackingValueEl) {
+                    shippingTrackingValueEl.textContent = payload.trackingNumber || '';
+                }
+
+                toggleRow(shippingDeliveredRowEl, !!payload.deliveredAtIso);
+                if (shippingDeliveredValueEl) {
+                    shippingDeliveredValueEl.textContent = payload.deliveredAtIso ? formatDateTime(payload.deliveredAtIso) : '';
+                }
+
+                renderTimeline(payload.statusHistory || []);
+            }
+
+            async function fetchLiveTracking() {
+                if (inFlight) {
+                    return;
+                }
+
+                inFlight = true;
+                try {
+                    const separator = liveUrlBase.includes('?') ? '&' : '?';
+                    const response = await fetch(`${liveUrlBase}${separator}_=${Date.now()}`, {
+                        method: 'GET',
+                        cache: 'no-store',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        return;
+                    }
+
+                    const payload = await response.json();
+                    applyTrackingPayload(payload);
+                } catch (_) {
+                    // Ignore transient polling errors.
+                } finally {
+                    inFlight = false;
+                }
+            }
+
+            const pollingIntervalMs = 3000;
+            fetchLiveTracking();
+            window.setInterval(fetchLiveTracking, pollingIntervalMs);
+
+            document.addEventListener('visibilitychange', function () {
+                if (!document.hidden) {
+                    fetchLiveTracking();
+                }
+            });
+        })();
+    </script>
+}

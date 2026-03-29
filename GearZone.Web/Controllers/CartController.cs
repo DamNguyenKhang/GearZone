@@ -26,8 +26,8 @@ namespace GearZone.Web.Controllers
 
             try
             {
-                await _cartService.AddToCartAsync(userId, request.VariantId, request.Quantity);
-                return Ok(new { message = "Added to cart successfully." });
+                var cartItemId = await _cartService.AddToCartAsync(userId, request.VariantId, request.Quantity);
+                return Ok(new { message = "Added to cart successfully.", cartItemId });
             }
             catch (Exception ex)
             {

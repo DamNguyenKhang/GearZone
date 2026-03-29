@@ -100,7 +100,7 @@ namespace GearZone.Web.Pages.Admin
                 var walletBalance = await GetCurrentWalletBalanceAsync();
                 if (walletBalance < requiredAmount)
                 {
-                    TempData["ErrorMessage"] = $"Số dư ví hiện tại ({walletBalance:N0}đ) không đủ để payout ({requiredAmount:N0}đ). Vui lòng topup trước khi xử lý.";
+                    TempData["ErrorMessage"] = $"Current wallet balance ({walletBalance:N0} VND) is insufficient for payout ({requiredAmount:N0} VND). Please top up before processing.";
                     return RedirectToPage("/Admin/Wallet/Index");
                 }
 
@@ -122,15 +122,15 @@ namespace GearZone.Web.Pages.Admin
                 var processedBatch = paged.Items.FirstOrDefault(x => x.BatchCode == batchCode);
                 if (processedBatch == null)
                 {
-                    TempData["InfoMessage"] = $"Batch '{batchCode}' đã được xử lý. Hãy kiểm tra danh sách payout batches để xem trạng thái.";
+                    TempData["InfoMessage"] = $"Batch '{batchCode}' has been processed. Please check the payout batch list for status details.";
                 }
                 else if (processedBatch.Status == GearZone.Domain.Enums.PayoutBatchStatus.Completed)
                 {
-                    TempData["SuccessMessage"] = $"Payout thành công. Batch '{batchCode}' hoàn tất ({processedBatch.SuccessCount} giao dịch).";
+                    TempData["SuccessMessage"] = $"Payout completed successfully. Batch '{batchCode}' finished ({processedBatch.SuccessCount} transactions).";
                 }
                 else
                 {
-                    TempData["ErrorMessage"] = $"Payout thất bại một phần/toàn phần. Batch '{batchCode}' có {processedBatch.FailedCount} giao dịch lỗi.";
+                    TempData["ErrorMessage"] = $"Payout partially/fully failed. Batch '{batchCode}' has {processedBatch.FailedCount} failed transactions.";
                 }
             }
             catch (Exception ex)

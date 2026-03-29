@@ -43,7 +43,7 @@
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400 group-focus-within:text-primary transition-colors">
                                 <span class="material-symbols-outlined text-xl">category</span>
                             </span>
-                            <input asp-for="Input.Name" id="category-name-input" placeholder="e.g. Card Đồ Họa (GPU)"
+                            <input asp-for="Input.Name" id="category-name-input" placeholder="e.g. Graphics Card (GPU)"
                                    class="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-11 pr-4 py-2.5 text-sm focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none" />
                         </div>
                         <span asp-validation-for="Input.Name" class="text-xs text-red-500"></span>
@@ -323,7 +323,7 @@
         // ── Slug helpers ──────────────────────────────────────────────────────────
         function toSlug(t) {
             return t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                .replace(/[đĐ]/g, 'd').replace(/[^a-z0-9\s-]/g, '')
+                .replace(/[\u0111\u0110]/g, 'd').replace(/[^a-z0-9\s-]/g, '')
                 .replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
         }
         const nameInput = document.getElementById('category-name-input');

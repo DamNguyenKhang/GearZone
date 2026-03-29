@@ -36,15 +36,35 @@ namespace GearZone.Web.Pages.Public.User
         public int CurrentStep { get; set; } = 1;
         public Guid? StoreId { get; set; }
         public RegistrationProgressDto? Progress { get; set; }
+        public StoreStatus? ExistingStoreStatus { get; set; }
+        public string? ExistingStoreRejectReason { get; set; }
         public string GoongMapKey => _configuration["GOONG_MAP_KEY"] ?? "";
 
-        public async Task<IActionResult> OnGetAsync()
+        public async Task<IActionResult> OnGetAsync(bool reapply = false)
         {
             var user = await _authService.GetUserAsync(User);
             if (user == null) return RedirectToPage("/Public/Auth/Login");
 
             // Check if user already has an approved/pending store
             var existingStore = await _sellerStoreService.GetStoreByOwnerIdAsync(user.Id);
+            ExistingStoreStatus = existingStore?.Status;
+            ExistingStoreRejectReason = existingStore?.RejectReason;
+
+            if (reapply && existingStore is { Status: StoreStatus.Pending or StoreStatus.Rejected })
+            {
+                try
+                {
+                    await _sellerStoreService.StartReapplicationAsync(user.Id);
+                    TempData["InfoMessage"] = "Your application has been reopened for editing.";
+                    return RedirectToPage(new { step = 1 });
+                }
+                catch (Exception ex)
+                {
+                    TempData["ErrorMessage"] = ex.Message;
+                    return RedirectToPage("/Public/User/Profile");
+                }
+            }
+
             if (existingStore != null && existingStore.Status != StoreStatus.Draft)
             {
                 if (existingStore.Status == StoreStatus.Approved)

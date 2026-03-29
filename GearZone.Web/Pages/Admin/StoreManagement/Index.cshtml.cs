@@ -12,6 +12,8 @@ namespace GearZone.Web.Pages.Admin.StoreManagement
     [Authorize(Roles = "Super Admin")]
     public class IndexModel : PageModel
     {
+        private const int MaxReasonLength = 500;
+
         private readonly IAdminStoreService _adminStoreService;
         public StoreApplicationDto StoreApplication { get; set; } = new StoreApplicationDto();
 
@@ -84,7 +86,20 @@ namespace GearZone.Web.Pages.Admin.StoreManagement
 
         public async Task<IActionResult> OnPostChangeStatusAsync(Guid storeId, StoreStatus status, string reason = "")
         {
-            var success = await _adminStoreService.UpdateStoreStatusAsync(storeId, status, reason);
+            var normalizedReason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
+            if ((status == StoreStatus.Locked || status == StoreStatus.Rejected) && string.IsNullOrWhiteSpace(normalizedReason))
+            {
+                TempData["ErrorMessage"] = "Reason is required for this status change.";
+                return RedirectToPage();
+            }
+
+            if (normalizedReason?.Length > MaxReasonLength)
+            {
+                TempData["ErrorMessage"] = $"Reason cannot exceed {MaxReasonLength} characters.";
+                return RedirectToPage();
+            }
+
+            var success = await _adminStoreService.UpdateStoreStatusAsync(storeId, status, normalizedReason);
            
             if (!success)
             {
@@ -92,7 +107,7 @@ namespace GearZone.Web.Pages.Admin.StoreManagement
                 return RedirectToPage();
             }
 
-            TempData["SuccessMessage"] = "Store application's status  has been rejected.";
+            TempData["SuccessMessage"] = $"Store application's status has been changed to {status}.";
             return RedirectToPage();
         }
     }

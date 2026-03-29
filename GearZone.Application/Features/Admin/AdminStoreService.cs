@@ -17,6 +17,8 @@ namespace GearZone.Application.Features.Admin;
 
 public class AdminStoreService : IAdminStoreService
 {
+    private const int MaxStatusReasonLength = 500;
+
     private readonly IStoreRepository _storeRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
@@ -78,12 +80,22 @@ public class AdminStoreService : IAdminStoreService
         if (store == null)
             return false;
 
+        var normalizedReason = NormalizeStatusReason(reason);
+        if (!IsValidReasonForStatus(status, normalizedReason))
+            return false;
+
         store.Status = status;
         store.UpdatedAt = DateTime.UtcNow;
 
+        if (status != StoreStatus.Rejected)
+            store.RejectReason = null;
+
+        if (status != StoreStatus.Locked)
+            store.LockReason = null;
+
         if (status == StoreStatus.Approved)
         {
-            store.ApprovedAt = DateTime.UtcNow;
+            store.ApprovedAt ??= DateTime.UtcNow;
 
             var user = store.OwnerUser;
             if (user != null)
@@ -97,13 +109,21 @@ public class AdminStoreService : IAdminStoreService
                     await _userManager.RemoveFromRoleAsync(user, "Customer");
             }
         }
+        else if (status == StoreStatus.Rejected)
+        {
+            store.RejectReason = normalizedReason;
+        }
+        else if (status == StoreStatus.Locked)
+        {
+            store.LockReason = normalizedReason;
+        }
 
         await _storeRepository.UpdateAsync(store);
         await _unitOfWork.SaveChangesAsync();
 
         if (isSendEmail)
         {
-            await _emailService.SendStoreStatusEmailAsync(store, status, reason);
+            await _emailService.SendStoreStatusEmailAsync(store, status, normalizedReason);
         }
 
         return true;
@@ -117,6 +137,27 @@ public class AdminStoreService : IAdminStoreService
             StoreStatus.Rejected => true,
             StoreStatus.Locked => true,
             _ => false
+        };
+    }
+
+    private static string? NormalizeStatusReason(string? reason)
+    {
+        if (string.IsNullOrWhiteSpace(reason))
+            return null;
+
+        var trimmed = reason.Trim();
+        return trimmed.Length <= MaxStatusReasonLength
+            ? trimmed
+            : trimmed[..MaxStatusReasonLength];
+    }
+
+    private static bool IsValidReasonForStatus(StoreStatus status, string? reason)
+    {
+        return status switch
+        {
+            StoreStatus.Rejected => !string.IsNullOrWhiteSpace(reason),
+            StoreStatus.Locked => !string.IsNullOrWhiteSpace(reason),
+            _ => true
         };
     }
 

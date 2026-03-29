@@ -30,7 +30,7 @@ namespace GearZone.Application.Features.Cart
             _unitOfWork = unitOfWork;
         }
 
-        public async Task AddToCartAsync(string userId, Guid variantId, int quantity)
+        public async Task<Guid> AddToCartAsync(string userId, Guid variantId, int quantity)
         {
             var variant = await _productVariantRepository.GetByIdAsync(variantId);
             if (variant == null)
@@ -74,6 +74,7 @@ namespace GearZone.Application.Features.Cart
             }
 
             await _unitOfWork.SaveChangesAsync();
+            return cartItem.Id;
         }
 
         public async Task<CartDto?> GetCartAsync(string userId)

@@ -21,6 +21,7 @@ namespace GearZone.Web.Pages.Checkout
 
         public Order Order { get; set; } = null!;
         public string PaymentMethodName { get; set; } = "COD";
+        public Guid? TrackSubOrderId { get; set; }
 
         public async Task<IActionResult> OnGetAsync(Guid orderId)
         {
@@ -29,6 +30,7 @@ namespace GearZone.Web.Pages.Checkout
 
             Order = await _orderRepository.Query()
                 .Include(o => o.Payments)
+                .Include(o => o.SubOrders)
                 .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
 
             if (Order == null)
@@ -46,6 +48,11 @@ namespace GearZone.Web.Pages.Checkout
                     _ => "Other"
                 };
             }
+
+            TrackSubOrderId = Order.SubOrders
+                .OrderBy(x => x.CreatedAt)
+                .Select(x => (Guid?)x.Id)
+                .FirstOrDefault();
 
             return Page();
         }

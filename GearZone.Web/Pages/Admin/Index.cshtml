@@ -174,8 +174,8 @@
                     var y = 200 - (double)(Model.DashboardData.RevenueOverview[i].Value / maxVal * 180);
                     var yNet = 200 - (double)((Model.DashboardData.RevenueOverview[i].SecondaryValue ?? 0) / maxVal * 180);
                     
-                    points += $"{x},{y} ";
-                    netPoints += $"{x},{yNet} ";
+                    points += $"{x.ToString(System.Globalization.CultureInfo.InvariantCulture)},{y.ToString(System.Globalization.CultureInfo.InvariantCulture)} ";
+                    netPoints += $"{x.ToString(System.Globalization.CultureInfo.InvariantCulture)},{yNet.ToString(System.Globalization.CultureInfo.InvariantCulture)} ";
                 }
 
                 <svg class="w-full h-full" preserveAspectRatio="none" viewBox="0 0 1000 256">
@@ -377,14 +377,15 @@
                             {
                                 var ux = i * uStep;
                                 var uy = 200 - (double)((Model.DashboardData.UserGrowth[i].SecondaryValue ?? 0) / totalMax * 180);
-                                userPoints += $"{ux},{uy} ";
+                                userPoints += $"{ux.ToString(System.Globalization.CultureInfo.InvariantCulture)},{uy.ToString(System.Globalization.CultureInfo.InvariantCulture)} ";
                             }
                         }
                         <polyline points="@userPoints" fill="none" stroke="#1ABC9C" stroke-width="3" />
                          <!-- End point dot -->
                         @{
-                            var lastX = 1000.0;
-                            var lastY = 200 - (double)((Model.DashboardData.UserGrowth.Last().SecondaryValue ?? 0) / totalMax * 180);
+                            var lastX = 1000.0.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                            var lastY = (200 - (double)((Model.DashboardData.UserGrowth.Last().SecondaryValue ?? 0) / totalMax * 180))
+                                .ToString(System.Globalization.CultureInfo.InvariantCulture);
                         }
                         <circle cx="@lastX" cy="@lastY" fill="#1ABC9C" r="4"></circle>
                     </svg>

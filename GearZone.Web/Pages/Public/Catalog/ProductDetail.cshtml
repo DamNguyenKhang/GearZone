@@ -95,46 +95,126 @@
             
             const variants = JSON.parse(root.getAttribute('data-variants') || '[]');
             const groups = Array.from(document.querySelectorAll('.attribute-group'));
+            const variantChips = Array.from(document.querySelectorAll('.variant-chip'));
             
             let selectedOptions = {};
+            let selectedVariantId = null;
 
-            // Helper to get matching variant
-            function findMatchingVariant() {
-                if(Object.keys(selectedOptions).length !== groups.length) return null;
-                
+            function setActionState(button, disabled) {
+                if (!button) return;
+                button.disabled = disabled;
+                button.classList.toggle('opacity-50', disabled);
+                button.classList.toggle('cursor-not-allowed', disabled);
+            }
+
+            function setActiveOptionButton(button) {
+                if (!button) return;
+
+                const group = button.closest('.attribute-group');
+                if (!group) return;
+
+                group.querySelectorAll('.variant-option').forEach(b => {
+                    b.classList.remove('border-2', 'border-primary', 'bg-primary/5', 'text-primary', 'relative');
+                    b.classList.add('border', 'border-slate-200');
+
+                    const check = b.querySelector('.checkmark-icon');
+                    if (check) check.remove();
+                });
+
+                button.classList.remove('border', 'border-slate-200');
+                button.classList.add('border-2', 'border-primary', 'bg-primary/5', 'text-primary', 'relative');
+                button.insertAdjacentHTML('beforeend', '<span class="checkmark-icon absolute -top-2 -right-2 bg-primary text-white text-[10px] px-1.5 py-0.5 rounded-full shadow-sm material-symbols-outlined text-xs p-1">check</span>');
+            }
+
+            function updateVariantChipState(activeVariantId) {
+                variantChips.forEach(chip => {
+                    const isActive = activeVariantId && chip.getAttribute('data-variant-id') === String(activeVariantId);
+                    chip.classList.toggle('border-2', !!isActive);
+                    chip.classList.toggle('border-primary', !!isActive);
+                    chip.classList.toggle('bg-primary/5', !!isActive);
+                    chip.classList.toggle('text-primary', !!isActive);
+                    chip.classList.toggle('border', !isActive);
+                    chip.classList.toggle('border-slate-200', !isActive);
+                });
+            }
+
+            function findVariantById(variantId) {
+                if (!variantId) return null;
+                return variants.find(v => String(v.Id) === String(variantId)) ?? null;
+            }
+
+            function findMatchingVariantByOptions() {
+                if (Object.keys(selectedOptions).length !== groups.length) return null;
+
                 const selectedIds = Object.values(selectedOptions).map(Number);
                 return variants.find(v => 
                     selectedIds.every(id => v.SelectedOptionIds.includes(id)) && 
                     v.SelectedOptionIds.length === selectedIds.length
-                );
+                ) ?? null;
+            }
+
+            function getCurrentVariant() {
+                const selectedByChip = findVariantById(selectedVariantId);
+                if (selectedByChip) return selectedByChip;
+
+                const selectedByAttributes = findMatchingVariantByOptions();
+                if (selectedByAttributes) return selectedByAttributes;
+
+                if (variants.length === 1) {
+                    return variants[0];
+                }
+
+                return null;
+            }
+
+            function syncOptionsFromVariant(variant) {
+                if (!variant || groups.length === 0) return;
+
+                selectedOptions = {};
+
+                groups.forEach(group => {
+                    const attrId = group.getAttribute('data-attribute-id');
+                    const buttons = Array.from(group.querySelectorAll('.variant-option'));
+                    const matchedButton = buttons.find(button => {
+                        const optionId = Number(button.getAttribute('data-option-id'));
+                        return variant.SelectedOptionIds.includes(optionId);
+                    });
+
+                    if (matchedButton) {
+                        setActiveOptionButton(matchedButton);
+                        selectedOptions[attrId] = matchedButton.getAttribute('data-option-id');
+                    } else {
+                        buttons.forEach(button => {
+                            button.classList.remove('border-2', 'border-primary', 'bg-primary/5', 'text-primary', 'relative');
+                            button.classList.add('border', 'border-slate-200');
+                            const check = button.querySelector('.checkmark-icon');
+                            if (check) check.remove();
+                        });
+                    }
+                });
             }
 
             function updateUI() {
-                const variant = findMatchingVariant();
+                const variant = getCurrentVariant();
                 const warningEl = document.getElementById('selection-warning');
                 const addToCartBtn = document.getElementById('add-to-cart-btn');
                 const buyNowBtn = document.getElementById('buy-now-btn');
                 const stockContainer = document.getElementById('stock-container');
                 const oosContainer = document.getElementById('out-of-stock-container');
-
-                const setActionState = (button, disabled) => {
-                    if (!button) return;
-                    button.disabled = disabled;
-                    button.classList.toggle('opacity-50', disabled);
-                    button.classList.toggle('cursor-not-allowed', disabled);
-                };
+                const hasCompleteSelection = groups.length > 0 && Object.keys(selectedOptions).length === groups.length;
                 
-                if (Object.keys(selectedOptions).length === groups.length && !variant) {
+                if (hasCompleteSelection && !variant) {
                     warningEl.classList.remove('hidden');
                     setActionState(addToCartBtn, true);
                     setActionState(buyNowBtn, true);
                 } else {
                     warningEl.classList.add('hidden');
-                    setActionState(addToCartBtn, false);
-                    setActionState(buyNowBtn, false);
                 }
 
                 if (variant) {
+                    selectedVariantId = variant.Id;
+                    updateVariantChipState(selectedVariantId);
+
                     // Update URL silently
                     const url = new URL(window.location);
                     url.searchParams.set('variantId', variant.Id);
@@ -172,17 +252,17 @@
                         qtyInput.setAttribute('data-max-stock', 0);
                         qtyInput.value = 1;
                     }
+                } else {
+                    updateVariantChipState(null);
+                    setActionState(addToCartBtn, variants.length > 0);
+                    setActionState(buyNowBtn, variants.length > 0);
                 }
             }
 
             function resolveVariantId() {
-                const variant = findMatchingVariant();
+                const variant = getCurrentVariant();
                 if (variant) {
                     return variant.Id;
-                }
-
-                if (variants.length === 1) {
-                    return variants[0].Id;
                 }
 
                 document.getElementById('selection-warning').classList.remove('hidden');
@@ -205,26 +285,28 @@
             // Click handlers
             document.querySelectorAll('.variant-option').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    const group = e.target.closest('.attribute-group');
+                    const button = e.currentTarget;
+                    const group = button.closest('.attribute-group');
                     const attrId = group.getAttribute('data-attribute-id');
-                    const optId = e.target.getAttribute('data-option-id');
-
-                    // UI Toggle: Remove active state from all buttons IN THIS GROUP
-                    group.querySelectorAll('.variant-option').forEach(b => {
-                        b.classList.remove('border-2', 'border-primary', 'bg-primary/5', 'text-primary');
-                        b.classList.add('border', 'border-slate-200');
-                        // Remove checkmark
-                        const check = b.querySelector('.material-symbols-outlined');
-                        if (check) check.remove();
-                    });
-
-                    // Add active state to clicked button
-                    e.target.classList.remove('border', 'border-slate-200');
-                    e.target.classList.add('border-2', 'border-primary', 'bg-primary/5', 'text-primary', 'relative');
-                    e.target.insertAdjacentHTML('beforeend', '<span class="absolute -top-2 -right-2 bg-primary text-white text-[10px] px-1.5 py-0.5 rounded-full shadow-sm material-symbols-outlined text-xs p-1 checkmark-icon">check</span>');
+                    const optId = button.getAttribute('data-option-id');
+                    setActiveOptionButton(button);
 
                     selectedOptions[attrId] = optId;
+                    const matchedVariant = findMatchingVariantByOptions();
+                    selectedVariantId = matchedVariant ? matchedVariant.Id : null;
                     
+                    updateUI();
+                });
+            });
+
+            variantChips.forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const variantId = chip.getAttribute('data-variant-id');
+                    const variant = findVariantById(variantId);
+                    if (!variant) return;
+
+                    selectedVariantId = variant.Id;
+                    syncOptionsFromVariant(variant);
                     updateUI();
                 });
             });
@@ -233,19 +315,20 @@
             const urlParams = new URLSearchParams(window.location.search);
             const initialVariantId = urlParams.get('variantId');
             if (initialVariantId) {
-                const initialVariant = variants.find(v => v.Id === initialVariantId);
+                const initialVariant = findVariantById(initialVariantId);
                 if (initialVariant) {
-                    initialVariant.SelectedOptionIds.forEach(optId => {
-                        const btn = document.querySelector(`.variant-option[data-option-id="${optId}"]`);
-                        if (btn) btn.click();
-                    });
+                    selectedVariantId = initialVariant.Id;
+                    syncOptionsFromVariant(initialVariant);
+                    updateUI();
+                } else if (variants.length > 0) {
+                    selectedVariantId = variants[0].Id;
+                    syncOptionsFromVariant(variants[0]);
+                    updateUI();
                 }
-            } else if (groups.length > 0 && variants.length > 0) {
-                // Pre-select first valid variant
-                variants[0].SelectedOptionIds.forEach(optId => {
-                     const btn = document.querySelector(`.variant-option[data-option-id="${optId}"]`);
-                     if (btn) btn.click();
-                });
+            } else if (variants.length > 0) {
+                selectedVariantId = variants[0].Id;
+                syncOptionsFromVariant(variants[0]);
+                updateUI();
             } else {
                 updateUI(); // In case there are no variants
             }

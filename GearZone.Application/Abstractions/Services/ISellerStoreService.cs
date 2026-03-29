@@ -16,4 +16,7 @@ public interface ISellerStoreService
     Task SubmitRegistrationAsync(Guid storeId, string userId);
     Task<RegistrationProgressDto?> GetRegistrationProgressAsync(string userId);
     Task<Guid> StartReapplicationAsync(string userId);
+
+    // Profile Management
+    Task<bool> UpdateStoreProfileAsync(string userId, UpdateStoreProfileDto dto);
 }

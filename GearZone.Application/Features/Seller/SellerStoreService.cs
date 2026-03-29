@@ -1,4 +1,4 @@
-﻿using GearZone.Application.Abstractions.Persistence;
+using GearZone.Application.Abstractions.Persistence;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Abstractions.External;
 using GearZone.Application.Features.Seller.Dtos;
@@ -85,6 +85,28 @@ public class SellerStoreService : ISellerStoreService
     public async Task<Store?> GetStoreByOwnerIdAsync(string userId)
     {
         return await _storeRepository.GetStoreByOwnerIdAsync(userId);
+    }
+
+    public async Task<bool> UpdateStoreProfileAsync(string userId, UpdateStoreProfileDto dto)
+    {
+        var store = await _storeRepository.Query()
+            .FirstOrDefaultAsync(s => s.OwnerUserId == userId && s.Status == StoreStatus.Approved);
+
+        if (store == null) return false;
+
+        store.Phone = dto.Phone;
+        store.Email = dto.Email;
+        store.Description = dto.Description;
+        store.AddressLine = dto.AddressLine;
+        store.Province = dto.Province;
+        store.Latitude = dto.Latitude;
+        store.Longitude = dto.Longitude;
+        store.UpdatedAt = DateTime.UtcNow;
+
+        _storeRepository.UpdateAsync(store);
+        await _unitOfWork.SaveChangesAsync();
+
+        return true;
     }
 
     // ==========================================

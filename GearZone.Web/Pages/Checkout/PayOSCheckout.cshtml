@@ -1,0 +1,67 @@
+@page
+@model GearZone.Web.Pages.Checkout.PayOSCheckoutModel
+@{
+    ViewData["Title"] = "Thanh toán qua PayOS - GearZone";
+}
+
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+        
+        <!-- Timer Header -->
+        <div class="bg-primary/10 border-b border-primary/20 p-4 text-center">
+            <h2 class="text-xl font-bold text-primary mb-1">Vui lòng hoàn tất thanh toán</h2>
+            <div class="inline-flex items-center gap-2 bg-white dark:bg-slate-900 px-4 py-2 rounded-full shadow-sm">
+                <span class="material-symbols-outlined text-amber-500">timer</span>
+                <span id="countdown-timer" class="text-lg font-mono font-bold text-slate-800 dark:text-white">
+                    Đang tính thời gian...
+                </span>
+            </div>
+            <p class="text-sm text-slate-500 mt-2">
+                Mã quét QR có hiệu lực 10 phút. Đơn hàng sẽ tự động hủy nếu không thanh toán.
+            </p>
+        </div>
+
+        <!-- PayOS Iframe -->
+        <div class="w-full relative bg-slate-50 dark:bg-slate-900" style="height: 75vh; min-height: 600px;">
+            <iframe src="@Model.CheckoutUrl" 
+                    class="absolute top-0 left-0 w-full h-full border-0" 
+                    allow="clipboard-write">
+            </iframe>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Fix timezone issue by explicitly treating the server's CreatedAt as UTC time
+        var createdAtStr = '@Model.CurrentOrder.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss.fff")' + 'Z'; 
+        var expireTime = new Date(createdAtStr);
+        // Add 10 minutes to creation time
+        expireTime.setMinutes(expireTime.getMinutes() + 10); 
+        
+        var countdownElement = document.getElementById("countdown-timer");
+
+        var timer = setInterval(function() {
+            var now = new Date().getTime();
+            var distance = expireTime.getTime() - now;
+
+            if (distance < 0) {
+                clearInterval(timer);
+                countdownElement.innerHTML = "00:00 - Quá hạn";
+                countdownElement.classList.add("text-red-500");
+                
+                // Tự động chuyển trang về huy đơn hàng nếu hết hẹn
+                window.location.href = '/checkout/payment-cancel';
+                return;
+            }
+
+            var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            var mm = minutes < 10 ? '0' + minutes : minutes;
+            var ss = seconds < 10 ? '0' + seconds : seconds;
+
+            countdownElement.innerHTML = mm + ":" + ss;
+        }, 1000);
+    </script>
+}

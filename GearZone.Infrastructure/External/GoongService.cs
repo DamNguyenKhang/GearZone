@@ -55,7 +55,9 @@ namespace GearZone.Infrastructure.External
 
         public async Task<GoongGeocodeResponse?> GetReverseGeocodeAsync(double lat, double lng)
         {
-            var url = $"https://rsapi.goong.io/Geocode?api_key={_apiKey}&latlng={lat},{lng}";
+            var latStr = lat.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var lngStr = lng.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var url = $"https://rsapi.goong.io/Geocode?api_key={_apiKey}&latlng={latStr},{lngStr}";
 
             try
             {
@@ -70,12 +72,16 @@ namespace GearZone.Infrastructure.External
 
         public async Task<double?> GetDistanceAsync(double originLat, double originLng, double destinationLat, double destinationLng)
         {
-            var url = $"https://rsapi.goong.io/DistanceMatrix?origins={originLat},{originLng}&destinations={destinationLat},{destinationLng}&vehicle=car&api_key={_apiKey}";
+            var oLatStr = originLat.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var oLngStr = originLng.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var dLatStr = destinationLat.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var dLngStr = destinationLng.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var url = $"https://rsapi.goong.io/DistanceMatrix?origins={oLatStr},{oLngStr}&destinations={dLatStr},{dLngStr}&vehicle=car&api_key={_apiKey}";
 
             try
             {
                 var response = await _httpClient.GetFromJsonAsync<GoongDistanceMatrixResponse>(url);
-                if (response?.Status == "OK" && response.Rows.Count > 0 && response.Rows[0].Elements.Count > 0)
+                if (response != null && response.Rows.Count > 0 && response.Rows[0].Elements.Count > 0)
                 {
                     var element = response.Rows[0].Elements[0];
                     if (element.Status == "OK")

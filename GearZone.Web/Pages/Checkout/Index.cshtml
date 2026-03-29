@@ -430,8 +430,8 @@
                                          data-ward="@addr.Ward"
                                          data-district="@addr.District"
                                          data-province="@addr.Province"
-                                         data-lat="@addr.Latitude"
-                                         data-lng="@addr.Longitude">
+                                         data-lat="@(addr.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture))"
+                                         data-lng="@(addr.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture))">
                                         
                                         <div class="flex items-start gap-4">
                                             <div class="w-10 h-10 rounded-full @(addr.IsDefault ? "bg-primary/20 text-primary" : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400") flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
@@ -637,8 +637,8 @@
             const apiKey = '@Model.GoongApiKey';
             const mapKey = '@Model.GoongMapKey';
 
-            const defaultLat = parseFloat('@Model.CheckoutRequest.ShippingInfo.Latitude') || 0;
-            const defaultLng = parseFloat('@Model.CheckoutRequest.ShippingInfo.Longitude') || 0;
+            const defaultLat = parseFloat('@(Model.CheckoutRequest.ShippingInfo.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture))') || 0;
+            const defaultLng = parseFloat('@(Model.CheckoutRequest.ShippingInfo.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture))') || 0;
             if (defaultLat !== 0 && defaultLng !== 0) {
                 setTimeout(() => calculateShipping(defaultLat, defaultLng), 500);
             }

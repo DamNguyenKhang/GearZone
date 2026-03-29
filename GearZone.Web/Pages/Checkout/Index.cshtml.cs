@@ -139,7 +139,7 @@ namespace GearZone.Web.Pages.Checkout
             // If PayOS: Redirect user directly to the PayOS payment page
             if (!string.IsNullOrEmpty(result.CheckoutUrl))
             {
-                return Redirect(result.CheckoutUrl);
+                return RedirectToPage("./PayOSCheckout", new { orderId = result.OrderId, checkoutUrl = result.CheckoutUrl });
             }
 
             // If COD: redirect to success page

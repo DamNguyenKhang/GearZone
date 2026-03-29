@@ -15,9 +15,9 @@ namespace GearZone.Application.Features.Shipping
         private readonly IMemoryCache _cache;
 
         private const decimal BaseFee = 15000;
-        private const decimal PricePerKm = 5000;
+        private const decimal PricePerKm = 500;
         private const decimal MinFee = 15000;
-        private const decimal MaxFee = 50000;
+        private const decimal MaxFee = 500000;
         private const decimal FreeShippingThreshold = 200000;
 
         public ShippingService(IGoongService goongService, IMemoryCache cache)

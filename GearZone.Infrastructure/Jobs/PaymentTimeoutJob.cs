@@ -17,7 +17,7 @@ namespace GearZone.Infrastructure.Jobs
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<PaymentTimeoutJob> _logger;
 
-        private const int TimeoutMinutes = 15;
+        private const int TimeoutMinutes = 10;
 
         public PaymentTimeoutJob(
             IOrderService orderService,

@@ -107,7 +107,15 @@ namespace GearZone.Infrastructure.External
                     success: true,
                     checkoutUrl: response.CheckoutUrl,
                     paymentLinkId: response.PaymentLinkId
-                );
+                )
+                {
+                    Bin = response.Bin,
+                    AccountNumber = response.AccountNumber,
+                    AccountName = response.AccountName,
+                    Amount = response.Amount,
+                    Description = response.Description,
+                    QrCode = response.QrCode
+                };
             }
             catch (Exception ex)
             {

@@ -7,6 +7,13 @@ namespace GearZone.Application.Features.Payment.Dtos
         public string? PaymentLinkId { get; set; }
         public string? ErrorMessage { get; set; }
 
+        public string? Bin { get; set; }
+        public string? AccountNumber { get; set; }
+        public string? AccountName { get; set; }
+        public long? Amount { get; set; }
+        public string? Description { get; set; }
+        public string? QrCode { get; set; }
+
         public PaymentResult(bool success, string? checkoutUrl, string? paymentLinkId = null, string? errorMessage = null)
         {
             Success = success;

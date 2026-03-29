@@ -205,7 +205,13 @@ namespace GearZone.Application.Features.Checkout
                 Success = true,
                 OrderId = order.Id,
                 OrderCode = order.OrderCode.ToString(),
-                CheckoutUrl = paymentResult.CheckoutUrl  // null for COD, URL for PayOS
+                CheckoutUrl = paymentResult.CheckoutUrl,
+                Bin = paymentResult.Bin,
+                AccountNumber = paymentResult.AccountNumber,
+                AccountName = paymentResult.AccountName,
+                Amount = paymentResult.Amount,
+                Description = paymentResult.Description,
+                QrCode = paymentResult.QrCode
             };
         }
 

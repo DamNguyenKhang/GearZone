@@ -1,6 +1,5 @@
 using GearZone.Application.Abstractions.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Security.Claims;
@@ -24,13 +23,18 @@ namespace GearZone.Web.Pages.Checkout
         public Guid? OrderId { get; set; }
         public long? OrderCode { get; set; }
 
-        public async Task<IActionResult> OnGetAsync([FromQuery] Guid? orderId, [FromQuery] long? orderCode)
+        public async Task<IActionResult> OnGetAsync([FromQuery] Guid? orderId, [FromQuery] long? orderCode, [FromQuery] bool processed = false)
         {
             OrderId = orderId;
             OrderCode = orderCode;
             _logger.LogInformation("PaymentCancel page loaded with OrderId: {OrderId}, OrderCode: {OrderCode}", orderId, orderCode);
 
             var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (processed)
+            {
+                return Page();
+            }
 
             if (orderId.HasValue)
             {

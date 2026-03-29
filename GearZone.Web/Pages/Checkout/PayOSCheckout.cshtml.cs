@@ -1,13 +1,24 @@
+using GearZone.Application.Abstractions.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
+using System.Security.Claims;
 
 namespace GearZone.Web.Pages.Checkout
 {
     [Authorize]
     public class PayOSCheckoutModel : PageModel
     {
+        private readonly IOrderService _orderService;
+        private readonly IBackgroundJobService _backgroundJobService;
+
+        public PayOSCheckoutModel(IOrderService orderService, IBackgroundJobService backgroundJobService)
+        {
+            _orderService = orderService;
+            _backgroundJobService = backgroundJobService;
+        }
+
         public string OrderId { get; set; } = string.Empty;
         public string OrderCode { get; set; } = string.Empty;
         public string Bin { get; set; } = string.Empty;
@@ -42,6 +53,26 @@ namespace GearZone.Web.Pages.Checkout
             ExpireAtUnix = DateTimeOffset.UtcNow.AddMinutes(10).ToUnixTimeMilliseconds();
 
             return Page();
+        }
+
+        public async Task<IActionResult> OnPostCancelAsync([FromForm] Guid orderId, CancellationToken ct)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var order = await _orderService.GetOrderByIdAsync(orderId, ct);
+
+            if (order == null || !string.Equals(order.UserId, userId, StringComparison.Ordinal))
+            {
+                Response.StatusCode = 400;
+                return new JsonResult(new { success = false, message = "Unable to cancel the order." });
+            }
+
+            _backgroundJobService.EnqueueOrderCancellation(orderId, userId);
+
+            return new JsonResult(new
+            {
+                success = true,
+                redirectUrl = Url.Page("/Checkout/PaymentCancel", new { orderId, processed = true })
+            });
         }
     }
 }

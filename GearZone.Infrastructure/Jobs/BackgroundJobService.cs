@@ -13,5 +13,12 @@ namespace GearZone.Infrastructure.Jobs
                 delay
             );
         }
+
+        public string EnqueueOrderCancellation(Guid orderId, string? userId = null)
+        {
+            return BackgroundJob.Enqueue<PaymentTimeoutJob>(
+                job => job.CancelOrderOnRequest(orderId, userId)
+            );
+        }
     }
 }

@@ -1,7 +1,7 @@
 @page
 @model GearZone.Web.Pages.Checkout.PayOSCheckoutModel
 @{
-    ViewData["Title"] = "Thanh toán qua PayOS - GearZone";
+    ViewData["Title"] = "Pay with PayOS - GearZone";
 }
 
 <style>
@@ -9,7 +9,6 @@
     .payos-card { display: grid; grid-template-columns: 1fr 1fr; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 32px rgba(0,0,0,.12); border: 1px solid #e2e8f0; }
     @@media (max-width: 640px) { .payos-card { grid-template-columns: 1fr; } }
 
-    /* Left – QR side */
     .qr-side { background: #fff; border-right: 1px solid #e2e8f0; color: #1e293b; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 20px; gap: 14px; }
     .qr-side h2 { margin: 0; font-size: 1rem; font-weight: 700; color: #1e293b; }
     .qr-side .order-code { font-size: .78rem; color: #94a3b8; background: #f1f5f9; border-radius: 20px; padding: 3px 14px; }
@@ -18,7 +17,6 @@
     #countdown-timer { font-family: monospace; font-size: 1.4rem; font-weight: 800; letter-spacing: .06em; color: #f97316; }
     .qr-expire-note { font-size: .72rem; color: #94a3b8; }
 
-    /* Right – Info side */
     .info-side { background: #fff; padding: 28px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; }
     .dark .info-side { background: #1a202c; }
     .info-side h3 { margin: 0 0 4px; font-size: 1rem; font-weight: 700; color: #1e293b; }
@@ -41,10 +39,12 @@
 </style>
 
 <div class="payos-wrap">
-
+    <form id="payos-cancel-form" method="post" asp-page-handler="Cancel" class="hidden">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="orderId" value="@Model.OrderId" />
+    </form>
 
     <div class="payos-card">
-        <!-- LEFT: QR -->
         <div class="qr-side">
             <h2>Scan QR Code to Pay</h2>
             <span class="order-code">Order code: @Model.OrderCode</span>
@@ -65,7 +65,6 @@
             <span class="qr-expire-note">Order will be cancelled when timer expires</span>
         </div>
 
-        <!-- RIGHT: Bank info -->
         <div class="info-side">
             <div>
                 <h3>Bank Transfer Details</h3>
@@ -90,7 +89,7 @@
                 <div class="bank-row" style="padding-top:14px;">
                     <span class="bank-label">Amount</span>
                     <span class="bank-value">
-                        <span class="amount-value">@(string.IsNullOrEmpty(Model.Amount) ? "–" : long.Parse(Model.Amount).ToString("N0") + "₫")</span>
+                        <span class="amount-value">@(string.IsNullOrEmpty(Model.Amount) ? "-" : long.Parse(Model.Amount).ToString("N0") + " VND")</span>
                         <button class="copy-btn" onclick="copyText('@Model.Amount')" title="Copy">
                             <span class="material-symbols-outlined" style="font-size:1rem;">content_copy</span>
                         </button>
@@ -108,7 +107,7 @@
             </div>
 
             <div>
-                <p class="note-text">⚠ Please enter the exact transfer note so your order is confirmed automatically.</p>
+                <p class="note-text">Please enter the exact transfer note so your order is confirmed automatically.</p>
                 <div class="btn-row">
                     <button class="btn-cancel" onclick="cancelOrder()">
                         <span class="material-symbols-outlined" style="font-size:1rem;">cancel</span>
@@ -127,7 +126,6 @@
     </div>
 </div>
 
-<!-- Confirm cancel modal -->
 <div id="cancel-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
     <div style="background:#fff;border-radius:16px;padding:28px;max-width:360px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.2);">
         <span class="material-symbols-outlined" style="font-size:3rem;color:#ef4444;">warning</span>
@@ -143,8 +141,19 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script>
-        // ─── Render QR ──────────────────────────────────
         var qrValue = '@Html.Raw(Model.QrCode)';
+        var expireAt = @Model.ExpireAtUnix;
+        var timerEl = document.getElementById("countdown-timer");
+        var orderId = '@Model.OrderId';
+        var cancelUrl = '/checkout/payment-cancel?orderId=' + orderId;
+        var successUrl = orderId ? ('/checkout/success?orderId=' + orderId) : '/';
+        var paymentStatusUrl = orderId ? ('/api/orders/' + orderId + '/payment-status') : '';
+        var payosUrl = '@Html.Raw(Model.CheckoutUrl)';
+        var payosPopup = null;
+        var popupMonitor = null;
+        var paymentPoller = null;
+        var isRedirectingAfterPayment = false;
+
         if (qrValue && document.getElementById("qrcode")) {
             new QRCode(document.getElementById("qrcode"), {
                 text: qrValue,
@@ -156,59 +165,62 @@
             });
         }
 
-        // ─── Countdown ──────────────────────────────────
-        var expireAt = @Model.ExpireAtUnix;
-        var timerEl = document.getElementById("countdown-timer");
-
         var tick = setInterval(function () {
             var rem = expireAt - Date.now();
             if (rem <= 0) {
                 clearInterval(tick);
-                timerEl.textContent = "00:00";
-                window.location.href = '/checkout/payment-cancel';
+                if (paymentPoller) {
+                    clearInterval(paymentPoller);
+                }
+                window.location.href = cancelUrl;
                 return;
             }
-            var m = Math.floor(rem / 60000), s = Math.floor((rem % 60000) / 1000);
-            timerEl.textContent = (m < 10 ? '0'+m : m) + ':' + (s < 10 ? '0'+s : s);
-            if (rem < 120000) timerEl.style.color = '#fca5a5';
+
+            var m = Math.floor(rem / 60000);
+            var s = Math.floor((rem % 60000) / 1000);
+            timerEl.textContent = (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+            if (rem < 120000) {
+                timerEl.style.color = '#fca5a5';
+            }
         }, 500);
 
-        // ─── Copy helper ────────────────────────────────
         function copyText(t) {
             navigator.clipboard.writeText(t).then(() => {
-                window.showToast?.('success', 'Đã sao chép!');
+                window.showToast?.('success', 'Copied.');
             });
         }
-
-        // ─── Cancel order ────────────────────────────────
-        var orderId = '@Model.OrderId';
-        var cancelUrl = '/checkout/payment-cancel?orderId=' + orderId;
 
         function cancelOrder() {
             document.getElementById('cancel-modal').style.display = 'flex';
         }
+
         function closeCancelModal() {
             document.getElementById('cancel-modal').style.display = 'none';
         }
-        function confirmCancel() {
-            // Close PayOS popup if it's still open
-            if (payosPopup && !payosPopup.closed) {
-                payosPopup.close();
+
+        function stopPaymentMonitors() {
+            if (popupMonitor) {
+                clearInterval(popupMonitor);
+            }
+            if (paymentPoller) {
+                clearInterval(paymentPoller);
             }
             clearInterval(tick);
-            window.location.href = cancelUrl;
         }
 
-        // ─── Open PayOS popup & monitor ─────────────────
-        var payosPopup = null;
-        var popupMonitor = null;
-        var payosUrl = '@Html.Raw(Model.CheckoutUrl)';
-
         function openPayOS() {
-            if (payosPopup && !payosPopup.closed) { payosPopup.focus(); return; }
+            if (payosPopup && !payosPopup.closed) {
+                payosPopup.focus();
+                return;
+            }
+
             payosPopup = window.open(payosUrl, 'payos_popup', 'width=700,height=700,top=100,left=200');
             popupMonitor = setInterval(function () {
-                if (!payosPopup || payosPopup.closed) { clearInterval(popupMonitor); return; }
+                if (!payosPopup || payosPopup.closed) {
+                    clearInterval(popupMonitor);
+                    return;
+                }
+
                 try {
                     var href = payosPopup.location.href;
                     if (href && href.indexOf(window.location.host) !== -1) {
@@ -216,8 +228,117 @@
                         payosPopup.close();
                         window.location.href = href;
                     }
-                } catch (e) { /* cross-origin – still on PayOS */ }
+                } catch (e) {
+                    // Still on PayOS domain.
+                }
             }, 800);
+        }
+
+        async function checkPaymentStatus() {
+            if (!paymentStatusUrl || isRedirectingAfterPayment) {
+                return;
+            }
+
+            try {
+                const response = await fetch(paymentStatusUrl, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    cache: 'no-store'
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const payload = await response.json();
+                const status = (payload?.status || '').toString().toLowerCase();
+
+                if (status === 'paid') {
+                    isRedirectingAfterPayment = true;
+                    stopPaymentMonitors();
+                    if (payosPopup && !payosPopup.closed) {
+                        payosPopup.close();
+                    }
+                    window.showToast?.('success', 'Payment successful. Redirecting to your order...');
+                    window.setTimeout(function () {
+                        window.location.href = successUrl;
+                    }, 900);
+                    return;
+                }
+
+                if (status === 'cancelled') {
+                    isRedirectingAfterPayment = true;
+                    stopPaymentMonitors();
+                    if (payosPopup && !payosPopup.closed) {
+                        payosPopup.close();
+                    }
+                    window.location.href = cancelUrl;
+                }
+            } catch (error) {
+                console.warn('Payment status polling failed.', error);
+            }
+        }
+
+        async function performCancelRequest() {
+            const cancelForm = document.getElementById('payos-cancel-form');
+            const formData = new FormData(cancelForm);
+            const action = cancelForm.getAttribute('action') || window.location.pathname + '?handler=Cancel';
+
+            const response = await fetch(action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            let payload = null;
+            try {
+                payload = await response.json();
+            } catch (error) {
+                payload = null;
+            }
+
+            if (!response.ok || !payload?.success || !payload?.redirectUrl) {
+                throw new Error(payload?.message || 'Unable to cancel the order.');
+            }
+
+            return payload.redirectUrl;
+        }
+
+        if (paymentStatusUrl) {
+            paymentPoller = setInterval(checkPaymentStatus, 3000);
+            window.setTimeout(checkPaymentStatus, 1200);
+        }
+
+        async function confirmCancel() {
+            const confirmButton = document.querySelector('#cancel-modal button[onclick="confirmCancel()"]');
+            const originalMarkup = confirmButton?.innerHTML;
+
+            try {
+                if (confirmButton) {
+                    confirmButton.disabled = true;
+                    confirmButton.textContent = 'Cancelling...';
+                    confirmButton.style.opacity = '0.75';
+                }
+
+                window.showToast?.('info', 'Cancelling your order...');
+
+                if (payosPopup && !payosPopup.closed) {
+                    payosPopup.close();
+                }
+
+                stopPaymentMonitors();
+                const redirectUrl = await performCancelRequest();
+                window.location.href = redirectUrl;
+            } catch (error) {
+                console.error('Cancel order failed.', error);
+                window.showToast?.('error', error?.message || 'Unable to cancel the order right now.');
+                if (confirmButton) {
+                    confirmButton.disabled = false;
+                    confirmButton.innerHTML = originalMarkup;
+                    confirmButton.style.opacity = '1';
+                }
+            }
         }
     </script>
 }

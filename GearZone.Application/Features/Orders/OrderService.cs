@@ -179,12 +179,10 @@ namespace GearZone.Application.Features.Orders
                     if (item.Variant != null)
                     {
                         item.Variant.StockQuantity += item.Quantity;
-                        await _productVariantRepository.UpdateAsync(item.Variant);
                     }
                 }
                 subOrder.Status = OrderStatus.Cancelled;
                 subOrder.UpdatedAt = DateTime.UtcNow;
-                await _subOrderRepository.UpdateAsync(subOrder);
             }
 
             // 2. Update Pending Payments
@@ -192,7 +190,6 @@ namespace GearZone.Application.Features.Orders
             {
                 payment.Status = PaymentStatus.Cancelled;
                 payment.UpdatedAt = DateTime.UtcNow;
-                await _paymentRepository.UpdateAsync(payment);
             }
 
             // 3. Add Status History
@@ -207,8 +204,6 @@ namespace GearZone.Application.Features.Orders
             });
 
             order.UpdatedAt = DateTime.UtcNow;
-            await _orderRepository.UpdateAsync(order);
-
             await _unitOfWork.SaveChangesAsync(ct);
             return true;
         }

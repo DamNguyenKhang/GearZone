@@ -99,5 +99,23 @@ namespace GearZone.Infrastructure.Jobs
                 throw;
             }
         }
+
+        [DisplayName("Cancel Order {0} From Buyer Request")]
+        public async Task CancelOrderOnRequest(Guid orderId, string? userId)
+        {
+            _logger.LogInformation("[Job] Processing buyer-requested cancellation for order {OrderId}", orderId);
+
+            try
+            {
+                await _orderService.CancelOrderAsync(orderId, userId);
+                await _unitOfWork.SaveChangesAsync();
+                _logger.LogInformation("[Job] Successfully processed buyer-requested cancellation for order {OrderId}", orderId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[Job] Failed to process buyer-requested cancellation for order {OrderId}", orderId);
+                throw;
+            }
+        }
     }
 }

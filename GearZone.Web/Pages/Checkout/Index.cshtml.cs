@@ -136,10 +136,19 @@ namespace GearZone.Web.Pages.Checkout
                 return Page();
             }
 
-            // If PayOS: Redirect user directly to the PayOS payment page
+            // If PayOS: redirect to internal QR page
             if (!string.IsNullOrEmpty(result.CheckoutUrl))
             {
-                return RedirectToPage("./PayOSCheckout", new { orderId = result.OrderId, checkoutUrl = result.CheckoutUrl });
+                TempData["PayOS_OrderId"] = result.OrderId?.ToString();
+                TempData["PayOS_OrderCode"] = result.OrderCode;
+                TempData["PayOS_Bin"] = result.Bin;
+                TempData["PayOS_AccountNumber"] = result.AccountNumber;
+                TempData["PayOS_AccountName"] = result.AccountName;
+                TempData["PayOS_Amount"] = result.Amount?.ToString();
+                TempData["PayOS_Description"] = result.Description;
+                TempData["PayOS_QrCode"] = result.QrCode;
+                TempData["PayOS_CheckoutUrl"] = result.CheckoutUrl;
+                return RedirectToPage("./PayOSCheckout");
             }
 
             // If COD: redirect to success page

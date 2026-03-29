@@ -67,6 +67,8 @@ namespace GearZone.Infrastructure.External
 
                     ReturnUrl = _settings.ReturnUrl,
                     CancelUrl = _settings.CancelUrl,
+                    
+                    ExpiredAt = (int)DateTimeOffset.UtcNow.AddMinutes(10).ToUnixTimeSeconds(),
 
                     BuyerName = order.ReceiverName,
                     BuyerEmail = order.User?.Email,

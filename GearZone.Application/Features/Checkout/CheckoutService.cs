@@ -197,7 +197,7 @@ namespace GearZone.Application.Features.Checkout
             // 9. Schedule real-time timeout job if PayOS
             if (request.PaymentMethod == PaymentMethod.PayOS)
             {
-                _backgroundJobService.SchedulePaymentTimeout(order.Id, TimeSpan.FromMinutes(15));
+                _backgroundJobService.SchedulePaymentTimeout(order.Id, TimeSpan.FromMinutes(10));
             }
 
             return new CheckoutResponseDto

@@ -1,7 +1,9 @@
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Common.Dtos;
 using GearZone.Application.Features.Map.Dtos;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace GearZone.Application.Features.Map;
@@ -56,7 +58,7 @@ public class MapService : IMapService
         {
             var parts = result.FormattedAddress.Split(',')
                 .Select(s => s.Trim())
-                .Where(s => !s.Equals("Việt Nam", System.StringComparison.OrdinalIgnoreCase))
+                .Where(s => !IsVietnamCountryName(s))
                 .Reverse()
                 .ToList();
 
@@ -66,5 +68,34 @@ public class MapService : IMapService
         }
 
         return detail;
+    }
+
+    private static bool IsVietnamCountryName(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var normalized = value.Normalize(NormalizationForm.FormD);
+        var builder = new StringBuilder(normalized.Length);
+        foreach (var c in normalized)
+        {
+            var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+            if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+            {
+                builder.Append(c);
+            }
+        }
+
+        var ascii = builder
+            .ToString()
+            .Normalize(NormalizationForm.FormC)
+            .Replace("\u0111", "d")
+            .Replace("\u0110", "D")
+            .Replace(" ", string.Empty)
+            .ToLowerInvariant();
+
+        return ascii == "vietnam";
     }
 }

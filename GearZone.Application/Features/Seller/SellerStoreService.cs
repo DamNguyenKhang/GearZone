@@ -315,6 +315,41 @@ public class SellerStoreService : ISellerStoreService
         };
     }
 
+    public async Task<Guid> StartReapplicationAsync(string userId)
+    {
+        var existingDraft = await _storeRepository.Query()
+            .Where(s => s.OwnerUserId == userId && s.Status == StoreStatus.Draft)
+            .OrderByDescending(s => s.UpdatedAt ?? s.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (existingDraft != null)
+        {
+            return existingDraft.Id;
+        }
+
+        var revisableStore = await _storeRepository.Query()
+            .Where(s => s.OwnerUserId == userId
+                && (s.Status == StoreStatus.Rejected || s.Status == StoreStatus.Pending))
+            .OrderByDescending(s => s.UpdatedAt ?? s.CreatedAt)
+            .FirstOrDefaultAsync();
+
+        if (revisableStore == null)
+        {
+            throw new InvalidOperationException("No pending or rejected application found to re-apply.");
+        }
+
+        revisableStore.Status = StoreStatus.Draft;
+        revisableStore.RejectReason = null;
+        revisableStore.RegistrationStep = 1;
+        revisableStore.ApprovedAt = null;
+        revisableStore.UpdatedAt = DateTime.UtcNow;
+
+        await _storeRepository.UpdateAsync(revisableStore);
+        await _unitOfWork.SaveChangesAsync();
+
+        return revisableStore.Id;
+    }
+
     private async Task<string> UploadIdentityImageAsync(Guid storeId, string userId, IFormFile file, string side)
     {
         var folder = $"GearZone/kyc/{storeId}/{userId}/{side}";

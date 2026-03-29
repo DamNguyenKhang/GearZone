@@ -20,6 +20,40 @@
         <p class="text-gray-500 mt-2">Complete the steps below to open your store on GearZone</p>
     </div>
 
+    @if (TempData["InfoMessage"] is string infoMessage)
+    {
+        <div class="mb-6 rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm font-medium text-blue-700">
+            @infoMessage
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] is string errorMessage)
+    {
+        <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-700">
+            @errorMessage
+        </div>
+    }
+
+    @if (Model.ExistingStoreStatus == GearZone.Domain.Enums.StoreStatus.Rejected && !ViewContext.HttpContext.Request.Query.ContainsKey("reapply"))
+    {
+        <div class="mb-6 rounded-2xl border border-orange-200 bg-orange-50 px-5 py-4">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="space-y-1">
+                    <p class="text-sm font-bold text-orange-700">Your previous store application was rejected.</p>
+                    @if (!string.IsNullOrWhiteSpace(Model.ExistingStoreRejectReason))
+                    {
+                        <p class="text-xs text-orange-700/90">Reason: @Model.ExistingStoreRejectReason</p>
+                    }
+                </div>
+                <a href="/Public/User/RegisterSeller?reapply=true"
+                   class="inline-flex items-center justify-center gap-2 rounded-xl border border-orange-300 bg-white px-4 py-2 text-sm font-bold text-orange-700 hover:bg-orange-100 transition-colors">
+                    <span class="material-symbols-outlined text-[18px]">refresh</span>
+                    Resubmit Application
+                </a>
+            </div>
+        </div>
+    }
+
     <!-- Stepper -->
     <div class="flex items-center justify-between mb-10 relative">
         <!-- Progress Bar Background -->

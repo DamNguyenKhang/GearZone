@@ -90,7 +90,7 @@
                 <h3 class="text-2xl font-black text-slate-900 leading-tight">
                     @if (Model.Summary.IsBalanceLive && Model.Summary.AvailableBalanceRaw.HasValue)
                     {
-                        @:đ @Model.Summary.AvailableBalanceRaw.Value.ToString("N0")
+                        @:VND @Model.Summary.AvailableBalanceRaw.Value.ToString("N0")
                     }
                     else
                     {
@@ -108,7 +108,7 @@
             </div>
             <div>
                 <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Pending Payout</p>
-                <h3 class="text-2xl font-black text-slate-900 leading-tight">đ @Model.Summary.PendingPayoutAmount.ToString("N0")</h3>
+                <h3 class="text-2xl font-black text-slate-900 leading-tight">VND @Model.Summary.PendingPayoutAmount.ToString("N0")</h3>
                 <p class="text-[11px] text-slate-400 mt-2 font-medium">Approved/Processing batches</p>
             </div>
         </div>
@@ -120,7 +120,7 @@
             </div>
             <div>
                 <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-1">Next Batch Required</p>
-                <h3 class="text-2xl font-black text-slate-900 leading-tight">đ @Model.Summary.NextBatchRequiredAmount.ToString("N0")</h3>
+                <h3 class="text-2xl font-black text-slate-900 leading-tight">VND @Model.Summary.NextBatchRequiredAmount.ToString("N0")</h3>
                 <p class="text-[11px] text-slate-400 mt-2 font-medium">Pending approval batches</p>
             </div>
         </div>
@@ -321,12 +321,12 @@
                                 @(string.IsNullOrEmpty(tx.Note) ? "—" : tx.Note)
                             </td>
                             <td class="py-4 px-5 text-right font-black whitespace-nowrap @(tx.Direction == TransactionDirection.IN ? "text-emerald-600" : "text-red-500")">
-                                @(tx.Direction == TransactionDirection.IN ? "+" : "−") đ @tx.Amount.ToString("N0")
+                                @(tx.Direction == TransactionDirection.IN ? "+" : "−") VND @tx.Amount.ToString("N0")
                             </td>
                             <td class="py-4 px-5 text-right font-bold text-slate-800 whitespace-nowrap">
                                 @if (tx.Status == WalletTransactionStatus.Completed)
                                 {
-                                    @:đ @tx.BalanceAfter.ToString("N0")
+                                    @:VND @tx.BalanceAfter.ToString("N0")
                                 }
                                 else
                                 {
@@ -432,7 +432,7 @@
                     <div class="space-y-1.5">
                         <label asp-for="TopupInput.Amount" class="block text-[11px] font-black text-slate-500 uppercase tracking-widest pl-1">Amount (VND) *</label>
                         <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 font-bold">đ</span>
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400 font-bold">VND</span>
                             <input asp-for="TopupInput.Amount" type="number" min="1" step="1000"
                                    class="form-input block w-full pl-8 pr-4 py-3 bg-slate-50 border-slate-200 rounded-xl text-lg font-black text-slate-900 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-slate-300"
                                    placeholder="0" />

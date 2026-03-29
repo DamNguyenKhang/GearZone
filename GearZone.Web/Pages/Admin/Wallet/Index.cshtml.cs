@@ -50,7 +50,7 @@ namespace GearZone.Web.Pages.Admin.Wallet
 
             await _walletService.RecordTopupAsync(TopupInput, adminId);
 
-            TempData["SuccessMessage"] = $"Topup đ{TopupInput.Amount:N0} recorded successfully with status Completed.";
+            TempData["SuccessMessage"] = $"Top-up {TopupInput.Amount:N0} VND recorded successfully with status Completed.";
             return RedirectToPage();
         }
     }

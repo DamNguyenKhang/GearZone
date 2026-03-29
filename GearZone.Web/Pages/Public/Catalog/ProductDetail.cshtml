@@ -112,18 +112,26 @@
             function updateUI() {
                 const variant = findMatchingVariant();
                 const warningEl = document.getElementById('selection-warning');
-                const btn = document.getElementById('add-to-cart-btn');
+                const addToCartBtn = document.getElementById('add-to-cart-btn');
+                const buyNowBtn = document.getElementById('buy-now-btn');
                 const stockContainer = document.getElementById('stock-container');
                 const oosContainer = document.getElementById('out-of-stock-container');
+
+                const setActionState = (button, disabled) => {
+                    if (!button) return;
+                    button.disabled = disabled;
+                    button.classList.toggle('opacity-50', disabled);
+                    button.classList.toggle('cursor-not-allowed', disabled);
+                };
                 
                 if (Object.keys(selectedOptions).length === groups.length && !variant) {
                     warningEl.classList.remove('hidden');
-                    btn.disabled = true;
-                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                    setActionState(addToCartBtn, true);
+                    setActionState(buyNowBtn, true);
                 } else {
                     warningEl.classList.add('hidden');
-                    btn.disabled = false;
-                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    setActionState(addToCartBtn, false);
+                    setActionState(buyNowBtn, false);
                 }
 
                 if (variant) {
@@ -148,8 +156,8 @@
                         stockContainer.classList.remove('hidden');
                         oosContainer.classList.add('hidden');
                         document.getElementById('display-stock').textContent = `In Stock (${variant.StockQuantity} units available)`;
-                        btn.disabled = false;
-                        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                        setActionState(addToCartBtn, false);
+                        setActionState(buyNowBtn, false);
                         qtyInput.setAttribute('data-max-stock', variant.StockQuantity);
                         
                         // If current value exceeds new max, reset it
@@ -159,12 +167,39 @@
                     } else {
                         stockContainer.classList.add('hidden');
                         oosContainer.classList.remove('hidden');
-                        btn.disabled = true;
-                        btn.classList.add('opacity-50', 'cursor-not-allowed');
+                        setActionState(addToCartBtn, true);
+                        setActionState(buyNowBtn, true);
                         qtyInput.setAttribute('data-max-stock', 0);
                         qtyInput.value = 1;
                     }
                 }
+            }
+
+            function resolveVariantId() {
+                const variant = findMatchingVariant();
+                if (variant) {
+                    return variant.Id;
+                }
+
+                if (variants.length === 1) {
+                    return variants[0].Id;
+                }
+
+                document.getElementById('selection-warning').classList.remove('hidden');
+                return null;
+            }
+
+            function resolveQuantity() {
+                const qtyInput = document.getElementById('qty-input');
+                const quantity = parseInt(qtyInput.value);
+                const maxStock = parseInt(qtyInput.getAttribute('data-max-stock') || '9999');
+
+                if (quantity > maxStock) {
+                    window.showToast?.('warning', `Only ${maxStock} items available in stock.`);
+                    return null;
+                }
+
+                return quantity;
             }
 
             // Click handlers
@@ -219,32 +254,39 @@
             const addToCartBtn = document.getElementById('add-to-cart-btn');
             if (addToCartBtn) {
                 addToCartBtn.addEventListener('click', async () => {
-                   const variant = findMatchingVariant();
-                   let variantId = null;
+                   const variantId = resolveVariantId();
+                   if (!variantId) return;
 
-                   if (variant) {
-                       variantId = variant.Id;
-                   } else if(variants.length === 1) { // Handle products with no explicit variants selection
-                       variantId = variants[0].Id;
-                   } else {
-                       document.getElementById('selection-warning').classList.remove('hidden');
-                       return;
-                   }
-                   
-                   const qtyInput = document.getElementById('qty-input');
-                   const quantity = parseInt(qtyInput.value);
-                   const maxStock = parseInt(qtyInput.getAttribute('data-max-stock') || '9999');
-
-                   if (quantity > maxStock) {
-                       window.showToast?.('warning', `Only ${maxStock} items available in stock.`);
-                       return;
-                   }
+                   const quantity = resolveQuantity();
+                   if (quantity === null) return;
 
                    const success = await addToCart(variantId, quantity, addToCartBtn);
                    
                    if (success) {
-                       qtyInput.value = 1;
+                       document.getElementById('qty-input').value = 1;
                    }
+                });
+            }
+
+            const buyNowBtn = document.getElementById('buy-now-btn');
+            if (buyNowBtn) {
+                buyNowBtn.addEventListener('click', async () => {
+                    const variantId = resolveVariantId();
+                    if (!variantId) return;
+
+                    const quantity = resolveQuantity();
+                    if (quantity === null) return;
+
+                    const result = await addToCart(variantId, quantity, buyNowBtn);
+                    if (!result) return;
+
+                    const cartItemId = result.cartItemId;
+                    if (!cartItemId) {
+                        window.location.href = '/Cart/Index';
+                        return;
+                    }
+
+                    window.location.href = `/Checkout?SelectedCartItemIds=${encodeURIComponent(cartItemId)}`;
                 });
             }
         });

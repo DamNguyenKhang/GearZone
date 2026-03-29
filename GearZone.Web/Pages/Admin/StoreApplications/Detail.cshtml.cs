@@ -12,6 +12,8 @@ namespace GearZone.Web.Pages.Admin.StoreApplications
     [Authorize(Roles = "Super Admin")]
     public class DetailModel : PageModel
     {
+        private const int MaxReasonLength = 500;
+
         private readonly IAdminStoreService _adminStoreService;
 
         public DetailModel(IAdminStoreService adminStoreService)
@@ -47,7 +49,20 @@ namespace GearZone.Web.Pages.Admin.StoreApplications
 
         public async Task<IActionResult> OnPostRejectAsync(Guid id, string rejectReason)
         {
-            var success = await _adminStoreService.UpdateStoreStatusAsync(id, StoreStatus.Rejected, rejectReason);
+            if (string.IsNullOrWhiteSpace(rejectReason))
+            {
+                TempData["ErrorMessage"] = "Rejection reason is required.";
+                return RedirectToPage(new { id });
+            }
+
+            var normalizedReason = rejectReason.Trim();
+            if (normalizedReason.Length > MaxReasonLength)
+            {
+                TempData["ErrorMessage"] = $"Rejection reason cannot exceed {MaxReasonLength} characters.";
+                return RedirectToPage(new { id });
+            }
+
+            var success = await _adminStoreService.UpdateStoreStatusAsync(id, StoreStatus.Rejected, normalizedReason);
             if (!success)
             {
                 TempData["ErrorMessage"] = "Failed to reject store application.";

@@ -71,9 +71,16 @@
                         }
                         else if (Model.UserStore.Status == StoreStatus.Pending)
                         {
-                            <div class="w-full py-2 bg-blue-50 text-blue-600 font-bold rounded-lg border border-blue-200 flex items-center justify-center gap-2 text-sm" title="Your application is currently being reviewed.">
-                                <span class="material-symbols-outlined text-[18px]">hourglass_empty</span>
-                                App Pending
+                            <div class="space-y-2">
+                                <div class="w-full py-2 bg-blue-50 text-blue-600 font-bold rounded-lg border border-blue-200 flex items-center justify-center gap-2 text-sm" title="Your application is currently being reviewed.">
+                                    <span class="material-symbols-outlined text-[18px]">hourglass_empty</span>
+                                    App Pending
+                                </div>
+                                <a href="/Public/User/RegisterSeller?reapply=true"
+                                   class="w-full py-2 bg-orange-50 text-orange-600 font-bold rounded-lg hover:bg-orange-100 transition-all border border-orange-200 flex items-center justify-center gap-2 text-sm">
+                                    <span class="material-symbols-outlined text-[18px]">edit_square</span>
+                                    Edit & Resubmit
+                                </a>
                             </div>
                         }
                         else if (Model.UserStore.Status == StoreStatus.Approved)
@@ -85,9 +92,16 @@
                         }
                         else if (Model.UserStore.Status == StoreStatus.Rejected)
                         {
-                            <div class="w-full py-2 bg-red-50 text-red-600 font-bold rounded-lg border border-red-200 flex items-center justify-center gap-2 text-sm cursor-help" title="Reason: @Model.UserStore.RejectReason">
-                                <span class="material-symbols-outlined text-[18px]">cancel</span>
-                                App Rejected
+                            <div class="space-y-2">
+                                <div class="w-full py-2 bg-red-50 text-red-600 font-bold rounded-lg border border-red-200 flex items-center justify-center gap-2 text-sm cursor-help" title="Reason: @Model.UserStore.RejectReason">
+                                    <span class="material-symbols-outlined text-[18px]">cancel</span>
+                                    App Rejected
+                                </div>
+                                <a href="/Public/User/RegisterSeller?reapply=true"
+                                   class="w-full py-2 bg-orange-50 text-orange-600 font-bold rounded-lg hover:bg-orange-100 transition-all border border-orange-200 flex items-center justify-center gap-2 text-sm">
+                                    <span class="material-symbols-outlined text-[18px]">refresh</span>
+                                    Resubmit Store Application
+                                </a>
                             </div>
                         }
                     </div>
@@ -148,6 +162,30 @@
             {
                 <div class="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-700">
                     @errorMessage
+                </div>
+            }
+
+            @if (Model.UserStore?.Status == StoreStatus.Pending || Model.UserStore?.Status == StoreStatus.Rejected)
+            {
+                <div class="rounded-2xl border border-orange-200 bg-orange-50 px-5 py-4">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="space-y-1">
+                            <p class="text-sm font-bold text-orange-700">
+                                @(Model.UserStore?.Status == StoreStatus.Pending
+                                    ? "Your store application is pending review. You can reopen it to edit and resubmit."
+                                    : "Your store application was rejected.")
+                            </p>
+                            @if (!string.IsNullOrWhiteSpace(Model.UserStore.RejectReason))
+                            {
+                                <p class="text-xs text-orange-700/90">Reason: @Model.UserStore.RejectReason</p>
+                            }
+                        </div>
+                        <a href="/Public/User/RegisterSeller?reapply=true"
+                           class="inline-flex items-center justify-center gap-2 rounded-xl border border-orange-300 bg-white px-4 py-2 text-sm font-bold text-orange-700 hover:bg-orange-100 transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">refresh</span>
+                            @(Model.UserStore?.Status == StoreStatus.Pending ? "Edit & Resubmit" : "Resubmit Application")
+                        </a>
+                    </div>
                 </div>
             }
 

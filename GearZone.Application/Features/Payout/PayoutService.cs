@@ -47,7 +47,7 @@ namespace GearZone.Application.Features.Payout
         DateTime endDate,
         CancellationToken ct = default)
         {
-            // 1. Tính period
+            // 1. Calculate period
             var periodEnd = endDate.Date;
             var periodStart = periodEnd.AddDays(-7);
 
@@ -55,14 +55,14 @@ namespace GearZone.Application.Features.Payout
                 "[Payout] Generating batch {Start:dd/MM} - {End:dd/MM}",
                 periodStart, periodEnd);
 
-            // 2. Kiểm tra trùng
+            // 2. Check duplicates
             var exists = await _payoutBatchRepository.ExistsByPeriodAsync(
                 periodStart, periodEnd, ct);
 
             if (exists)
                 throw new InvalidOperationException($"Batch for {periodStart:dd/MM} - {periodEnd:dd/MM} already exists.");
 
-            // 3. Lấy orders đủ điều kiện (SubOrders)
+            // 3. Get eligible orders (SubOrders)
             var eligibleSubOrders = await _subOrderRepository
                 .GetEligibleForPayoutAsync(periodStart, periodEnd, ct);
 
@@ -130,7 +130,7 @@ namespace GearZone.Application.Features.Payout
                 sequence++;
             }
 
-            // 7. Gán tổng vào batch
+            // 7. Assign totals to batch
             batch.TotalGrossAmount = transactions.Sum(t => t.GrossAmount);
             batch.TotalCommissionAmount = transactions.Sum(t => t.CommissionAmount);
             batch.TotalNetAmount = transactions.Sum(t => t.NetAmount);
@@ -288,7 +288,7 @@ namespace GearZone.Application.Features.Payout
             string batchCode,
             CancellationToken ct = default)
         {
-            // 1. Load batch kèm transactions
+            // 1. Load batch with transactions
             var batch = await _payoutBatchRepository.Query()
                 .Include(x => x.Transactions)
                 .FirstOrDefaultAsync(x => x.BatchCode == batchCode, ct)
@@ -297,12 +297,12 @@ namespace GearZone.Application.Features.Payout
             if (batch.Status != PayoutBatchStatus.Approved)
                 throw new InvalidOperationException($"Batch {batch.BatchCode} is not Approved. Current: {batch.Status}");
 
-            // 2. Chuyển sang Processing
+            // 2. Move to Processing
             batch.Status = PayoutBatchStatus.Processing;
             await _payoutBatchRepository.UpdateAsync(batch);
             await _unitOfWork.SaveChangesAsync(ct);
 
-            // 3. Lấy transactions cần xử lý
+            // 3. Get transactions to process
             var queued = batch.Transactions
                 .Where(t => t.Status == PayoutTransactionStatus.Queued)
                 .ToList();
@@ -398,11 +398,11 @@ namespace GearZone.Application.Features.Payout
 
             await _payoutTransactionRepository.UpdateRangeAsync(queued, ct);
 
-            // 9. Lưu wallet transactions
+            // 9. Persist wallet transactions
             foreach (var wtx in walletTxs)
                 await _walletTransactionRepository.AddAsync(wtx, ct);
 
-            // 10. Tính lại batch status
+            // 10. Recalculate batch status
             RecalculateBatchStatus(batch);
             await _payoutBatchRepository.UpdateAsync(batch);
 
@@ -446,7 +446,7 @@ namespace GearZone.Application.Features.Payout
                 return;
             }
 
-            // Thử lại
+            // Retry
             transaction.Status = PayoutTransactionStatus.Processing;
             transaction.RetryCount += 1;
             await _payoutTransactionRepository.UpdateAsync(transaction);
@@ -464,7 +464,7 @@ namespace GearZone.Application.Features.Payout
 
                 var result = await _payoutClient.CreatePayoutAsync(request);
 
-                // Lấy balance snapshot
+                // Get balance snapshot
                 var lastTx = await _walletTransactionRepository.GetLastCompletedTransactionAsync(ct);
                 var balanceBefore = lastTx?.BalanceAfter ?? 0m;
 
@@ -486,7 +486,7 @@ namespace GearZone.Application.Features.Payout
                     await RecalculateParentBatchAsync(
                         transaction.PayoutBatchId, ct);
 
-                    // Tạo WalletTransaction OUT - Completed
+                    // Create WalletTransaction OUT - Completed
                     walletTx = new WalletTransaction
                     {
                         Id = Guid.NewGuid(),
@@ -515,7 +515,7 @@ namespace GearZone.Application.Features.Payout
                     transaction.FailureReason =
                         $"[Retry {transaction.RetryCount}] {result.ErrorMessage}";
 
-                    // Tạo WalletTransaction OUT - Failed (balance không đổi)
+                    // Create WalletTransaction OUT - Failed (balance unchanged)
                     walletTx = new WalletTransaction
                     {
                         Id = Guid.NewGuid(),
@@ -605,7 +605,7 @@ namespace GearZone.Application.Features.Payout
             transaction.ExcludeReason = reason;
             await _payoutTransactionRepository.UpdateAsync(transaction);
 
-            // Unlock orders thuộc transaction này → trả về Unpaid
+            // Unlock orders linked to this transaction and return them to Unpaid
             var subOrderIds = await _payoutItemRepository
                 .GetSubOrderIdsByTransactionIdAsync(transactionId, ct);
             await _subOrderRepository.BulkUpdatePayoutStatusAsync(

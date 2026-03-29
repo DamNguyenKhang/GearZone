@@ -64,9 +64,9 @@ namespace GearZone.Web.Pages.Admin.Vouchers
         public async Task<IActionResult> OnPostAsync()
         {
             // Custom Validation
-            if (Input.DiscountType == "Percent" && Input.DiscountValue >= 100)
+            if (Input.DiscountType == "Percent" && Input.DiscountValue > 100)
             {
-                ModelState.AddModelError("Input.DiscountValue", "Percentage must be under 100%");
+                ModelState.AddModelError("Input.DiscountValue", "Percentage must be less than or equal to 100%");
             }
             if (Input.DiscountType == "Fixed" && Input.MinOrderAmount <= Input.DiscountValue)
             {

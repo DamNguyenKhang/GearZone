@@ -15,6 +15,7 @@ namespace GearZone.Application.Features.Seller.Dtos
         public decimal? MaxDiscount { get; set; }
         public decimal? MinOrderAmount { get; set; }
         public int UsageLimit { get; set; }
+        public int MaxUsagePerUser { get; set; }
         public int UsedCount { get; set; }
         public int? CategoryId { get; set; }
         public string? CategoryName { get; set; }
@@ -76,6 +77,10 @@ namespace GearZone.Application.Features.Seller.Dtos
         [Required(ErrorMessage = "Total usage limit is required")]
         [Range(1, 1000000, ErrorMessage = "Usage limit must be at least 1")]
         public int UsageLimit { get; set; }
+
+        [Required(ErrorMessage = "Max usage per user is required")]
+        [Range(1, 1000, ErrorMessage = "Max usage per user must be between 1 and 1000")]
+        public int MaxUsagePerUser { get; set; } = 1;
 
         [Required(ErrorMessage = "Start date is required")]
         public DateTime StartAt { get; set; }

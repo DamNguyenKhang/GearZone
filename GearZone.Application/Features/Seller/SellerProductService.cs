@@ -64,7 +64,9 @@ namespace GearZone.Application.Features.Seller
                     Id = p.Id,
                     Name = p.Name,
                     Slug = p.Slug,
+                    CategoryId = p.CategoryId,
                     CategoryName = p.Category.Name,
+                    BrandId = p.BrandId,
                     BrandName = p.Brand.Name,
                     BasePrice = p.BasePrice,
                     TotalStock = p.Variants.Sum(v => v.StockQuantity),
@@ -331,7 +333,20 @@ namespace GearZone.Application.Features.Seller
             product.BrandId = dto.BrandId;
             product.BasePrice = dto.BasePrice;
             product.SpecsJson = BuildSpecsJson(dto.Specifications);
-            product.Status = dto.IsDraft ? ProductStatus.Draft : ProductStatus.Pending;
+            // Keep products visible on marketplace after routine edits (e.g. adding images).
+            // Only move to Pending when product was not publicly visible before.
+            if (dto.IsDraft)
+            {
+                product.Status = ProductStatus.Draft;
+            }
+            else if (product.Status == ProductStatus.Active || product.Status == ProductStatus.Approved)
+            {
+                product.Status = ProductStatus.Active;
+            }
+            else
+            {
+                product.Status = ProductStatus.Pending;
+            }
             product.UpdatedAt = DateTime.UtcNow;
 
             await _productRepository.UpdateAsync(product);

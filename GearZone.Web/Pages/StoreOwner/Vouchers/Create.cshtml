@@ -187,14 +187,14 @@
                             <div>
                                 <label asp-for="Input.DiscountValue" id="valueLabel" class="block text-sm font-bold text-slate-700 mb-1.5">Discount Percentage (%)</label>
                                 <div class="relative">
-                                    <input asp-for="Input.DiscountValue" class="form-input w-full border-slate-200 rounded-lg focus:ring-primary focus:border-primary h-[42px] pr-10" />
+                                    <input asp-for="Input.DiscountValue" asp-format="{0:0}" class="form-input w-full border-slate-200 rounded-lg focus:ring-primary focus:border-primary h-[42px] pr-10" />
                                     <span id="valueUnit" class="absolute right-4 top-2.5 text-sm font-bold text-slate-400">%</span>
                                 </div>
                                 <span asp-validation-for="Input.DiscountValue" id="discountValue-error" class="text-xs text-red-500 mt-1"></span>
                             </div>
                             <div id="maxDiscountDiv">
                                 <label asp-for="Input.MaxDiscount" class="block text-sm font-bold text-slate-700 mb-1.5">Maximum Discount Cap (VND)</label>
-                                <input asp-for="Input.MaxDiscount" class="form-input w-full border-slate-200 rounded-lg focus:ring-primary focus:border-primary h-[42px]" placeholder="Optional" />
+                                <input asp-for="Input.MaxDiscount" asp-format="{0:0}" class="form-input w-full border-slate-200 rounded-lg focus:ring-primary focus:border-primary h-[42px]" placeholder="Optional" />
                                 <span asp-validation-for="Input.MaxDiscount" class="text-xs text-red-500 mt-1"></span>
                             </div>
                         </div>
@@ -202,7 +202,7 @@
                         <div class="space-y-4">
                             <div>
                                 <label asp-for="Input.MinOrderAmount" class="block text-sm font-bold text-slate-700 mb-1.5">Minimum Spend (VND)</label>
-                                <input asp-for="Input.MinOrderAmount" class="form-input w-full border-slate-200 rounded-lg focus:ring-primary focus:border-primary h-[42px]" />
+                                <input asp-for="Input.MinOrderAmount" asp-format="{0:0}" class="form-input w-full border-slate-200 rounded-lg focus:ring-primary focus:border-primary h-[42px]" />
                                 <span asp-validation-for="Input.MinOrderAmount" id="minOrderAmount-error" class="text-xs text-red-500 mt-1"></span>
                             </div>
                             <div class="bg-emerald-50 border border-emerald-100 p-4 rounded-xl">
@@ -245,7 +245,15 @@
                              <input type="range" asp-for="Input.UsageLimit" min="10" max="5000" step="10" class="w-full h-2 rounded-lg cursor-pointer z-10" id="limitRange" />
                         </div>
                         
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                            <div>
+                                <label asp-for="Input.MaxUsagePerUser" class="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Max Usage Per User</label>
+                                <div class="relative">
+                                    <span class="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-sm">person</span>
+                                    <input asp-for="Input.MaxUsagePerUser" class="form-input w-full border-slate-200 rounded-lg focus:ring-primary focus:border-primary h-[38px] pl-10 text-sm" placeholder="e.g. 1" />
+                                </div>
+                                <span asp-validation-for="Input.MaxUsagePerUser" class="text-xs text-red-500 mt-1"></span>
+                            </div>
                             <p class="text-[11px] text-slate-500 leading-relaxed italic">
                                 * The voucher will automatically expire when the usage limit is reached or the campaign end date passes.
                             </p>
@@ -381,7 +389,8 @@
             limitRange: document.getElementById('limitRange'),
             typeRadios: document.getElementsByName('Input.Type'),
             startAt: document.getElementById('Input_StartAt'),
-            endAt: document.getElementById('Input_EndAt')
+            endAt: document.getElementById('Input_EndAt'),
+            maxPerUser: document.getElementById('Input_MaxUsagePerUser')
         };
 
         const previews = {
@@ -395,13 +404,17 @@
             icon: document.getElementById('prevIcon')
         };
 
+        function formatVndInt(value) {
+            return Math.round(value).toLocaleString('vi-VN');
+        }
+
         function updatePreview() {
             previews.name.innerText = inputs.name.value || 'My Campaign';
             previews.code.innerText = inputs.code.value || 'VCODE';
             previews.category.innerText = inputs.category.options[inputs.category.selectedIndex].text;
             
             const minSpendValue = parseFloat(inputs.minSpend.value) || 0;
-            previews.minSpend.innerText = minSpendValue.toLocaleString() + ' VND';
+            previews.minSpend.innerText = formatVndInt(minSpendValue) + ' VND';
             previews.limit.innerText = inputs.limitRange.value;
             
             // Range track color logic
@@ -410,23 +423,23 @@
 
             const discType = document.getElementById('discountTypeField').value;
             const val = parseFloat(inputs.discountValue.value) || 0;
-            previews.value.innerText = discType === 'Percent' ? val + '% OFF' : val.toLocaleString() + ' VND OFF';
+            previews.value.innerText = discType === 'Percent' ? val + '% OFF' : formatVndInt(val) + ' VND OFF';
 
             // Calc example using Minimum Spend
             const samplePurchase = Math.max(minSpendValue, discType === 'Percent' ? 100000 : val + 10000);
-            document.getElementById('samplePurchaseDisplay').innerText = samplePurchase.toLocaleString();
+            document.getElementById('samplePurchaseDisplay').innerText = formatVndInt(samplePurchase);
             
-            document.getElementById('calcValue').innerText = val.toLocaleString();
+            document.getElementById('calcValue').innerText = discType === 'Percent' ? val : formatVndInt(val);
             if (discType === 'Percent') {
                 document.getElementById('calcSymbol').innerText = '-';
                 document.getElementById('calcUnit').innerText = '%';
                 const discount = (samplePurchase * val / 100);
-                document.getElementById('calcFinal').innerText = (samplePurchase - discount).toLocaleString();
+                document.getElementById('calcFinal').innerText = formatVndInt(samplePurchase - discount);
             } else {
                 document.getElementById('calcSymbol').innerText = '-';
                 document.getElementById('calcUnit').innerText = 'VND';
                 const discount = val;
-                document.getElementById('calcFinal').innerText = Math.max(0, samplePurchase - discount).toLocaleString();
+                document.getElementById('calcFinal').innerText = formatVndInt(Math.max(0, samplePurchase - discount));
             }
 
             // Logic Validation
@@ -439,8 +452,8 @@
             minSpendError.innerText = '';
             endAtError.innerText = '';
 
-            if (discType === 'Percent' && val >= 100) {
-                discValueError.innerText = 'Percentage must be under 100%';
+            if (discType === 'Percent' && val > 100) {
+                discValueError.innerText = 'Percentage must be less than or equal to 100%';
             } else if (discType === 'Fixed' && minSpendValue <= val) {
                 minSpendError.innerText = 'Minimum spend must be greater than discount amount';
             }
@@ -486,6 +499,7 @@
         inputs.limitRange.addEventListener('input', updatePreview);
         inputs.startAt.addEventListener('input', updatePreview);
         inputs.endAt.addEventListener('input', updatePreview);
+        inputs.maxPerUser.addEventListener('input', updatePreview);
 
         // Type Button Logic
         document.getElementById('typePercent').addEventListener('click', function() {
@@ -546,8 +560,8 @@
             const startDate = new Date(inputs.startAt.value);
             const endDate = new Date(inputs.endAt.value);
 
-            if (discType === 'Percent' && val >= 100) {
-                errorList.push('Discount percentage must be under 100%');
+            if (discType === 'Percent' && val > 100) {
+                errorList.push('Discount percentage must be less than or equal to 100%');
             } else if (discType === 'Fixed' && minSpendValue <= val) {
                 errorList.push('Minimum spend must be greater than discount amount');
             }

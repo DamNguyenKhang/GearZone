@@ -10,7 +10,9 @@ namespace GearZone.Application.Features.Seller.Dtos
         public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Slug { get; set; } = string.Empty;
+        public int CategoryId { get; set; }
         public string CategoryName { get; set; } = string.Empty;
+        public int BrandId { get; set; }
         public string BrandName { get; set; } = string.Empty;
         public decimal BasePrice { get; set; }
         public int TotalStock { get; set; }

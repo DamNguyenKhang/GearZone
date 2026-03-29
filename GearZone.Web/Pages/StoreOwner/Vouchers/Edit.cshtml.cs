@@ -55,6 +55,7 @@ namespace GearZone.Web.Pages.StoreOwner.Vouchers
             Input.MaxDiscount = voucher.MaxDiscount;
             Input.MinOrderAmount = voucher.MinOrderAmount ?? 0;
             Input.UsageLimit = voucher.UsageLimit;
+            Input.MaxUsagePerUser = voucher.MaxUsagePerUser;
             Input.StartAt = voucher.StartAt;
             Input.EndAt = voucher.EndAt;
             Input.CategoryId = voucher.CategoryId;

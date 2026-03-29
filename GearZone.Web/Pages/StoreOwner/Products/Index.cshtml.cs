@@ -4,7 +4,9 @@ using GearZone.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Globalization;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace GearZone.Web.Pages.StoreOwner.Products
@@ -79,11 +81,11 @@ namespace GearZone.Web.Pages.StoreOwner.Products
 
             if (!string.IsNullOrWhiteSpace(SearchTerm))
             {
-                var term = SearchTerm.ToLower();
+                var term = NormalizeForSearch(SearchTerm);
                 query = query.Where(p => 
-                    p.Name.ToLower().Contains(term) || 
-                    p.CategoryName.ToLower().Contains(term) || 
-                    p.BrandName.ToLower().Contains(term));
+                    NormalizeForSearch(p.Name).Contains(term, StringComparison.Ordinal) ||
+                    NormalizeForSearch(p.CategoryName).Contains(term, StringComparison.Ordinal) ||
+                    NormalizeForSearch(p.BrandName).Contains(term, StringComparison.Ordinal));
             }
 
             if (!string.IsNullOrWhiteSpace(Status))
@@ -93,20 +95,12 @@ namespace GearZone.Web.Pages.StoreOwner.Products
 
             if (CategoryId.HasValue)
             {
-                var categoryName = Categories.FirstOrDefault(c => c.Id == CategoryId)?.Name;
-                if (!string.IsNullOrEmpty(categoryName))
-                {
-                    query = query.Where(p => p.CategoryName == categoryName);
-                }
+                query = query.Where(p => p.CategoryId == CategoryId.Value);
             }
 
             if (BrandId.HasValue)
             {
-                var brandName = Brands.FirstOrDefault(b => b.Id == BrandId)?.Name;
-                if (!string.IsNullOrEmpty(brandName))
-                {
-                    query = query.Where(p => p.BrandName == brandName);
-                }
+                query = query.Where(p => p.BrandId == BrandId.Value);
             }
 
             // Sorting
@@ -151,6 +145,27 @@ namespace GearZone.Web.Pages.StoreOwner.Products
             public int OutofStockProducts { get; set; }
             public int DraftProducts { get; set; }
             public int PendingProducts { get; set; }
+        }
+
+        private static string NormalizeForSearch(string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                return string.Empty;
+            }
+
+            var normalized = input.Trim().Normalize(NormalizationForm.FormD);
+            var builder = new StringBuilder(normalized.Length);
+
+            foreach (var c in normalized)
+            {
+                if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                {
+                    builder.Append(char.ToLowerInvariant(c));
+                }
+            }
+
+            return builder.ToString().Normalize(NormalizationForm.FormC);
         }
     }
 }

@@ -131,7 +131,7 @@ namespace GearZone.Application.Features.Seller
                 MinOrderAmount = dto.MinOrderAmount,
                 UsageLimit = dto.UsageLimit,
                 UsedCount = 0,
-                MaxUsagePerUser = 1,
+                MaxUsagePerUser = dto.MaxUsagePerUser,
                 StartAt = dto.StartAt,
                 EndAt = dto.EndAt,
                 IsActive = dto.IsVisible,
@@ -197,6 +197,7 @@ namespace GearZone.Application.Features.Seller
             voucher.MaxDiscount = discountType == DiscountType.FixedAmount ? null : dto.MaxDiscount;
             voucher.MinOrderAmount = dto.MinOrderAmount;
             voucher.UsageLimit = dto.UsageLimit;
+            voucher.MaxUsagePerUser = dto.MaxUsagePerUser;
             voucher.StartAt = dto.StartAt;
             voucher.EndAt = dto.EndAt;
             voucher.IsActive = dto.IsVisible;
@@ -285,6 +286,11 @@ namespace GearZone.Application.Features.Seller
                 return "Usage limit must be at least 1.";
             }
 
+            if (dto.MaxUsagePerUser < 1 || dto.MaxUsagePerUser > 1000)
+            {
+                return "Max usage per user must be between 1 and 1000.";
+            }
+
             if (dto.DiscountValue <= 0)
             {
                 return "Discount value must be greater than 0.";
@@ -301,9 +307,9 @@ namespace GearZone.Application.Features.Seller
             }
 
             var discountType = ParseDiscountType(dto.DiscountType);
-            if (discountType == DiscountType.Percent && dto.DiscountValue >= 100)
+            if (discountType == DiscountType.Percent && dto.DiscountValue > 100)
             {
-                return "Discount percentage must be under 100%.";
+                return "Discount percentage must be less than or equal to 100%.";
             }
 
             if (discountType == DiscountType.Percent && dto.MaxDiscount.HasValue && dto.MaxDiscount.Value <= 0)
@@ -332,6 +338,7 @@ namespace GearZone.Application.Features.Seller
                 MaxDiscount = voucher.MaxDiscount,
                 MinOrderAmount = voucher.MinOrderAmount,
                 UsageLimit = voucher.UsageLimit,
+                MaxUsagePerUser = voucher.MaxUsagePerUser,
                 UsedCount = voucher.UsedCount,
                 CategoryId = voucher.CategoryId,
                 CategoryName = voucher.Category?.Name,

@@ -50,6 +50,7 @@ namespace GearZone.Web.Pages.StoreOwner.Vouchers
                         MaxDiscount = sourceVoucher.MaxDiscount,
                         MinOrderAmount = sourceVoucher.MinOrderAmount ?? 0,
                         UsageLimit = sourceVoucher.UsageLimit,
+                        MaxUsagePerUser = sourceVoucher.MaxUsagePerUser,
                         CategoryId = sourceVoucher.CategoryId,
                         IsVisible = true,
                         StartAt = DateTime.Now,
@@ -66,6 +67,7 @@ namespace GearZone.Web.Pages.StoreOwner.Vouchers
             Input.DiscountValue = 10;
             Input.MinOrderAmount = 50000;
             Input.UsageLimit = 100;
+            Input.MaxUsagePerUser = 1;
             Input.IsVisible = true;
 
             return Page();

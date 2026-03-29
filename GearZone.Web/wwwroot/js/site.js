@@ -1,5 +1,5 @@
 // Global Add to Cart Function
-async function addToCart(variantId, quantity = 1, buttonElement = null) {
+async function addToCart(variantId, quantity = 1, buttonElement = null, isBuyNow = false) {
     if (!variantId) {
         window.showToast?.('error', 'Please select a product variant.');
         return false;
@@ -18,7 +18,7 @@ async function addToCart(variantId, quantity = 1, buttonElement = null) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ variantId, quantity })
+            body: JSON.stringify({ variantId, quantity, isBuyNow })
         });
 
         const isRedirected = response.redirected || (response.status === 200 && response.url.toLowerCase().includes('login'));
@@ -41,8 +41,12 @@ async function addToCart(variantId, quantity = 1, buttonElement = null) {
         const cartCountEl = document.getElementById('header-cart-count');
         if (cartCountEl) {
             cartCountEl.classList.remove('hidden');
-            let currentCount = parseInt(cartCountEl.textContent) || 0;
-            cartCountEl.textContent = currentCount + quantity;
+            if (data.cartCount !== undefined) {
+                cartCountEl.textContent = data.cartCount;
+            } else {
+                let currentCount = parseInt(cartCountEl.textContent) || 0;
+                cartCountEl.textContent = currentCount + quantity;
+            }
         }
         return data;
     } catch (error) {

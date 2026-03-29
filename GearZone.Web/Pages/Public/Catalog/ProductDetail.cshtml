@@ -360,8 +360,8 @@
                     const quantity = resolveQuantity();
                     if (quantity === null) return;
 
-                    const result = await addToCart(variantId, quantity, buyNowBtn);
-                    if (!result) return;
+                    const result = await addToCart(variantId, quantity, buyNowBtn, true);
+                    if (!result) return;    
 
                     const cartItemId = result.cartItemId;
                     if (!cartItemId) {

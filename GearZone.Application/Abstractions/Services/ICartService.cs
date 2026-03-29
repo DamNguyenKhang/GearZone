@@ -8,7 +8,7 @@ namespace GearZone.Application.Abstractions.Services
 {
     public interface ICartService
     {
-        Task<Guid> AddToCartAsync(string userId, Guid variantId, int quantity);
+        Task<Guid> AddToCartAsync(string userId, Guid variantId, int quantity, bool isBuyNow = false);
         Task UpdateCartItemQuantityAsync(Guid cartItemId, int newQuantity, string userId);
         Task RemoveCartItemAsync(Guid cartItemId, string userId);
         Task<CartDto?> GetCartAsync(string userId);

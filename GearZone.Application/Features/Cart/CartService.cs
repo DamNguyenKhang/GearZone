@@ -30,7 +30,7 @@ namespace GearZone.Application.Features.Cart
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<Guid> AddToCartAsync(string userId, Guid variantId, int quantity)
+        public async Task<Guid> AddToCartAsync(string userId, Guid variantId, int quantity, bool isBuyNow = false)
         {
             var variant = await _productVariantRepository.GetByIdAsync(variantId);
             if (variant == null)
@@ -49,11 +49,20 @@ namespace GearZone.Application.Features.Cart
             var cartItem = await _cartItemRepository.Query().FirstOrDefaultAsync(ci => ci.CartId == cart.Id && ci.VariantId == variantId);
             if (cartItem != null)
             {
-                int newTotalQuantity = cartItem.Quantity + quantity;
-                if (newTotalQuantity > variant.StockQuantity)
-                    throw new InvalidOperationException($"Insufficient stock. Maximum available: {variant.StockQuantity}.");
-                
-                cartItem.Quantity = newTotalQuantity;
+                if (isBuyNow)
+                {
+                    cartItem.Quantity = quantity;
+                    if (cartItem.Quantity > variant.StockQuantity)
+                        cartItem.Quantity = variant.StockQuantity;
+                }
+                else
+                {
+                    int newTotalQuantity = cartItem.Quantity + quantity;
+                    if (newTotalQuantity > variant.StockQuantity)
+                        throw new InvalidOperationException($"Insufficient stock. Maximum available: {variant.StockQuantity}.");
+                    
+                    cartItem.Quantity = newTotalQuantity;
+                }
                 cart.UpdatedAt = DateTime.UtcNow;
             }
             else

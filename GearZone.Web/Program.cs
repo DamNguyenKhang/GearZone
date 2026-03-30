@@ -1,4 +1,5 @@
 using GearZone.Application;
+using GearZone.Application.Abstractions.External;
 using GearZone.Domain.Entities;
 using GearZone.Infrastructure;
 using GearZone.Infrastructure.Jobs;
@@ -69,6 +70,7 @@ var connectionString = builder.Configuration["DB_CONNECTION_STRING"] ?? builder.
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
+builder.Services.AddScoped<IOrderTrackingNotifier, SignalROrderTrackingNotifier>();
 builder.Services.AddScoped<BuyerInboxComposer>();
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
@@ -229,6 +231,7 @@ app.UseStaticFiles();
 app.MapStaticAssets();
 app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");
+app.MapHub<OrderTrackingHub>("/hubs/order-tracking");
 app.MapRazorPages()
    .WithStaticAssets();
 

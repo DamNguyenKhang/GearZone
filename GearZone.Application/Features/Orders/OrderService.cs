@@ -1,4 +1,5 @@
 using GearZone.Application.Abstractions.Persistence;
+using GearZone.Application.Abstractions.External;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Checkout.Dtos;
@@ -15,6 +16,7 @@ namespace GearZone.Application.Features.Orders
         private readonly ISubOrderRepository _subOrderRepository;
         private readonly IPaymentRepository _paymentRepository;
         private readonly IProductVariantRepository _productVariantRepository;
+        private readonly IOrderTrackingNotifier _orderTrackingNotifier;
         private readonly IUnitOfWork _unitOfWork;
 
         public OrderService(
@@ -22,12 +24,14 @@ namespace GearZone.Application.Features.Orders
             ISubOrderRepository subOrderRepository,
             IPaymentRepository paymentRepository,
             IProductVariantRepository productVariantRepository,
+            IOrderTrackingNotifier orderTrackingNotifier,
             IUnitOfWork unitOfWork)
         {
             _orderRepository = orderRepository;
             _subOrderRepository = subOrderRepository;
             _paymentRepository = paymentRepository;
             _productVariantRepository = productVariantRepository;
+            _orderTrackingNotifier = orderTrackingNotifier;
             _unitOfWork = unitOfWork;
         }
 
@@ -43,12 +47,12 @@ namespace GearZone.Application.Features.Orders
             List<GearZone.Application.Features.Shipping.Dtos.StoreShippingFeeDto>? storeShippingFees = null,
             CancellationToken ct = default)
         {
-            var addressParts = new List<string?> 
-            { 
-                request.ShippingInfo.Address, 
-                request.ShippingInfo.Ward, 
-                request.ShippingInfo.District, 
-                request.ShippingInfo.Province 
+            var addressParts = new List<string?>
+            {
+                request.ShippingInfo.Address,
+                request.ShippingInfo.Ward,
+                request.ShippingInfo.District,
+                request.ShippingInfo.Province
             };
             var shippingAddressStr = string.Join(", ", addressParts.Where(s => !string.IsNullOrWhiteSpace(s)));
 
@@ -122,7 +126,7 @@ namespace GearZone.Application.Features.Orders
                 };
 
                 order.SubOrders.Add(subOrder);
-                
+
                 // Create Shipment for this store
                 var storeShipping = storeShippingFees?.FirstOrDefault(sf => sf.StoreId == storeId);
                 if (storeShipping != null)
@@ -198,13 +202,19 @@ namespace GearZone.Application.Features.Orders
                 NewStatus = OrderStatus.Cancelled,
                 ChangedAt = DateTime.UtcNow,
                 ChangedByUserId = userId,
-                Note = userId == null 
-                    ? "Order auto-cancelled by system (payment timeout)" 
+                Note = userId == null
+                    ? "Order auto-cancelled by system (payment timeout)"
                     : "Order cancelled by user"
             });
 
             order.UpdatedAt = DateTime.UtcNow;
             await _unitOfWork.SaveChangesAsync(ct);
+
+            foreach (var subOrder in order.SubOrders)
+            {
+                await _orderTrackingNotifier.NotifySubOrderUpdatedAsync(subOrder.Id, ct);
+            }
+
             return true;
         }
 

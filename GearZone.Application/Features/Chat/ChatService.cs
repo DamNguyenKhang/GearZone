@@ -1,4 +1,5 @@
 using GearZone.Application.Abstractions.Persistence;
+using GearZone.Application.Abstractions.External;
 using GearZone.Application.Abstractions.Services;
 using GearZone.Application.Common.Models;
 using GearZone.Application.Features.Chat.Dtos;
@@ -16,6 +17,7 @@ namespace GearZone.Application.Features.Chat
         private readonly IStoreRepository _storeRepository;
         private readonly ISubOrderRepository _subOrderRepository;
         private readonly IOrderStatusHistoryRepository _orderStatusHistoryRepository;
+        private readonly IOrderTrackingNotifier _orderTrackingNotifier;
         private readonly IUnitOfWork _unitOfWork;
 
         public ChatService(
@@ -25,6 +27,7 @@ namespace GearZone.Application.Features.Chat
             IStoreRepository storeRepository,
             ISubOrderRepository subOrderRepository,
             IOrderStatusHistoryRepository orderStatusHistoryRepository,
+            IOrderTrackingNotifier orderTrackingNotifier,
             IUnitOfWork unitOfWork)
         {
             _conversationRepository = conversationRepository;
@@ -33,6 +36,7 @@ namespace GearZone.Application.Features.Chat
             _storeRepository = storeRepository;
             _subOrderRepository = subOrderRepository;
             _orderStatusHistoryRepository = orderStatusHistoryRepository;
+            _orderTrackingNotifier = orderTrackingNotifier;
             _unitOfWork = unitOfWork;
         }
 
@@ -655,6 +659,7 @@ namespace GearZone.Application.Features.Chat
             });
 
             await _unitOfWork.SaveChangesAsync();
+            await _orderTrackingNotifier.NotifySubOrderUpdatedAsync(subOrder.Id);
             return true;
         }
 

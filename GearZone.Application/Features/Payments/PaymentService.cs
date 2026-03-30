@@ -19,6 +19,7 @@ namespace GearZone.Application.Features.Payment
         private readonly IPaymentRepository _paymentRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPaymentGateway _paymentGateway;
+        private readonly IOrderTrackingNotifier _orderTrackingNotifier;
         private readonly ILogger<PaymentService> _logger;
 
         public PaymentService(
@@ -26,12 +27,14 @@ namespace GearZone.Application.Features.Payment
             IPaymentRepository paymentRepository,
             IUnitOfWork unitOfWork,
             IPaymentGateway paymentGateway,
+            IOrderTrackingNotifier orderTrackingNotifier,
             ILogger<PaymentService> logger)
         {
             _orderRepository = orderRepository;
             _paymentRepository = paymentRepository;
             _unitOfWork = unitOfWork;
             _paymentGateway = paymentGateway;
+            _orderTrackingNotifier = orderTrackingNotifier;
             _logger = logger;
         }
 
@@ -95,6 +98,12 @@ namespace GearZone.Application.Features.Payment
                     });
 
                     await _unitOfWork.SaveChangesAsync(ct);
+
+                    foreach (var subOrder in order.SubOrders)
+                    {
+                        await _orderTrackingNotifier.NotifySubOrderUpdatedAsync(subOrder.Id, ct);
+                    }
+
                     return PaymentVerificationResult.Ok(order.Id);
                 }
 

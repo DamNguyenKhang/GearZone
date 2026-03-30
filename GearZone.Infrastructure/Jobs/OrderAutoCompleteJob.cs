@@ -1,4 +1,5 @@
 using GearZone.Application.Abstractions.Persistence;
+using GearZone.Application.Abstractions.External;
 using GearZone.Domain.Enums;
 using Hangfire;
 using Microsoft.Extensions.Logging;
@@ -12,17 +13,20 @@ namespace GearZone.Infrastructure.Jobs
     {
         private readonly ISubOrderRepository _subOrderRepository;
         private readonly ISystemSettingRepository _systemSettingRepository;
+        private readonly IOrderTrackingNotifier _orderTrackingNotifier;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<OrderAutoCompleteJob> _logger;
 
         public OrderAutoCompleteJob(
             ISubOrderRepository subOrderRepository,
             ISystemSettingRepository systemSettingRepository,
+            IOrderTrackingNotifier orderTrackingNotifier,
             IUnitOfWork unitOfWork,
             ILogger<OrderAutoCompleteJob> logger)
         {
             _subOrderRepository = subOrderRepository;
             _systemSettingRepository = systemSettingRepository;
+            _orderTrackingNotifier = orderTrackingNotifier;
             _unitOfWork = unitOfWork;
             _logger = logger;
         }
@@ -65,6 +69,11 @@ namespace GearZone.Infrastructure.Jobs
 
             // 4. Save changes
             await _unitOfWork.SaveChangesAsync();
+
+            foreach (var subOrder in eligibleOrders)
+            {
+                await _orderTrackingNotifier.NotifySubOrderUpdatedAsync(subOrder.Id);
+            }
 
             _logger.LogInformation("[Job] AutoCompleteOrders finished. {Count} orders processed.", eligibleOrders.Count);
         }

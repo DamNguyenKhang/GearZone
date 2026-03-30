@@ -215,8 +215,10 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
         (function () {
+            const subOrderId = '@Model.Tracking.SubOrderId';
             const statusBadgeEl = document.getElementById('tracking-current-status');
             const timelineListEl = document.getElementById('status-timeline-list');
             const timelineEmptyEl = document.getElementById('status-timeline-empty');
@@ -232,6 +234,7 @@
             }
 
             const liveUrlBase = '@Url.Page("/Public/User/Orders/Track", "Live", new { subOrderId = Model.Tracking.SubOrderId })';
+            const hubUrl = '/hubs/order-tracking';
 
             const statusClassMap = {
                 Pending: 'bg-amber-50 text-amber-700 border border-amber-200',
@@ -260,6 +263,7 @@
             };
 
             const badgeBaseClass = 'inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.14em]';
+            let trackingConnection = null;
             let inFlight = false;
 
             function getStatusBadgeClass(status) {
@@ -417,13 +421,59 @@
                 }
             }
 
+            async function tryConnectRealtime() {
+                if (!window.signalR || !subOrderId) {
+                    return;
+                }
+
+                trackingConnection = new signalR.HubConnectionBuilder()
+                    .withUrl(hubUrl)
+                    .withAutomaticReconnect([0, 2000, 5000, 10000])
+                    .build();
+
+                trackingConnection.on('TrackingUpdated', function (payload) {
+                    if (!payload || !payload.subOrderId) {
+                        return;
+                    }
+
+                    if (String(payload.subOrderId).toLowerCase() !== String(subOrderId).toLowerCase()) {
+                        return;
+                    }
+
+                    fetchLiveTracking();
+                });
+
+                trackingConnection.onreconnected(async function () {
+                    try {
+                        await trackingConnection.invoke('JoinTracking', subOrderId);
+                        fetchLiveTracking();
+                    } catch (_) {
+                        // Polling still keeps UI updated when rejoin fails.
+                    }
+                });
+
+                try {
+                    await trackingConnection.start();
+                    await trackingConnection.invoke('JoinTracking', subOrderId);
+                } catch (_) {
+                    // Polling fallback continues to work.
+                }
+            }
+
             const pollingIntervalMs = 3000;
             fetchLiveTracking();
             window.setInterval(fetchLiveTracking, pollingIntervalMs);
+            tryConnectRealtime();
 
             document.addEventListener('visibilitychange', function () {
                 if (!document.hidden) {
                     fetchLiveTracking();
+                }
+            });
+
+            window.addEventListener('beforeunload', function () {
+                if (trackingConnection) {
+                    trackingConnection.stop();
                 }
             });
         })();

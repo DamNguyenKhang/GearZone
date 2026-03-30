@@ -24,6 +24,7 @@ namespace GearZone.Application
         {
             services.AddMemoryCache();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IOrderTrackingNotifier, NoOpOrderTrackingNotifier>();
             services.AddScoped<IAdminUserService, AdminUserService>();
             services.AddScoped<IAdminStoreService, AdminStoreService>();
             services.AddScoped<ISystemSettingService, SystemSettingService>();

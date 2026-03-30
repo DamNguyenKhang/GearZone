@@ -227,9 +227,6 @@
                     const displayOriginalElement = document.getElementById('display-original-price');
                     if(displayOriginalElement) displayOriginalElement.textContent = originalPrice.toLocaleString('vi-VN') + ' VND';
                     
-                    // Update SKU
-                    document.getElementById('display-sku').textContent = variant.Sku;
-
                     // Update Stock
                     const qtyInput = document.getElementById('qty-input');
                     if (variant.StockQuantity > 0) {

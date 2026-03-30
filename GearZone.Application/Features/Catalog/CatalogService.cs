@@ -492,7 +492,6 @@ namespace GearZone.Application.Features.Catalog
                 dto.Variants = product.Variants.Select(v => new VariantDetailDto
                 {
                     Id = v.Id,
-                    Sku = v.Sku,
                     VariantName = v.VariantName,
                     Price = v.Price,
                     StockQuantity = v.StockQuantity,

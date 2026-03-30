@@ -107,7 +107,7 @@ namespace GearZone.Application.Features.Cart
                         ProductName = i.Variant.Product.Name,
                         ProductSlug = i.Variant.Product.Slug,
                         ImageUrl = i.Variant.Product.Images.OrderByDescending(img => img.IsPrimary).FirstOrDefault()?.ImageUrl,
-                        VariantName = i.Variant.VariantName + ", " + (i.Variant.AttributeValues.Any() ? string.Join(", ", i.Variant.AttributeValues.Select(va => va.CategoryAttributeOption.Value)) : null),
+                        VariantName = i.Variant.VariantName,
                         Price = i.Variant.Price,
                         Quantity = i.Quantity,
                         StockQuantity = i.Variant.StockQuantity

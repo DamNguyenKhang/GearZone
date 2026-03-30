@@ -24,11 +24,11 @@ namespace GearZone.Infrastructure.Repositories
         {
             var orders = await _dbSet
             .Where(o =>
-                o.Status == OrderStatus.Completed &&
+                (o.Status == OrderStatus.Completed || o.Status == OrderStatus.Delivered) &&
                 o.PayoutStatus == PayoutStatus.Unpaid &&
                 o.Order.Payments.Any(p => p.Status == PaymentStatus.Paid &&
                                           p.Method != PaymentMethod.COD) &&
-                o.UpdatedAt <= DateTime.UtcNow.AddDays(-7)
+                (o.DeliveredAt ?? o.UpdatedAt ?? o.CreatedAt) <= DateTime.UtcNow.AddDays(-7)
             )
             .ToListAsync();
             return orders;
@@ -166,7 +166,9 @@ namespace GearZone.Infrastructure.Repositories
         public async Task<decimal> GetTotalEligiblePayoutAmountAsync(CancellationToken ct = default)
         {
             return await _dbSet
-                .Where(x => x.Status == OrderStatus.Completed && x.PayoutStatus == PayoutStatus.Unpaid)
+                .Where(x =>
+                    (x.Status == OrderStatus.Completed || x.Status == OrderStatus.Delivered) &&
+                    x.PayoutStatus == PayoutStatus.Unpaid)
                 .SumAsync(x => x.NetAmount, ct);
         }
 
@@ -312,12 +314,12 @@ namespace GearZone.Infrastructure.Repositories
             return _dbSet
                 .Include(o => o.Items)
                 .Include(o => o.Store)
-                .Where(o => o.Status == OrderStatus.Completed &&
+                .Where(o => (o.Status == OrderStatus.Completed || o.Status == OrderStatus.Delivered) &&
                             o.PayoutStatus == PayoutStatus.Unpaid &&
                             o.Order.Payments.Any(p => p.Status == PaymentStatus.Paid &&
                                                       p.Method != PaymentMethod.COD) &&
-                            o.CreatedAt >= periodStart &&
-                            o.CreatedAt <= periodEnd);
+                            (o.DeliveredAt ?? o.UpdatedAt ?? o.CreatedAt) >= periodStart &&
+                            (o.DeliveredAt ?? o.UpdatedAt ?? o.CreatedAt) <= periodEnd);
         }
 
         public async Task<PagedResult<UserOrderDto>> GetUserOrdersAsync(string userId, UserOrderQueryDto queryDto, DateTime utcNow, CancellationToken ct = default)

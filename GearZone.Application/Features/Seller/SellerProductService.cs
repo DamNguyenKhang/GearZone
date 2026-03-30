@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -134,6 +135,7 @@ namespace GearZone.Application.Features.Seller
         public async Task<Guid> CreateProductAsync(CreateProductDto dto, Guid storeId, string userId)
         {
             var slug = string.IsNullOrEmpty(dto.Slug) ? dto.Name.ToLower().Replace(" ", "-") : dto.Slug;
+            await PrepareGeneratedVariantIdentityAsync(dto.Name, dto.CategoryId, dto.Variants);
 
             var existingProduct = await _productRepository.Query()
                 .AnyAsync(p => p.StoreId == storeId && p.Slug == slug && !p.IsDeleted);
@@ -319,6 +321,8 @@ namespace GearZone.Application.Features.Seller
             if (product == null) throw new InvalidOperationException("Product not found.");
 
             var slug = string.IsNullOrEmpty(dto.Slug) ? dto.Name.ToLower().Replace(" ", "-") : dto.Slug;
+            await PrepareGeneratedVariantIdentityAsync(dto.Name, dto.CategoryId, dto.Variants);
+
             if (slug != product.Slug)
             {
                 var existingSlug = await _productRepository.Query()
@@ -547,6 +551,115 @@ namespace GearZone.Application.Features.Seller
             }
 
             await _unitOfWork.SaveChangesAsync();
+        }
+
+        private async Task PrepareGeneratedVariantIdentityAsync(string productName, int categoryId, List<ProductVariantDto>? variants)
+        {
+            if (variants == null || variants.Count == 0)
+            {
+                return;
+            }
+
+            var usedAttributeCombinations = new HashSet<string>(StringComparer.Ordinal);
+
+            var optionLookup = await _categoryAttributeRepository.Query()
+                .Where(a => a.CategoryId == categoryId)
+                .SelectMany(a => a.Options.Select(o => new
+                {
+                    o.Id,
+                    o.Value
+                }))
+                .ToDictionaryAsync(x => x.Id, x => x.Value ?? string.Empty);
+
+            var productPrefix = NormalizeSkuPart(productName, 12);
+            if (string.IsNullOrWhiteSpace(productPrefix))
+            {
+                productPrefix = "PRODUCT";
+            }
+
+            var usedSkus = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            for (var i = 0; i < variants.Count; i++)
+            {
+                var variant = variants[i];
+                var combinationKey = string.Join(
+                    "|",
+                    (variant.Attributes ?? new List<AttributeSelectionDto>())
+                        .Where(a => a.AttributeId > 0 && a.OptionId > 0)
+                        .OrderBy(a => a.AttributeId)
+                        .ThenBy(a => a.OptionId)
+                        .Select(a => $"{a.AttributeId}:{a.OptionId}")
+                );
+
+                if (usedAttributeCombinations.Contains(combinationKey))
+                {
+                    throw new InvalidOperationException("Duplicate variant attributes are not allowed. Please choose a unique attribute combination for each variant.");
+                }
+                usedAttributeCombinations.Add(combinationKey);
+
+                var selectedOptionValues = (variant.Attributes ?? new List<AttributeSelectionDto>())
+                    .Select(a => optionLookup.TryGetValue(a.OptionId, out var value) ? value : string.Empty)
+                    .Where(v => !string.IsNullOrWhiteSpace(v))
+                    .Select(v => v.Trim())
+                    .ToList();
+
+                variant.VariantName = selectedOptionValues.Count > 0
+                    ? string.Join(" / ", selectedOptionValues)
+                    : $"Variant {i + 1}";
+
+                var optionSkuParts = selectedOptionValues
+                    .Select(v => NormalizeSkuPart(v, 8))
+                    .Where(v => !string.IsNullOrWhiteSpace(v))
+                    .ToList();
+
+                var skuBase = optionSkuParts.Count > 0
+                    ? $"{productPrefix}-{string.Join("-", optionSkuParts)}"
+                    : $"{productPrefix}-VAR{i + 1}";
+
+                var candidateSku = skuBase;
+                var suffix = 2;
+                while (usedSkus.Contains(candidateSku))
+                {
+                    candidateSku = $"{skuBase}-{suffix++}";
+                }
+
+                usedSkus.Add(candidateSku);
+                variant.Sku = candidateSku;
+            }
+        }
+
+        private static string NormalizeSkuPart(string value, int maxLength)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            var builder = new StringBuilder(value.Length);
+            foreach (var c in value.Trim().ToUpperInvariant())
+            {
+                if (char.IsLetterOrDigit(c))
+                {
+                    builder.Append(c);
+                }
+                else if (char.IsWhiteSpace(c) || c == '-' || c == '_' || c == '/')
+                {
+                    builder.Append('-');
+                }
+            }
+
+            var normalized = builder.ToString().Trim('-');
+            while (normalized.Contains("--", StringComparison.Ordinal))
+            {
+                normalized = normalized.Replace("--", "-", StringComparison.Ordinal);
+            }
+
+            if (normalized.Length > maxLength)
+            {
+                normalized = normalized[..maxLength].Trim('-');
+            }
+
+            return normalized;
         }
 
         public async Task<List<Category>> GetCategoriesAsync()

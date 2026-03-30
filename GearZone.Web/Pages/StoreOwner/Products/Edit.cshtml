@@ -228,13 +228,13 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     <div>
                                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Variant Name</label>
-                                        <input asp-for="Input.Variants[i].VariantName" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white" placeholder="Standard / 16GB RAM" 
+                                        <input asp-for="Input.Variants[i].VariantName" class="variant-name-input w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50" placeholder="Auto from attributes" readonly
                                             data-val="true" data-val-required="Variant name is required" required>
                                         <span class="field-validation-valid text-xs text-red-500" data-valmsg-for="Input.Variants[@i].VariantName" data-valmsg-replace="true"></span>
                                     </div>
                                     <div>
                                         <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">SKU</label>
-                                        <input asp-for="Input.Variants[i].Sku" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-white" placeholder="Unique SKU" readonly="@(Model.Input.Variants[i].Sku != "")" 
+                                        <input asp-for="Input.Variants[i].Sku" class="variant-sku-input w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50" placeholder="Auto from attributes" readonly
                                             data-val="true" data-val-required="SKU is required" required>
                                         <span class="field-validation-valid text-xs text-red-500" data-valmsg-for="Input.Variants[@i].Sku" data-valmsg-replace="true"></span>
                                     </div>
@@ -330,13 +330,13 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
                 <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">Variant Name</label>
-                <input name="Input.Variants[{index}].VariantName" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30" placeholder="e.g., White / 128GB" 
+                <input name="Input.Variants[{index}].VariantName" class="variant-name-input w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50" placeholder="Auto from attributes" readonly
                     data-val="true" data-val-required="Variant name is required" required>
                 <span class="field-validation-valid text-xs text-red-500" data-valmsg-for="Input.Variants[{index}].VariantName" data-valmsg-replace="true"></span>
             </div>
             <div>
                 <label class="block text-[10px] font-bold text-gray-500 uppercase mb-1">SKU</label>
-                <input name="Input.Variants[{index}].Sku" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50/30" placeholder="SKU-AUTO-123" 
+                <input name="Input.Variants[{index}].Sku" class="variant-sku-input w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary focus:border-primary bg-gray-50" placeholder="Auto from attributes" readonly
                     data-val="true" data-val-required="SKU is required" required>
                 <span class="field-validation-valid text-xs text-red-500" data-valmsg-for="Input.Variants[{index}].Sku" data-valmsg-replace="true"></span>
             </div>
@@ -570,6 +570,71 @@
                 return html;
             }
 
+            function normalizeSkuPart(value, maxLength = 8) {
+                return (value || '')
+                    .toUpperCase()
+                    .replace(/[^A-Z0-9]+/g, '-')
+                    .replace(/^-+|-+$/g, '')
+                    .replace(/--+/g, '-')
+                    .slice(0, maxLength);
+            }
+
+            function generateVariantIdentity($row, index) {
+                const selectedValues = [];
+                $row.find('.attributes-wrapper select').each(function() {
+                    const txt = $(this).find('option:selected').text();
+                    if ($(this).val() && txt && !txt.startsWith('Select ')) {
+                        selectedValues.push(txt.trim());
+                    }
+                });
+
+                const variantName = selectedValues.length > 0 ? selectedValues.join(' / ') : `Variant ${index + 1}`;
+                const productPrefix = normalizeSkuPart($('#Input_Name').val(), 12) || 'PRODUCT';
+                const skuParts = selectedValues.map(v => normalizeSkuPart(v, 8)).filter(Boolean);
+                const variantSku = skuParts.length > 0 ? `${productPrefix}-${skuParts.join('-')}` : `${productPrefix}-VAR${index + 1}`;
+
+                $row.find('.variant-name-input').val(variantName);
+                $row.find('.variant-sku-input').val(variantSku);
+            }
+
+            function regenerateAllVariantIdentity() {
+                $('#variantsContainer .variant-row').each(function(index) {
+                    generateVariantIdentity($(this), index);
+                });
+            }
+
+            function buildVariantCombinationKey($row) {
+                const pairs = [];
+                $row.find('.attributes-wrapper select').each(function() {
+                    const optionId = $(this).val();
+                    const attrId = $(this).closest('div').find('input[name*="AttributeId"]').val();
+                    if (attrId && optionId) {
+                        pairs.push(`${attrId}:${optionId}`);
+                    }
+                });
+                pairs.sort();
+                return pairs.join('|');
+            }
+
+            function validateUniqueVariantCombinations(showToast = false) {
+                const seen = new Set();
+                let duplicated = false;
+
+                $('#variantsContainer .variant-row').each(function() {
+                    const key = buildVariantCombinationKey($(this));
+                    if (!key) return;
+                    if (seen.has(key)) {
+                        duplicated = true;
+                    }
+                    seen.add(key);
+                });
+
+                if (duplicated && showToast) {
+                    window.showToast?.('warning', 'Duplicate variant attributes are not allowed. Please choose a unique attribute combination for each variant.');
+                }
+                return !duplicated;
+            }
+
             function refreshAllVariantAttributes() {
                 if (currentCategoryAttributes.length > 0) {
                     $('.variant-row').each(function(index) {
@@ -592,8 +657,10 @@
                         let attrsHtml = generateAttributesHtml(index, selected);
                         wrapper.html(attrsHtml);
                     });
+                    regenerateAllVariantIdentity();
                 } else {
                     $('.attributes-wrapper').empty();
+                    regenerateAllVariantIdentity();
                 }
             }
 
@@ -728,6 +795,7 @@
                 
                 // Re-render attributes for the new variant
                 refreshAllVariantAttributes();
+                regenerateAllVariantIdentity();
                 
                 updateIndices('variantsContainer', 'variant-row');
                 reparseValidation();
@@ -736,6 +804,24 @@
             $(document).on('click', '.btnRemoveRow', function () {
                 $(this).closest('.variant-row').remove();
                 updateIndices('variantsContainer', 'variant-row');
+                regenerateAllVariantIdentity();
+            });
+
+            $(document).on('change', '#variantsContainer .attributes-wrapper select', function() {
+                const $row = $(this).closest('.variant-row');
+                const index = $row.index();
+                generateVariantIdentity($row, index);
+                validateUniqueVariantCombinations(false);
+            });
+
+            $('#Input_Name').on('input', function() {
+                regenerateAllVariantIdentity();
+            });
+
+            $form.on('submit', function(e) {
+                if (!validateUniqueVariantCombinations(true)) {
+                    e.preventDefault();
+                }
             });
 
             function wirePrimaryPreview() {
@@ -799,6 +885,7 @@
             wirePrimaryPreview();
             ensureEmptySlot($('#additionalImagesContainerEdit'));
 
+            regenerateAllVariantIdentity();
             reparseValidation();
         });
     </script>

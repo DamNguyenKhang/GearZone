@@ -1,0 +1,104 @@
+@page
+@model GearZone.Web.Pages.StoreOwner.Settings.IndexModel
+@{
+    ViewData["Title"] = "Store Settings";
+    ViewData["PageHeader"] = "Store Settings";
+    ViewData["ActivePage"] = "Settings";
+    ViewData["Breadcrumb"] = new string[] { "Dashboard", "Settings" };
+    Layout = "_StoreOwnerLayout";
+}
+
+<div class="flex flex-col gap-6 relative pb-28 w-full max-w-[1440px] mx-auto">
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Settings Menu Navigation -->
+        <div class="lg:col-span-1 flex flex-col gap-2">
+            <div class="bg-white rounded-xl shadow-card border border-slate-100 p-3 flex flex-col gap-1">
+                <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary/10 text-primary font-bold transition-colors">
+                    <span class="material-symbols-outlined text-[20px] filled">storefront</span>
+                    General Info
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors font-medium">
+                    <span class="material-symbols-outlined text-[20px]">account_circle</span>
+                    Business Profile
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors font-medium">
+                    <span class="material-symbols-outlined text-[20px]">security</span>
+                    Security
+                </a>
+                <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors font-medium">
+                    <span class="material-symbols-outlined text-[20px]">notifications_active</span>
+                    Notifications
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Settings Form -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl shadow-card border border-slate-100 overflow-hidden">
+                <div class="border-b border-slate-200 px-6 py-5 bg-slate-50/50">
+                    <h2 class="text-xl font-bold text-slate-900">General Information</h2>
+                    <p class="text-sm text-slate-500 mt-1">Update your store's basic details and public-facing information.</p>
+                </div>
+                
+                <div class="p-6">
+                    <form class="flex flex-col gap-6">
+                        <!-- Store Avatar/Logo -->
+                        <div class="flex items-start gap-6 pb-6 border-b border-slate-100">
+                            @if (!string.IsNullOrEmpty(Model.Store?.LogoUrl))
+                            {
+                                <div class="size-24 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden shadow-sm bg-cover bg-center" style="background-image: url('@Model.Store.LogoUrl')"></div>
+                            }
+                            else
+                            {
+                                <div class="size-24 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
+                                    <span class="material-symbols-outlined text-4xl text-slate-300">store</span>
+                                </div>
+                            }
+                            <div class="flex flex-col gap-2 mt-2">
+                                <h3 class="font-bold text-slate-900 text-sm">Store Logo</h3>
+                                <p class="text-xs text-slate-500">Recommended size: 512x512px. Max 2MB (JPG, PNG).</p>
+                                <div class="mt-2 flex gap-3">
+                                    <button type="button" class="px-3 py-1.5 bg-white border border-slate-300 rounded-md text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-colors shadow-sm">Change Layout</button>
+                                    <button type="button" class="px-3 py-1.5 text-sm font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Inputs -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="flex flex-col gap-1.5 md:col-span-2">
+                                <label class="text-xs font-bold text-slate-700 uppercase tracking-widest">Store Name</label>
+                                <input type="text" class="px-4 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-shadow" value="@(Model.Store?.StoreName)" disabled>
+                                <span class="text-[11px] text-slate-400">Contact admin to change store name.</span>
+                            </div>
+
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-xs font-bold text-slate-700 uppercase tracking-widest">Contact Phone</label>
+                                <input type="tel" class="px-4 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-shadow" placeholder="+84 123 456 789" value="@(Model.Store?.Phone)">
+                            </div>
+
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-xs font-bold text-slate-700 uppercase tracking-widest">Support Email</label>
+                                <input type="email" class="px-4 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-shadow" placeholder="support@mystore.com" value="@(Model.Store?.Email)">
+                            </div>
+
+                            <div class="flex flex-col gap-1.5 md:col-span-2">
+                                <label class="text-xs font-bold text-slate-700 uppercase tracking-widest">Store Description</label>
+                                <textarea rows="4" class="px-4 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-shadow resize-none" placeholder="Tell customers what your store is about...">@(Model.Store?.Description)</textarea>
+                            </div>
+                        </div>
+
+                        <div class="pt-6 border-t border-slate-100 flex justify-end gap-3 mt-4">
+                            <button type="button" class="px-5 py-2.5 rounded-lg text-slate-600 bg-white border border-slate-300 font-bold hover:bg-slate-50 transition-colors text-sm shadow-sm">Discard Changes</button>
+                            <button type="button" class="px-5 py-2.5 rounded-lg bg-primary text-white font-bold hover:bg-primary-dark transition-colors text-sm shadow-md shadow-primary/20 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[18px]">save</span>
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

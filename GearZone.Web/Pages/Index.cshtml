@@ -1,362 +1,617 @@
-﻿@page
-@model IndexModel
+@page
+@model GearZone.Web.Pages.IndexModel
+@using System.Linq
+@using Microsoft.AspNetCore.Mvc.ViewFeatures
 @{
-    ViewData["Title"] = "Genuine Components";
+    ViewData["Title"] = "Marketplace Home";
+
+    string GetToneBackground(string tone) => tone switch
+    {
+        "orange" => "bg-[#fff1e8] text-[#ff6b00]",
+        "violet" => "bg-[#f2edff] text-violet-600",
+        "sky" => "bg-[#eef6ff] text-sky-600",
+        "emerald" => "bg-[#ecfbf4] text-emerald-600",
+        "blue" => "bg-[#e8f2ff] text-[#0261c7]",
+        "slate" => "bg-slate-100 text-slate-700",
+        _ => "bg-[#e8f2ff] text-[#0261c7]"
+    };
+    var spotlightCategories = Model.HomePage.Categories.Take(12).ToList();
+    var flashProducts = Model.HomePage.FlashRail.Products.Take(5).ToList();
+    var recommendedProducts = Model.HomePage.RecommendedRail.Products.Take(10).ToList();
+    var showcaseStores = Model.HomePage.Stores.Take(4).ToList();
 }
 
-<!-- Hero Section -->
-<section class="relative bg-background-dark overflow-hidden">
-    <!-- Background Image with Overlay -->
-    <div class="absolute inset-0 z-0">
-        <img alt="Futuristic electronic circuit board with blue neon lights" class="w-full h-full object-cover opacity-20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvT2mtItp9v2Df4eQ2aRrGSih1RpFdddo_2sT4ofVPgFFwsWZ9LphOpcvvyP2gsoxAaP2_I4Gl44r3PO-Hd6z31OP5-DJtScsD-HSM9XHqpGQvosHp4jQ10h8rEZXR6C7NMZKtAIO8szM1dfA-j42Ssl87iLAibGkZW5g8X5HRiMC2GTVoQccKGunrxlPSjtWirnmnL6M6uDqA9Fqiebi05l5-LUsmoPwl57GvWJZHnKeEs_A7Jf3ly6l9NbqrhQFIh5YKxcetSixr" />
-        <div class="absolute inset-0 bg-gradient-to-r from-gray-900 via-gray-900/90 to-primary/30"></div>
-    </div>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-16 md:py-24 lg:py-32">
-        <div class="max-w-2xl">
-            <div class="inline-flex items-center px-3 py-1 rounded-full bg-primary/20 text-blue-100 text-sm font-medium mb-6 border border-primary/30 backdrop-blur-sm">
-                <span class="w-2 h-2 rounded-full bg-secondary mr-2 animate-pulse"></span>
-                Official Distributor for 500+ Brands
-            </div>
-            <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-tight mb-6">
-                Genuine Components,<br />
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-300">Best Prices.</span>
-            </h1>
-            <p class="text-lg text-gray-300 mb-8 max-w-xl leading-relaxed">
-                Upgrade your rig with authentic parts from top-tier manufacturers. Fast shipping nationwide across Vietnam.
-            </p>
-            <div class="flex flex-col sm:flex-row gap-4">
-                <button class="px-8 py-3.5 bg-secondary hover:bg-orange-600 text-white font-bold rounded-lg shadow-lg shadow-orange-500/20 transition-all transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary focus:ring-offset-gray-900 text-base">
-                    Shop Now
-                </button>
-                <button class="px-8 py-3.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-lg backdrop-blur-sm border border-white/10 transition-all flex items-center justify-center gap-2">
-                    <span>View Flash Sales</span>
-                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
-                </button>
-            </div>
-        </div>
-    </div>
-</section>
+@section Styles {
+    <style>
+        .dmx-home {
+            background: linear-gradient(180deg, #eef5ff 0%, #f7fbff 32%, #f8fafc 100%);
+            overflow-x: clip;
+        }
 
-<!-- Featured Categories Grid -->
-<section class="py-12 bg-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between mb-8">
-            <h2 class="text-2xl font-bold text-gray-900">Featured Categories</h2>
-            <a class="text-primary hover:text-blue-700 font-medium text-sm flex items-center gap-1 group" href="#">
-                View All Categories
-                <span class="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1">arrow_forward</span>
-            </a>
-        </div>
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <!-- Category Item -->
-            <a class="group flex flex-col items-center p-6 bg-slate-50 rounded-xl border border-transparent hover:border-primary/20 hover:bg-white hover:shadow-lg transition-all duration-300" href="#">
-                <div class="w-12 h-12 bg-blue-100 text-primary rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-2xl">memory</span>
-                </div>
-                <h3 class="font-semibold text-gray-900 group-hover:text-primary transition-colors">CPU</h3>
-                <p class="text-xs text-gray-500 mt-1">1,200+ Items</p>
-            </a>
-            <a class="group flex flex-col items-center p-6 bg-slate-50 rounded-xl border border-transparent hover:border-primary/20 hover:bg-white hover:shadow-lg transition-all duration-300" href="#">
-                <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-2xl">developer_board</span>
-                </div>
-                <h3 class="font-semibold text-gray-900 group-hover:text-primary transition-colors">GPU</h3>
-                <p class="text-xs text-gray-500 mt-1">850+ Items</p>
-            </a>
-            <a class="group flex flex-col items-center p-6 bg-slate-50 rounded-xl border border-transparent hover:border-primary/20 hover:bg-white hover:shadow-lg transition-all duration-300" href="#">
-                <div class="w-12 h-12 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-2xl">dns</span>
-                </div>
-                <h3 class="font-semibold text-gray-900 group-hover:text-primary transition-colors">RAM</h3>
-                <p class="text-xs text-gray-500 mt-1">540+ Items</p>
-            </a>
-            <a class="group flex flex-col items-center p-6 bg-slate-50 rounded-xl border border-transparent hover:border-primary/20 hover:bg-white hover:shadow-lg transition-all duration-300" href="#">
-                <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-2xl">hard_drive</span>
-                </div>
-                <h3 class="font-semibold text-gray-900 group-hover:text-primary transition-colors">SSD/HDD</h3>
-                <p class="text-xs text-gray-500 mt-1">920+ Items</p>
-            </a>
-            <a class="group flex flex-col items-center p-6 bg-slate-50 rounded-xl border border-transparent hover:border-primary/20 hover:bg-white hover:shadow-lg transition-all duration-300" href="#">
-                <div class="w-12 h-12 bg-cyan-100 text-cyan-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-2xl">monitor</span>
-                </div>
-                <h3 class="font-semibold text-gray-900 group-hover:text-primary transition-colors">Monitors</h3>
-                <p class="text-xs text-gray-500 mt-1">340+ Items</p>
-            </a>
-            <a class="group flex flex-col items-center p-6 bg-slate-50 rounded-xl border border-transparent hover:border-primary/20 hover:bg-white hover:shadow-lg transition-all duration-300" href="#">
-                <div class="w-12 h-12 bg-pink-100 text-pink-600 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-2xl">keyboard</span>
-                </div>
-                <h3 class="font-semibold text-gray-900 group-hover:text-primary transition-colors">Peripherals</h3>
-                <p class="text-xs text-gray-500 mt-1">2,100+ Items</p>
-            </a>
-        </div>
-    </div>
-</section>
+        .dmx-shell {
+            width: min(1200px, 100%);
+            margin: 0 auto;
+            padding-inline: 1rem;
+        }
 
-<!-- Flash Sale Section -->
-<section class="py-12 bg-slate-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div class="flex items-center gap-3">
-                <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-secondary text-3xl animate-bounce">bolt</span>
-                    Today's Flash Sale
-                </h2>
-                <div class="flex items-center gap-1 ml-4 bg-gray-900 text-white px-3 py-1 rounded text-sm font-mono font-bold tracking-widest">
-                    <span>02</span>:<span>14</span>:<span>55</span>
-                </div>
-            </div>
-            <a class="text-secondary font-medium hover:text-orange-700 text-sm flex items-center" href="#">
-                See all deals
-                <span class="material-symbols-outlined text-lg">chevron_right</span>
-            </a>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- Product Card 1 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-                <div class="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-                    <img alt="Modern graphics card on white background" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2R-azHEPXgUcp2F7Wr6cIolM1gUhCMJXlYBXptHbyDWgf6GPvZLwnM9DYje2gq-YuIu2PlZdvpLG5vXqbYUJh6dAwY4N2OLZ7gglB7h6-Ll_7-k6KYuRiQD-JbEX3S5VsNiyoILPPAq2rHgMh6cgyEfReBKwlM1t2VC5lFoLWYRtdutSOY63EVTr0qO5fmX1M4Uwd5puBzRF3W5ld2rJJiV-LJBupQnMD2y-ImSLJBwK87uKudhJ8kbgx6CXxSgM-vBdqVHtuU_HP" />
-                    <div class="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">-25%</div>
-                    <div class="absolute top-3 right-3 bg-white/90 backdrop-blur text-xs font-semibold px-2 py-1 rounded text-primary border border-gray-100 shadow-sm flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[14px]">verified</span> GearVN
-                    </div>
-                </div>
-                <div class="p-4">
-                    <h3 class="text-gray-900 font-medium line-clamp-2 min-h-[3rem] mb-2 group-hover:text-primary transition-colors">
-                        ASUS ROG Strix GeForce RTX 4070 Ti OC Edition 12GB GDDR6X
-                    </h3>
-                    <div class="flex items-center gap-1 mb-3">
-                        <div class="flex text-yellow-400 text-sm">
-                            <span class="material-symbols-outlined text-[16px] fill-current">star</span>
-                            <span class="material-symbols-outlined text-[16px] fill-current">star</span>
-                            <span class="material-symbols-outlined text-[16px] fill-current">star</span>
-                            <span class="material-symbols-outlined text-[16px] fill-current">star</span>
-                            <span class="material-symbols-outlined text-[16px] fill-current">star_half</span>
-                        </div>
-                        <span class="text-xs text-gray-500">(128)</span>
-                    </div>
-                    <div class="flex items-baseline gap-2 mb-4">
-                        <span class="text-xl font-bold text-secondary">24.990.000 ₫</span>
-                        <span class="text-sm text-gray-400 line-through">33.500.000 ₫</span>
-                    </div>
-                    <button class="w-full py-2.5 rounded-lg border border-primary text-primary font-medium hover:bg-primary hover:text-white transition-colors flex items-center justify-center gap-2">
-                        <span class="material-symbols-outlined text-[18px]">add_shopping_cart</span>
-                        Add to Cart
-                    </button>
-                </div>
-            </div>
-            <!-- Product Card 2 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-                <div class="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-                    <img alt="Computer CPU processor macro shot" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBj4R6q0mbsbZ75b18C-8AOl1ZVsA1N70dpoHcAZNLPQCbpeMcL3A95J4ym8KUHfxJR0RNc0BFH3eBZ8J3K5HO2bZ9qjQfbOtDMboRXH5u5gf1zfPUvdVn3PNgIzsSI9pvBfJIdeWjaFSb1QlgjyLJbcaAc4DyDPaCtpb8Ftljnhj2Oob4W2EsJqo_OosXVQQBZGHWigwjr4r04ZPBmxaL9wvs6elpKD6p17yvUMm7sUTBs7fTwizHdsc_3tNH6e9ni1hlVc0O_7zoL" />
-                    <div class="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">-15%</div>
-                    <div class="absolute top-3 right-3 bg-white/90 backdrop-blur text-xs font-semibold px-2 py-1 rounded text-primary border border-gray-100 shadow-sm flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[14px]">verified</span> Hanoicomputer
-                    </div>
-                </div>
-                <div class="p-4">
-                    <h3 class="text-gray-900 font-medium line-clamp-2 min-h-[3rem] mb-2 group-hover:text-primary transition-colors">
-                        AMD Ryzen 7 7800X3D Gaming Processor
-                    </h3>
-                    <div class="flex items-center gap-1 mb-3">
-                        <div class="flex text-yellow-400 text-sm">
-                            <span class="material-symbols-outlined text-[16px] fill-current">star</span>
-                            <span class="material-symbols-outlined text-[16px] fill-current">star</span>
-                            <span class="material-symbols-outlined text-[16px] fill-current">star</span>
-                            <span class="material-symbols-outlined text-[16px] fill-current">star</span>
-                            <span class="material-symbols-outlined text-[16px] fill-current">star</span>
-                        </div>
-                        <span class="text-xs text-gray-500">(450)</span>
-                    </div>
-                    <div class="flex items-baseline gap-2 mb-4">
-                        <span class="text-xl font-bold text-secondary">9.890.000 ₫</span>
-                        <span class="text-sm text-gray-400 line-through">11.500.000 ₫</span>
-                    </div>
-                    <button class="w-full py-2.5 rounded-lg border border-primary text-primary font-medium hover:bg-primary hover:text-white transition-colors flex items-center justify-center gap-2">
-                        <span class="material-symbols-outlined text-[18px]">add_shopping_cart</span>
-                        Add to Cart
-                    </button>
-                </div>
-            </div>
-            <!-- Product Card 3 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-                <div class="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-                    <img alt="Mechanical keyboard with RGB lighting" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMl-YFwWuGHDI8LTijEKkkBvbvLps68kWfaQ05xhxanu8Tv3ilJw5WJ_LPt6lPFO-GI8ytxk_tQaOfG44X8OEcHbrXm6HSHkoda-3pgF-SKSykPkwnYEB6m2Nkvrezhlk_HsQ0EaYoX5oDCcOWdU9R6kUNYNz-MSHzu3keuLr0mWdvUxH13pqJiVt9VjJYuzhY_cy2VsMCmli0jHWtzpwbTKa_GCSJUo0PGfZUjm8dy3X8kT0QZXYkLCwLt95pAvTB3-e3BdPnyRuR" />
-                    <div class="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">-30%</div>
-                    <div class="absolute top-3 right-3 bg-white/90 backdrop-blur text-xs font-semibold px-2 py-1 rounded text-primary border border-gray-100 shadow-sm flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[14px]">verified</span> An Phat PC
-                    </div>
-                </div>
-                <div class="p-4">
-                    <h3 class="text-gray-900 font-medium line-clamp-2 min-h-[3rem] mb-2 group-hover:text-primary transition-colors">
-                        Keychron K2 Pro QMK/VIA Wireless Mechanical Keyboard
-                    </h3>
-                    <div class="flex items-center gap-1 mb-3">
-                        <div class="flex text-yellow-400 text-sm">
-                            <span class="material-symbols-outlined text-[16px] fill-current">star</span>
-                            <span class="material-symbols-outlined text-[16px] fill-current">star</span>
-                            <span class="material-symbols-outlined text-[16px] fill-current">star</span>
-                            <span class="material-symbols-outlined text-[16px] fill-current">star</span>
-                            <span class="material-symbols-outlined text-[16px] text-gray-300">star</span>
-                        </div>
-                        <span class="text-xs text-gray-500">(89)</span>
-                    </div>
-                    <div class="flex items-baseline gap-2 mb-4">
-                        <span class="text-xl font-bold text-secondary">2.450.000 ₫</span>
-                        <span class="text-sm text-gray-400 line-through">3.500.000 ₫</span>
-                    </div>
-                    <button class="w-full py-2.5 rounded-lg border border-primary text-primary font-medium hover:bg-primary hover:text-white transition-colors flex items-center justify-center gap-2">
-                        <span class="material-symbols-outlined text-[18px]">add_shopping_cart</span>
-                        Add to Cart
-                    </button>
-                </div>
-            </div>
-            <!-- Product Card 4 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-                <div class="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-                    <img alt="Black gaming monitor showing code" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDT6XNBBzbP_lkyxTKedvFrxygiM-kISpvgqq7-9gN9sOqMaecNe5-kbDPNk8U5IUZZBFvHtN1JcVyP4Ff_J3YZab8Y3nb2hPPsBslO79kiEisrwtfCV-dLqJcABW-EN1OCIXSPj3EfKvRW6j--NB1w1FQYs_sYDM9oXGfgclhnqzLnQRkFjgQdbxaLf2lfBU9qizltXnBxRE1kyIyxEmKI6qYd0ec0beq-pK5-qBw3fS5rQZokM1uFc0BnhIHCmxZXQLc1hKRrOZF_" />
-                    <div class="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">-10%</div>
-                    <div class="absolute top-3 right-3 bg-white/90 backdrop-blur text-xs font-semibold px-2 py-1 rounded text-primary border border-gray-100 shadow-sm flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[14px]">verified</span> TechLand
-                    </div>
-                </div>
-                <div class="p-4">
-                    <h3 class="text-gray-900 font-medium line-clamp-2 min-h-[3rem] mb-2 group-hover:text-primary transition-colors">
-                        LG UltraGear 27" QHD Nano IPS 1ms 165Hz Gaming Monitor
-                    </h3>
-                    <div class="flex items-center gap-1 mb-3">
-                        <div class="flex text-yellow-400 text-sm">
-                            <span class="material-symbols-outlined text-[16px] fill-current">star</span>
-                            <span class="material-symbols-outlined text-[16px] fill-current">star</span>
-                            <span class="material-symbols-outlined text-[16px] fill-current">star</span>
-                            <span class="material-symbols-outlined text-[16px] fill-current">star</span>
-                            <span class="material-symbols-outlined text-[16px] fill-current">star_half</span>
-                        </div>
-                        <span class="text-xs text-gray-500">(210)</span>
-                    </div>
-                    <div class="flex items-baseline gap-2 mb-4">
-                        <span class="text-xl font-bold text-secondary">7.890.000 ₫</span>
-                        <span class="text-sm text-gray-400 line-through">8.990.000 ₫</span>
-                    </div>
-                    <button class="w-full py-2.5 rounded-lg border border-primary text-primary font-medium hover:bg-primary hover:text-white transition-colors flex items-center justify-center gap-2">
-                        <span class="material-symbols-outlined text-[18px]">add_shopping_cart</span>
-                        Add to Cart
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+        .dmx-band {
+            background:
+                linear-gradient(180deg, rgba(1, 49, 118, 0.96) 0%, rgba(10, 92, 196, 0.95) 58%, rgba(11, 108, 221, 0.94) 100%),
+                radial-gradient(circle at top right, rgba(255, 107, 0, 0.14), transparent 24%);
+            overflow: clip;
+        }
 
-<!-- Top Stores Section -->
-<section class="py-12 bg-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between mb-8">
-            <h2 class="text-2xl font-bold text-gray-900">Top Rated Stores</h2>
+        .dmx-panel {
+            border-radius: 1.2rem;
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            background: white;
+            box-shadow: 0 18px 32px -26px rgba(15, 23, 42, 0.22);
+        }
+
+        .dmx-hero-card {
+            position: relative;
+            min-height: clamp(220px, 32vw, 332px);
+            overflow: hidden;
+            border-radius: 1.25rem;
+            background: linear-gradient(135deg, #07111f 0%, #0f2452 52%, #0b6ae4 100%);
+            color: white;
+            box-shadow: 0 30px 60px -42px rgba(2, 6, 23, 0.55);
+        }
+
+        .dmx-hero-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(90deg, rgba(3, 11, 27, 0.82) 0%, rgba(3, 11, 27, 0.64) 34%, rgba(3, 11, 27, 0.18) 68%, rgba(3, 11, 27, 0.06) 100%),
+                radial-gradient(circle at top left, rgba(255, 255, 255, 0.08), transparent 22%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .dmx-hero-slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(18px) scale(0.99);
+            transition: opacity 0.42s ease, transform 0.42s ease;
+        }
+
+        .dmx-hero-slide.is-active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(0) scale(1);
+        }
+
+        .dmx-hero-media {
+            position: absolute;
+            inset: 0;
+        }
+
+        .dmx-hero-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+
+        .dmx-hero-copy {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            min-height: inherit;
+            align-items: center;
+            padding: 1.4rem 1.35rem 3.9rem;
+        }
+
+        .dmx-hero-copy-inner {
+            width: min(100%, 34rem);
+        }
+
+        .dmx-hero-text-shadow {
+            text-shadow: 0 14px 30px rgba(2, 6, 23, 0.38);
+        }
+
+        .dmx-hero-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.12);
+            padding: 0.52rem 0.9rem;
+            font-size: 0.65rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.24em;
+            color: #f8fafc;
+            backdrop-filter: blur(18px);
+        }
+
+        .dmx-hero-tag {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+            padding: 0.42rem 0.8rem;
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: rgba(248, 250, 252, 0.92);
+            backdrop-filter: blur(12px);
+        }
+
+        .dmx-hero-control {
+            display: inline-flex;
+            height: 2.35rem;
+            width: 2.35rem;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+            backdrop-filter: blur(16px);
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .dmx-hero-control:hover {
+            background: rgba(255, 255, 255, 0.18);
+            transform: translateY(-1px);
+        }
+
+        .dmx-dot {
+            width: 0.5rem;
+            height: 0.5rem;
+            border: none;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.42);
+            transition: width 0.2s ease, background-color 0.2s ease;
+        }
+
+        .dmx-dot.is-active {
+            width: 1.45rem;
+            background: white;
+        }
+
+        .dmx-service-strip {
+            margin-top: -0.15rem;
+        }
+
+        .dmx-flash-timer-box {
+            display: inline-flex;
+            min-width: 2rem;
+            justify-content: center;
+            border-radius: 0.45rem;
+            background: #111827;
+            padding: 0.28rem 0.45rem;
+            color: white;
+        }
+
+        @@media (min-width: 768px) {
+            .dmx-shell {
+                padding-inline: 1.5rem;
+            }
+
+            .dmx-hero-copy {
+                padding: 1.8rem 1.8rem 4.2rem;
+            }
+        }
+
+        @@media (min-width: 1024px) {
+            .dmx-shell {
+                padding-inline: 2rem;
+            }
+
+            .dmx-hero-copy {
+                padding: 2rem 2rem 4.45rem;
+            }
+        }
+    </style>
+}
+
+<div class="dmx-home pb-16">
+    <section class="dmx-band pb-5 pt-5">
+        <div class="dmx-shell">
+            <section class="dmx-hero-card"
+                     data-hero-carousel
+                     aria-label="Featured promotions"
+                     aria-roledescription="carousel"
+                     tabindex="0">
+                @for (var index = 0; index < Model.HeroSlides.Count; index++)
+                {
+                    var slide = Model.HeroSlides[index];
+                    <article class="dmx-hero-slide @(index == 0 ? "is-active" : "")"
+                             data-carousel-slide
+                             aria-hidden="@(index == 0 ? "false" : "true")">
+                        <div class="dmx-hero-media">
+                            <img src="@slide.ImageUrl"
+                                 alt="@slide.ImageAlt"
+                                 loading="@(index == 0 ? "eager" : "lazy")"
+                                 decoding="async" />
+                        </div>
+                        <div class="dmx-hero-copy">
+                            <div class="dmx-hero-copy-inner">
+                                <div class="dmx-hero-chip">
+                                    <span class="h-2 w-2 rounded-full bg-[#ffb36b]"></span>
+                                    @slide.Eyebrow
+                                </div>
+                                <h1 class="dmx-hero-text-shadow mt-4 font-['Space_Grotesk'] text-[clamp(1.9rem,4.6vw,3.35rem)] font-bold leading-[0.94] tracking-[-0.06em] text-white">
+                                    @slide.Title
+                                </h1>
+                                <p class="mt-3 max-w-[31rem] text-sm leading-6 text-slate-100/88 md:text-[15px] md:leading-7">
+                                    @slide.Description
+                                </p>
+
+                                @if (slide.Tags.Any())
+                                {
+                                    <div class="mt-4 flex flex-wrap gap-2">
+                                        @foreach (var tag in slide.Tags)
+                                        {
+                                            <span class="dmx-hero-tag">@tag</span>
+                                        }
+                                    </div>
+                                }
+
+                                <div class="mt-5 flex flex-wrap gap-3">
+                                    <a href="@slide.PrimaryHref" class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#ff6b00] px-4 py-3 text-sm font-extrabold text-white shadow-[0_18px_28px_-18px_rgba(255,107,0,.78)] transition hover:-translate-y-0.5">
+                                        @slide.PrimaryLabel
+                                        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                                    </a>
+                                    <a href="@slide.SecondaryHref" class="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-extrabold text-white backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white/15">
+                                        @slide.SecondaryLabel
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                }
+
+                <div class="absolute inset-x-4 bottom-4 z-[3] flex flex-wrap items-center justify-between gap-3 md:inset-x-6">
+                    <div class="flex items-center gap-2">
+                        @for (var index = 0; index < Model.HeroSlides.Count; index++)
+                        {
+                            <button type="button"
+                                    class="dmx-dot @(index == 0 ? "is-active" : "")"
+                                    data-carousel-dot
+                                    data-slide-index="@index"
+                                    aria-current="@(index == 0 ? "true" : "false")">
+                                <span class="sr-only">Go to slide @(index + 1)</span>
+                            </button>
+                        }
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button type="button" data-carousel-prev aria-label="Previous slide" class="dmx-hero-control">
+                            <span class="material-symbols-outlined text-[18px]">west</span>
+                        </button>
+                        <button type="button" data-carousel-next aria-label="Next slide" class="dmx-hero-control">
+                            <span class="material-symbols-outlined text-[18px]">east</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- Store Card 1 -->
-            <div class="p-6 rounded-xl border border-gray-200 bg-white hover:shadow-md transition-shadow">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-primary font-bold text-lg">
-                            GV
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-gray-900">GearVN</h3>
-                            <div class="flex items-center gap-1 text-xs text-gray-500">
-                                <span class="material-symbols-outlined text-[14px] text-yellow-500 fill-current">star</span>
-                                4.9 (5.2k reviews)
-                            </div>
-                        </div>
-                    </div>
-                    <span class="bg-blue-50 text-primary text-xs font-semibold px-2 py-1 rounded">Official</span>
+    </section>
+
+    @if (Model.ServiceItems.Any())
+    {
+        <section class="dmx-service-strip pt-4">
+            <div class="dmx-shell">
+                <div class="dmx-panel grid grid-cols-2 gap-3 p-3 md:grid-cols-4 xl:grid-cols-6">
+                    @foreach (var item in Model.ServiceItems.Take(6))
+                    {
+                        <a href="@item.Href" class="flex items-center gap-3 rounded-2xl border border-slate-200/90 px-3 py-3 transition hover:border-blue-200 hover:bg-slate-50">
+                            <span class="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl @GetToneBackground(item.Tone)">
+                                <span class="material-symbols-outlined text-[20px]">@item.Icon</span>
+                            </span>
+                            <span class="min-w-0">
+                                <span class="block text-sm font-extrabold text-slate-900">@item.Title</span>
+                                <span class="mt-0.5 block text-[11px] leading-4 text-slate-500">@item.Subtitle</span>
+                            </span>
+                        </a>
+                    }
                 </div>
-                <div class="flex items-center justify-between text-sm text-gray-600 mb-4">
-                    <span>Products: <strong class="text-gray-900">1.2k+</strong></span>
-                    <span>Followers: <strong class="text-gray-900">25k</strong></span>
-                </div>
-                <button class="w-full py-2 rounded-lg bg-gray-50 text-gray-900 font-medium hover:bg-gray-100 transition-colors text-sm">
-                    Visit Store
-                </button>
             </div>
-            <!-- Store Card 2 -->
-            <div class="p-6 rounded-xl border border-gray-200 bg-white hover:shadow-md transition-shadow">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-red-600 font-bold text-lg">
-                            AP
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-gray-900">An Phat PC</h3>
-                            <div class="flex items-center gap-1 text-xs text-gray-500">
-                                <span class="material-symbols-outlined text-[14px] text-yellow-500 fill-current">star</span>
-                                4.8 (3.8k reviews)
-                            </div>
-                        </div>
+        </section>
+    }
+
+    <section class="pt-4">
+        <div class="dmx-shell">
+            <div class="dmx-panel p-4">
+                <div class="mb-4 flex items-center justify-between gap-3">
+                    <div>
+                        <p class="text-[11px] font-extrabold uppercase tracking-[0.2em] text-slate-500">Popular categories</p>
+                        <h2 class="mt-1 text-xl font-black tracking-[-0.03em] text-slate-950">Browse the catalog the fast retail way</h2>
                     </div>
-                    <span class="bg-blue-50 text-primary text-xs font-semibold px-2 py-1 rounded">Official</span>
+                    <a href="/products" class="text-xs font-extrabold uppercase tracking-[0.18em] text-[#0261c7]">View all</a>
                 </div>
-                <div class="flex items-center justify-between text-sm text-gray-600 mb-4">
-                    <span>Products: <strong class="text-gray-900">950+</strong></span>
-                    <span>Followers: <strong class="text-gray-900">18k</strong></span>
+
+                <div class="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
+                    @foreach (var category in spotlightCategories)
+                    {
+                        <a href="@category.Href" class="rounded-2xl border border-slate-200/90 bg-white p-4 text-center transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_18px_28px_-24px_rgba(37,99,235,.18)]">
+                            <span class="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl @GetToneBackground(category.Tone)">
+                                <span class="material-symbols-outlined text-[22px]">@category.Icon</span>
+                            </span>
+                            <p class="mt-3 text-sm font-extrabold leading-5 text-slate-900">@category.Name</p>
+                            <p class="mt-1 text-[11px] uppercase tracking-[0.16em] text-slate-500">@category.ProductCount items</p>
+                        </a>
+                    }
                 </div>
-                <button class="w-full py-2 rounded-lg bg-gray-50 text-gray-900 font-medium hover:bg-gray-100 transition-colors text-sm">
-                    Visit Store
-                </button>
-            </div>
-            <!-- Store Card 3 -->
-            <div class="p-6 rounded-xl border border-gray-200 bg-white hover:shadow-md transition-shadow">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-blue-800 font-bold text-lg">
-                            HC
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-gray-900">Hanoicomputer</h3>
-                            <div class="flex items-center gap-1 text-xs text-gray-500">
-                                <span class="material-symbols-outlined text-[14px] text-yellow-500 fill-current">star</span>
-                                4.8 (4.1k reviews)
-                            </div>
-                        </div>
-                    </div>
-                    <span class="bg-blue-50 text-primary text-xs font-semibold px-2 py-1 rounded">Official</span>
-                </div>
-                <div class="flex items-center justify-between text-sm text-gray-600 mb-4">
-                    <span>Products: <strong class="text-gray-900">1.5k+</strong></span>
-                    <span>Followers: <strong class="text-gray-900">32k</strong></span>
-                </div>
-                <button class="w-full py-2 rounded-lg bg-gray-50 text-gray-900 font-medium hover:bg-gray-100 transition-colors text-sm">
-                    Visit Store
-                </button>
-            </div>
-            <!-- Store Card 4 -->
-            <div class="p-6 rounded-xl border border-gray-200 bg-white hover:shadow-md transition-shadow">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center text-green-600 font-bold text-lg">
-                            PL
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-gray-900">Phong Vu</h3>
-                            <div class="flex items-center gap-1 text-xs text-gray-500">
-                                <span class="material-symbols-outlined text-[14px] text-yellow-500 fill-current">star</span>
-                                4.7 (8.5k reviews)
-                            </div>
-                        </div>
-                    </div>
-                    <span class="bg-blue-50 text-primary text-xs font-semibold px-2 py-1 rounded">Official</span>
-                </div>
-                <div class="flex items-center justify-between text-sm text-gray-600 mb-4">
-                    <span>Products: <strong class="text-gray-900">2.1k+</strong></span>
-                    <span>Followers: <strong class="text-gray-900">45k</strong></span>
-                </div>
-                <button class="w-full py-2 rounded-lg bg-gray-50 text-gray-900 font-medium hover:bg-gray-100 transition-colors text-sm">
-                    Visit Store
-                </button>
             </div>
         </div>
-    </div>
-</section>
+    </section>
+
+    <section class="pt-4" id="home-flash-zone">
+        <div class="dmx-shell">
+            <div class="dmx-panel overflow-hidden">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 bg-gradient-to-r from-[#0b58c4] to-[#0f78e4] px-4 py-4 text-white">
+                    <div class="flex items-center gap-3">
+                        <span class="rounded-full bg-white px-3 py-1 text-xs font-extrabold uppercase tracking-[0.2em] text-[#0b58c4]">@Model.HomePage.FlashRail.Eyebrow</span>
+                        <h2 class="text-xl font-black tracking-[-0.03em]">@Model.HomePage.FlashRail.Title</h2>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm font-bold">
+                        <span class="uppercase tracking-[0.18em] text-white/80">Ends in</span>
+                        <span class="dmx-flash-timer-box" data-flash-hours>03</span>
+                        <span class="text-white/60">:</span>
+                        <span class="dmx-flash-timer-box" data-flash-minutes>18</span>
+                        <span class="text-white/60">:</span>
+                        <span class="dmx-flash-timer-box" data-flash-seconds>45</span>
+                    </div>
+                </div>
+
+                <div class="p-4">
+                    <p class="mb-4 text-sm leading-7 text-slate-500">@Model.HomePage.FlashRail.Description</p>
+                    @if (flashProducts.Any())
+                    {
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+                            @foreach (var product in flashProducts)
+                            {
+                                <div class="product-slot min-w-0">
+                                    <partial name="/Pages/Shared/_ProductCard.cshtml"
+                                             model="product"
+                                             view-data='new ViewDataDictionary(ViewData) { ["ViewMode"] = "grid" }' />
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="rounded-2xl border border-dashed border-slate-300/80 bg-white/70 px-4 py-8 text-center text-sm text-slate-500">No flash deal products are available yet.</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="pt-4">
+        <div class="dmx-shell">
+            <div class="dmx-panel p-4">
+                <div class="mb-4 flex items-center justify-between gap-3">
+                    <div>
+                        <p class="text-[11px] font-extrabold uppercase tracking-[0.2em] text-slate-500">Official store zone</p>
+                        <h2 class="mt-1 text-xl font-black tracking-[-0.03em] text-slate-950">Verified stores laid out like a mall strip</h2>
+                    </div>
+                    <a href="/products" class="text-xs font-extrabold uppercase tracking-[0.18em] text-[#0261c7]">See more</a>
+                </div>
+
+                <div class="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,.85fr)]">
+                    <a href="@(showcaseStores.FirstOrDefault()?.Href ?? "/products")" class="rounded-[1.35rem] bg-gradient-to-br from-[#eef5ff] via-white to-[#fff1e8] p-5">
+                        <p class="text-[11px] font-extrabold uppercase tracking-[0.22em] text-[#0261c7]">Official hub</p>
+                        <h3 class="mt-2 text-[1.8rem] font-black leading-none tracking-[-0.05em] text-slate-950">
+                            @(showcaseStores.FirstOrDefault()?.StoreName ?? "GearZone Official")
+                        </h3>
+                        <p class="mt-3 max-w-[32rem] text-sm leading-7 text-slate-600">
+                            Official routes, seeded catalog, and support entry points grouped in one cleaner zone instead of oversized homepage cards.
+                        </p>
+                        <div class="mt-5 flex flex-wrap gap-2">
+                            @foreach (var store in showcaseStores.Take(4))
+                            {
+                                <span class="rounded-full bg-white px-3 py-2 text-[11px] font-extrabold text-slate-700 shadow-sm">@store.StoreName</span>
+                            }
+                        </div>
+                    </a>
+
+                    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-2">
+                        @foreach (var store in showcaseStores)
+                        {
+                            <a href="@store.Href" class="rounded-2xl border border-slate-200/90 bg-white p-4 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-[0_18px_28px_-24px_rgba(37,99,235,.18)]">
+                                <div class="flex items-start gap-3">
+                                    <span class="inline-flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#eef6ff] text-base font-black text-[#0261c7]">
+                                        @if (!string.IsNullOrWhiteSpace(store.LogoUrl))
+                                        {
+                                            <img src="@store.LogoUrl" alt="@store.StoreName" class="h-full w-full object-cover" loading="lazy" decoding="async" />
+                                        }
+                                        else
+                                        {
+                                            @(string.IsNullOrWhiteSpace(store.StoreName) ? "G" : store.StoreName[0].ToString())
+                                        }
+                                    </span>
+                                    <span class="min-w-0">
+                                        <span class="block truncate text-sm font-extrabold text-slate-900">@store.StoreName</span>
+                                        <span class="mt-1 block text-xs leading-5 text-slate-500">@(string.IsNullOrWhiteSpace(store.Description) ? "Verified marketplace seller with live storefront routing." : store.Description)</span>
+                                    </span>
+                                </div>
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                    <span class="rounded-full bg-slate-50 px-2.5 py-1.5 text-[11px] font-extrabold text-slate-700">@store.ProductCount products</span>
+                                    <span class="rounded-full bg-slate-50 px-2.5 py-1.5 text-[11px] font-extrabold text-slate-700">@store.TotalSold sold</span>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="pt-4">
+        <div class="dmx-shell">
+            <div class="dmx-panel p-4">
+                <div class="mb-4 flex items-center justify-between gap-3">
+                    <div>
+                        <p class="text-[11px] font-extrabold uppercase tracking-[0.2em] text-slate-500">@Model.HomePage.RecommendedRail.Eyebrow</p>
+                        <h2 class="mt-1 text-xl font-black tracking-[-0.03em] text-slate-950">@Model.HomePage.RecommendedRail.Title</h2>
+                        <p class="mt-1 text-sm leading-7 text-slate-500">@Model.HomePage.RecommendedRail.Description</p>
+                    </div>
+                    <a href="@Model.HomePage.RecommendedRail.ViewAllHref" class="text-xs font-extrabold uppercase tracking-[0.18em] text-[#0261c7]">@Model.HomePage.RecommendedRail.ViewAllLabel</a>
+                </div>
+
+                @if (recommendedProducts.Any())
+                {
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+                        @foreach (var product in recommendedProducts)
+                        {
+                            <div class="product-slot min-w-0">
+                                <partial name="/Pages/Shared/_ProductCard.cshtml"
+                                         model="product"
+                                         view-data='new ViewDataDictionary(ViewData) { ["ViewMode"] = "grid" }' />
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="rounded-2xl border border-dashed border-slate-300/80 bg-white/70 px-4 py-8 text-center text-sm text-slate-500">No recommended products are available yet.</div>
+                }
+            </div>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-hero-carousel]').forEach(function (root) {
+                const slides = Array.from(root.querySelectorAll('[data-carousel-slide]'));
+                const dots = Array.from(root.querySelectorAll('[data-carousel-dot]'));
+                const prevButton = root.querySelector('[data-carousel-prev]');
+                const nextButton = root.querySelector('[data-carousel-next]');
+                const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                const intervalMs = 5600;
+                let activeIndex = Math.max(0, slides.findIndex(slide => slide.classList.contains('is-active')));
+                let timerId = null;
+
+                if (!slides.length) {
+                    return;
+                }
+
+                function stopAutoAdvance() {
+                    if (timerId) {
+                        window.clearTimeout(timerId);
+                        timerId = null;
+                    }
+                }
+
+                function scheduleNext() {
+                    if (reduceMotion || slides.length < 2) {
+                        return;
+                    }
+
+                    stopAutoAdvance();
+                    timerId = window.setTimeout(function () {
+                        setActive(activeIndex + 1, true);
+                    }, intervalMs);
+                }
+
+                function setActive(nextIndex, restartAuto) {
+                    activeIndex = (nextIndex + slides.length) % slides.length;
+
+                    slides.forEach(function (slide, index) {
+                        const isActive = index === activeIndex;
+                        slide.classList.toggle('is-active', isActive);
+                        slide.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+                    });
+
+                    dots.forEach(function (dot, index) {
+                        const isActive = index === activeIndex;
+                        dot.classList.toggle('is-active', isActive);
+                        dot.setAttribute('aria-current', isActive ? 'true' : 'false');
+                    });
+
+                    if (restartAuto !== false) {
+                        scheduleNext();
+                    }
+                }
+
+                function move(delta) {
+                    stopAutoAdvance();
+                    setActive(activeIndex + delta, true);
+                }
+
+                prevButton?.addEventListener('click', function () {
+                    move(-1);
+                });
+
+                nextButton?.addEventListener('click', function () {
+                    move(1);
+                });
+
+                dots.forEach(function (dot, index) {
+                    dot.addEventListener('click', function () {
+                        stopAutoAdvance();
+                        setActive(index, true);
+                    });
+                });
+
+                root.addEventListener('mouseenter', stopAutoAdvance);
+                root.addEventListener('mouseleave', scheduleNext);
+                root.addEventListener('focusin', stopAutoAdvance);
+                root.addEventListener('focusout', function (event) {
+                    if (!root.contains(event.relatedTarget)) {
+                        scheduleNext();
+                    }
+                });
+
+                root.addEventListener('keydown', function (event) {
+                    if (event.key === 'ArrowLeft') {
+                        event.preventDefault();
+                        move(-1);
+                    }
+
+                    if (event.key === 'ArrowRight') {
+                        event.preventDefault();
+                        move(1);
+                    }
+                });
+
+                document.addEventListener('visibilitychange', function () {
+                    if (document.hidden) {
+                        stopAutoAdvance();
+                    }
+                    else {
+                        scheduleNext();
+                    }
+                });
+
+                setActive(activeIndex, false);
+                scheduleNext();
+            });
+
+            const hoursEl = document.querySelector('[data-flash-hours]');
+            const minutesEl = document.querySelector('[data-flash-minutes]');
+            const secondsEl = document.querySelector('[data-flash-seconds]');
+
+            if (hoursEl && minutesEl && secondsEl) {
+                let remainingSeconds = (3 * 60 * 60) + (18 * 60) + 45;
+
+                function paintCountdown() {
+                    const hours = Math.floor(remainingSeconds / 3600);
+                    const minutes = Math.floor((remainingSeconds % 3600) / 60);
+                    const seconds = remainingSeconds % 60;
+
+                    hoursEl.textContent = String(hours).padStart(2, '0');
+                    minutesEl.textContent = String(minutes).padStart(2, '0');
+                    secondsEl.textContent = String(seconds).padStart(2, '0');
+                }
+
+                paintCountdown();
+
+                window.setInterval(function () {
+                    remainingSeconds = remainingSeconds <= 0 ? (3 * 60 * 60) + (18 * 60) + 45 : remainingSeconds - 1;
+                    paintCountdown();
+                }, 1000);
+            }
+        });
+    </script>
+}

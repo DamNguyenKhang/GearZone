@@ -1,4 +1,5 @@
-﻿using System;
+using GearZone.Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -7,14 +8,14 @@ namespace GearZone.Domain.Entities
     public class OrderStatusHistory : Entity<Guid>
     {
         public Guid OrderId { get; set; }
-        public string? OldStatus { get; set; }
-        public string NewStatus { get; set; } = string.Empty;
+        public OrderStatus? OldStatus { get; set; }
+        public OrderStatus NewStatus { get; set; }
         public DateTime ChangedAt { get; set; }
-        public string ChangedByUserId { get; set; } = string.Empty;
+        public string? ChangedByUserId { get; set; }
         public string? Note { get; set; }
 
         // Navigation
         public Order Order { get; set; } = null!;
-        public ApplicationUser ChangedByUser { get; set; } = null!;
+        public ApplicationUser? ChangedByUser { get; set; }
     }
 }

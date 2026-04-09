@@ -1,4 +1,4 @@
-﻿using GearZone.Application.Abstractions.Persistence;
+using GearZone.Application.Abstractions.Persistence;
 using System;
 
 namespace GearZone.Infrastructure.Repositories
@@ -11,6 +11,7 @@ namespace GearZone.Infrastructure.Repositories
         {
             _dbContext = dbContext;
         }
+
         public Task<int> SaveChangesAsync(CancellationToken ct = default)
         => _dbContext.SaveChangesAsync(ct);
     }

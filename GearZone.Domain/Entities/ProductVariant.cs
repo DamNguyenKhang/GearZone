@@ -19,6 +19,7 @@ namespace GearZone.Domain.Entities
         // Navigation
         public Product Product { get; set; } = null!;
         public ICollection<InventoryTransaction> InventoryTransactions { get; set; } = new List<InventoryTransaction>();
+        public ICollection<VariantAttributeValue> AttributeValues { get; set; } = new List<VariantAttributeValue>();
     }
 
 }

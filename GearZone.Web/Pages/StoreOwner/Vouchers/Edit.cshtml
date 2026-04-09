@@ -1,0 +1,137 @@
+@page "{id:guid}"
+@model GearZone.Web.Pages.StoreOwner.Vouchers.EditModel
+@{
+    ViewData["Title"] = "Edit Voucher";
+    ViewData["PageHeader"] = "Edit Voucher";
+    ViewData["ActivePage"] = "Vouchers";
+    ViewData["Breadcrumb"] = new[] { "Vouchers", "Edit" };
+    Layout = "_StoreOwnerLayout";
+}
+
+<div class="mx-auto max-w-4xl space-y-6">
+    <div>
+        <p class="text-xs font-black uppercase tracking-[0.24em] text-orange-500">Update Seller Voucher</p>
+        <h1 class="mt-2 text-3xl font-black text-slate-900">Edit Product Voucher</h1>
+        <p class="mt-2 text-sm text-slate-500">Only seller product/order voucher settings can be edited here.</p>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <form method="post" class="space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <input type="hidden" asp-for="Id" />
+        <div asp-validation-summary="ModelOnly" class="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"></div>
+
+        <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div class="md:col-span-2">
+                <label asp-for="Input.Name" class="mb-1 block text-sm font-semibold text-slate-700">Voucher Name</label>
+                <input asp-for="Input.Name" class="w-full rounded-xl border-slate-200 text-sm" />
+                <span asp-validation-for="Input.Name" class="text-xs text-rose-600"></span>
+            </div>
+
+            <div>
+                <label asp-for="Input.Code" class="mb-1 block text-sm font-semibold text-slate-700">Voucher Code</label>
+                <input asp-for="Input.Code" id="voucherCodeInput" class="w-full rounded-xl border-slate-200 text-sm uppercase font-mono" />
+                <span asp-validation-for="Input.Code" class="text-xs text-rose-600"></span>
+            </div>
+
+            <div>
+                <label asp-for="Input.CategoryId" class="mb-1 block text-sm font-semibold text-slate-700">Category (Optional)</label>
+                <select asp-for="Input.CategoryId" class="w-full rounded-xl border-slate-200 text-sm">
+                    <option value="">All categories</option>
+                    @foreach (var category in Model.Categories)
+                    {
+                        <option value="@category.Id">@category.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="md:col-span-2">
+                <label asp-for="Input.Description" class="mb-1 block text-sm font-semibold text-slate-700">Description</label>
+                <textarea asp-for="Input.Description" rows="3" class="w-full rounded-xl border-slate-200 text-sm"></textarea>
+            </div>
+
+            <div>
+                <label asp-for="Input.DiscountType" class="mb-1 block text-sm font-semibold text-slate-700">Discount Type</label>
+                <select asp-for="Input.DiscountType" id="discountTypeSelect" class="w-full rounded-xl border-slate-200 text-sm">
+                    <option value="Percent">Percent (%)</option>
+                    <option value="Fixed">Fixed Amount (VND)</option>
+                </select>
+            </div>
+
+            <div>
+                <label asp-for="Input.DiscountValue" class="mb-1 block text-sm font-semibold text-slate-700">Discount Value</label>
+                <input asp-for="Input.DiscountValue" class="w-full rounded-xl border-slate-200 text-sm" />
+                <span asp-validation-for="Input.DiscountValue" class="text-xs text-rose-600"></span>
+            </div>
+
+            <div id="maxDiscountBlock">
+                <label asp-for="Input.MaxDiscount" class="mb-1 block text-sm font-semibold text-slate-700">Max Discount (Percent mode)</label>
+                <input asp-for="Input.MaxDiscount" class="w-full rounded-xl border-slate-200 text-sm" />
+                <span asp-validation-for="Input.MaxDiscount" class="text-xs text-rose-600"></span>
+            </div>
+
+            <div>
+                <label asp-for="Input.MinOrderAmount" class="mb-1 block text-sm font-semibold text-slate-700">Minimum Spend</label>
+                <input asp-for="Input.MinOrderAmount" class="w-full rounded-xl border-slate-200 text-sm" />
+                <span asp-validation-for="Input.MinOrderAmount" class="text-xs text-rose-600"></span>
+            </div>
+
+            <div>
+                <label asp-for="Input.UsageLimit" class="mb-1 block text-sm font-semibold text-slate-700">Usage Limit</label>
+                <input asp-for="Input.UsageLimit" class="w-full rounded-xl border-slate-200 text-sm" />
+                <span asp-validation-for="Input.UsageLimit" class="text-xs text-rose-600"></span>
+            </div>
+
+            <div>
+                <label asp-for="Input.StartAt" class="mb-1 block text-sm font-semibold text-slate-700">Start At</label>
+                <input asp-for="Input.StartAt" type="datetime-local" class="w-full rounded-xl border-slate-200 text-sm" />
+                <span asp-validation-for="Input.StartAt" class="text-xs text-rose-600"></span>
+            </div>
+
+            <div>
+                <label asp-for="Input.EndAt" class="mb-1 block text-sm font-semibold text-slate-700">End At</label>
+                <input asp-for="Input.EndAt" type="datetime-local" class="w-full rounded-xl border-slate-200 text-sm" />
+                <span asp-validation-for="Input.EndAt" class="text-xs text-rose-600"></span>
+            </div>
+        </div>
+
+        <label class="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <input asp-for="Input.IsVisible" type="checkbox" class="rounded border-slate-300 text-primary focus:ring-primary" />
+            <span class="text-sm text-slate-700">Voucher is visible and can run when within valid period</span>
+        </label>
+
+        <div class="flex items-center justify-end gap-3">
+            <a asp-page="/StoreOwner/Vouchers/Index" class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Cancel</a>
+            <button type="submit" class="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-dark">Update Voucher</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const discountTypeSelect = document.getElementById("discountTypeSelect");
+        const maxDiscountBlock = document.getElementById("maxDiscountBlock");
+        const voucherCodeInput = document.getElementById("voucherCodeInput");
+
+        function syncDiscountType() {
+            if (discountTypeSelect.value === "Fixed") {
+                maxDiscountBlock.classList.add("hidden");
+            } else {
+                maxDiscountBlock.classList.remove("hidden");
+            }
+        }
+
+        discountTypeSelect.addEventListener("change", syncDiscountType);
+        voucherCodeInput.addEventListener("input", function () {
+            this.value = this.value.toUpperCase();
+        });
+
+        syncDiscountType();
+    </script>
+}

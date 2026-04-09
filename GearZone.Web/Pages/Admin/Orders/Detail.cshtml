@@ -1,0 +1,301 @@
+@page "{id:guid?}"
+@model GearZone.Web.Pages.Admin.Orders.DetailModel
+@{
+    ViewData["Title"] = "Order #GZ-8921 Details";
+    ViewData["ActivePage"] = "Orders";
+    Layout = "_AdminLayout";
+}
+
+<!-- Custom style from prototype -->
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 10px;
+    }
+</style>
+
+<!-- BEGIN: HeaderSection from Prototype -->
+<header class="bg-white border-b border-slate-200 px-6 sm:px-8 py-6 -mx-6 sm:-mx-8 -mt-6 sm:-mt-8 mb-6 sm:mb-8">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div>
+            <nav class="flex text-sm text-slate-500 mb-2 gap-2 items-center">
+                <a class="hover:text-blue-600" href="/admin">Dashboard</a>
+                <span class="material-symbols-outlined text-sm">chevron_right</span>
+                <a class="hover:text-blue-600" href="/admin/orders">Orders</a>
+                <span class="material-symbols-outlined text-sm">chevron_right</span>
+                <span class="text-slate-900 font-medium">#GZ-8921</span>
+            </nav>
+            <div class="flex items-center gap-4 flex-wrap">
+                <h2 class="text-2xl font-bold text-slate-900">Order #GZ-8921</h2>
+                <div class="flex gap-2">
+                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Delivered
+                    </span>
+                    <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> Paid
+                    </span>
+                    <span class="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 bg-orange-500 rounded-full"></span> Unpaid Payout
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <button class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-medium text-sm">
+                <span class="material-symbols-outlined text-lg">print</span> Print Invoice
+            </button>
+            <button class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-medium text-sm">
+                <span class="material-symbols-outlined text-lg">download</span> Export PDF
+            </button>
+            <button class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium text-sm">
+                Update Status
+            </button>
+        </div>
+    </div>
+</header>
+<!-- END: HeaderSection -->
+
+<div class="max-w-7xl mx-auto custom-scrollbar">
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <!-- BEGIN: LeftColumn -->
+        <div class="xl:col-span-2 space-y-8">
+            <!-- Block 1: General Info -->
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden" data-purpose="general-info-card">
+                <div class="p-6 border-b border-slate-50 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-blue-600">info</span>
+                    <h3 class="font-bold text-slate-800">General Information</h3>
+                </div>
+                <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-2">Store</p>
+                        <p class="text-sm font-semibold text-blue-600">TechStore Official</p>
+                        <p class="text-xs text-slate-500">email@store.com</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-2">Customer</p>
+                        <p class="text-sm font-semibold text-slate-800">John Doe</p>
+                        <p class="text-xs text-slate-500">+84 987 654 321</p>
+                        <p class="text-xs text-slate-500">john@example.com</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-2">Created At</p>
+                        <p class="text-sm font-semibold text-slate-800">Oct 24, 2025</p>
+                        <p class="text-xs text-slate-500">09:14 AM</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Block 2: Order Items Table -->
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden" data-purpose="items-table-card">
+                <div class="p-6 border-b border-slate-50 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-blue-600">inventory</span>
+                    <h3 class="font-bold text-slate-800">Order Items</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/50">
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Product</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Unit Price</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Quantity</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Line Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-4">
+                                        <img alt="Product Thumbnail" class="size-12 rounded-lg object-cover bg-slate-100 border border-slate-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBj1MYOTJ9skmsqlGSDSyatzv9qazxlFKklH-ayOWtmvwcG9MLjxfGa2A7l4aaNQNSxZE2kTIqf6fSryEtdKsob0w0qgMr9CYkgSY57EuJMQ4ZUK-qVXdfmzN9NqMIBt-rBGAlkHVYh_xyPyPzteJYd4tSKC9qxClOg5eNXlRKZ9p3eViuB62J-zV6FFAT5Y7vBd6DPReE2LNzLGqV9Nf5elBfZaENZ8EiW0f5tXyWTvZ0GTIdvsBTltHjqH4fVrsJ9cNH_s7QAyyuF" />
+                                        <div>
+                                            <p class="text-sm font-semibold text-slate-800">Logitech MX Master 3S</p>
+                                            <p class="text-xs text-slate-400 font-mono mt-0.5">SKU: LG-MX3S-GR</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-right text-sm font-medium text-slate-600">₫2,350,000</td>
+                                <td class="px-6 py-4 text-center text-sm font-bold text-slate-600">1</td>
+                                <td class="px-6 py-4 text-right text-sm font-bold text-slate-800">₫2,350,000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Order Summary Section -->
+                <div class="p-6 bg-slate-50/30 border-t border-slate-100">
+                    <div class="flex flex-col items-end space-y-2">
+                        <div class="flex justify-between w-full max-w-xs text-sm">
+                            <span class="text-slate-500">Subtotal</span>
+                            <span class="font-medium text-slate-800">₫2,350,000</span>
+                        </div>
+                        <div class="flex justify-between w-full max-w-xs text-sm">
+                            <span class="text-slate-500">Shipping Fee</span>
+                            <span class="font-medium text-slate-800">₫30,000</span>
+                        </div>
+                        <div class="flex justify-between w-full max-w-xs pt-4 border-t border-slate-200 mt-2">
+                            <span class="text-base font-bold text-slate-900 leading-none flex items-center">Grand Total</span>
+                            <span class="text-xl font-bold text-blue-600 tracking-tight leading-none">₫2,380,000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Block 3: Financial Details -->
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden" data-purpose="financials-card">
+                <div class="p-6 border-b border-slate-50 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-blue-600">account_balance_wallet</span>
+                        <h3 class="font-bold text-slate-800">Financial Details (Internal)</h3>
+                    </div>
+                    <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold uppercase border border-slate-200 shadow-sm">System</span>
+                </div>
+                <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 pb-5">
+                        <p class="text-xs font-semibold text-slate-500 mb-1 uppercase tracking-wider">Commission Rate</p>
+                        <p class="text-2xl font-bold text-slate-800">15%</p>
+                    </div>
+                    <div class="p-4 rounded-xl bg-red-50 border border-red-100 pb-5">
+                        <p class="text-xs font-semibold text-red-600 mb-1 uppercase tracking-wider">Commission Amount</p>
+                        <p class="text-2xl font-bold text-red-700">₫352,500</p>
+                    </div>
+                    <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-100 pb-5">
+                        <p class="text-xs font-semibold text-emerald-600 mb-1 uppercase tracking-wider">Net Store Amount</p>
+                        <p class="text-2xl font-bold text-emerald-700">₫1,997,500</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Block 4: Order Timeline -->
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden" data-purpose="timeline-card">
+                <div class="p-6 border-b border-slate-50 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-blue-600">history</span>
+                    <h3 class="font-bold text-slate-800">Order Timeline</h3>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-blue-500 before:via-blue-300 before:to-transparent">
+                        <!-- Item 1 -->
+                        <div class="relative flex items-start gap-6 group">
+                            <div class="absolute left-0 w-10 h-10 flex items-center justify-center bg-white border-2 border-blue-500 rounded-full z-10">
+                                <span class="material-symbols-outlined text-blue-500 text-lg shadow-sm">check_circle</span>
+                            </div>
+                            <div class="ml-12 pt-0.5">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-bold text-slate-800">Delivered</span>
+                                    <span class="text-xs font-medium text-slate-400">Oct 26, 2025 - 03:30 PM</span>
+                                </div>
+                                <p class="text-sm text-slate-500 mt-1">Package successfully handed over to customer.</p>
+                            </div>
+                        </div>
+
+                        <!-- Item 2 -->
+                        <div class="relative flex items-start gap-6">
+                            <div class="absolute left-0 w-10 h-10 flex items-center justify-center bg-white border-2 border-blue-500 rounded-full z-10 shadow-sm">
+                                <span class="material-symbols-outlined text-blue-500 text-lg">local_shipping</span>
+                            </div>
+                            <div class="ml-12 pt-0.5">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-bold text-slate-800">Out for Delivery</span>
+                                    <span class="text-xs font-medium text-slate-400">Oct 26, 2025 - 08:00 AM</span>
+                                </div>
+                                <p class="text-sm text-slate-500 mt-1">Shipper is on the way to the shipping address.</p>
+                            </div>
+                        </div>
+
+                        <!-- Item 3 -->
+                        <div class="relative flex items-start gap-6">
+                            <div class="absolute left-0 w-10 h-10 flex items-center justify-center bg-white border-2 border-slate-200 rounded-full z-10 shadow-sm">
+                                <span class="material-symbols-outlined text-slate-400 text-lg">package_2</span>
+                            </div>
+                            <div class="ml-12 pt-0.5">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-bold text-slate-800">Pending</span>
+                                    <span class="text-xs font-medium text-slate-400">Oct 24, 2025 - 09:14 AM</span>
+                                </div>
+                                <p class="text-sm text-slate-500 mt-1">Order created and waiting for processing.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END: LeftColumn -->
+
+        <!-- BEGIN: RightColumn -->
+        <div class="space-y-8">
+            <!-- Block 5: Shipping Details -->
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden" data-purpose="shipping-card">
+                <div class="p-6 border-b border-slate-50 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-blue-600">location_on</span>
+                    <h3 class="font-bold text-slate-800">Shipping Details</h3>
+                </div>
+                <div class="p-6 space-y-6">
+                    <div>
+                        <label class="text-xs text-slate-400 uppercase font-bold tracking-wider block mb-2">Address</label>
+                        <div class="bg-slate-50 border border-slate-100 rounded-xl p-4 text-sm font-medium text-slate-700 leading-relaxed">
+                            Apartment 12B, Ocean View Building<br />
+                            District 7, Ho Chi Minh City<br />
+                            Vietnam
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="border-t border-slate-100 pt-4">
+                            <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Provider</p>
+                            <p class="text-sm font-semibold text-slate-800">Giao Hang Nhanh</p>
+                        </div>
+                        <div class="border-t border-slate-100 pt-4">
+                            <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1 mt-1">Tracking Number</p>
+                            <div class="flex items-center gap-2 mb-1">
+                                <code class="text-sm font-mono font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">GHN-2025-AX992</code>
+                                <button class="material-symbols-outlined text-slate-400 hover:text-blue-600 text-[20px] transition-colors" title="Copy">content_copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Block 6: Payment Info -->
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden" data-purpose="payment-card">
+                <div class="p-6 border-b border-slate-50 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-blue-600">payments</span>
+                    <h3 class="font-bold text-slate-800">Payment Information</h3>
+                </div>
+                <div class="p-6 space-y-4">
+                    <div class="flex justify-between items-center py-2 border-b border-slate-50">
+                        <span class="text-sm text-slate-500">Method</span>
+                        <span class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-[18px] text-blue-500">credit_card</span> VNPay
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-slate-50">
+                        <span class="text-sm text-slate-500">Provider</span>
+                        <span class="text-sm font-semibold text-slate-800">PayOS</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-slate-50">
+                        <span class="text-sm text-slate-500">Transaction Ref</span>
+                        <span class="text-sm font-mono font-bold text-slate-800">TXN-123456</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-sm text-slate-500">Paid At</span>
+                        <span class="text-sm font-semibold text-slate-800 text-right">Oct 24, 2025<br /><span class="text-xs text-slate-400 font-medium tracking-tight">09:16 AM</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Promotion Card (Contextual Extra) -->
+            <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-lg shadow-blue-500/20">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="size-10 flex items-center justify-center bg-white/20 rounded-xl backdrop-blur-md shadow-inner">
+                        <span class="material-symbols-outlined">support_agent</span>
+                    </div>
+                    <h4 class="font-bold text-lg">Need Help?</h4>
+                </div>
+                <p class="text-sm text-blue-50 text-opacity-90 mb-6 leading-relaxed">If there are any disputes regarding this order, our support team is available 24/7.</p>
+                <button class="w-full py-2.5 bg-white text-blue-600 rounded-xl font-bold text-sm hover:bg-blue-50 transition-colors shadow-sm whitespace-nowrap">
+                    Contact Support
+                </button>
+            </div>
+        </div>
+        <!-- END: RightColumn -->
+    </div>
+</div>

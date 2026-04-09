@@ -1,30 +1,52 @@
 using GearZone.Application;
 using GearZone.Domain.Entities;
 using GearZone.Infrastructure;
+using GearZone.Infrastructure.Jobs;
 using GearZone.Infrastructure.Seed;
+using GearZone.Web.Hubs;
+using GearZone.Web.Pages.Public.User.Messages;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Rewrite;
 
 var builder = WebApplication.CreateBuilder(args);
 
-DotNetEnv.Env.Load();
+var envCandidates = new[]
+{
+    System.IO.Path.Combine(builder.Environment.ContentRootPath, ".env"),
+    System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), ".env"),
+    System.IO.Path.GetFullPath(System.IO.Path.Combine(builder.Environment.ContentRootPath, "..", ".env"))
+}
+.Distinct(StringComparer.OrdinalIgnoreCase);
+
+foreach (var envPath in envCandidates)
+{
+    if (!System.IO.File.Exists(envPath))
+    {
+        continue;
+    }
+
+    DotNetEnv.Env.Load(envPath);
+    Console.WriteLine($"Environment: loaded {envPath}");
+}
+
 builder.Configuration.AddEnvironmentVariables();
 
-var connectionString = builder.Configuration.GetConnectionString("GearZoneDB");
+var connectionString = builder.Configuration["DB_CONNECTION_STRING"] ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddControllers();
+builder.Services.AddSignalR();
+builder.Services.AddScoped<BuyerInboxComposer>();
 
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
-})
-.AddCookie(options =>
-{
-    options.LoginPath = "/Auth/Login";
-    options.AccessDeniedPath = "/Auth/Login";
+    // Use Identity's scheme as the default for everything
+    options.DefaultScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
 })
 .AddGoogle(options =>
 {
@@ -32,13 +54,7 @@ builder.Services.AddAuthentication(options =>
     options.ClientSecret = builder.Configuration["GOOGLE_CLIENT_SECRET"] ?? "";
 });
 
-builder.Services.ConfigureApplicationCookie(opt =>
-{
-    opt.LoginPath = "/Identity/Account/Login";
-    opt.AccessDeniedPath = "/Identity/Account/AccessDenied";
-    opt.ExpireTimeSpan = TimeSpan.FromMinutes(30);
-    opt.SlidingExpiration = true;
-});
+builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(GearZone.Application.Abstractions.Services.IAuthService).Assembly);
 
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -48,10 +64,18 @@ builder.Services
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
+builder.Services.ConfigureApplicationCookie(opt =>
+{
+    opt.LoginPath = "/Auth/Login";
+    opt.AccessDeniedPath = "/Auth/Login";
+    opt.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+    opt.SlidingExpiration = true;
+});
+
 builder.Services
     .AddDatabase(connectionString)
     .AddApplication()
-    .AddInfrastructure()
+    .AddInfrastructure(builder.Configuration)
     ;
 
 builder.Services.AddCors(options =>
@@ -78,21 +102,74 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
 
+    var dbContext = services.GetRequiredService<ApplicationDbContext>();
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var configuration = services.GetRequiredService<IConfiguration>();
 
-    await IdentitySeeder.SeedAsync(userManager, roleManager, configuration);
+    try
+    {
+        await IdentitySeeder.SeedAsync(userManager, roleManager, configuration);
+        Console.WriteLine("Seed[Identity]: completed.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Seed[Identity]: {ex}");
+    }
+
+    try
+    {
+        await CatalogSeeder.SeedAsync(dbContext);
+        Console.WriteLine("Seed[Catalog]: completed.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Seed[Catalog]: {ex}");
+    }
 }
 
 app.UseHttpsRedirection();
 app.UseCors();
+
+// URL Rewrite for backward compatibility
+var rewriteOptions = new RewriteOptions()
+    .AddRedirect("(?i)Public/Catalog/Browse/?$", "products")
+    .AddRedirect("(?i)Public/Catalog/Browse(.*)", "products$1");
+app.UseRewriter(rewriteOptions);
+
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseHangfireDashboard("/hangfire");
+
+using (var scope = app.Services.CreateScope())
+{
+    // Recurring jobs
+    RecurringJob.AddOrUpdate<PayoutBatchJob>(
+        "generate-weekly-payout",
+        job => job.GenerateWeeklyBatchAsync(),
+        "1 17 * * 0", // Chủ nhật 17:01 UTC = Thứ 2 00:01 VN
+        TimeZoneInfo.Utc);
+
+    RecurringJob.AddOrUpdate<PayoutBatchJob>(
+        "retry-failed-payouts",
+        job => job.RetryFailedTransactionsAsync(),
+        "0 */6 * * *",
+        TimeZoneInfo.Utc);
+
+    RecurringJob.AddOrUpdate<OrderAutoCompleteJob>(
+        "order-auto-complete",
+        job => job.AutoCompleteOrdersAsync(),
+        Cron.Daily(),
+        TimeZoneInfo.Utc);
+}
+
+app.UseStaticFiles();
 app.MapStaticAssets();
+app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
 app.MapRazorPages()
    .WithStaticAssets();
 

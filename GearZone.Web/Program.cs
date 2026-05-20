@@ -228,11 +228,9 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseStaticFiles();
-app.MapStaticAssets();
 app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");
 app.MapHub<OrderTrackingHub>("/hubs/order-tracking");
-app.MapRazorPages()
-   .WithStaticAssets();
+app.MapRazorPages();
 
 app.Run();

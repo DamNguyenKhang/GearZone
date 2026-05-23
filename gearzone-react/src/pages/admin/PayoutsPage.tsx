@@ -12,6 +12,8 @@ interface Payout {
   bankAccount?: string;
 }
 
+const statusBadge: Record<string, string> = { Completed: 'success', Pending: 'warning', Rejected: 'danger' };
+
 export default function AdminPayoutsPage() {
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,56 +40,49 @@ export default function AdminPayoutsPage() {
     finally { setProcessing(null); }
   };
 
-  if (loading) return <div style={{ padding: '2rem' }}>Loading…</div>;
+  if (loading) return <div className="container text-center py-5"><div className="spinner-border text-primary" /></div>;
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>Payout Requests</h1>
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ background: '#f0f0f0' }}>
-            <th style={{ padding: '0.75rem', textAlign: 'left' }}>Store</th>
-            <th style={{ padding: '0.75rem', textAlign: 'right' }}>Amount</th>
-            <th style={{ padding: '0.75rem', textAlign: 'left' }}>Bank Info</th>
-            <th style={{ padding: '0.75rem', textAlign: 'center' }}>Status</th>
-            <th style={{ padding: '0.75rem', textAlign: 'left' }}>Requested</th>
-            <th style={{ padding: '0.75rem', textAlign: 'center' }}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {payouts.map(p => (
-            <tr key={p.id} style={{ borderBottom: '1px solid #eee' }}>
-              <td style={{ padding: '0.75rem', fontWeight: 500 }}>{p.storeName}</td>
-              <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 700 }}>{p.amount?.toLocaleString()} VND</td>
-              <td style={{ padding: '0.75rem', fontSize: 13, color: '#555' }}>
-                {p.bankName && <div>{p.bankName}</div>}
-                {p.bankAccount && <div style={{ color: '#888' }}>{p.bankAccount}</div>}
-              </td>
-              <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                <span style={{ color: p.status === 'Completed' ? '#38a169' : p.status === 'Pending' ? '#ed8936' : '#e53e3e', fontWeight: 600 }}>{p.status}</span>
-              </td>
-              <td style={{ padding: '0.75rem', color: '#888', fontSize: 13 }}>{new Date(p.requestedAt).toLocaleDateString()}</td>
-              <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                {p.status === 'Pending' && (
-                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                    <button onClick={() => handleProcess(p.id)} disabled={processing === p.id}
-                      style={{ padding: '0.25rem 0.75rem', background: '#c6f6d5', border: 'none', borderRadius: 4, cursor: 'pointer', color: '#276749' }}>
-                      {processing === p.id ? '…' : 'Process'}
-                    </button>
-                    <button onClick={() => handleReject(p.id)} disabled={processing === p.id}
-                      style={{ padding: '0.25rem 0.75rem', background: '#fed7d7', border: 'none', borderRadius: 4, cursor: 'pointer', color: '#c53030' }}>
-                      Reject
-                    </button>
-                  </div>
-                )}
-              </td>
-            </tr>
-          ))}
-          {payouts.length === 0 && (
-            <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>No payout requests.</td></tr>
-          )}
-        </tbody>
-      </table>
+    <div className="container">
+      <h2 className="mb-4">Payout Requests</h2>
+      <div className="card shadow-sm">
+        <div className="table-responsive">
+          <table className="table table-hover mb-0">
+            <thead className="table-light">
+              <tr><th>Store</th><th className="text-end">Amount</th><th>Bank Info</th><th className="text-center">Status</th><th>Requested</th><th className="text-center">Actions</th></tr>
+            </thead>
+            <tbody>
+              {payouts.map(p => (
+                <tr key={p.id}>
+                  <td className="fw-semibold">{p.storeName}</td>
+                  <td className="text-end fw-bold">{p.amount?.toLocaleString()} ₫</td>
+                  <td>
+                    {p.bankName && <div className="small">{p.bankName}</div>}
+                    {p.bankAccount && <small className="text-muted">{p.bankAccount}</small>}
+                  </td>
+                  <td className="text-center">
+                    <span className={`badge bg-${statusBadge[p.status] ?? 'secondary'}`}>{p.status}</span>
+                  </td>
+                  <td className="text-muted small">{new Date(p.requestedAt).toLocaleDateString()}</td>
+                  <td className="text-center">
+                    {p.status === 'Pending' && (
+                      <div className="d-flex gap-1 justify-content-center">
+                        <button className="btn btn-sm btn-outline-success" disabled={processing === p.id}
+                          onClick={() => handleProcess(p.id)}>
+                          {processing === p.id ? <span className="spinner-border spinner-border-sm" /> : 'Process'}
+                        </button>
+                        <button className="btn btn-sm btn-outline-danger" disabled={processing === p.id}
+                          onClick={() => handleReject(p.id)}>Reject</button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {payouts.length === 0 && <tr><td colSpan={6} className="text-center text-muted py-4">No payout requests.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

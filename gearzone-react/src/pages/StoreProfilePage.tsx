@@ -30,10 +30,7 @@ export default function StoreProfilePage() {
   useEffect(() => {
     if (!slug) return;
     setLoading(true);
-    Promise.all([
-      catalogApi.storeProfile(slug),
-      catalogApi.storeProducts(slug),
-    ]).then(([s, p]) => {
+    Promise.all([catalogApi.storeProfile(slug), catalogApi.storeProducts(slug)]).then(([s, p]) => {
       const storeData = s as StoreProfile;
       setStore(storeData);
       setFollowing(storeData.isFollowing ?? false);
@@ -43,46 +40,57 @@ export default function StoreProfilePage() {
 
   const handleFollow = async () => {
     if (!slug) return;
-    try {
-      await catalogApi.followStore(slug);
-      setFollowing(f => !f);
-    } catch { }
+    try { await catalogApi.followStore(slug); setFollowing(f => !f); } catch { }
   };
 
-  if (loading) return <div style={{ padding: '2rem' }}>Loading…</div>;
-  if (!store) return <div style={{ padding: '2rem' }}>Store not found.</div>;
+  if (loading) return <div className="container text-center py-5"><div className="spinner-border text-primary" /></div>;
+  if (!store) return <div className="container py-4"><div className="alert alert-warning">Store not found.</div></div>;
 
   return (
-    <div style={{ padding: '2rem', maxWidth: 1000, margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '2rem' }}>
-        {store.logoUrl && <img src={store.logoUrl} alt={store.name} style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover' }} />}
-        <div>
-          <h1 style={{ margin: 0 }}>{store.name}</h1>
-          {store.description && <p style={{ color: '#555', margin: '0.25rem 0' }}>{store.description}</p>}
-          <p style={{ color: '#888', margin: '0.25rem 0', fontSize: 14 }}>{store.followerCount ?? 0} followers</p>
-          {user && (
-            <button onClick={handleFollow}
-              style={{ padding: '0.4rem 1rem', background: following ? '#eee' : '#3182ce', color: following ? '#333' : '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
-              {following ? 'Unfollow' : 'Follow'}
-            </button>
-          )}
+    <div className="container">
+      <div className="card shadow-sm mb-4">
+        <div className="card-body d-flex align-items-center gap-4">
+          {store.logoUrl
+            ? <img src={store.logoUrl} alt={store.name} className="rounded-circle" style={{ width: 80, height: 80, objectFit: 'cover' }} />
+            : <div className="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white fw-bold fs-3"
+                style={{ width: 80, height: 80 }}>{store.name[0]}</div>
+          }
+          <div>
+            <h3 className="mb-1">{store.name}</h3>
+            {store.description && <p className="text-muted mb-1">{store.description}</p>}
+            <small className="text-muted">{store.followerCount ?? 0} followers</small>
+            {user && (
+              <div className="mt-2">
+                <button onClick={handleFollow}
+                  className={`btn btn-sm ${following ? 'btn-outline-secondary' : 'btn-primary'}`}>
+                  {following ? 'Unfollow' : 'Follow'}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      <h2>Products</h2>
-      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-        {products.map(p => (
-          <Link key={p.slug} to={`/products/${p.slug}`}
-            style={{ width: 180, border: '1px solid #ccc', borderRadius: 8, overflow: 'hidden', textDecoration: 'none', color: 'inherit' }}>
-            {p.imageUrl && <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: 140, objectFit: 'cover' }} />}
-            <div style={{ padding: '0.5rem' }}>
-              <p style={{ margin: 0, fontWeight: 500, fontSize: 13 }}>{p.name}</p>
-              <p style={{ margin: 0, color: '#e53e3e', fontSize: 13 }}>{p.basePrice?.toLocaleString()} VND</p>
+      <h4 className="mb-3">Products</h4>
+      {products.length === 0 ? (
+        <p className="text-muted">No products listed yet.</p>
+      ) : (
+        <div className="row row-cols-2 row-cols-md-4 g-3">
+          {products.map(p => (
+            <div key={p.slug} className="col">
+              <Link to={`/products/${p.slug}`} className="text-decoration-none text-dark">
+                <div className="card h-100 shadow-sm">
+                  {p.imageUrl && <img src={p.imageUrl} alt={p.name} className="card-img-top" style={{ height: 140, objectFit: 'cover' }} />}
+                  <div className="card-body py-2 px-3">
+                    <p className="card-text small fw-semibold mb-1">{p.name}</p>
+                    <p className="text-danger small mb-0">{p.basePrice?.toLocaleString()} ₫</p>
+                  </div>
+                </div>
+              </Link>
             </div>
-          </Link>
-        ))}
-        {products.length === 0 && <p style={{ color: '#888' }}>No products listed yet.</p>}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

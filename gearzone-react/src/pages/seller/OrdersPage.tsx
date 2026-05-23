@@ -10,6 +10,20 @@ interface SubOrder {
   items: Array<{ productName: string; quantity: number; price: number }>;
 }
 
+const statusBadge: Record<string, string> = {
+  Pending: 'warning', Approved: 'primary', Processing: 'info',
+  Shipping: 'secondary', Delivered: 'success', Cancelled: 'danger',
+};
+
+const actionButtons: Record<string, Array<{ label: string; action: 'approve' | 'reject' | 'markProcessing' | 'markDelivered'; variant: string }>> = {
+  Pending: [
+    { label: 'Approve', action: 'approve', variant: 'success' },
+    { label: 'Reject', action: 'reject', variant: 'danger' },
+  ],
+  Approved: [{ label: 'Mark Processing', action: 'markProcessing', variant: 'primary' }],
+  Processing: [{ label: 'Mark Delivered', action: 'markDelivered', variant: 'success' }],
+};
+
 export default function SellerOrdersPage() {
   const [orders, setOrders] = useState<SubOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,69 +50,66 @@ export default function SellerOrdersPage() {
       };
       await actions[action]();
       fetchOrders();
-    } finally {
-      setProcessing(null);
-    }
+    } finally { setProcessing(null); }
   };
 
-  const statusColors: Record<string, string> = {
-    Pending: '#ed8936', Approved: '#3182ce', Processing: '#805ad5',
-    Shipping: '#d69e2e', Delivered: '#38a169', Cancelled: '#e53e3e',
-  };
-
-  const actionButtons: Record<string, Array<{ label: string; action: 'approve' | 'reject' | 'markProcessing' | 'markDelivered'; color: string }>> = {
-    Pending: [
-      { label: 'Approve', action: 'approve', color: '#38a169' },
-      { label: 'Reject', action: 'reject', color: '#e53e3e' },
-    ],
-    Approved: [{ label: 'Mark Processing', action: 'markProcessing', color: '#3182ce' }],
-    Processing: [{ label: 'Mark Delivered', action: 'markDelivered', color: '#38a169' }],
-  };
-
-  if (loading) return <div style={{ padding: '2rem' }}>Loading…</div>;
+  if (loading) return <div className="container text-center py-5"><div className="spinner-border text-primary" /></div>;
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>Orders</h1>
-      {orders.length === 0 ? <p style={{ color: '#888' }}>No orders yet.</p> : (
-        orders.map(order => (
-          <div key={order.id} style={{ border: '1px solid #e2e8f0', borderRadius: 8, marginBottom: '1rem', overflow: 'hidden' }}>
-            <div onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}
-              style={{ padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', background: '#fafafa' }}>
-              <div>
-                <span style={{ fontWeight: 600 }}>#{order.id.slice(0, 8)}</span>
-                <span style={{ margin: '0 1rem', color: '#888', fontSize: 13 }}>{new Date(order.createdAt).toLocaleDateString()}</span>
-                <span style={{ color: '#555', fontSize: 13 }}>{order.buyerName}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <span style={{ color: statusColors[order.status] ?? '#333', fontWeight: 600 }}>{order.status}</span>
-                <span style={{ fontWeight: 700 }}>{order.totalPrice?.toLocaleString()} VND</span>
-              </div>
-            </div>
+    <div className="container">
+      <h2 className="mb-4">Orders</h2>
 
-            {expandedId === order.id && (
-              <div style={{ padding: '1rem', borderTop: '1px solid #e2e8f0' }}>
-                {order.items?.map((item, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.3rem 0', fontSize: 14 }}>
-                    <span>{item.productName} × {item.quantity}</span>
-                    <span>{(item.price * item.quantity).toLocaleString()} VND</span>
+      {orders.length === 0 ? (
+        <p className="text-muted">No orders yet.</p>
+      ) : (
+        <div className="accordion" id="ordersAccordion">
+          {orders.map(order => (
+            <div key={order.id} className="accordion-item mb-2 border rounded shadow-sm">
+              <div className="accordion-header">
+                <button
+                  className={`accordion-button ${expandedId !== order.id ? 'collapsed' : ''} bg-light`}
+                  onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}
+                  type="button">
+                  <div className="d-flex justify-content-between w-100 me-3 align-items-center">
+                    <div>
+                      <span className="fw-semibold font-monospace">#{order.id.slice(0, 8)}</span>
+                      <span className="text-muted small ms-3">{new Date(order.createdAt).toLocaleDateString()}</span>
+                      <span className="text-muted small ms-3">{order.buyerName}</span>
+                    </div>
+                    <div className="d-flex align-items-center gap-3">
+                      <span className={`badge bg-${statusBadge[order.status] ?? 'secondary'}`}>{order.status}</span>
+                      <span className="fw-bold">{order.totalPrice?.toLocaleString()} ₫</span>
+                    </div>
                   </div>
-                ))}
-                {actionButtons[order.status] && (
-                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-                    {actionButtons[order.status].map(btn => (
-                      <button key={btn.action} onClick={() => handleAction(order.id, btn.action)}
-                        disabled={processing === order.id}
-                        style={{ padding: '0.4rem 1rem', background: btn.color, color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
-                        {processing === order.id ? '…' : btn.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                </button>
               </div>
-            )}
-          </div>
-        ))
+
+              {expandedId === order.id && (
+                <div className="accordion-body">
+                  {order.items?.map((item, i) => (
+                    <div key={i} className="d-flex justify-content-between small border-bottom py-1">
+                      <span>{item.productName} × {item.quantity}</span>
+                      <span>{(item.price * item.quantity).toLocaleString()} ₫</span>
+                    </div>
+                  ))}
+                  {actionButtons[order.status] && (
+                    <div className="d-flex gap-2 mt-3">
+                      {actionButtons[order.status].map(btn => (
+                        <button key={btn.action}
+                          className={`btn btn-sm btn-${btn.variant}`}
+                          onClick={() => handleAction(order.id, btn.action)}
+                          disabled={processing === order.id}>
+                          {processing === order.id ? <span className="spinner-border spinner-border-sm me-1" /> : null}
+                          {btn.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

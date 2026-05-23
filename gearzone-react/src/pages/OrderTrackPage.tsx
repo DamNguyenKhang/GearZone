@@ -17,6 +17,11 @@ interface TrackingData {
   trackingNumber?: string;
 }
 
+const statusBadge: Record<string, string> = {
+  Pending: 'warning', Processing: 'primary', Shipping: 'info',
+  Delivered: 'success', Cancelled: 'danger',
+};
+
 export default function OrderTrackPage() {
   const { subOrderId } = useParams<{ subOrderId: string }>();
   const [data, setData] = useState<TrackingData | null>(null);
@@ -29,52 +34,44 @@ export default function OrderTrackPage() {
       .finally(() => setLoading(false));
   }, [subOrderId]);
 
-  if (loading) return <div style={{ padding: '2rem' }}>Loading…</div>;
-  if (!data) return <div style={{ padding: '2rem' }}>Order not found.</div>;
-
-  const statusColors: Record<string, string> = {
-    Pending: '#ed8936',
-    Processing: '#3182ce',
-    Shipping: '#805ad5',
-    Delivered: '#38a169',
-    Cancelled: '#e53e3e',
-  };
+  if (loading) return <div className="container text-center py-5"><div className="spinner-border text-primary" /></div>;
+  if (!data) return <div className="container py-4"><div className="alert alert-warning">Order not found.</div></div>;
 
   return (
-    <div style={{ padding: '2rem', maxWidth: 700, margin: '0 auto' }}>
-      <h1>Order Tracking</h1>
+    <div className="container">
+      <div className="row justify-content-center">
+        <div className="col-lg-7">
+          <h2 className="mb-4">Order Tracking</h2>
 
-      <div style={{ padding: '1.25rem', background: '#f9f9f9', borderRadius: 8, marginBottom: '2rem' }}>
-        <p style={{ margin: 0 }}><strong>Order:</strong> #{data.subOrderId}</p>
-        {data.trackingNumber && <p style={{ margin: '0.25rem 0' }}><strong>Tracking #:</strong> {data.trackingNumber}</p>}
-        {data.estimatedDelivery && <p style={{ margin: '0.25rem 0' }}><strong>Est. Delivery:</strong> {data.estimatedDelivery}</p>}
-        <p style={{ margin: '0.25rem 0' }}>
-          <strong>Status: </strong>
-          <span style={{ color: statusColors[data.status] ?? '#333', fontWeight: 700 }}>{data.status}</span>
-        </p>
-        {data.productNames?.length > 0 && (
-          <p style={{ margin: '0.25rem 0', color: '#555', fontSize: 14 }}>{data.productNames.join(', ')}</p>
-        )}
-      </div>
-
-      <h2>Timeline</h2>
-      <div style={{ position: 'relative', paddingLeft: '2rem' }}>
-        {data.timeline?.map((step, i) => (
-          <div key={i} style={{ position: 'relative', paddingBottom: '1.5rem' }}>
-            <div style={{
-              position: 'absolute', left: -28, top: 4,
-              width: 16, height: 16, borderRadius: '50%',
-              background: i === 0 ? '#38a169' : '#ccc',
-              border: '2px solid #fff', boxShadow: '0 0 0 2px #ccc'
-            }} />
-            {i < (data.timeline.length - 1) && (
-              <div style={{ position: 'absolute', left: -21, top: 20, width: 2, height: '100%', background: '#e2e8f0' }} />
-            )}
-            <p style={{ margin: 0, fontWeight: 600 }}>{step.status}</p>
-            <p style={{ margin: '0.25rem 0', color: '#555', fontSize: 14 }}>{step.description}</p>
-            {step.timestamp && <p style={{ margin: 0, fontSize: 12, color: '#999' }}>{new Date(step.timestamp).toLocaleString()}</p>}
+          <div className="card shadow-sm mb-4">
+            <div className="card-body">
+              <div className="d-flex justify-content-between align-items-start">
+                <div>
+                  <p className="mb-1"><strong>Order:</strong> #{data.subOrderId}</p>
+                  {data.trackingNumber && <p className="mb-1"><strong>Tracking #:</strong> {data.trackingNumber}</p>}
+                  {data.estimatedDelivery && <p className="mb-1"><strong>Est. Delivery:</strong> {data.estimatedDelivery}</p>}
+                  {data.productNames?.length > 0 && (
+                    <p className="text-muted small mb-0">{data.productNames.join(', ')}</p>
+                  )}
+                </div>
+                <span className={`badge bg-${statusBadge[data.status] ?? 'secondary'} fs-6`}>{data.status}</span>
+              </div>
+            </div>
           </div>
-        ))}
+
+          <h5 className="mb-3">Timeline</h5>
+          <div className="ps-3 border-start border-2">
+            {data.timeline?.map((step, i) => (
+              <div key={i} className="mb-4 position-relative">
+                <div className="position-absolute bg-primary rounded-circle"
+                  style={{ width: 12, height: 12, left: -22, top: 4, border: '2px solid white', boxShadow: '0 0 0 2px #0d6efd' }} />
+                <p className="fw-semibold mb-0">{step.status}</p>
+                <p className="text-muted small mb-0">{step.description}</p>
+                {step.timestamp && <small className="text-secondary">{new Date(step.timestamp).toLocaleString()}</small>}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

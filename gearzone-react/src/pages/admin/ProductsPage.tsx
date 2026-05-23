@@ -41,60 +41,72 @@ export default function AdminProductsPage() {
   };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>Products</h1>
-      <input placeholder="Search products…" value={search} onChange={e => setSearch(e.target.value)}
-        onKeyDown={e => e.key === 'Enter' && fetchProducts(search)}
-        style={{ padding: '0.5rem', width: '100%', maxWidth: 400, marginBottom: '1rem' }} />
+    <div className="container">
+      <h2 className="mb-4">Products</h2>
 
-      {loading ? <div>Loading…</div> : (
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ background: '#f0f0f0' }}>
-              <th style={{ padding: '0.75rem', textAlign: 'left' }}>Product</th>
-              <th style={{ padding: '0.75rem', textAlign: 'right' }}>Price</th>
-              <th style={{ padding: '0.75rem', textAlign: 'left' }}>Store</th>
-              <th style={{ padding: '0.75rem', textAlign: 'center' }}>Approved</th>
-              <th style={{ padding: '0.75rem', textAlign: 'center' }}>Active</th>
-              <th style={{ padding: '0.75rem', textAlign: 'center' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map(p => (
-              <tr key={p.id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={{ padding: '0.75rem' }}>
-                  <div style={{ fontWeight: 500 }}>{p.name}</div>
-                  <div style={{ fontSize: 12, color: '#888' }}>{p.brandName}</div>
-                </td>
-                <td style={{ padding: '0.75rem', textAlign: 'right' }}>{p.basePrice?.toLocaleString()} VND</td>
-                <td style={{ padding: '0.75rem', fontSize: 13, color: '#555' }}>{p.storeName}</td>
-                <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                  <span style={{ color: p.isApproved ? '#38a169' : '#ed8936', fontWeight: 600 }}>{p.isApproved ? '✓' : 'Pending'}</span>
-                </td>
-                <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                  <span style={{ color: p.isActive ? '#38a169' : '#e53e3e', fontWeight: 600 }}>{p.isActive ? 'Yes' : 'No'}</span>
-                </td>
-                <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                  <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                    {!p.isApproved && (
-                      <button onClick={() => handleApprove(p.id)} disabled={processing === p.id}
-                        style={{ padding: '0.2rem 0.6rem', background: '#c6f6d5', border: 'none', borderRadius: 4, cursor: 'pointer', color: '#276749', fontSize: 12 }}>
-                        Approve
-                      </button>
-                    )}
-                    <button onClick={() => handleToggleActive(p.id, !p.isActive)} disabled={processing === p.id}
-                      style={{ padding: '0.2rem 0.6rem', background: p.isActive ? '#fed7d7' : '#bee3f8', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 12 }}>
-                      {processing === p.id ? '…' : p.isActive ? 'Deactivate' : 'Activate'}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {products.length === 0 && (
-              <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>No products found.</td></tr>
-            )}
-          </tbody>
-        </table>
+      <div className="input-group mb-4" style={{ maxWidth: 400 }}>
+        <input className="form-control" placeholder="Search products…" value={search}
+          onChange={e => setSearch(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && fetchProducts(search)} />
+        <button className="btn btn-outline-secondary" onClick={() => fetchProducts(search)}>Search</button>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-4"><div className="spinner-border text-primary" /></div>
+      ) : (
+        <div className="card shadow-sm">
+          <div className="table-responsive">
+            <table className="table table-hover mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th>Product</th><th className="text-end">Price</th><th>Store</th>
+                  <th className="text-center">Approved</th>
+                  <th className="text-center">Active</th>
+                  <th className="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.map(p => (
+                  <tr key={p.id}>
+                    <td>
+                      <div className="fw-semibold">{p.name}</div>
+                      <small className="text-muted">{p.brandName}</small>
+                    </td>
+                    <td className="text-end">{p.basePrice?.toLocaleString()} ₫</td>
+                    <td className="text-muted small">{p.storeName}</td>
+                    <td className="text-center">
+                      <span className={`badge bg-${p.isApproved ? 'success' : 'warning'}`}>
+                        {p.isApproved ? 'Approved' : 'Pending'}
+                      </span>
+                    </td>
+                    <td className="text-center">
+                      <span className={`badge bg-${p.isActive ? 'success' : 'danger'}`}>
+                        {p.isActive ? 'Yes' : 'No'}
+                      </span>
+                    </td>
+                    <td className="text-center">
+                      <div className="d-flex gap-1 justify-content-center flex-wrap">
+                        {!p.isApproved && (
+                          <button className="btn btn-sm btn-outline-success" disabled={processing === p.id}
+                            onClick={() => handleApprove(p.id)}>Approve</button>
+                        )}
+                        <button
+                          className={`btn btn-sm ${p.isActive ? 'btn-outline-danger' : 'btn-outline-primary'}`}
+                          disabled={processing === p.id}
+                          onClick={() => handleToggleActive(p.id, !p.isActive)}>
+                          {processing === p.id ? <span className="spinner-border spinner-border-sm" /> : (p.isActive ? 'Deactivate' : 'Activate')}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {products.length === 0 && (
+                  <tr><td colSpan={6} className="text-center text-muted py-4">No products found.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   );

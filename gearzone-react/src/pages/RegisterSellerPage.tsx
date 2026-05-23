@@ -18,16 +18,18 @@ export default function RegisterSellerPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  // Step 1: Store info
   const [storeName, setStoreName] = useState('');
   const [storeDesc, setStoreDesc] = useState('');
-  // Step 2: Business info
   const [businessName, setBusinessName] = useState('');
   const [taxId, setTaxId] = useState('');
-  // Step 3: Banking info
   const [bankName, setBankName] = useState('');
   const [bankAccount, setBankAccount] = useState('');
   const [bankHolder, setBankHolder] = useState('');
+
+  const refresh = async () => {
+    const p = await sellerApi.registration.getProgress();
+    setProgress(p as RegistrationProgress);
+  };
 
   useEffect(() => {
     sellerApi.registration.getProgress()
@@ -35,157 +37,163 @@ export default function RegisterSellerPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleStep1 = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true); setError('');
-    try {
-      await sellerApi.registration.submitStep1({ storeName, description: storeDesc });
-      const p = await sellerApi.registration.getProgress();
-      setProgress(p as RegistrationProgress);
-    } catch (err: unknown) { setError(err instanceof Error ? err.message : 'Failed.'); }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const wrap = (fn: () => Promise<any>) => async (e: React.FormEvent) => {
+    e.preventDefault(); setSaving(true); setError('');
+    try { await fn(); await refresh(); }
+    catch (err: unknown) { setError(err instanceof Error ? err.message : 'Failed.'); }
     finally { setSaving(false); }
   };
 
-  const handleStep2 = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true); setError('');
-    try {
-      await sellerApi.registration.submitStep2({ businessName, taxId });
-      const p = await sellerApi.registration.getProgress();
-      setProgress(p as RegistrationProgress);
-    } catch (err: unknown) { setError(err instanceof Error ? err.message : 'Failed.'); }
-    finally { setSaving(false); }
-  };
-
-  const handleStep3 = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true); setError('');
-    try {
-      await sellerApi.registration.submitStep3({ bankName, bankAccount, bankHolder });
-      const p = await sellerApi.registration.getProgress();
-      setProgress(p as RegistrationProgress);
-    } catch (err: unknown) { setError(err instanceof Error ? err.message : 'Failed.'); }
-    finally { setSaving(false); }
-  };
-
-  const handleSubmit = async () => {
-    setSaving(true); setError('');
-    try {
-      await sellerApi.registration.submit();
-      const p = await sellerApi.registration.getProgress();
-      setProgress(p as RegistrationProgress);
-    } catch (err: unknown) { setError(err instanceof Error ? err.message : 'Failed.'); }
-    finally { setSaving(false); }
-  };
-
-  const handleReapply = async () => {
-    setSaving(true); setError('');
-    try {
-      await sellerApi.registration.reapply();
-      const p = await sellerApi.registration.getProgress();
-      setProgress(p as RegistrationProgress);
-    } catch (err: unknown) { setError(err instanceof Error ? err.message : 'Failed.'); }
-    finally { setSaving(false); }
-  };
-
-  if (loading) return <div style={{ padding: '2rem' }}>Loading…</div>;
+  if (loading) return <div className="container text-center py-5"><div className="spinner-border text-primary" /></div>;
 
   if (progress?.status === 'Approved') {
     return (
-      <div style={{ padding: '2rem', maxWidth: 500, margin: '2rem auto', textAlign: 'center' }}>
-        <h1 style={{ color: '#38a169' }}>Application Approved!</h1>
-        <p>Your seller account has been approved.</p>
-        <button onClick={() => navigate('/seller/dashboard')}
-          style={{ padding: '0.75rem 2rem', background: '#38a169', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
-          Go to Seller Dashboard
-        </button>
+      <div className="container">
+        <div className="row justify-content-center">
+          <div className="col-md-5 text-center py-5">
+            <div className="text-success display-1 mb-3">✓</div>
+            <h3 className="text-success">Application Approved!</h3>
+            <p className="text-muted mb-4">Your seller account has been approved.</p>
+            <button className="btn btn-success btn-lg" onClick={() => navigate('/seller/dashboard')}>
+              Go to Seller Dashboard
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (progress?.status === 'PendingReview') {
     return (
-      <div style={{ padding: '2rem', maxWidth: 500, margin: '2rem auto', textAlign: 'center' }}>
-        <h1>Application Under Review</h1>
-        <p style={{ color: '#555' }}>Your application is being reviewed. We'll notify you via email.</p>
+      <div className="container">
+        <div className="row justify-content-center">
+          <div className="col-md-5 text-center py-5">
+            <div className="spinner-border text-primary mb-3" />
+            <h3>Application Under Review</h3>
+            <p className="text-muted">Your application is being reviewed. We'll notify you via email.</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (progress?.status === 'Rejected') {
     return (
-      <div style={{ padding: '2rem', maxWidth: 500, margin: '2rem auto', textAlign: 'center' }}>
-        <h1 style={{ color: '#e53e3e' }}>Application Rejected</h1>
-        {progress.rejectionReason && <p style={{ color: '#555' }}><strong>Reason:</strong> {progress.rejectionReason}</p>}
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <button onClick={handleReapply} disabled={saving}
-          style={{ padding: '0.75rem 2rem', background: '#3182ce', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
-          {saving ? 'Processing…' : 'Reapply'}
-        </button>
+      <div className="container">
+        <div className="row justify-content-center">
+          <div className="col-md-5 text-center py-5">
+            <h3 className="text-danger">Application Rejected</h3>
+            {progress.rejectionReason && (
+              <div className="alert alert-danger">{progress.rejectionReason}</div>
+            )}
+            {error && <div className="alert alert-danger">{error}</div>}
+            <button className="btn btn-primary" onClick={async () => {
+              setSaving(true);
+              try { await sellerApi.registration.reapply(); await refresh(); }
+              catch (err: unknown) { setError(err instanceof Error ? err.message : 'Failed.'); }
+              finally { setSaving(false); }
+            }} disabled={saving}>
+              {saving ? <span className="spinner-border spinner-border-sm me-2" /> : null}Reapply
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   const step = progress?.currentStep ?? 1;
+  const steps = ['Store Info', 'Business', 'Banking'];
 
   return (
-    <div style={{ padding: '2rem', maxWidth: 500, margin: '2rem auto' }}>
-      <h1>Become a Seller</h1>
+    <div className="container">
+      <div className="row justify-content-center">
+        <div className="col-md-6">
+          <h2 className="mb-4">Become a Seller</h2>
 
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem' }}>
-        {[1, 2, 3].map(n => (
-          <div key={n} style={{
-            flex: 1, padding: '0.5rem', textAlign: 'center', borderRadius: 4,
-            background: n < step ? '#38a169' : n === step ? '#3182ce' : '#e2e8f0',
-            color: n <= step ? '#fff' : '#888', fontWeight: 600, fontSize: 14
-          }}>
-            {n < step ? '✓' : n}. {n === 1 ? 'Store Info' : n === 2 ? 'Business' : 'Banking'}
+          <div className="d-flex mb-4 gap-2">
+            {steps.map((label, i) => {
+              const n = i + 1;
+              const done = n < step;
+              const active = n === step;
+              return (
+                <div key={n} className={`flex-fill text-center py-2 rounded fw-semibold small
+                  ${done ? 'bg-success text-white' : active ? 'bg-primary text-white' : 'bg-light text-muted'}`}>
+                  {done ? '✓ ' : `${n}. `}{label}
+                </div>
+              );
+            })}
           </div>
-        ))}
-      </div>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+          {error && <div className="alert alert-danger">{error}</div>}
 
-      {step === 1 && (
-        <form onSubmit={handleStep1} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <input placeholder="Store Name" value={storeName} onChange={e => setStoreName(e.target.value)} required style={{ padding: '0.5rem' }} />
-          <textarea placeholder="Store Description" value={storeDesc} onChange={e => setStoreDesc(e.target.value)} rows={3} style={{ padding: '0.5rem' }} />
-          <button type="submit" disabled={saving} style={{ padding: '0.75rem', background: '#3182ce', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
-            {saving ? 'Saving…' : 'Continue to Step 2'}
-          </button>
-        </form>
-      )}
+          {step === 1 && (
+            <form onSubmit={wrap(() => sellerApi.registration.submitStep1({ storeName, description: storeDesc }))}>
+              <div className="mb-3">
+                <label className="form-label">Store Name</label>
+                <input className="form-control" value={storeName} onChange={e => setStoreName(e.target.value)} required />
+              </div>
+              <div className="mb-3">
+                <label className="form-label">Store Description</label>
+                <textarea className="form-control" rows={3} value={storeDesc} onChange={e => setStoreDesc(e.target.value)} />
+              </div>
+              <button type="submit" className="btn btn-primary w-100" disabled={saving}>
+                {saving ? <span className="spinner-border spinner-border-sm me-2" /> : null}Continue to Step 2
+              </button>
+            </form>
+          )}
 
-      {step === 2 && (
-        <form onSubmit={handleStep2} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <input placeholder="Business/Company Name" value={businessName} onChange={e => setBusinessName(e.target.value)} required style={{ padding: '0.5rem' }} />
-          <input placeholder="Tax ID (optional)" value={taxId} onChange={e => setTaxId(e.target.value)} style={{ padding: '0.5rem' }} />
-          <button type="submit" disabled={saving} style={{ padding: '0.75rem', background: '#3182ce', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
-            {saving ? 'Saving…' : 'Continue to Step 3'}
-          </button>
-        </form>
-      )}
+          {step === 2 && (
+            <form onSubmit={wrap(() => sellerApi.registration.submitStep2({ businessName, taxId }))}>
+              <div className="mb-3">
+                <label className="form-label">Business / Company Name</label>
+                <input className="form-control" value={businessName} onChange={e => setBusinessName(e.target.value)} required />
+              </div>
+              <div className="mb-3">
+                <label className="form-label">Tax ID (optional)</label>
+                <input className="form-control" value={taxId} onChange={e => setTaxId(e.target.value)} />
+              </div>
+              <button type="submit" className="btn btn-primary w-100" disabled={saving}>
+                {saving ? <span className="spinner-border spinner-border-sm me-2" /> : null}Continue to Step 3
+              </button>
+            </form>
+          )}
 
-      {step === 3 && (
-        <form onSubmit={handleStep3} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <input placeholder="Bank Name" value={bankName} onChange={e => setBankName(e.target.value)} required style={{ padding: '0.5rem' }} />
-          <input placeholder="Account Number" value={bankAccount} onChange={e => setBankAccount(e.target.value)} required style={{ padding: '0.5rem' }} />
-          <input placeholder="Account Holder Name" value={bankHolder} onChange={e => setBankHolder(e.target.value)} required style={{ padding: '0.5rem' }} />
-          <button type="submit" disabled={saving} style={{ padding: '0.75rem', background: '#3182ce', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
-            {saving ? 'Saving…' : 'Save Banking Info'}
-          </button>
-        </form>
-      )}
+          {step === 3 && (
+            <form onSubmit={wrap(() => sellerApi.registration.submitStep3({ bankName, bankAccount, bankHolder }))}>
+              <div className="mb-3">
+                <label className="form-label">Bank Name</label>
+                <input className="form-control" value={bankName} onChange={e => setBankName(e.target.value)} required />
+              </div>
+              <div className="mb-3">
+                <label className="form-label">Account Number</label>
+                <input className="form-control" value={bankAccount} onChange={e => setBankAccount(e.target.value)} required />
+              </div>
+              <div className="mb-3">
+                <label className="form-label">Account Holder Name</label>
+                <input className="form-control" value={bankHolder} onChange={e => setBankHolder(e.target.value)} required />
+              </div>
+              <button type="submit" className="btn btn-primary w-100" disabled={saving}>
+                {saving ? <span className="spinner-border spinner-border-sm me-2" /> : null}Save Banking Info
+              </button>
+            </form>
+          )}
 
-      {step === 4 && (
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ color: '#38a169' }}>All steps completed! Ready to submit.</p>
-          <button onClick={handleSubmit} disabled={saving}
-            style={{ padding: '0.75rem 2rem', background: '#38a169', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
-            {saving ? 'Submitting…' : 'Submit Application'}
-          </button>
+          {step === 4 && (
+            <div className="text-center">
+              <p className="text-success fw-semibold">All steps completed! Ready to submit.</p>
+              <button className="btn btn-success btn-lg" disabled={saving} onClick={async () => {
+                setSaving(true);
+                try { await sellerApi.registration.submit(); await refresh(); }
+                catch (err: unknown) { setError(err instanceof Error ? err.message : 'Failed.'); }
+                finally { setSaving(false); }
+              }}>
+                {saving ? <span className="spinner-border spinner-border-sm me-2" /> : null}Submit Application
+              </button>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

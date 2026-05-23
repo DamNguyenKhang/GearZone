@@ -41,41 +41,52 @@ export default function CartPage() {
 
   const total = cart?.items.reduce((sum, i) => sum + i.price * i.quantity, 0) ?? 0;
 
-  if (loading) return <div style={{ padding: '2rem' }}>Loading…</div>;
+  if (loading) return <div className="container text-center py-5"><div className="spinner-border text-primary" /></div>;
 
   return (
-    <div style={{ padding: '2rem', maxWidth: 800, margin: '0 auto' }}>
-      <h1>Your Cart</h1>
+    <div className="container">
+      <h2 className="mb-4">Your Cart</h2>
 
       {(!cart?.items || cart.items.length === 0) ? (
-        <p>Your cart is empty. <Link to="/products">Browse products</Link></p>
+        <div className="alert alert-info">
+          Your cart is empty. <Link to="/products">Browse products</Link>
+        </div>
       ) : (
         <>
-          {cart.items.map(item => (
-            <div key={item.productSlug} style={{ display: 'flex', gap: '1rem', padding: '1rem 0', borderBottom: '1px solid #eee', alignItems: 'center' }}>
-              {item.imageUrl && <img src={item.imageUrl} alt={item.productName} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 4 }} />}
-              <div style={{ flex: 1 }}>
-                <Link to={`/products/${item.productSlug}`} style={{ fontWeight: 600, color: 'inherit' }}>{item.productName}</Link>
-                <p style={{ margin: '0.25rem 0', fontSize: 13, color: '#888' }}>{item.storeName}</p>
-                <p style={{ margin: 0, color: '#e53e3e' }}>{item.price?.toLocaleString()} VND</p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <input type="number" min={1} value={item.quantity}
-                  onChange={e => handleQtyChange(item.productSlug, Number(e.target.value))}
-                  style={{ width: 55, padding: '0.25rem' }} />
-                <button onClick={() => handleRemove(item.productSlug)}
-                  style={{ padding: '0.25rem 0.75rem', background: '#fed7d7', border: 'none', borderRadius: 4, cursor: 'pointer', color: '#c53030' }}>
-                  Remove
-                </button>
-              </div>
-              <p style={{ fontWeight: 700, minWidth: 100, textAlign: 'right' }}>{(item.price * item.quantity).toLocaleString()} VND</p>
+          <div className="card shadow-sm mb-4">
+            <div className="card-body p-0">
+              {cart.items.map((item, idx) => (
+                <div key={item.productSlug}
+                  className={`d-flex align-items-center gap-3 p-3 ${idx < cart.items.length - 1 ? 'border-bottom' : ''}`}>
+                  {item.imageUrl && (
+                    <img src={item.imageUrl} alt={item.productName}
+                      className="rounded" style={{ width: 80, height: 80, objectFit: 'cover' }} />
+                  )}
+                  <div className="flex-grow-1">
+                    <Link to={`/products/${item.productSlug}`} className="fw-semibold text-dark text-decoration-none">
+                      {item.productName}
+                    </Link>
+                    <p className="text-muted small mb-1">{item.storeName}</p>
+                    <p className="text-danger fw-bold mb-0">{item.price?.toLocaleString()} ₫</p>
+                  </div>
+                  <div className="d-flex align-items-center gap-2">
+                    <input type="number" min={1} value={item.quantity}
+                      onChange={e => handleQtyChange(item.productSlug, Number(e.target.value))}
+                      className="form-control form-control-sm" style={{ width: 65 }} />
+                    <button className="btn btn-outline-danger btn-sm"
+                      onClick={() => handleRemove(item.productSlug)}>Remove</button>
+                  </div>
+                  <div className="text-end fw-bold" style={{ minWidth: 110 }}>
+                    {(item.price * item.quantity).toLocaleString()} ₫
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1.5rem', marginTop: '1.5rem' }}>
-            <span style={{ fontSize: 18, fontWeight: 700 }}>Total: {total.toLocaleString()} VND</span>
-            <button onClick={() => navigate('/checkout')}
-              style={{ padding: '0.75rem 2rem', background: '#38a169', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontSize: 16, fontWeight: 600 }}>
+          <div className="d-flex justify-content-end align-items-center gap-4">
+            <span className="fs-5 fw-bold">Total: {total.toLocaleString()} ₫</span>
+            <button className="btn btn-success btn-lg" onClick={() => navigate('/checkout')}>
               Proceed to Checkout
             </button>
           </div>

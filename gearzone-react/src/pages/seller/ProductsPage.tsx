@@ -27,25 +27,22 @@ export default function SellerProductsPage() {
 
   useEffect(() => { fetchProducts(); }, []);
 
+  const resetForm = () => {
+    setShowForm(false); setEditId(null);
+    setForm({ name: '', basePrice: '', stockQuantity: '', description: '' });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true); setError('');
     const payload = { name: form.name, basePrice: Number(form.basePrice), stockQuantity: Number(form.stockQuantity), description: form.description };
     try {
-      if (editId) {
-        await sellerApi.products.update(editId, payload);
-      } else {
-        await sellerApi.products.create(payload);
-      }
-      setShowForm(false);
-      setEditId(null);
-      setForm({ name: '', basePrice: '', stockQuantity: '', description: '' });
-      fetchProducts();
+      if (editId) await sellerApi.products.update(editId, payload);
+      else await sellerApi.products.create(payload);
+      resetForm(); fetchProducts();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save product.');
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
 
   const handleDelete = async (id: string) => {
@@ -60,70 +57,89 @@ export default function SellerProductsPage() {
     setShowForm(true);
   };
 
-  if (loading) return <div style={{ padding: '2rem' }}>Loading…</div>;
+  if (loading) return <div className="container text-center py-5"><div className="spinner-border text-primary" /></div>;
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h1 style={{ margin: 0 }}>My Products</h1>
-        <button onClick={() => { setShowForm(true); setEditId(null); setForm({ name: '', basePrice: '', stockQuantity: '', description: '' }); }}
-          style={{ padding: '0.5rem 1.5rem', background: '#3182ce', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
-          + Add Product
-        </button>
+    <div className="container">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="mb-0">My Products</h2>
+        <button className="btn btn-primary" onClick={() => { resetForm(); setShowForm(true); }}>+ Add Product</button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} style={{ padding: '1.5rem', background: '#f9f9f9', borderRadius: 8, marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', maxWidth: 500 }}>
-          <h3 style={{ margin: 0 }}>{editId ? 'Edit Product' : 'New Product'}</h3>
-          <input placeholder="Product Name" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required style={{ padding: '0.5rem' }} />
-          <input type="number" placeholder="Base Price (VND)" value={form.basePrice} onChange={e => setForm(f => ({ ...f, basePrice: e.target.value }))} required style={{ padding: '0.5rem' }} />
-          <input type="number" placeholder="Stock Quantity" value={form.stockQuantity} onChange={e => setForm(f => ({ ...f, stockQuantity: e.target.value }))} required style={{ padding: '0.5rem' }} />
-          <textarea placeholder="Description" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} style={{ padding: '0.5rem' }} />
-          {error && <p style={{ color: 'red', margin: 0 }}>{error}</p>}
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button type="submit" disabled={saving} style={{ flex: 1, padding: '0.5rem', background: '#38a169', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
-              {saving ? 'Saving…' : 'Save'}
-            </button>
-            <button type="button" onClick={() => setShowForm(false)} style={{ flex: 1, padding: '0.5rem', background: '#eee', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
-              Cancel
-            </button>
+        <div className="card shadow-sm mb-4">
+          <div className="card-header"><h5 className="mb-0">{editId ? 'Edit Product' : 'New Product'}</h5></div>
+          <div className="card-body">
+            <form onSubmit={handleSubmit}>
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label className="form-label">Product Name</label>
+                  <input className="form-control" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label">Base Price (₫)</label>
+                  <input className="form-control" type="number" value={form.basePrice} onChange={e => setForm(f => ({ ...f, basePrice: e.target.value }))} required />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label">Stock</label>
+                  <input className="form-control" type="number" value={form.stockQuantity} onChange={e => setForm(f => ({ ...f, stockQuantity: e.target.value }))} required />
+                </div>
+                <div className="col-12">
+                  <label className="form-label">Description</label>
+                  <textarea className="form-control" rows={2} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} />
+                </div>
+              </div>
+              {error && <div className="alert alert-danger mt-3 py-2">{error}</div>}
+              <div className="d-flex gap-2 mt-3">
+                <button type="submit" className="btn btn-success" disabled={saving}>
+                  {saving ? <span className="spinner-border spinner-border-sm me-1" /> : null}Save
+                </button>
+                <button type="button" className="btn btn-outline-secondary" onClick={resetForm}>Cancel</button>
+              </div>
+            </form>
           </div>
-        </form>
+        </div>
       )}
 
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ background: '#f0f0f0' }}>
-            <th style={{ padding: '0.75rem', textAlign: 'left' }}>Product</th>
-            <th style={{ padding: '0.75rem', textAlign: 'right' }}>Price</th>
-            <th style={{ padding: '0.75rem', textAlign: 'right' }}>Stock</th>
-            <th style={{ padding: '0.75rem', textAlign: 'center' }}>Status</th>
-            <th style={{ padding: '0.75rem', textAlign: 'center' }}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map(p => (
-            <tr key={p.id} style={{ borderBottom: '1px solid #eee' }}>
-              <td style={{ padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                {p.imageUrl && <img src={p.imageUrl} alt={p.name} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 4 }} />}
-                {p.name}
-              </td>
-              <td style={{ padding: '0.75rem', textAlign: 'right' }}>{p.basePrice?.toLocaleString()} VND</td>
-              <td style={{ padding: '0.75rem', textAlign: 'right' }}>{p.stockQuantity}</td>
-              <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                <span style={{ color: p.isActive ? '#38a169' : '#e53e3e', fontWeight: 600 }}>{p.isActive ? 'Active' : 'Inactive'}</span>
-              </td>
-              <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                <button onClick={() => handleEdit(p)} style={{ marginRight: '0.5rem', padding: '0.25rem 0.75rem', background: '#bee3f8', border: 'none', borderRadius: 4, cursor: 'pointer' }}>Edit</button>
-                <button onClick={() => handleDelete(p.id)} style={{ padding: '0.25rem 0.75rem', background: '#fed7d7', border: 'none', borderRadius: 4, cursor: 'pointer', color: '#c53030' }}>Delete</button>
-              </td>
-            </tr>
-          ))}
-          {products.length === 0 && (
-            <tr><td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>No products yet.</td></tr>
-          )}
-        </tbody>
-      </table>
+      <div className="card shadow-sm">
+        <div className="table-responsive">
+          <table className="table table-hover mb-0">
+            <thead className="table-light">
+              <tr>
+                <th>Product</th>
+                <th className="text-end">Price</th>
+                <th className="text-end">Stock</th>
+                <th className="text-center">Status</th>
+                <th className="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map(p => (
+                <tr key={p.id}>
+                  <td>
+                    <div className="d-flex align-items-center gap-2">
+                      {p.imageUrl && <img src={p.imageUrl} alt={p.name} className="rounded" style={{ width: 40, height: 40, objectFit: 'cover' }} />}
+                      <span className="fw-semibold">{p.name}</span>
+                    </div>
+                  </td>
+                  <td className="text-end">{p.basePrice?.toLocaleString()} ₫</td>
+                  <td className="text-end">{p.stockQuantity}</td>
+                  <td className="text-center">
+                    <span className={`badge bg-${p.isActive ? 'success' : 'danger'}`}>{p.isActive ? 'Active' : 'Inactive'}</span>
+                  </td>
+                  <td className="text-center">
+                    <button className="btn btn-sm btn-outline-primary me-1" onClick={() => handleEdit(p)}>Edit</button>
+                    <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(p.id)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+              {products.length === 0 && (
+                <tr><td colSpan={5} className="text-center text-muted py-4">No products yet.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

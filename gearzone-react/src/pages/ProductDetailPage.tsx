@@ -31,6 +31,7 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [addingToCart, setAddingToCart] = useState(false);
   const [cartMsg, setCartMsg] = useState('');
+  const [cartMsgType, setCartMsgType] = useState<'success' | 'danger'>('success');
 
   useEffect(() => {
     if (!slug) return;
@@ -47,61 +48,69 @@ export default function ProductDetailPage() {
     try {
       await cartApi.add(product.slug, quantity);
       setCartMsg('Added to cart!');
+      setCartMsgType('success');
       setTimeout(() => setCartMsg(''), 3000);
     } catch (e: unknown) {
       setCartMsg(e instanceof Error ? e.message : 'Failed to add to cart.');
+      setCartMsgType('danger');
     } finally {
       setAddingToCart(false);
     }
   };
 
-  if (loading) return <div style={{ padding: '2rem' }}>Loading…</div>;
-  if (!product) return <div style={{ padding: '2rem' }}>Product not found.</div>;
+  if (loading) return <div className="container text-center py-5"><div className="spinner-border text-primary" /></div>;
+  if (!product) return <div className="container py-4"><div className="alert alert-warning">Product not found.</div></div>;
 
   return (
-    <div style={{ padding: '2rem', maxWidth: 1000, margin: '0 auto' }}>
-      <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-        <div style={{ flex: '0 0 400px' }}>
-          {product.imageUrl && (
-            <img src={product.imageUrl} alt={product.name} style={{ width: '100%', borderRadius: 8, objectFit: 'cover' }} />
-          )}
+    <div className="container">
+      <div className="row g-4 mb-5">
+        <div className="col-md-5">
+          {product.imageUrl
+            ? <img src={product.imageUrl} alt={product.name} className="img-fluid rounded shadow-sm" />
+            : <div className="bg-light rounded" style={{ height: 350 }} />
+          }
         </div>
 
-        <div style={{ flex: 1 }}>
-          <h1 style={{ marginTop: 0 }}>{product.name}</h1>
-          <p style={{ color: '#e53e3e', fontSize: 24, fontWeight: 700 }}>{product.basePrice?.toLocaleString()} VND</p>
-          <p style={{ color: '#666' }}>{product.brandName} · <Link to={`/stores/${product.storeSlug}`}>{product.storeName}</Link></p>
+        <div className="col-md-7">
+          <h2 className="mb-1">{product.name}</h2>
+          <p className="text-muted mb-2">{product.brandName} · <Link to={`/stores/${product.storeSlug}`}>{product.storeName}</Link></p>
           {product.averageRating !== undefined && (
-            <p style={{ color: '#888' }}>Rating: {product.averageRating.toFixed(1)} / 5 ({product.reviewCount} reviews)</p>
+            <p className="text-muted small mb-2">
+              {'★'.repeat(Math.round(product.averageRating))}{'☆'.repeat(5 - Math.round(product.averageRating))}
+              {' '}{product.averageRating.toFixed(1)} ({product.reviewCount} reviews)
+            </p>
           )}
+          <h3 className="text-danger fw-bold mb-3">{product.basePrice?.toLocaleString()} ₫</h3>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '1rem 0' }}>
-            <label>Qty:</label>
-            <input type="number" min={1} value={quantity} onChange={e => setQuantity(Number(e.target.value))}
-              style={{ width: 60, padding: '0.25rem' }} />
-            <button onClick={handleAddToCart} disabled={addingToCart}
-              style={{ padding: '0.5rem 1.5rem', background: '#3182ce', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
-              {addingToCart ? 'Adding…' : 'Add to Cart'}
+          <div className="d-flex align-items-center gap-3 mb-3">
+            <label className="fw-semibold mb-0">Qty:</label>
+            <input type="number" min={1} value={quantity}
+              onChange={e => setQuantity(Number(e.target.value))}
+              className="form-control" style={{ width: 80 }} />
+            <button className="btn btn-primary px-4" onClick={handleAddToCart} disabled={addingToCart}>
+              {addingToCart ? <span className="spinner-border spinner-border-sm me-1" /> : null}
+              Add to Cart
             </button>
           </div>
-          {cartMsg && <p style={{ color: cartMsg.includes('Failed') ? 'red' : 'green' }}>{cartMsg}</p>}
+
+          {cartMsg && <div className={`alert alert-${cartMsgType} py-2`}>{cartMsg}</div>}
 
           {product.description && (
-            <div style={{ marginTop: '1rem' }}>
-              <h3>Description</h3>
-              <p style={{ lineHeight: 1.6 }}>{product.description}</p>
+            <div className="mt-3">
+              <h5>Description</h5>
+              <p className="text-muted" style={{ lineHeight: 1.7 }}>{product.description}</p>
             </div>
           )}
 
           {product.specifications && Object.keys(product.specifications).length > 0 && (
-            <div style={{ marginTop: '1rem' }}>
-              <h3>Specifications</h3>
-              <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+            <div className="mt-3">
+              <h5>Specifications</h5>
+              <table className="table table-sm table-bordered">
                 <tbody>
                   {Object.entries(product.specifications).map(([k, v]) => (
-                    <tr key={k} style={{ borderBottom: '1px solid #eee' }}>
-                      <td style={{ padding: '0.4rem', fontWeight: 600, width: '40%' }}>{k}</td>
-                      <td style={{ padding: '0.4rem' }}>{v}</td>
+                    <tr key={k}>
+                      <td className="fw-semibold text-muted" style={{ width: '40%' }}>{k}</td>
+                      <td>{v}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -112,31 +121,39 @@ export default function ProductDetailPage() {
       </div>
 
       {product.reviews && product.reviews.length > 0 && (
-        <section style={{ marginTop: '3rem' }}>
-          <h2>Reviews</h2>
+        <section className="mb-5">
+          <h4 className="mb-3">Customer Reviews</h4>
           {product.reviews.map(r => (
-            <div key={r.id} style={{ padding: '1rem', borderBottom: '1px solid #eee' }}>
-              <p style={{ margin: 0, fontWeight: 600 }}>{r.reviewerName} — {'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</p>
-              <p style={{ margin: '0.25rem 0', color: '#555' }}>{r.comment}</p>
-              <p style={{ margin: 0, fontSize: 12, color: '#999' }}>{new Date(r.createdAt).toLocaleDateString()}</p>
+            <div key={r.id} className="card mb-2">
+              <div className="card-body py-3">
+                <p className="mb-1 fw-semibold">
+                  {r.reviewerName}
+                  <span className="text-warning ms-2">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
+                </p>
+                <p className="mb-1 text-muted">{r.comment}</p>
+                <p className="mb-0 small text-secondary">{new Date(r.createdAt).toLocaleDateString()}</p>
+              </div>
             </div>
           ))}
         </section>
       )}
 
       {product.relatedProducts && product.relatedProducts.length > 0 && (
-        <section style={{ marginTop: '3rem' }}>
-          <h2>Related Products</h2>
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+        <section className="mb-5">
+          <h4 className="mb-3">Related Products</h4>
+          <div className="row row-cols-2 row-cols-md-4 g-3">
             {product.relatedProducts.map(p => (
-              <Link key={p.slug} to={`/products/${p.slug}`}
-                style={{ width: 160, border: '1px solid #ccc', borderRadius: 8, overflow: 'hidden', textDecoration: 'none', color: 'inherit' }}>
-                {p.imageUrl && <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: 120, objectFit: 'cover' }} />}
-                <div style={{ padding: '0.5rem' }}>
-                  <p style={{ margin: 0, fontSize: 13, fontWeight: 500 }}>{p.name}</p>
-                  <p style={{ margin: 0, color: '#e53e3e', fontSize: 13 }}>{p.basePrice?.toLocaleString()} VND</p>
-                </div>
-              </Link>
+              <div key={p.slug} className="col">
+                <Link to={`/products/${p.slug}`} className="text-decoration-none text-dark">
+                  <div className="card h-100 shadow-sm">
+                    {p.imageUrl && <img src={p.imageUrl} alt={p.name} className="card-img-top" style={{ height: 130, objectFit: 'cover' }} />}
+                    <div className="card-body py-2 px-3">
+                      <p className="card-text small fw-semibold mb-1">{p.name}</p>
+                      <p className="text-danger small mb-0">{p.basePrice?.toLocaleString()} ₫</p>
+                    </div>
+                  </div>
+                </Link>
+              </div>
             ))}
           </div>
         </section>

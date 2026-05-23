@@ -20,9 +20,7 @@ export default function SellerSettingsPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    sellerApi.getStoreSettings()
-      .then(d => setSettings(d as StoreSettings))
-      .finally(() => setLoading(false));
+    sellerApi.getStoreSettings().then(d => setSettings(d as StoreSettings)).finally(() => setLoading(false));
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -34,56 +32,68 @@ export default function SellerSettingsPage() {
       setSuccess('Settings saved successfully!');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to save settings.');
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
 
-  const handleChange = (field: keyof StoreSettings, value: string) => {
+  const set = (field: keyof StoreSettings, value: string) =>
     setSettings(s => s ? { ...s, [field]: value } : s);
-  };
 
-  if (loading) return <div style={{ padding: '2rem' }}>Loading…</div>;
-  if (!settings) return <div style={{ padding: '2rem' }}>Failed to load settings.</div>;
+  if (loading) return <div className="container text-center py-5"><div className="spinner-border text-primary" /></div>;
+  if (!settings) return <div className="container py-4"><div className="alert alert-danger">Failed to load settings.</div></div>;
 
   return (
-    <div style={{ padding: '2rem', maxWidth: 600 }}>
-      <h1>Store Settings</h1>
+    <div className="container">
+      <div className="row justify-content-center">
+        <div className="col-lg-7">
+          <h2 className="mb-4">Store Settings</h2>
+          <form onSubmit={handleSubmit}>
+            <div className="card shadow-sm mb-3">
+              <div className="card-header">Basic Info</div>
+              <div className="card-body">
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">Store Name</label>
+                  <input className="form-control" value={settings.name} onChange={e => set('name', e.target.value)} required />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">Description</label>
+                  <textarea className="form-control" rows={3} value={settings.description ?? ''} onChange={e => set('description', e.target.value)} />
+                </div>
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label fw-semibold">Contact Email</label>
+                    <input className="form-control" type="email" value={settings.contactEmail ?? ''} onChange={e => set('contactEmail', e.target.value)} />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label fw-semibold">Contact Phone</label>
+                    <input className="form-control" value={settings.contactPhone ?? ''} onChange={e => set('contactPhone', e.target.value)} />
+                  </div>
+                </div>
+              </div>
+            </div>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.3rem' }}>Store Name</label>
-          <input value={settings.name} onChange={e => handleChange('name', e.target.value)} required style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box' }} />
-        </div>
-        <div>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.3rem' }}>Description</label>
-          <textarea value={settings.description ?? ''} onChange={e => handleChange('description', e.target.value)} rows={3} style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box' }} />
-        </div>
-        <div>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.3rem' }}>Contact Email</label>
-          <input type="email" value={settings.contactEmail ?? ''} onChange={e => handleChange('contactEmail', e.target.value)} style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box' }} />
-        </div>
-        <div>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.3rem' }}>Contact Phone</label>
-          <input value={settings.contactPhone ?? ''} onChange={e => handleChange('contactPhone', e.target.value)} style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box' }} />
-        </div>
-        <div>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.3rem' }}>Return Policy</label>
-          <textarea value={settings.returnPolicy ?? ''} onChange={e => handleChange('returnPolicy', e.target.value)} rows={4} style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box' }} />
-        </div>
-        <div>
-          <label style={{ display: 'block', fontWeight: 600, marginBottom: '0.3rem' }}>Shipping Policy</label>
-          <textarea value={settings.shippingPolicy ?? ''} onChange={e => handleChange('shippingPolicy', e.target.value)} rows={4} style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box' }} />
-        </div>
+            <div className="card shadow-sm mb-3">
+              <div className="card-header">Policies</div>
+              <div className="card-body">
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">Return Policy</label>
+                  <textarea className="form-control" rows={4} value={settings.returnPolicy ?? ''} onChange={e => set('returnPolicy', e.target.value)} />
+                </div>
+                <div className="mb-0">
+                  <label className="form-label fw-semibold">Shipping Policy</label>
+                  <textarea className="form-control" rows={4} value={settings.shippingPolicy ?? ''} onChange={e => set('shippingPolicy', e.target.value)} />
+                </div>
+              </div>
+            </div>
 
-        {error && <p style={{ color: 'red', margin: 0 }}>{error}</p>}
-        {success && <p style={{ color: '#38a169', margin: 0 }}>{success}</p>}
+            {error && <div className="alert alert-danger">{error}</div>}
+            {success && <div className="alert alert-success">{success}</div>}
 
-        <button type="submit" disabled={saving}
-          style={{ padding: '0.75rem', background: '#3182ce', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontWeight: 600 }}>
-          {saving ? 'Saving…' : 'Save Settings'}
-        </button>
-      </form>
+            <button type="submit" className="btn btn-primary w-100" disabled={saving}>
+              {saving ? <span className="spinner-border spinner-border-sm me-2" /> : null}Save Settings
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

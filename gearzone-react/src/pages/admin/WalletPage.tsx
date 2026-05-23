@@ -6,13 +6,7 @@ interface WalletData {
   platformBalance: number;
   totalHeld: number;
   totalPaidOut: number;
-  recentTransactions?: Array<{
-    id: string;
-    type: string;
-    amount: number;
-    createdAt: string;
-    description?: string;
-  }>;
+  recentTransactions?: Array<{ id: string; type: string; amount: number; createdAt: string; description?: string }>;
 }
 
 export default function AdminWalletPage() {
@@ -20,61 +14,60 @@ export default function AdminWalletPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    adminApi.getWallet()
-      .then(d => setData(d as WalletData))
-      .finally(() => setLoading(false));
+    adminApi.getWallet().then(d => setData(d as WalletData)).finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <div style={{ padding: '2rem' }}>Loading…</div>;
-  if (!data) return <div style={{ padding: '2rem' }}>Failed to load wallet data.</div>;
+  if (loading) return <div className="container text-center py-5"><div className="spinner-border text-primary" /></div>;
+  if (!data) return <div className="container py-4"><div className="alert alert-danger">Failed to load wallet data.</div></div>;
+
+  const stats = [
+    { label: 'Platform Balance', value: data.platformBalance, color: 'success' },
+    { label: 'Held for Payouts', value: data.totalHeld, color: 'warning' },
+    { label: 'Total Paid Out', value: data.totalPaidOut, color: 'primary' },
+  ];
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>Platform Wallet</h1>
+    <div className="container">
+      <h2 className="mb-4">Platform Wallet</h2>
 
-      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
-        {[
-          { label: 'Platform Balance', value: data.platformBalance, color: '#38a169' },
-          { label: 'Held for Payouts', value: data.totalHeld, color: '#ed8936' },
-          { label: 'Total Paid Out', value: data.totalPaidOut, color: '#3182ce' },
-        ].map(s => (
-          <div key={s.label} style={{ flex: '1 1 200px', padding: '1.5rem', background: '#f9f9f9', borderRadius: 8, borderLeft: `4px solid ${s.color}` }}>
-            <p style={{ margin: 0, color: '#888', fontSize: 13 }}>{s.label}</p>
-            <p style={{ margin: '0.5rem 0 0', fontSize: 22, fontWeight: 700, color: s.color }}>{(s.value ?? 0).toLocaleString()} VND</p>
+      <div className="row g-3 mb-4">
+        {stats.map(s => (
+          <div key={s.label} className="col-md-4">
+            <div className={`card shadow-sm border-start border-4 border-${s.color}`}>
+              <div className="card-body">
+                <p className="text-muted small mb-1">{s.label}</p>
+                <p className={`h4 fw-bold text-${s.color} mb-0`}>{(s.value ?? 0).toLocaleString()} ₫</p>
+              </div>
+            </div>
           </div>
         ))}
       </div>
 
-      <div style={{ marginBottom: '1.5rem' }}>
-        <Link to="/admin/transactions" style={{ padding: '0.5rem 1.5rem', background: '#3182ce', color: '#fff', borderRadius: 4, textDecoration: 'none', fontWeight: 600 }}>
-          View All Transactions
-        </Link>
+      <div className="mb-4">
+        <Link to="/admin/transactions" className="btn btn-primary">View All Transactions</Link>
       </div>
 
       {data.recentTransactions && data.recentTransactions.length > 0 && (
-        <>
-          <h2>Recent Transactions</h2>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#f0f0f0' }}>
-                <th style={{ padding: '0.75rem', textAlign: 'left' }}>Date</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left' }}>Type</th>
-                <th style={{ padding: '0.75rem', textAlign: 'right' }}>Amount</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left' }}>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.recentTransactions.map(t => (
-                <tr key={t.id} style={{ borderBottom: '1px solid #eee' }}>
-                  <td style={{ padding: '0.75rem', color: '#888', fontSize: 13 }}>{new Date(t.createdAt).toLocaleDateString()}</td>
-                  <td style={{ padding: '0.75rem' }}>{t.type}</td>
-                  <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 600 }}>{t.amount?.toLocaleString()} VND</td>
-                  <td style={{ padding: '0.75rem', color: '#555', fontSize: 13 }}>{t.description ?? '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>
+        <div className="card shadow-sm">
+          <div className="card-header"><h5 className="mb-0">Recent Transactions</h5></div>
+          <div className="table-responsive">
+            <table className="table table-hover mb-0">
+              <thead className="table-light">
+                <tr><th>Date</th><th>Type</th><th className="text-end">Amount</th><th>Description</th></tr>
+              </thead>
+              <tbody>
+                {data.recentTransactions.map(t => (
+                  <tr key={t.id}>
+                    <td className="text-muted small">{new Date(t.createdAt).toLocaleDateString()}</td>
+                    <td>{t.type}</td>
+                    <td className="text-end fw-semibold">{t.amount?.toLocaleString()} ₫</td>
+                    <td className="text-muted small">{t.description ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
     </div>
   );

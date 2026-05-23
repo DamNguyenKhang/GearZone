@@ -12,6 +12,8 @@ interface Transaction {
   description?: string;
 }
 
+const statusBadge: Record<string, string> = { Completed: 'success', Pending: 'warning', Failed: 'danger' };
+
 export default function AdminTransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,54 +28,47 @@ export default function AdminTransactionsPage() {
 
   useEffect(() => { fetchTransactions(); }, []);
 
-  if (loading) return <div style={{ padding: '2rem' }}>Loading…</div>;
-
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>Transactions</h1>
+    <div className="container">
+      <h2 className="mb-4">Transactions</h2>
 
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', alignItems: 'center' }}>
-        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={{ padding: '0.5rem' }}>
+      <div className="d-flex gap-2 mb-4">
+        <select className="form-select" style={{ maxWidth: 200 }}
+          value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
           <option value="">All Types</option>
-          <option>Payment</option>
-          <option>Payout</option>
-          <option>Refund</option>
-          <option>PlatformFee</option>
+          {['Payment', 'Payout', 'Refund', 'PlatformFee'].map(t => <option key={t}>{t}</option>)}
         </select>
-        <button onClick={fetchTransactions} style={{ padding: '0.5rem 1rem', background: '#3182ce', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
-          Filter
-        </button>
+        <button className="btn btn-primary" onClick={fetchTransactions}>Filter</button>
       </div>
 
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ background: '#f0f0f0' }}>
-            <th style={{ padding: '0.75rem', textAlign: 'left' }}>Date</th>
-            <th style={{ padding: '0.75rem', textAlign: 'left' }}>Type</th>
-            <th style={{ padding: '0.75rem', textAlign: 'right' }}>Amount</th>
-            <th style={{ padding: '0.75rem', textAlign: 'left' }}>Store</th>
-            <th style={{ padding: '0.75rem', textAlign: 'center' }}>Status</th>
-            <th style={{ padding: '0.75rem', textAlign: 'left' }}>Description</th>
-          </tr>
-        </thead>
-        <tbody>
-          {transactions.map(t => (
-            <tr key={t.id} style={{ borderBottom: '1px solid #eee' }}>
-              <td style={{ padding: '0.75rem', color: '#888', fontSize: 13 }}>{new Date(t.createdAt).toLocaleDateString()}</td>
-              <td style={{ padding: '0.75rem' }}>{t.type}</td>
-              <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 600 }}>{t.amount?.toLocaleString()} VND</td>
-              <td style={{ padding: '0.75rem', color: '#555', fontSize: 13 }}>{t.storeName ?? '—'}</td>
-              <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                <span style={{ color: t.status === 'Completed' ? '#38a169' : t.status === 'Pending' ? '#ed8936' : '#e53e3e' }}>{t.status}</span>
-              </td>
-              <td style={{ padding: '0.75rem', color: '#555', fontSize: 13 }}>{t.description ?? '—'}</td>
-            </tr>
-          ))}
-          {transactions.length === 0 && (
-            <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>No transactions found.</td></tr>
-          )}
-        </tbody>
-      </table>
+      {loading ? (
+        <div className="text-center py-4"><div className="spinner-border text-primary" /></div>
+      ) : (
+        <div className="card shadow-sm">
+          <div className="table-responsive">
+            <table className="table table-hover mb-0">
+              <thead className="table-light">
+                <tr><th>Date</th><th>Type</th><th className="text-end">Amount</th><th>Store</th><th className="text-center">Status</th><th>Description</th></tr>
+              </thead>
+              <tbody>
+                {transactions.map(t => (
+                  <tr key={t.id}>
+                    <td className="text-muted small">{new Date(t.createdAt).toLocaleDateString()}</td>
+                    <td>{t.type}</td>
+                    <td className="text-end fw-semibold">{t.amount?.toLocaleString()} ₫</td>
+                    <td className="text-muted small">{t.storeName ?? '—'}</td>
+                    <td className="text-center">
+                      <span className={`badge bg-${statusBadge[t.status] ?? 'secondary'}`}>{t.status}</span>
+                    </td>
+                    <td className="text-muted small">{t.description ?? '—'}</td>
+                  </tr>
+                ))}
+                {transactions.length === 0 && <tr><td colSpan={6} className="text-center text-muted py-4">No transactions found.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

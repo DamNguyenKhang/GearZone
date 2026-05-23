@@ -23,23 +23,54 @@ export default function Navbar() {
   };
 
   return (
-    <nav style={{ padding: '1rem', borderBottom: '1px solid #ccc', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-      <Link to="/"><strong>GearZone</strong></Link>
-      <Link to="/products">Products</Link>
-
-      {user ? (
-        <>
-          <Link to="/cart">Cart ({cartCount})</Link>
-          <Link to="/profile">Profile</Link>
-
-          {user.role === 'Store Owner' && <Link to="/seller/dashboard">Seller</Link>}
-          {user.role === 'Super Admin' && <Link to="/admin/dashboard">Admin</Link>}
-
-          <button onClick={handleLogout}>Logout ({user.fullName})</button>
-        </>
-      ) : (
-        <Link to="/login">Login</Link>
-      )}
+    <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div className="container">
+        <Link className="navbar-brand fw-bold" to="/">GearZone</Link>
+        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+          <span className="navbar-toggler-icon"></span>
+        </button>
+        <div className="collapse navbar-collapse" id="mainNav">
+          <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+            <li className="nav-item">
+              <Link className="nav-link" to="/products">Products</Link>
+            </li>
+          </ul>
+          <ul className="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center gap-2">
+            {user ? (
+              <>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/cart">
+                    <i className="bi bi-cart3"></i> Cart
+                    {cartCount > 0 && <span className="badge bg-danger ms-1">{cartCount}</span>}
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link className="nav-link" to="/profile">Profile</Link>
+                </li>
+                {user.role === 'Store Owner' && (
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/seller/dashboard">Seller</Link>
+                  </li>
+                )}
+                {user.role === 'Super Admin' && (
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/admin/dashboard">Admin</Link>
+                  </li>
+                )}
+                <li className="nav-item">
+                  <button className="btn btn-outline-light btn-sm" onClick={handleLogout}>
+                    Logout ({user.fullName})
+                  </button>
+                </li>
+              </>
+            ) : (
+              <li className="nav-item">
+                <Link className="btn btn-outline-light btn-sm" to="/login">Login</Link>
+              </li>
+            )}
+          </ul>
+        </div>
+      </div>
     </nav>
   );
 }

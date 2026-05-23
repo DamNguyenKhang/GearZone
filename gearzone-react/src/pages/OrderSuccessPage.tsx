@@ -22,41 +22,43 @@ export default function OrderSuccessPage() {
       .finally(() => setLoading(false));
   }, [orderId]);
 
-  if (loading) return <div style={{ padding: '2rem' }}>Loading…</div>;
+  if (loading) return <div className="container text-center py-5"><div className="spinner-border text-primary" /></div>;
 
   return (
-    <div style={{ padding: '2rem', maxWidth: 600, margin: '4rem auto', textAlign: 'center' }}>
-      <div style={{ fontSize: 64 }}>✓</div>
-      <h1 style={{ color: '#38a169' }}>Order Placed Successfully!</h1>
-      <p style={{ color: '#555' }}>Thank you for your purchase. We'll process your order shortly.</p>
+    <div className="container">
+      <div className="row justify-content-center">
+        <div className="col-md-6 text-center">
+          <div className="display-1 text-success mb-3">✓</div>
+          <h2 className="text-success mb-2">Order Placed Successfully!</h2>
+          <p className="text-muted mb-4">Thank you for your purchase. We'll process your order shortly.</p>
 
-      {order && (
-        <div style={{ textAlign: 'left', background: '#f9f9f9', padding: '1.5rem', borderRadius: 8, margin: '1.5rem 0' }}>
-          <p><strong>Order ID:</strong> {order.orderId}</p>
-          {order.deliveryAddress && <p><strong>Delivery to:</strong> {order.deliveryAddress}</p>}
-          <hr />
-          {order.items?.map((item, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.3rem 0' }}>
-              <span>{item.productName} × {item.quantity}</span>
-              <span>{(item.price * item.quantity).toLocaleString()} VND</span>
-            </div>
-          ))}
-          {order.totalPrice && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, marginTop: '0.5rem', borderTop: '1px solid #e2e8f0', paddingTop: '0.5rem' }}>
-              <span>Total</span>
-              <span>{order.totalPrice.toLocaleString()} VND</span>
+          {order && (
+            <div className="card shadow-sm mb-4 text-start">
+              <div className="card-body">
+                <p className="mb-1"><strong>Order ID:</strong> {order.orderId}</p>
+                {order.deliveryAddress && <p className="mb-2"><strong>Delivery to:</strong> {order.deliveryAddress}</p>}
+                <hr />
+                {order.items?.map((item, i) => (
+                  <div key={i} className="d-flex justify-content-between small mb-1">
+                    <span>{item.productName} × {item.quantity}</span>
+                    <span>{(item.price * item.quantity).toLocaleString()} ₫</span>
+                  </div>
+                ))}
+                {order.totalPrice && (
+                  <div className="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
+                    <span>Total</span>
+                    <span className="text-danger">{order.totalPrice.toLocaleString()} ₫</span>
+                  </div>
+                )}
+              </div>
             </div>
           )}
-        </div>
-      )}
 
-      <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1.5rem' }}>
-        <Link to="/profile" style={{ padding: '0.6rem 1.5rem', background: '#3182ce', color: '#fff', borderRadius: 6, textDecoration: 'none', fontWeight: 600 }}>
-          View My Orders
-        </Link>
-        <Link to="/products" style={{ padding: '0.6rem 1.5rem', border: '1px solid #ccc', borderRadius: 6, textDecoration: 'none', color: '#333' }}>
-          Continue Shopping
-        </Link>
+          <div className="d-flex gap-3 justify-content-center">
+            <Link to="/profile" className="btn btn-primary">View My Orders</Link>
+            <Link to="/products" className="btn btn-outline-secondary">Continue Shopping</Link>
+          </div>
+        </div>
       </div>
     </div>
   );

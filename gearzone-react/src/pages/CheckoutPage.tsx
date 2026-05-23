@@ -13,13 +13,7 @@ interface Address {
 }
 
 interface CheckoutData {
-  items: Array<{
-    productSlug: string;
-    productName: string;
-    price: number;
-    quantity: number;
-    storeName: string;
-  }>;
+  items: Array<{ productSlug: string; productName: string; price: number; quantity: number; storeName: string }>;
   addresses: Address[];
   totalPrice: number;
 }
@@ -32,18 +26,17 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'payos'>('cod');
   const [voucherCode, setVoucherCode] = useState('');
   const [voucherMsg, setVoucherMsg] = useState('');
+  const [voucherOk, setVoucherOk] = useState(false);
   const [discount, setDiscount] = useState(0);
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    checkoutApi.getData()
-      .then(d => {
-        const cd = d as CheckoutData;
-        setData(cd);
-        if (cd.addresses?.length > 0) setSelectedAddress(cd.addresses[0].id);
-      })
-      .finally(() => setLoading(false));
+    checkoutApi.getData().then(d => {
+      const cd = d as CheckoutData;
+      setData(cd);
+      if (cd.addresses?.length > 0) setSelectedAddress(cd.addresses[0].id);
+    }).finally(() => setLoading(false));
   }, []);
 
   const handleApplyVoucher = async () => {
@@ -52,8 +45,10 @@ export default function CheckoutPage() {
       const result = await checkoutApi.applyVoucher(voucherCode) as { discount?: number; message?: string };
       setDiscount(result.discount ?? 0);
       setVoucherMsg(result.message ?? 'Voucher applied!');
+      setVoucherOk(true);
     } catch (e: unknown) {
       setVoucherMsg(e instanceof Error ? e.message : 'Invalid voucher.');
+      setVoucherOk(false);
       setDiscount(0);
     }
   };
@@ -80,74 +75,95 @@ export default function CheckoutPage() {
     }
   };
 
-  if (loading) return <div style={{ padding: '2rem' }}>Loading…</div>;
-  if (!data) return <div style={{ padding: '2rem' }}>Could not load checkout data.</div>;
+  if (loading) return <div className="container text-center py-5"><div className="spinner-border text-primary" /></div>;
+  if (!data) return <div className="container py-4"><div className="alert alert-danger">Could not load checkout data.</div></div>;
 
   const total = (data.totalPrice ?? 0) - discount;
 
   return (
-    <div style={{ padding: '2rem', maxWidth: 800, margin: '0 auto' }}>
-      <h1>Checkout</h1>
-
-      <section style={{ marginBottom: '2rem' }}>
-        <h2>Delivery Address</h2>
-        {data.addresses.length === 0 ? (
-          <p>No address saved. Please add one in your profile.</p>
-        ) : (
-          data.addresses.map(a => (
-            <label key={a.id} style={{ display: 'block', padding: '0.75rem', border: `2px solid ${selectedAddress === a.id ? '#3182ce' : '#ccc'}`, borderRadius: 6, marginBottom: '0.5rem', cursor: 'pointer' }}>
-              <input type="radio" name="address" value={a.id} checked={selectedAddress === a.id}
-                onChange={() => setSelectedAddress(a.id)} style={{ marginRight: '0.5rem' }} />
-              <strong>{a.fullName}</strong> · {a.phone}<br />
-              <span style={{ color: '#555', fontSize: 14 }}>{a.addressLine}, {a.ward}, {a.district}, {a.province}</span>
-            </label>
-          ))
-        )}
-      </section>
-
-      <section style={{ marginBottom: '2rem' }}>
-        <h2>Order Summary</h2>
-        {data.items.map((item, i) => (
-          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0', borderBottom: '1px solid #f0f0f0' }}>
-            <span>{item.productName} × {item.quantity} <span style={{ color: '#888', fontSize: 13 }}>({item.storeName})</span></span>
-            <span>{(item.price * item.quantity).toLocaleString()} VND</span>
+    <div className="container">
+      <div className="row g-4">
+        <div className="col-lg-8">
+          <div className="card shadow-sm mb-3">
+            <div className="card-header"><h5 className="mb-0">Delivery Address</h5></div>
+            <div className="card-body">
+              {data.addresses.length === 0 ? (
+                <p className="text-muted">No address saved. Please add one in your profile.</p>
+              ) : data.addresses.map(a => (
+                <label key={a.id}
+                  className={`d-block p-3 border rounded mb-2 cursor-pointer ${selectedAddress === a.id ? 'border-primary bg-light' : ''}`}
+                  style={{ cursor: 'pointer' }}>
+                  <input type="radio" name="address" value={a.id} checked={selectedAddress === a.id}
+                    onChange={() => setSelectedAddress(a.id)} className="me-2" />
+                  <strong>{a.fullName}</strong> · {a.phone}
+                  <br />
+                  <small className="text-muted">{a.addressLine}, {a.ward}, {a.district}, {a.province}</small>
+                </label>
+              ))}
+            </div>
           </div>
-        ))}
-      </section>
 
-      <section style={{ marginBottom: '2rem' }}>
-        <h2>Voucher</h2>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <input placeholder="Enter voucher code" value={voucherCode} onChange={e => setVoucherCode(e.target.value)}
-            style={{ flex: 1, padding: '0.5rem' }} />
-          <button onClick={handleApplyVoucher} style={{ padding: '0.5rem 1rem' }}>Apply</button>
+          <div className="card shadow-sm mb-3">
+            <div className="card-header"><h5 className="mb-0">Payment Method</h5></div>
+            <div className="card-body d-flex gap-4">
+              <div className="form-check">
+                <input className="form-check-input" type="radio" name="payment" id="cod"
+                  checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} />
+                <label className="form-check-label" htmlFor="cod">Cash on Delivery</label>
+              </div>
+              <div className="form-check">
+                <input className="form-check-input" type="radio" name="payment" id="payos"
+                  checked={paymentMethod === 'payos'} onChange={() => setPaymentMethod('payos')} />
+                <label className="form-check-label" htmlFor="payos">PayOS (Online)</label>
+              </div>
+            </div>
+          </div>
+
+          <div className="card shadow-sm mb-3">
+            <div className="card-header"><h5 className="mb-0">Voucher</h5></div>
+            <div className="card-body">
+              <div className="input-group">
+                <input className="form-control" placeholder="Enter voucher code" value={voucherCode}
+                  onChange={e => setVoucherCode(e.target.value)} />
+                <button className="btn btn-outline-secondary" onClick={handleApplyVoucher}>Apply</button>
+              </div>
+              {voucherMsg && (
+                <small className={`mt-1 d-block ${voucherOk ? 'text-success' : 'text-danger'}`}>{voucherMsg}</small>
+              )}
+            </div>
+          </div>
         </div>
-        {voucherMsg && <p style={{ color: discount > 0 ? 'green' : 'red', fontSize: 14 }}>{voucherMsg}</p>}
-      </section>
 
-      <section style={{ marginBottom: '2rem' }}>
-        <h2>Payment Method</h2>
-        <label style={{ marginRight: '1.5rem', cursor: 'pointer' }}>
-          <input type="radio" name="payment" value="cod" checked={paymentMethod === 'cod'} onChange={() => setPaymentMethod('cod')} />
-          {' '}Cash on Delivery
-        </label>
-        <label style={{ cursor: 'pointer' }}>
-          <input type="radio" name="payment" value="payos" checked={paymentMethod === 'payos'} onChange={() => setPaymentMethod('payos')} />
-          {' '}PayOS (Online)
-        </label>
-      </section>
-
-      <div style={{ textAlign: 'right', marginBottom: '1rem' }}>
-        {discount > 0 && <p style={{ color: 'green' }}>Discount: -{discount.toLocaleString()} VND</p>}
-        <p style={{ fontSize: 20, fontWeight: 700 }}>Total: {total.toLocaleString()} VND</p>
+        <div className="col-lg-4">
+          <div className="card shadow-sm sticky-top" style={{ top: 80 }}>
+            <div className="card-header"><h5 className="mb-0">Order Summary</h5></div>
+            <div className="card-body">
+              {data.items.map((item, i) => (
+                <div key={i} className="d-flex justify-content-between small mb-2">
+                  <span>{item.productName} × {item.quantity}</span>
+                  <span>{(item.price * item.quantity).toLocaleString()} ₫</span>
+                </div>
+              ))}
+              <hr />
+              {discount > 0 && (
+                <div className="d-flex justify-content-between text-success small mb-2">
+                  <span>Discount</span><span>-{discount.toLocaleString()} ₫</span>
+                </div>
+              )}
+              <div className="d-flex justify-content-between fw-bold fs-5">
+                <span>Total</span><span className="text-danger">{total.toLocaleString()} ₫</span>
+              </div>
+            </div>
+            <div className="card-footer">
+              {error && <div className="alert alert-danger py-2 mb-2">{error}</div>}
+              <button className="btn btn-success w-100 btn-lg" onClick={handlePlaceOrder} disabled={placing}>
+                {placing ? <span className="spinner-border spinner-border-sm me-2" /> : null}
+                Place Order
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      <button onClick={handlePlaceOrder} disabled={placing}
-        style={{ width: '100%', padding: '0.875rem', background: '#38a169', color: '#fff', border: 'none', borderRadius: 6, fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>
-        {placing ? 'Placing Order…' : 'Place Order'}
-      </button>
     </div>
   );
 }

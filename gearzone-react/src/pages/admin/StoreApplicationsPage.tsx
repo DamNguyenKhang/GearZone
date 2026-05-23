@@ -11,6 +11,8 @@ interface Application {
   submittedAt: string;
 }
 
+const statusBadge: Record<string, string> = { PendingReview: 'warning', Approved: 'success', Rejected: 'danger' };
+
 export default function AdminStoreApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,85 +40,81 @@ export default function AdminStoreApplicationsPage() {
     setProcessing(rejectId);
     try {
       await adminApi.storeApplications.reject(rejectId, rejectReason);
-      setRejectId(null); setRejectReason('');
-      fetchApps();
+      setRejectId(null); setRejectReason(''); fetchApps();
     } finally { setProcessing(null); }
   };
 
-  if (loading) return <div style={{ padding: '2rem' }}>Loading…</div>;
+  if (loading) return <div className="container text-center py-5"><div className="spinner-border text-primary" /></div>;
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>Store Applications</h1>
+    <div className="container">
+      <h2 className="mb-4">Store Applications</h2>
 
       {rejectId && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: '#fff', padding: '2rem', borderRadius: 8, maxWidth: 400, width: '90%' }}>
-            <h3>Rejection Reason</h3>
-            <textarea value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Enter reason for rejection…" rows={4}
-              style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box', marginBottom: '1rem' }} />
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button onClick={handleReject} disabled={!rejectReason || !!processing}
-                style={{ flex: 1, padding: '0.5rem', background: '#e53e3e', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
-                Confirm Reject
-              </button>
-              <button onClick={() => { setRejectId(null); setRejectReason(''); }}
-                style={{ flex: 1, padding: '0.5rem', background: '#eee', border: 'none', borderRadius: 4, cursor: 'pointer' }}>
-                Cancel
-              </button>
+        <div className="modal d-block" style={{ background: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Rejection Reason</h5>
+                <button className="btn-close" onClick={() => { setRejectId(null); setRejectReason(''); }} />
+              </div>
+              <div className="modal-body">
+                <textarea className="form-control" rows={4} value={rejectReason}
+                  onChange={e => setRejectReason(e.target.value)}
+                  placeholder="Enter reason for rejection…" />
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-outline-secondary" onClick={() => { setRejectId(null); setRejectReason(''); }}>Cancel</button>
+                <button className="btn btn-danger" disabled={!rejectReason || !!processing} onClick={handleReject}>
+                  {processing ? <span className="spinner-border spinner-border-sm me-1" /> : null}Confirm Reject
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ background: '#f0f0f0' }}>
-            <th style={{ padding: '0.75rem', textAlign: 'left' }}>Applicant</th>
-            <th style={{ padding: '0.75rem', textAlign: 'left' }}>Store Name</th>
-            <th style={{ padding: '0.75rem', textAlign: 'center' }}>Status</th>
-            <th style={{ padding: '0.75rem', textAlign: 'left' }}>Submitted</th>
-            <th style={{ padding: '0.75rem', textAlign: 'center' }}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {applications.map(a => (
-            <tr key={a.id} style={{ borderBottom: '1px solid #eee' }}>
-              <td style={{ padding: '0.75rem' }}>
-                <div style={{ fontWeight: 500 }}>{a.applicantName}</div>
-                <div style={{ fontSize: 12, color: '#888' }}>{a.applicantEmail}</div>
-              </td>
-              <td style={{ padding: '0.75rem' }}>
-                <div>{a.storeName}</div>
-                {a.businessName && <div style={{ fontSize: 12, color: '#888' }}>{a.businessName}</div>}
-              </td>
-              <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                <span style={{ color: a.status === 'PendingReview' ? '#ed8936' : a.status === 'Approved' ? '#38a169' : '#e53e3e', fontWeight: 600 }}>
-                  {a.status === 'PendingReview' ? 'Pending' : a.status}
-                </span>
-              </td>
-              <td style={{ padding: '0.75rem', color: '#888', fontSize: 13 }}>{new Date(a.submittedAt).toLocaleDateString()}</td>
-              <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                {a.status === 'PendingReview' && (
-                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                    <button onClick={() => handleApprove(a.id)} disabled={processing === a.id}
-                      style={{ padding: '0.25rem 0.75rem', background: '#c6f6d5', border: 'none', borderRadius: 4, cursor: 'pointer', color: '#276749' }}>
-                      {processing === a.id ? '…' : 'Approve'}
-                    </button>
-                    <button onClick={() => setRejectId(a.id)}
-                      style={{ padding: '0.25rem 0.75rem', background: '#fed7d7', border: 'none', borderRadius: 4, cursor: 'pointer', color: '#c53030' }}>
-                      Reject
-                    </button>
-                  </div>
-                )}
-              </td>
-            </tr>
-          ))}
-          {applications.length === 0 && (
-            <tr><td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>No applications found.</td></tr>
-          )}
-        </tbody>
-      </table>
+      <div className="card shadow-sm">
+        <div className="table-responsive">
+          <table className="table table-hover mb-0">
+            <thead className="table-light">
+              <tr><th>Applicant</th><th>Store</th><th className="text-center">Status</th><th>Submitted</th><th className="text-center">Actions</th></tr>
+            </thead>
+            <tbody>
+              {applications.map(a => (
+                <tr key={a.id}>
+                  <td>
+                    <div className="fw-semibold">{a.applicantName}</div>
+                    <small className="text-muted">{a.applicantEmail}</small>
+                  </td>
+                  <td>
+                    <div>{a.storeName}</div>
+                    {a.businessName && <small className="text-muted">{a.businessName}</small>}
+                  </td>
+                  <td className="text-center">
+                    <span className={`badge bg-${statusBadge[a.status] ?? 'secondary'}`}>
+                      {a.status === 'PendingReview' ? 'Pending' : a.status}
+                    </span>
+                  </td>
+                  <td className="text-muted small">{new Date(a.submittedAt).toLocaleDateString()}</td>
+                  <td className="text-center">
+                    {a.status === 'PendingReview' && (
+                      <div className="d-flex gap-1 justify-content-center">
+                        <button className="btn btn-sm btn-outline-success" disabled={processing === a.id}
+                          onClick={() => handleApprove(a.id)}>
+                          {processing === a.id ? <span className="spinner-border spinner-border-sm" /> : 'Approve'}
+                        </button>
+                        <button className="btn btn-sm btn-outline-danger" onClick={() => setRejectId(a.id)}>Reject</button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {applications.length === 0 && <tr><td colSpan={5} className="text-center text-muted py-4">No applications found.</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

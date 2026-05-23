@@ -1,88 +1,89 @@
 using GearZone.Application.Abstractions.Services;
+using GearZone.Web.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace GearZone.Web.Controllers
+namespace GearZone.Web.Controllers;
+
+[Route("api/cart")]
+[ApiController]
+[Authorize]
+public class CartController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    [Authorize]
-    public class CartController : ControllerBase
+    private readonly ICartService _cartService;
+
+    public CartController(ICartService cartService)
     {
-        private readonly ICartService _cartService;
+        _cartService = cartService;
+    }
 
-        public CartController(ICartService cartService)
+    private string UserId => User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+
+    // GET /api/cart
+    [HttpGet]
+    public async Task<IActionResult> Get()
+    {
+        var cart = await _cartService.GetCartAsync(UserId);
+        return Ok(ApiResponse<object>.Ok(cart));
+    }
+
+    // POST /api/cart/add
+    [HttpPost("add")]
+    public async Task<IActionResult> Add([FromBody] AddToCartRequest request)
+    {
+        try
         {
-            _cartService = cartService;
+            var cartItemId = await _cartService.AddToCartAsync(UserId, request.VariantId, request.Quantity, request.IsBuyNow);
+            var cartCount = await _cartService.GetCartItemsCountAsync(UserId);
+            return Ok(ApiResponse<object>.Ok(new { cartItemId, cartCount }, "Added to cart."));
         }
-
-        [HttpPost("add")]
-        public async Task<IActionResult> AddToCart([FromBody] AddToCartRequest request)
+        catch (Exception ex)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
-
-            try
-            {
-                var cartItemId = await _cartService.AddToCartAsync(userId, request.VariantId, request.Quantity, request.IsBuyNow);
-                var cartCount = await _cartService.GetCartItemsCountAsync(userId);
-                return Ok(new { message = "Added to cart successfully.", cartItemId, cartCount });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
-        }
-
-        [HttpPut("update-quantity")]
-        public async Task<IActionResult> UpdateQuantity([FromBody] UpdateQuantityRequest request)
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
-
-            try
-            {
-                await _cartService.UpdateCartItemQuantityAsync(request.CartItemId, request.Quantity, userId);
-                return Ok(new { message = "Quantity updated successfully." });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
-        }
-
-        [HttpDelete("remove/{cartItemId}")]
-        public async Task<IActionResult> RemoveItem(Guid cartItemId)
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-                return Unauthorized();
-
-            try
-            {
-                await _cartService.RemoveCartItemAsync(cartItemId, userId);
-                return Ok(new { message = "Product removed from cart." });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
+            return BadRequest(ApiResponse.Fail(ex.Message));
         }
     }
 
-    public class AddToCartRequest
+    // PUT /api/cart/update-quantity
+    [HttpPut("update-quantity")]
+    public async Task<IActionResult> UpdateQuantity([FromBody] UpdateQuantityRequest request)
     {
-        public Guid VariantId { get; set; }
-        public int Quantity { get; set; }
-        public bool IsBuyNow { get; set; }
+        try
+        {
+            await _cartService.UpdateCartItemQuantityAsync(request.CartItemId, request.Quantity, UserId);
+            return Ok(ApiResponse.Ok("Quantity updated."));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse.Fail(ex.Message));
+        }
     }
 
-    public class UpdateQuantityRequest
+    // DELETE /api/cart/remove/{cartItemId}
+    [HttpDelete("remove/{cartItemId:guid}")]
+    public async Task<IActionResult> Remove(Guid cartItemId)
     {
-        public Guid CartItemId { get; set; }
-        public int Quantity { get; set; }
+        try
+        {
+            await _cartService.RemoveCartItemAsync(cartItemId, UserId);
+            return Ok(ApiResponse.Ok("Item removed."));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ApiResponse.Fail(ex.Message));
+        }
     }
+}
+
+public class AddToCartRequest
+{
+    public Guid VariantId { get; set; }
+    public int Quantity { get; set; }
+    public bool IsBuyNow { get; set; }
+}
+
+public class UpdateQuantityRequest
+{
+    public Guid CartItemId { get; set; }
+    public int Quantity { get; set; }
 }

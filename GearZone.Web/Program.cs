@@ -69,6 +69,7 @@ var connectionString = builder.Configuration["DB_CONNECTION_STRING"] ?? builder.
 
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<IOrderTrackingNotifier, SignalROrderTrackingNotifier>();
 builder.Services.AddScoped<BuyerInboxComposer>();
@@ -126,10 +127,34 @@ builder.Services.ConfigureApplicationCookie(opt =>
     opt.AccessDeniedPath = "/Auth/Login";
     opt.ExpireTimeSpan = TimeSpan.FromMinutes(30);
     opt.SlidingExpiration = true;
-    opt.Cookie.SameSite = SameSiteMode.Lax;
-    opt.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    opt.Cookie.SameSite = SameSiteMode.None;   // Cross-origin React SPA
+    opt.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     opt.Cookie.HttpOnly = true;
     opt.Cookie.IsEssential = true;
+
+    // Return 401/403 JSON for API calls instead of redirect to login page
+    opt.Events.OnRedirectToLogin = ctx =>
+    {
+        if (ctx.Request.Path.StartsWithSegments("/api"))
+        {
+            ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            ctx.Response.ContentType = "application/json";
+            return ctx.Response.WriteAsync("{\"success\":false,\"message\":\"Unauthorized.\"}");
+        }
+        ctx.Response.Redirect(ctx.RedirectUri);
+        return Task.CompletedTask;
+    };
+    opt.Events.OnRedirectToAccessDenied = ctx =>
+    {
+        if (ctx.Request.Path.StartsWithSegments("/api"))
+        {
+            ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+            ctx.Response.ContentType = "application/json";
+            return ctx.Response.WriteAsync("{\"success\":false,\"message\":\"Forbidden.\"}");
+        }
+        ctx.Response.Redirect(ctx.RedirectUri);
+        return Task.CompletedTask;
+    };
 });
 
 builder.Services
@@ -140,12 +165,17 @@ builder.Services
 
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
+    // Named policy for the React SPA — AllowAnyOrigin and AllowCredentials cannot coexist.
+    // Add VITE_API_URL origins here (dev + prod).
+    options.AddPolicy("ReactApp", policy =>
+        policy
+            .WithOrigins(
+                "http://localhost:5173",   // Vite dev server
+                "http://localhost:3000",   // CRA / fallback
+                builder.Configuration["FRONTEND_URL"] ?? "http://localhost:5173")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials());
 });
 
 var app = builder.Build();
@@ -190,7 +220,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseHttpsRedirection();
-app.UseCors();
+app.UseCors("ReactApp");
 
 // URL Rewrite for backward compatibility
 var rewriteOptions = new RewriteOptions()

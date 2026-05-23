@@ -1,23 +1,24 @@
 using GearZone.Application.Abstractions.Services;
+using GearZone.Web.Common;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GearZone.Web.Controllers
+namespace GearZone.Web.Controllers;
+
+[Route("api/banks")]
+[ApiController]
+public class BanksController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class BanksController : ControllerBase
+    private readonly IBankCatalogService _bankCatalogService;
+
+    public BanksController(IBankCatalogService bankCatalogService)
     {
-        private readonly IBankCatalogService _bankCatalogService;
+        _bankCatalogService = bankCatalogService;
+    }
 
-        public BanksController(IBankCatalogService bankCatalogService)
-        {
-            _bankCatalogService = bankCatalogService;
-        }
-
-        [HttpGet]
-        public IActionResult GetSupportedBanks()
-        {
-            return Ok(_bankCatalogService.GetSupportedBanks());
-        }
+    // GET /api/banks
+    [HttpGet]
+    public IActionResult GetSupportedBanks()
+    {
+        return Ok(ApiResponse<object>.Ok(_bankCatalogService.GetSupportedBanks()));
     }
 }

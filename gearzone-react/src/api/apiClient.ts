@@ -8,7 +8,7 @@ export interface ApiResponse<T> {
 }
 
 const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL: 'http://localhost:5107/api',
   withCredentials: true,   // Required: sends ASP.NET Identity cookies cross-origin
   headers: { 'Content-Type': 'application/json' },
 });

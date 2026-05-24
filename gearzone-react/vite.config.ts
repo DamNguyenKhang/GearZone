@@ -9,12 +9,12 @@ export default defineConfig({
     proxy: {
       // Proxy API requests to ASP.NET backend during development
       '/api': {
-        target: 'https://localhost:7000',
+        target: 'https://localhost:7266',
         changeOrigin: true,
         secure: false,
       },
       '/hubs': {
-        target: 'https://localhost:7000',
+        target: 'https://localhost:7266',
         changeOrigin: true,
         secure: false,
         ws: true,

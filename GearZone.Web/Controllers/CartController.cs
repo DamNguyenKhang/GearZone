@@ -54,6 +54,17 @@ namespace GearZone.Web.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetCart()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            var cart = await _cartService.GetCartAsync(userId);
+            return Ok(new { success = true, data = cart });
+        }
+
         [HttpDelete("remove/{cartItemId}")]
         public async Task<IActionResult> RemoveItem(Guid cartItemId)
         {

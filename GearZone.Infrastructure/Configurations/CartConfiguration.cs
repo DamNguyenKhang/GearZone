@@ -16,15 +16,10 @@ namespace GearZone.Infrastructure.Configurations
             builder.HasKey(x => x.Id);
 
             builder.HasIndex(x => x.UserId).IsUnique();
-            builder.HasIndex(x => x.StoreId);
 
             builder.HasOne(x => x.User)
                    .WithMany(x => x.Carts)
                    .HasForeignKey(x => x.UserId);
-
-            builder.HasOne(x => x.Store)
-                   .WithMany()
-                   .HasForeignKey(x => x.StoreId);
         }
     }
 }

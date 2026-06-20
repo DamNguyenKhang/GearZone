@@ -1,5 +1,8 @@
 ﻿using GearZone.Domain.Entities;
 using System.Linq.Expressions;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Linq;
 
 namespace GearZone.Application.Abstractions.Persistence
 {
@@ -10,6 +13,6 @@ namespace GearZone.Application.Abstractions.Persistence
         Task<T> UpdateAsync(T entity);
         Task DeleteAsync(T entity);
         Task<T?> GetByIdAsync(TKey id, CancellationToken ct = default, params Expression<Func<T, object>>[] includes);
-        //Task<IEnumerable<T>> GetAllByIdsAsync(IEnumerable<TKey> ids, CancellationToken ct = default, params Expression<Func<T, object>>[] includes);
+        IQueryable<T> Query();
     }
 }

@@ -1,44 +1,117 @@
 using GearZone.Application;
+using GearZone.Application.Abstractions.External;
 using GearZone.Domain.Entities;
 using GearZone.Infrastructure;
+using GearZone.Infrastructure.Jobs;
 using GearZone.Infrastructure.Seed;
+using GearZone.Web.Hubs;
+using GearZone.Web.Pages.Public.User.Messages;
+using Hangfire;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Rewrite;
 
 var builder = WebApplication.CreateBuilder(args);
 
-DotNetEnv.Env.Load();
+var envCandidates = new[]
+{
+    System.IO.Path.Combine(builder.Environment.ContentRootPath, ".env"),
+    System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), ".env"),
+    System.IO.Path.GetFullPath(System.IO.Path.Combine(builder.Environment.ContentRootPath, "..", ".env"))
+}
+.Distinct(StringComparer.OrdinalIgnoreCase);
+
+foreach (var envPath in envCandidates)
+{
+    if (!System.IO.File.Exists(envPath))
+    {
+        continue;
+    }
+
+    DotNetEnv.Env.Load(envPath);
+    Console.WriteLine($"Environment: loaded {envPath}");
+}
+
+static void EnsureEnvAlias(string targetKey, string sourceKey)
+{
+    var targetValue = Environment.GetEnvironmentVariable(targetKey);
+    if (!string.IsNullOrWhiteSpace(targetValue))
+    {
+        return;
+    }
+
+    var sourceValue = Environment.GetEnvironmentVariable(sourceKey);
+    if (!string.IsNullOrWhiteSpace(sourceValue))
+    {
+        Environment.SetEnvironmentVariable(targetKey, sourceValue.Trim());
+    }
+}
+
+// Backward-compatible PayOS env aliases so both legacy PAYOS_* and new PAYOS_PAYIN_* keys work.
+EnsureEnvAlias("PAYOS_CLIENT_ID", "PAYOS_PAYIN_CLIENT_ID");
+EnsureEnvAlias("PAYOS_API_KEY", "PAYOS_PAYIN_API_KEY");
+EnsureEnvAlias("PAYOS_CHECKSUM_KEY", "PAYOS_PAYIN_CHECKSUM_KEY");
+EnsureEnvAlias("PAYOS_RETURN_URL", "PAYOS_PAYIN_RETURN_URL");
+EnsureEnvAlias("PAYOS_CANCEL_URL", "PAYOS_PAYIN_CANCEL_URL");
+EnsureEnvAlias("PAYOS_PAYIN_CLIENT_ID", "PAYOS_CLIENT_ID");
+EnsureEnvAlias("PAYOS_PAYIN_API_KEY", "PAYOS_API_KEY");
+EnsureEnvAlias("PAYOS_PAYIN_CHECKSUM_KEY", "PAYOS_CHECKSUM_KEY");
+EnsureEnvAlias("PAYOS_PAYIN_RETURN_URL", "PAYOS_RETURN_URL");
+EnsureEnvAlias("PAYOS_PAYIN_CANCEL_URL", "PAYOS_CANCEL_URL");
+
 builder.Configuration.AddEnvironmentVariables();
 
-var connectionString = builder.Configuration.GetConnectionString("GearZoneDB");
+var connectionString = builder.Configuration["DB_CONNECTION_STRING"] ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
-// Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddControllers();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddSignalR();
+builder.Services.AddScoped<IOrderTrackingNotifier, SignalROrderTrackingNotifier>();
+builder.Services.AddScoped<BuyerInboxComposer>();
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
-})
-.AddCookie(options =>
-{
-    options.LoginPath = "/Auth/Login";
-    options.AccessDeniedPath = "/Auth/Login";
+    // Use Identity's scheme as the default for everything
+    options.DefaultScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
 })
 .AddGoogle(options =>
 {
     options.ClientId = builder.Configuration["GOOGLE_CLIENT_ID"] ?? "";
     options.ClientSecret = builder.Configuration["GOOGLE_CLIENT_SECRET"] ?? "";
+    options.CallbackPath = "/signin-google";
+    options.SaveTokens = true;
+
+    // Reduce local/dev correlation-cookie drop issues during Google callback.
+    options.CorrelationCookie.SameSite = SameSiteMode.Lax;
+    options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.CorrelationCookie.HttpOnly = true;
+    options.CorrelationCookie.IsEssential = true;
+
+    options.Events = new OAuthEvents
+    {
+        OnRemoteFailure = context =>
+        {
+            context.HandleResponse();
+            var message = Uri.EscapeDataString(context.Failure?.Message ?? "External login failed.");
+            context.Response.Redirect($"/Auth/Login?remoteError={message}");
+            return Task.CompletedTask;
+        }
+    };
 });
 
-builder.Services.ConfigureApplicationCookie(opt =>
-{
-    opt.LoginPath = "/Identity/Account/Login";
-    opt.AccessDeniedPath = "/Identity/Account/AccessDenied";
-    opt.ExpireTimeSpan = TimeSpan.FromMinutes(30);
-    opt.SlidingExpiration = true;
-});
+builder.Services.AddAutoMapper(typeof(Program).Assembly, typeof(GearZone.Application.Abstractions.Services.IAuthService).Assembly);
 
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -48,23 +121,65 @@ builder.Services
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
+builder.Services.ConfigureApplicationCookie(opt =>
+{
+    opt.LoginPath = "/Auth/Login";
+    opt.AccessDeniedPath = "/Auth/Login";
+    opt.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+    opt.SlidingExpiration = true;
+    opt.Cookie.SameSite = SameSiteMode.None;   // Cross-origin React SPA
+    opt.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    opt.Cookie.HttpOnly = true;
+    opt.Cookie.IsEssential = true;
+
+    // Return 401/403 JSON for API calls instead of redirect to login page
+    opt.Events.OnRedirectToLogin = ctx =>
+    {
+        if (ctx.Request.Path.StartsWithSegments("/api"))
+        {
+            ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            ctx.Response.ContentType = "application/json";
+            return ctx.Response.WriteAsync("{\"success\":false,\"message\":\"Unauthorized.\"}");
+        }
+        ctx.Response.Redirect(ctx.RedirectUri);
+        return Task.CompletedTask;
+    };
+    opt.Events.OnRedirectToAccessDenied = ctx =>
+    {
+        if (ctx.Request.Path.StartsWithSegments("/api"))
+        {
+            ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+            ctx.Response.ContentType = "application/json";
+            return ctx.Response.WriteAsync("{\"success\":false,\"message\":\"Forbidden.\"}");
+        }
+        ctx.Response.Redirect(ctx.RedirectUri);
+        return Task.CompletedTask;
+    };
+});
+
 builder.Services
     .AddDatabase(connectionString)
     .AddApplication()
-    .AddInfrastructure()
+    .AddInfrastructure(builder.Configuration)
     ;
 
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
+    // Named policy for the React SPA — AllowAnyOrigin and AllowCredentials cannot coexist.
+    // Add VITE_API_URL origins here (dev + prod).
+    options.AddPolicy("ReactApp", policy =>
+        policy
+            .WithOrigins(
+                "http://localhost:5173",   // Vite dev server
+                "http://localhost:3000",   // CRA / fallback
+                builder.Configuration["FRONTEND_URL"] ?? "http://localhost:5173")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials());
 });
 
 var app = builder.Build();
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -78,22 +193,74 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
 
+    var dbContext = services.GetRequiredService<ApplicationDbContext>();
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     var configuration = services.GetRequiredService<IConfiguration>();
 
-    await IdentitySeeder.SeedAsync(userManager, roleManager, configuration);
+    try
+    {
+        await IdentitySeeder.SeedAsync(userManager, roleManager, configuration);
+        Console.WriteLine("Seed[Identity]: completed.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Seed[Identity]: {ex}");
+    }
+
+    try
+    {
+        await CatalogSeeder.SeedAsync(dbContext);
+        Console.WriteLine("Seed[Catalog]: completed.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Seed[Catalog]: {ex}");
+    }
 }
 
 app.UseHttpsRedirection();
-app.UseCors();
+app.UseCors("ReactApp");
+
+// URL Rewrite for backward compatibility
+var rewriteOptions = new RewriteOptions()
+    .AddRedirect("(?i)Public/Catalog/Browse/?$", "products")
+    .AddRedirect("(?i)Public/Catalog/Browse(.*)", "products$1");
+app.UseRewriter(rewriteOptions);
+
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
-app.MapRazorPages()
-   .WithStaticAssets();
+app.UseHangfireDashboard("/hangfire");
+
+using (var scope = app.Services.CreateScope())
+{
+    // Recurring jobs
+    RecurringJob.AddOrUpdate<PayoutBatchJob>(
+        "generate-weekly-payout",
+        job => job.GenerateWeeklyBatchAsync(),
+        "1 17 * * 0", // Sunday 17:01 UTC = Monday 00:01 Vietnam time
+        TimeZoneInfo.Utc);
+
+    RecurringJob.AddOrUpdate<PayoutBatchJob>(
+        "retry-failed-payouts",
+        job => job.RetryFailedTransactionsAsync(),
+        "0 */6 * * *",
+        TimeZoneInfo.Utc);
+
+    RecurringJob.AddOrUpdate<OrderAutoCompleteJob>(
+        "order-auto-complete",
+        job => job.AutoCompleteOrdersAsync(),
+        Cron.Daily(),
+        TimeZoneInfo.Utc);
+}
+
+app.UseStaticFiles();
+app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
+app.MapHub<OrderTrackingHub>("/hubs/order-tracking");
+app.MapRazorPages();
 
 app.Run();

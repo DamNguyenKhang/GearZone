@@ -1,4 +1,4 @@
-﻿using GearZone.Domain.Entities;
+using GearZone.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -15,9 +15,9 @@ namespace GearZone.Infrastructure.Configurations
 
             builder.HasKey(x => x.Id);
 
-            builder.HasOne(x => x.Order)
+            builder.HasOne(x => x.SubOrder)
                    .WithMany(x => x.Items)
-                   .HasForeignKey(x => x.OrderId);
+                   .HasForeignKey(x => x.SubOrderId);
 
             builder.HasOne(x => x.Variant)
                    .WithMany()
